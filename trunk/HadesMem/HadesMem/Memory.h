@@ -107,9 +107,9 @@ namespace Hades
     // Call remote function
     DWORD MemoryMgr::Call(PVOID Address) const 
     {
-      // Call function via creating a remote thread in the target
-      // Todo: Robust implementation via ASM Jit and SEH
-      // Todo: Support parameters, calling conventions, etc
+      // Call function via creating a remote thread in the target.
+      // Todo: Robust implementation via ASM Jit and SEH.
+      // Todo: Support parameters, calling conventions, etc.
       EnsureCloseHandle MyThread = CreateRemoteThread(m_Process.GetHandle(), 
         nullptr, 0, reinterpret_cast<LPTHREAD_START_ROUTINE>(Address), 
         nullptr, 0, nullptr);
@@ -121,7 +121,6 @@ namespace Hades
           ErrorString("Could not create remote thread.") << 
           ErrorCodeWin(LastError));
       }
-
 
       // Wait for the remote thread to terminate
       if (WaitForSingleObject(MyThread, INFINITE) != WAIT_OBJECT_0)
