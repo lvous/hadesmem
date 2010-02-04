@@ -64,7 +64,7 @@ T ReadNumericDataFromUser()
 
 // Handle 'MemoryRead' or 'MemoryWrite' task for string types
 template <typename T, typename CharT>
-void HandleStringReadOrWrite(Hades::Memory::Memory const& MyMemory, 
+void HandleStringReadOrWrite(Hades::Memory::MemoryMgr const& MyMemory, 
   PVOID Address, int Task, std::basic_istream<CharT>& In, 
   std::basic_ostream<CharT>& Out)
 {
@@ -88,7 +88,7 @@ void HandleStringReadOrWrite(Hades::Memory::Memory const& MyMemory,
 
 // Handle 'MemoryRead' or 'MemoryWrite' task for char types
 template <typename T, typename CharT>
-void HandleCharReadOrWrite(Hades::Memory::Memory const& MyMemory, 
+void HandleCharReadOrWrite(Hades::Memory::MemoryMgr const& MyMemory, 
   PVOID Address, int Task, std::basic_istream<CharT>& In, 
   std::basic_ostream<CharT>& Out)
 {
@@ -112,7 +112,7 @@ void HandleCharReadOrWrite(Hades::Memory::Memory const& MyMemory,
 
 // Handle 'MemoryRead' or 'MemoryWrite' task for numeric types
 template <typename T>
-void HandleNumericReadOrWrite(Hades::Memory::Memory const& MyMemory, 
+void HandleNumericReadOrWrite(Hades::Memory::MemoryMgr const& MyMemory, 
   PVOID Address, int Task)
 {
   // Read data
@@ -151,7 +151,7 @@ inline int GetOption(std::string Option, int Min, int Max)
 }
 
 // Create Memory object using process name from user
-inline void CreateMemoryFromProcName(std::shared_ptr<Hades::Memory::Memory>& 
+inline void CreateMemoryFromProcName(std::shared_ptr<Hades::Memory::MemoryMgr>& 
   MyMemory)
 {
   // Output
@@ -166,11 +166,11 @@ inline void CreateMemoryFromProcName(std::shared_ptr<Hades::Memory::Memory>&
   }
 
   // Create memory manager
-  MyMemory.reset(new Hades::Memory::Memory(ProcessName));
+  MyMemory.reset(new Hades::Memory::MemoryMgr(ProcessName));
 }
 
 // Create Memory object using process ID from user
-inline void CreateMemoryFromProcID(std::shared_ptr<Hades::Memory::Memory>& 
+inline void CreateMemoryFromProcID(std::shared_ptr<Hades::Memory::MemoryMgr>& 
   MyMemory)
 {
   // Output
@@ -188,11 +188,11 @@ inline void CreateMemoryFromProcID(std::shared_ptr<Hades::Memory::Memory>&
   std::wcin.ignore((std::numeric_limits<std::streamsize>::max)(), '\n');
 
   // Create memory manager
-  MyMemory.reset(new Hades::Memory::Memory(ProcessID));
+  MyMemory.reset(new Hades::Memory::MemoryMgr(ProcessID));
 }
 
 // Create Memory object using window name from user
-inline void CreateMemoryFromWindowName(std::shared_ptr<Hades::Memory::Memory>& 
+inline void CreateMemoryFromWindowName(std::shared_ptr<Hades::Memory::MemoryMgr>& 
   MyMemory)
 {
   // Output
@@ -207,5 +207,5 @@ inline void CreateMemoryFromWindowName(std::shared_ptr<Hades::Memory::Memory>&
   }
 
   // Create memory manager
-  MyMemory.reset(new Hades::Memory::Memory(WindowName, nullptr));
+  MyMemory.reset(new Hades::Memory::MemoryMgr(WindowName, nullptr));
 }

@@ -1,9 +1,5 @@
 #pragma once
 
-// HadesMem
-#include "Error.h"
-#include "Process.h"
-
 // Windows API
 #include <Windows.h>
 
@@ -20,6 +16,10 @@
 #include <boost/noncopyable.hpp>
 #pragma warning(pop)
 
+// HadesMem
+#include "Error.h"
+#include "Process.h"
+
 namespace Hades
 {
   namespace Memory
@@ -29,17 +29,17 @@ namespace Hades
     { };
 
     // Memory managing class
-    class Memory : private boost::noncopyable
+    class MemoryMgr : private boost::noncopyable
     {
     public:
       // Open process from handle
-      inline explicit Memory(HANDLE ProcHandle);
+      inline explicit MemoryMgr(HANDLE ProcHandle);
       // Open process from process ID
-      inline explicit Memory(DWORD ProcID);
+      inline explicit MemoryMgr(DWORD ProcID);
       // Open process from process name
-      inline explicit Memory(std::wstring const& ProcName);
+      inline explicit MemoryMgr(std::wstring const& ProcName);
       // Open process from window name (and optionally class)
-      inline explicit Memory(std::wstring const& WindowName, 
+      inline MemoryMgr(std::wstring const& WindowName, 
         std::wstring const* const ClassName);
 
       // Read memory (POD types)
@@ -81,34 +81,36 @@ namespace Hades
       // Whether an address is currently writable
       inline bool CanWrite(PVOID Address) const;
 
+      inline DWORD GetProcessID() const;
+
     private:
       Process m_Process;
     };
 
     // Open process from handle
-    Memory::Memory(HANDLE ProcHandle) 
+    MemoryMgr::MemoryMgr(HANDLE ProcHandle) 
       : m_Process(ProcHandle) 
     { }
 
     // Open process from process ID
-    Memory::Memory(DWORD ProcID) 
+    MemoryMgr::MemoryMgr(DWORD ProcID) 
       : m_Process(ProcID) 
     { }
 
     // Open process from process name
-    Memory::Memory(std::wstring const& ProcName) 
+    MemoryMgr::MemoryMgr(std::wstring const& ProcName) 
       : m_Process(ProcName) 
     { }
 
     // Open process from window name (and optionally class)
-    Memory::Memory(std::wstring const& WindowName, 
+    MemoryMgr::MemoryMgr(std::wstring const& WindowName, 
       std::wstring const* const ClassName) 
       : m_Process(WindowName, ClassName) 
     { }
 
     // Read memory (POD types)
     template <typename T>
-    T Memory::Read(PVOID Address, typename boost::enable_if<
+    T MemoryMgr::Read(PVOID Address, typename boost::enable_if<
       std::is_pod<T>>::type* /*Dummy*/) const 
     {
       // Set page protection for reading
@@ -156,7 +158,7 @@ namespace Hades
 
     // Read memory (string types)
     template <typename T>
-    T Memory::Read(PVOID Address, typename boost::enable_if<std::is_same<T, 
+    T MemoryMgr::Read(PVOID Address, typename boost::enable_if<std::is_same<T, 
       std::basic_string<typename T::value_type>>>::type* /*Dummy*/) const
     {
       // Character type
@@ -184,7 +186,7 @@ namespace Hades
 
     // Read memory (vector types)
     template <typename T>
-    T Memory::Read(PVOID Address, typename std::vector<typename T::
+    T MemoryMgr::Read(PVOID Address, typename std::vector<typename T::
       value_type>::size_type Size, typename boost::enable_if<std::is_same<T, 
       std::vector<typename T::value_type>>>::type* /*Dummy*/) const
     {
@@ -206,7 +208,7 @@ namespace Hades
 
     // Write memory (POD types)
     template <typename T>
-    void Memory::Write(PVOID Address, T const& Data, typename boost::enable_if<
+    void MemoryMgr::Write(PVOID Address, T const& Data, typename boost::enable_if<
       std::is_pod<T>>::type* /*Dummy*/) const 
     {
       // Set page protections for writing
@@ -251,7 +253,7 @@ namespace Hades
 
     // Write memory (string types)
     template <typename T>
-    void Memory::Write(PVOID Address, T const& Data, typename boost::enable_if<
+    void MemoryMgr::Write(PVOID Address, T const& Data, typename boost::enable_if<
       std::is_same<T, std::basic_string<typename T::value_type>>>::type* 
       /*Dummy*/) 
       const
@@ -276,7 +278,7 @@ namespace Hades
 
     // Write memory (vector types)
     template <typename T>
-    void Memory::Write(PVOID Address, T const& Data, typename boost::enable_if<
+    void MemoryMgr::Write(PVOID Address, T const& Data, typename boost::enable_if<
       std::is_same<T, std::vector<typename T::value_type>>>::type* /*Dummy*/) 
       const
     {
@@ -293,7 +295,7 @@ namespace Hades
     }
 
     // Whether an address is currently readable
-    bool Memory::CanRead(PVOID Address) const
+    bool MemoryMgr::CanRead(PVOID Address) const
     {
       // Query page protections
       MEMORY_BASIC_INFORMATION MyMemInfo = { 0 };
@@ -317,7 +319,7 @@ namespace Hades
     }
 
     // Whether an address is currently writable
-    bool Memory::CanWrite(PVOID Address) const
+    bool MemoryMgr::CanWrite(PVOID Address) const
     {
       // Query page protections
       MEMORY_BASIC_INFORMATION MyMemInfo = { 0 };
@@ -336,6 +338,12 @@ namespace Hades
         MyMemInfo.Protect == PAGE_EXECUTE_WRITECOPY || 
         MyMemInfo.Protect == PAGE_READWRITE || 
         MyMemInfo.Protect == PAGE_WRITECOPY;
+    }
+
+    // Get process ID of target
+    DWORD MemoryMgr::GetProcessID() const
+    {
+      return m_Process.GetID();
     }
   }
 }

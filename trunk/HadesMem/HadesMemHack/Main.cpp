@@ -29,7 +29,7 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
     int ProcSelect = GetOption("process selection method", 1, 3);
 
     // Get process selection data and create memory manager
-    std::shared_ptr<Hades::Memory::Memory> MyMemory;
+    std::shared_ptr<Hades::Memory::MemoryMgr> MyMemory;
     switch (ProcSelect)
     {
       // Select via process name

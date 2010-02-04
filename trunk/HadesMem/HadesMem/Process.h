@@ -1,10 +1,5 @@
 #pragma once
 
-// HadesMem
-#include "I18n.h"
-#include "Error.h"
-#include "EnsureCleanup.h"
-
 // Windows API
 #include <Windows.h>
 #include <TlHelp32.h>
@@ -20,6 +15,11 @@
 #include <boost/noncopyable.hpp>
 #include <boost/lexical_cast.hpp>
 #pragma warning(pop)
+
+// HadesMem
+#include "I18n.h"
+#include "Error.h"
+#include "EnsureCleanup.h"
 
 namespace Hades
 {
@@ -46,8 +46,11 @@ namespace Hades
       // Create from existing handle
       inline explicit Process(HANDLE ProcHandle);
 
-      // Get process handle
+      // Get process handlex
       inline HANDLE GetHandle() const;
+      
+      // Get process ID
+      inline DWORD GetID() const;
 
     private:
       // Open process given process id
@@ -57,12 +60,15 @@ namespace Hades
       inline void GetSeDebugPrivilege();
 
       // Process handle
-      EnsureCloseHandle m_ProcHandle;
+      EnsureCloseHandle m_Handle;
+
+      // Process ID
+      DWORD m_ID;
     };
 
     // Open process from process id
     Process::Process(DWORD ProcID) 
-      : m_ProcHandle(nullptr) 
+      : m_Handle(nullptr) 
     {
       // Get SeDebugPrivilege
       GetSeDebugPrivilege();
@@ -73,7 +79,7 @@ namespace Hades
 
     // Open process from process name
     Process::Process(std::wstring const& ProcName) 
-      : m_ProcHandle(nullptr) 
+      : m_Handle(nullptr) 
     {
       // Get SeDebugPrivilege
       GetSeDebugPrivilege();
@@ -120,7 +126,7 @@ namespace Hades
     // Open process from window name and class
     Process::Process(std::wstring const& WindowName, 
       std::wstring const* const ClassName) 
-      : m_ProcHandle(nullptr) 
+      : m_Handle(nullptr) 
     {
       // Get SeDebugPrivilege
       GetSeDebugPrivilege();
@@ -155,7 +161,7 @@ namespace Hades
 
     // Create from existing handle
     Process::Process(HANDLE ProcHandle) 
-      : m_ProcHandle(ProcHandle) 
+      : m_Handle(ProcHandle) 
     {
       // Get SeDebugPrivilege
       GetSeDebugPrivilege();
@@ -165,14 +171,14 @@ namespace Hades
     void Process::Open(DWORD ProcID)
     {
       // Open process
-      m_ProcHandle = OpenProcess(PROCESS_CREATE_THREAD | 
+      m_Handle = OpenProcess(PROCESS_CREATE_THREAD | 
         PROCESS_QUERY_INFORMATION | 
         PROCESS_VM_OPERATION | 
         PROCESS_VM_READ | 
         PROCESS_VM_WRITE, 
         FALSE, 
         ProcID);
-      if (!m_ProcHandle)
+      if (!m_Handle)
       {
         DWORD LastError = GetLastError();
         BOOST_THROW_EXCEPTION(ProcessError() << 
@@ -240,7 +246,13 @@ namespace Hades
     // Get process handle
     HANDLE Process::GetHandle() const
     {
-      return m_ProcHandle;
+      return m_Handle;
+    }
+
+    // Get process ID
+    DWORD Process::GetID() const
+    {
+      return m_ID;
     }
   }
 }

@@ -26,7 +26,9 @@
     <ClInclude Include="Error.h" />
     <ClInclude Include="I18n.h" />
     <ClInclude Include="Memory.h" />
+    <ClInclude Include="Module.h" />
     <ClInclude Include="Process.h" />
+    <ClInclude Include="Toolhelper.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{7699F816-E93B-4C61-B491-2B8405122949}</ProjectGuid>
