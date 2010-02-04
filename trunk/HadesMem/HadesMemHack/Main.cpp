@@ -64,6 +64,7 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
       std::wcout << "4. Call function." << std::endl;
       std::wcout << "5. Allocate memory." << std::endl;
       std::wcout << "6. Free memory." << std::endl;
+      std::wcout << "7. Disassemble." << std::endl;
 
       // Get task
       auto Task = static_cast<Detail::Task>(GetOption("task", 1, 6));

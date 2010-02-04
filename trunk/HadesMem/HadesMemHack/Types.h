@@ -41,7 +41,8 @@ namespace Detail
     Task_FindMod, 
     Task_CallFunc, 
     Task_AllocMem, 
-    Task_FreeMem
+    Task_FreeMem, 
+    Task_Disassemble
   };
   
   // Module selection methods

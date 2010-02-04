@@ -20,6 +20,9 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Disassemble.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="EnsureCleanup.h">
       <Filter>Header Files</Filter>
     </ClInclude>
