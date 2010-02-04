@@ -6,6 +6,10 @@
 // C++ Standard Library
 #include <string>
 
+// Notice: Modified version of AutoWinObj library provided in the 'Windows 
+// via C/C++' sample code. Originally copyright Jeffrey Richter and 
+// Christophe Nasarre.
+
 namespace Hades
 {
   // Data type representing the address of the object's cleanup function.
@@ -14,39 +18,51 @@ namespace Hades
 
   // Each template instantiation requires a data type, address of cleanup 
   // function, and a value that indicates an invalid value.
-  template<typename T, FnCleanup pfn, UINT_PTR Invalid = 0> 
-  class EnsureCleanup 
+  template<typename T, FnCleanup MyCleanup, UINT_PTR Invalid = 0> 
+  class AutoWinObj 
   {
   public:
     // Default constructor assumes an invalid value (nothing to cleanup)
-    EnsureCleanup() 
-    { m_t = Invalid; }
+    AutoWinObj() 
+      : m_t(Invalid) 
+    { }
 
     // This constructor sets the value to the specified value
-    EnsureCleanup(T t) : m_t((UINT_PTR) t) 
+    static_assert(sizeof(T) == sizeof(UINT_PTR), "Size of handle type is "
+      "incorrect.");
+    AutoWinObj(T t) 
+      : m_t(reinterpret_cast<UINT_PTR>(t)) 
     { }
 
     // The destructor performs the cleanup.
-    ~EnsureCleanup() 
-    { Cleanup(); }
+    ~AutoWinObj() 
+    {
+      Cleanup();
+    }
 
     // Helper methods to tell if the value represents a valid object or not..
     BOOL IsValid() const 
-    { return(m_t != Invalid); }
+    {
+      return m_t != Invalid;
+    }
     BOOL IsInvalid() const 
-    { return(!IsValid()); }
+    {
+      return !IsValid();
+    }
 
     // Re-assigning the object forces the current object to be cleaned-up.
     T operator= (T t) 
     { 
       Cleanup(); 
-      m_t = (UINT_PTR) t;
-      return(*this);  
+      m_t = reinterpret_cast<UINT_PTR>(t);
+      return *this;  
     }
 
     // Returns the value (supports both 32-bit and 64-bit Windows).
     operator T() const 
-    { return (T) m_t; }
+    {
+      return reinterpret_cast<T>(m_t);
+    }
 
     // Cleanup the object if the value represents a valid object
     void Cleanup() 
@@ -55,32 +71,34 @@ namespace Hades
       {
         // In 64-bit Windows, all parameters are 64-bits, 
         // so no casting is required
-        pfn(m_t);         // Close the object.
-        m_t = Invalid;   // We no longer represent a valid object.
+        MyCleanup(m_t); // Close the object.
+        m_t = Invalid; // We no longer represent a valid object.
       }
     }
 
   protected:
-    EnsureCleanup(const EnsureCleanup&);
+    // Disable copying
+    AutoWinObj(const AutoWinObj&);
 
   private:
-    UINT_PTR m_t;           // The member representing the object
+    UINT_PTR m_t; // The member representing the object
   };
 
   // Macros to make it easier to declare instances of the template 
   // class for specific data types.
 
-#define MakeCleanupClass(className, tData, pfnCleanup) \
-  typedef EnsureCleanup<tData, (FnCleanup) pfnCleanup> className
+  #define MakeCleanupClass(className, tData, pfnCleanup) \
+    typedef AutoWinObj<tData, (FnCleanup) pfnCleanup> className
 
-#define MakeCleanupClassX(className, tData, pfnCleanup, Invalid) \
-  typedef EnsureCleanup<tData, (FnCleanup) pfnCleanup, \
-  (INT_PTR) Invalid> className
+  #define MakeCleanupClassX(className, tData, pfnCleanup, Invalid) \
+    typedef AutoWinObj<tData, (FnCleanup) pfnCleanup, \
+    (INT_PTR) Invalid> className
 
   // Instances of the template C++ class for common data types.
   MakeCleanupClass(EnsureFindClose, HANDLE, FindClose);
   MakeCleanupClass(EnsureCloseHandle, HANDLE, CloseHandle);
-  MakeCleanupClassX(EnsureCloseSnap, HANDLE, CloseHandle, INVALID_HANDLE_VALUE);
+  MakeCleanupClassX(EnsureCloseSnap, HANDLE, CloseHandle, 
+    INVALID_HANDLE_VALUE);
   MakeCleanupClass(EnsureLocalFree, HLOCAL, LocalFree);
   MakeCleanupClass(EnsureGlobalFree, HGLOBAL, GlobalFree);
   MakeCleanupClass(EnsureGlobalUnlock, LPVOID, GlobalUnlock);
