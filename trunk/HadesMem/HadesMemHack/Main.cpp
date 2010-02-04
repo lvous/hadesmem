@@ -319,6 +319,31 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
           std::wcout << "Module not found." << std::endl;
         }
       }
+      // Handle 'Call Function' task
+      if (Task == Detail::Task_CallFunc)
+      {
+        // Output
+        std::wcout << "Enter target address:" << std::endl;
+
+        // Get address
+        PVOID Address = 0;
+        while (!(std::wcin >> std::hex >> Address >> std::dec))
+        {
+          std::cout << "Invalid handle." << std::endl;
+          std::wcin.clear();
+          std::wcin.ignore((std::numeric_limits<std::streamsize>::max)(), 
+            '\n');
+        }
+        std::wcin.ignore((std::numeric_limits<std::streamsize>::max)(), 
+          '\n');
+
+        // Call remote function
+        auto ExitCode = MyMemory->Call(Address);
+        
+        // Output
+        std::wcout << "Thread Exit Code: " << reinterpret_cast<PVOID>(
+          ExitCode) << "." << std::endl;
+      }
       // Output for all currently unhandled tasks
       else
       {

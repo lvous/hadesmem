@@ -40,6 +40,9 @@ namespace Hades
       inline MemoryMgr(std::wstring const& WindowName, 
         std::wstring const* const ClassName);
 
+      // Call remote function
+      DWORD Call(PVOID Address) const;
+
       // Read memory (POD types)
       template <typename T>
       T Read(PVOID Address, typename boost::enable_if<std::is_pod<T>>::type* 
@@ -100,6 +103,50 @@ namespace Hades
       std::wstring const* const ClassName) 
       : m_Process(WindowName, ClassName) 
     { }
+
+    // Call remote function
+    DWORD MemoryMgr::Call(PVOID Address) const 
+    {
+      // Call function via creating a remote thread in the target
+      // Todo: Robust implementation via ASM Jit and SEH
+      // Todo: Support parameters, calling conventions, etc
+      EnsureCloseHandle MyThread = CreateRemoteThread(m_Process.GetHandle(), 
+        nullptr, 0, reinterpret_cast<LPTHREAD_START_ROUTINE>(Address), 
+        nullptr, 0, nullptr);
+      if (!MyThread)
+      {
+        DWORD LastError = GetLastError();
+        BOOST_THROW_EXCEPTION(MemoryError() << 
+          ErrorFunction("Memory:Call") << 
+          ErrorString("Could not create remote thread.") << 
+          ErrorCodeWin(LastError));
+      }
+
+
+      // Wait for the remote thread to terminate
+      if (WaitForSingleObject(MyThread, INFINITE) != WAIT_OBJECT_0)
+      {
+        DWORD LastError = GetLastError();
+        BOOST_THROW_EXCEPTION(MemoryError() << 
+          ErrorFunction("Memory:Call") << 
+          ErrorString("Could not wait for remote thread.") << 
+          ErrorCodeWin(LastError));
+      }
+
+      // Get exit code of remote injection thread
+      DWORD ExitCode = 0;
+      if (!GetExitCodeThread(MyThread, &ExitCode))
+      {
+        DWORD LastError = GetLastError();
+        BOOST_THROW_EXCEPTION(MemoryError() << 
+          ErrorFunction("Memory:Call") << 
+          ErrorString("Could not get remote thread exit code.") << 
+          ErrorCodeWin(LastError));
+      }
+
+      // Return exit code from thread
+      return ExitCode;
+    }
 
     // Read memory (POD types)
     template <typename T>
