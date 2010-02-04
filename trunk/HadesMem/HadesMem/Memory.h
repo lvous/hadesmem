@@ -32,8 +32,6 @@ namespace Hades
     class MemoryMgr : private boost::noncopyable
     {
     public:
-      // Open process from handle
-      inline explicit MemoryMgr(HANDLE ProcHandle);
       // Open process from process ID
       inline explicit MemoryMgr(DWORD ProcID);
       // Open process from process name
@@ -86,11 +84,6 @@ namespace Hades
     private:
       Process m_Process;
     };
-
-    // Open process from handle
-    MemoryMgr::MemoryMgr(HANDLE ProcHandle) 
-      : m_Process(ProcHandle) 
-    { }
 
     // Open process from process ID
     MemoryMgr::MemoryMgr(DWORD ProcID) 

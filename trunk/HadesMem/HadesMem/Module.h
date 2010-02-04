@@ -36,6 +36,8 @@ namespace Hades
       std::wstring GetName() const;
       std::wstring GetPath() const;
 
+      bool Found() const;
+
     private:
       // Disable assignment
       Module& operator= (Module const&);
@@ -163,6 +165,11 @@ namespace Hades
     std::wstring Module::GetPath() const
     {
       return m_Path;
+    }
+
+    bool Module::Found() const
+    {
+      return m_Found;
     }
   }
 }

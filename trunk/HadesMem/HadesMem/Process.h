@@ -43,10 +43,7 @@ namespace Hades
       inline explicit Process(std::wstring const& WindowName, 
         std::wstring const* const ClassName);
 
-      // Create from existing handle
-      inline explicit Process(HANDLE ProcHandle);
-
-      // Get process handlex
+      // Get process handle
       inline HANDLE GetHandle() const;
       
       // Get process ID
@@ -68,7 +65,8 @@ namespace Hades
 
     // Open process from process id
     Process::Process(DWORD ProcID) 
-      : m_Handle(nullptr) 
+      : m_Handle(nullptr), 
+      m_ID(0) 
     {
       // Get SeDebugPrivilege
       GetSeDebugPrivilege();
@@ -79,7 +77,8 @@ namespace Hades
 
     // Open process from process name
     Process::Process(std::wstring const& ProcName) 
-      : m_Handle(nullptr) 
+      : m_Handle(nullptr), 
+      m_ID(0) 
     {
       // Get SeDebugPrivilege
       GetSeDebugPrivilege();
@@ -119,14 +118,15 @@ namespace Hades
       }
 
       // Open process
-      DWORD ProcID = ProcEntry.th32ProcessID;
-      Open(ProcID);
+      m_ID = ProcEntry.th32ProcessID;
+      Open(m_ID);
     }
 
     // Open process from window name and class
     Process::Process(std::wstring const& WindowName, 
       std::wstring const* const ClassName) 
-      : m_Handle(nullptr) 
+      : m_Handle(nullptr), 
+      m_ID(0) 
     {
       // Get SeDebugPrivilege
       GetSeDebugPrivilege();
@@ -144,9 +144,8 @@ namespace Hades
       }
 
       // Get process ID from window
-      DWORD ProcID = 0;
-      GetWindowThreadProcessId(MyWnd, &ProcID);
-      if (!ProcID)
+      GetWindowThreadProcessId(MyWnd, &m_ID);
+      if (!m_ID)
       {
         DWORD LastError = GetLastError();
         BOOST_THROW_EXCEPTION(ProcessError() << 
@@ -156,15 +155,7 @@ namespace Hades
       }
 
       // Open process
-      Open(ProcID);
-    }
-
-    // Create from existing handle
-    Process::Process(HANDLE ProcHandle) 
-      : m_Handle(ProcHandle) 
-    {
-      // Get SeDebugPrivilege
-      GetSeDebugPrivilege();
+      Open(m_ID);
     }
 
     // Open process given process id

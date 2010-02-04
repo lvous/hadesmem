@@ -1,6 +1,7 @@
 // HadesMem
 #include "IoAux.h"
 #include "Types.h"
+#include "HadesMem/Module.h"
 #include "HadesMem/Memory.h"
 
 // C++ Standard Library
@@ -26,7 +27,8 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
     std::wcout << "3. Window name." << std::endl;
 
     // Get process selection method
-    int ProcSelect = GetOption("process selection method", 1, 3);
+    Detail::ProcSelect ProcSelect = static_cast<Detail::ProcSelect>(
+      GetOption("process selection method", 1, 3));
 
     // Get process selection data and create memory manager
     std::shared_ptr<Hades::Memory::MemoryMgr> MyMemory;
@@ -85,6 +87,221 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
         std::wcout << "12. Char (Narrow)." << std::endl;
         std::wcout << "13. Char (Wide)." << std::endl;
         std::wcout << "14. Pointer." << std::endl;
+
+        // Get data type
+        Detail::DataType MyDataType = static_cast<Detail::DataType>(GetOption(
+          "data type", 1, 14));
+
+        // Output
+        std::wcout << "Enter target address:" << std::endl;
+
+        // Get address
+        PVOID Address = 0;
+        while (!(std::wcin >> std::hex >> Address >> std::dec) || !Address)
+        {
+          std::cout << "Invalid address." << std::endl;
+          std::wcin.clear();
+          std::wcin.ignore((std::numeric_limits<std::streamsize>::max)(), '\n');
+        }
+        std::wcin.ignore((std::numeric_limits<std::streamsize>::max)(), '\n');
+
+        // Handle selected data type
+        switch (MyDataType)
+        {
+        case Detail::DataType_Byte:
+          {
+            // Read data
+            auto Current = MyMemory->Read<Detail::Byte>(Address);
+            std::wcout << "Value: " << static_cast<Detail::Int32>(Current) 
+              << std::endl;
+
+            // Handle 'Write Memory' task
+            if (Task == Detail::Task_WriteMem)
+            {
+              // Output
+              std::wcout << "Enter new value:" << std::endl;
+
+              // Get data
+              Detail::Int32 New = 0;
+              while (!(std::wcin >> New) || New > 256)
+              {
+                std::cout << "Invalid data." << std::endl;
+                std::wcin.clear();
+                std::wcin.ignore((std::numeric_limits<std::streamsize>::max)(), 
+                  '\n');
+              }
+              std::wcin.ignore((std::numeric_limits<std::streamsize>::max)(), 
+                '\n');
+
+              // Write data
+              MyMemory->Write(Address, static_cast<Detail::Byte>(New));
+            }
+
+            break;
+          }
+
+        case Detail::DataType_Int16:
+          HandleNumericReadOrWrite<Detail::Int16>(*MyMemory, Address, Task);
+          break;
+
+        case Detail::DataType_UInt16:
+          HandleNumericReadOrWrite<Detail::UInt16>(*MyMemory, Address, Task);
+          break;
+
+        case Detail::DataType_Int32:
+          HandleNumericReadOrWrite<Detail::Int32>(*MyMemory, Address, Task);
+          break;
+
+        case Detail::DataType_UInt32:
+          HandleNumericReadOrWrite<Detail::UInt32>(*MyMemory, Address, Task);
+          break;
+
+        case Detail::DataType_Int64:
+          HandleNumericReadOrWrite<Detail::Int64>(*MyMemory, Address, Task);
+          break;
+
+        case Detail::DataType_UInt64:
+          HandleNumericReadOrWrite<Detail::UInt64>(*MyMemory, Address, Task);
+          break;
+
+        case Detail::DataType_Float:
+          HandleNumericReadOrWrite<Detail::Float>(*MyMemory, Address, Task);
+          break;
+
+        case Detail::DataType_Double:
+          HandleNumericReadOrWrite<Detail::Double>(*MyMemory, Address, Task);
+          break;
+
+        case Detail::DataType_StrNarrow:
+          HandleStringReadOrWrite<Detail::StrNarrow>(*MyMemory, Address, Task, 
+            std::cin, std::cout);
+          break;
+
+        case Detail::DataType_StrWide:
+          HandleStringReadOrWrite<Detail::StrWide>(*MyMemory, Address, Task, 
+            std::wcin, std::wcout);
+          break;
+
+        case Detail::DataType_CharNarrow:
+          HandleCharReadOrWrite<Detail::CharNarrow>(*MyMemory, Address, Task, 
+            std::cin, std::cout);
+          break;
+
+        case Detail::DataType_CharWide:
+          HandleCharReadOrWrite<Detail::CharWide>(*MyMemory, Address, Task, 
+            std::wcin, std::wcout);
+          break;
+
+        case Detail::DataType_Pointer:
+          {
+            // Read data
+            auto Current = MyMemory->Read<Detail::Pointer>(Address);
+            std::wcout << "Value: " << Current << std::endl;
+
+            // Handle 'Write Memory' task
+            if (Task == Detail::Task_WriteMem)
+            {
+              // Output
+              std::wcout << "Enter new value:" << std::endl;
+
+              // Get data
+              Detail::Pointer New = 0;
+              while (!(std::wcin >> std::hex >> New >> std::dec))
+              {
+                std::cout << "Invalid address." << std::endl;
+                std::wcin.clear();
+                std::wcin.ignore((std::numeric_limits<std::streamsize>::max)(), 
+                  '\n');
+              }
+              std::wcin.ignore((std::numeric_limits<std::streamsize>::max)(), 
+                '\n');
+
+              // Write data
+              MyMemory->Write(Address, New);
+            }
+
+            break;
+          }
+
+        default:
+          // Catch unsupported type
+          assert(!"Unsupported data type.");
+        }
+      }
+      // Check for task 'Find Module'
+      if (Task == Detail::Task_FindMod)
+      {
+        // Output
+        std::wcout << "Choose a module search method:" << std::endl;
+        std::wcout << "1. Name." << std::endl;
+        std::wcout << "2. Handle." << std::endl;
+
+        // Get module search method
+        int ModSelect = GetOption("module search method", 1, 2);
+
+        // Module pointer
+        std::shared_ptr<Hades::Memory::Module> MyModule;
+
+        switch (ModSelect) 
+        {
+        case 1:
+          {
+            // Output
+            std::wcout << "Enter target module name:" << std::endl;
+
+            // Get name
+            std::wstring ModName;
+            while (!std::getline(std::wcin, ModName) || ModName.empty())
+            {
+              std::cout << "Invalid name." << std::endl;
+              std::wcin.clear();
+            }
+
+            // Get module
+            MyModule.reset(new Hades::Memory::Module(ModName, *MyMemory));
+
+            // Dump module info
+            std::wcout << "Module Base: " << MyModule->GetBase() << std::endl;
+            std::wcout << "Module Size: " << MyModule->GetSize() << std::endl;
+            std::wcout << "Module Name: " << MyModule->GetName() << std::endl;
+            std::wcout << "Module Path: " << MyModule->GetPath() << std::endl;
+
+            break;
+          }
+
+        case 2:
+          {
+            // Output
+            std::wcout << "Enter target module base:" << std::endl;
+
+            // Get handle
+            PVOID ModHandle = 0;
+            while (!(std::wcin >> std::hex >> ModHandle >> std::dec))
+            {
+              std::cout << "Invalid handle." << std::endl;
+              std::wcin.clear();
+              std::wcin.ignore((std::numeric_limits<std::streamsize>::max)(), 
+                '\n');
+            }
+            std::wcin.ignore((std::numeric_limits<std::streamsize>::max)(), 
+              '\n');
+
+            // Get module
+            MyModule.reset(new Hades::Memory::Module(reinterpret_cast<HMODULE>(
+              ModHandle), *MyMemory));
+
+            // Dump module info
+            std::wcout << "Module Base: " << MyModule->GetBase() << std::endl;
+            std::wcout << "Module Size: " << MyModule->GetSize() << std::endl;
+            std::wcout << "Module Name: " << MyModule->GetName() << std::endl;
+            std::wcout << "Module Path: " << MyModule->GetPath() << std::endl;
+
+            break;
+          }
+
+        default:
+          assert("Unsupported module search method.");
+        }
       }
       // Output for all currently unhandled tasks
       else
@@ -92,145 +309,6 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
         std::wcout << "Sorry, that task is not yet supported." << std::endl;
       }
 
-      // Get data type
-      Detail::DataType MyDataType = static_cast<Detail::DataType>(GetOption(
-        "data type", 1, 14));
-
-      // Output
-      std::wcout << "Enter the target address:" << std::endl;
-
-      // Get address
-      PVOID Address = 0;
-      while (!(std::wcin >> std::hex >> Address >> std::dec) || !Address)
-      {
-        std::cout << "Invalid address." << std::endl;
-        std::wcin.clear();
-        std::wcin.ignore((std::numeric_limits<std::streamsize>::max)(), '\n');
-      }
-      std::wcin.ignore((std::numeric_limits<std::streamsize>::max)(), '\n');
-
-      // Handle selected data type
-      switch (MyDataType)
-      {
-      case Detail::DataType_Byte:
-        {
-          // Read data
-          auto Current = MyMemory->Read<Detail::Byte>(Address);
-          std::wcout << "Value: " << static_cast<Detail::Int32>(Current) 
-            << std::endl;
-
-          // Handle 'Write Memory' task
-          if (Task == Detail::Task_WriteMem)
-          {
-            // Output
-            std::wcout << "Enter new value:" << std::endl;
-
-            // Get data
-            Detail::Int32 New = 0;
-            while (!(std::wcin >> New) || New > 256)
-            {
-              std::cout << "Invalid data." << std::endl;
-              std::wcin.clear();
-              std::wcin.ignore((std::numeric_limits<std::streamsize>::max)(), 
-                '\n');
-            }
-            std::wcin.ignore((std::numeric_limits<std::streamsize>::max)(), 
-              '\n');
-
-            // Write data
-            MyMemory->Write(Address, static_cast<Detail::Byte>(New));
-          }
-
-          break;
-        }
-
-      case Detail::DataType_Int16:
-        HandleNumericReadOrWrite<Detail::Int16>(*MyMemory, Address, Task);
-        break;
-
-      case Detail::DataType_UInt16:
-        HandleNumericReadOrWrite<Detail::UInt16>(*MyMemory, Address, Task);
-        break;
-
-      case Detail::DataType_Int32:
-        HandleNumericReadOrWrite<Detail::Int32>(*MyMemory, Address, Task);
-        break;
-
-      case Detail::DataType_UInt32:
-        HandleNumericReadOrWrite<Detail::UInt32>(*MyMemory, Address, Task);
-        break;
-
-      case Detail::DataType_Int64:
-        HandleNumericReadOrWrite<Detail::Int64>(*MyMemory, Address, Task);
-        break;
-
-      case Detail::DataType_UInt64:
-        HandleNumericReadOrWrite<Detail::UInt64>(*MyMemory, Address, Task);
-        break;
-
-      case Detail::DataType_Float:
-        HandleNumericReadOrWrite<Detail::Float>(*MyMemory, Address, Task);
-        break;
-
-      case Detail::DataType_Double:
-        HandleNumericReadOrWrite<Detail::Double>(*MyMemory, Address, Task);
-        break;
-
-      case Detail::DataType_StrNarrow:
-        HandleStringReadOrWrite<Detail::StrNarrow>(*MyMemory, Address, Task, 
-          std::cin, std::cout);
-        break;
-
-      case Detail::DataType_StrWide:
-        HandleStringReadOrWrite<Detail::StrWide>(*MyMemory, Address, Task, 
-          std::wcin, std::wcout);
-        break;
-
-      case Detail::DataType_CharNarrow:
-        HandleCharReadOrWrite<Detail::CharNarrow>(*MyMemory, Address, Task, 
-          std::cin, std::cout);
-        break;
-
-      case Detail::DataType_CharWide:
-        HandleCharReadOrWrite<Detail::CharWide>(*MyMemory, Address, Task, 
-          std::wcin, std::wcout);
-        break;
-
-      case Detail::DataType_Pointer:
-        {
-          // Read data
-          auto Current = MyMemory->Read<Detail::Pointer>(Address);
-          std::wcout << "Value: " << Current << std::endl;
-
-          // Handle 'Write Memory' task
-          if (Task == Detail::Task_WriteMem)
-          {
-            // Output
-            std::wcout << "Enter new value:" << std::endl;
-
-            // Get data
-            Detail::Pointer New = 0;
-            while (!(std::wcin >> std::hex >> New >> std::dec))
-            {
-              std::cout << "Invalid address." << std::endl;
-              std::wcin.clear();
-              std::wcin.ignore((std::numeric_limits<std::streamsize>::max)(), 
-                '\n');
-            }
-            std::wcin.ignore((std::numeric_limits<std::streamsize>::max)(), 
-              '\n');
-
-            // Write data
-            MyMemory->Write(Address, New);
-          }
-
-          break;
-        }
-
-      default:
-        // Catch unsupported type
-        assert(!"Unsupported data type.");
-      }
     }
 
   }
