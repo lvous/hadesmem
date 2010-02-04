@@ -6,7 +6,7 @@
 // C++ Standard Library
 #include <string>
 
-// Notice: Modified version of AutoWinObj library provided in the 'Windows 
+// Notice: Modified version of EnsureCleanup library provided in the 'Windows 
 // via C/C++' sample code. Originally copyright Jeffrey Richter and 
 // Christophe Nasarre.
 
@@ -19,23 +19,23 @@ namespace Hades
   // Each template instantiation requires a data type, address of cleanup 
   // function, and a value that indicates an invalid value.
   template<typename T, FnCleanup MyCleanup, UINT_PTR Invalid = 0> 
-  class AutoWinObj 
+  class EnsureCleanup 
   {
   public:
     // Default constructor assumes an invalid value (nothing to cleanup)
-    AutoWinObj() 
+    EnsureCleanup() 
       : m_t(Invalid) 
     { }
 
     // This constructor sets the value to the specified value
     static_assert(sizeof(T) == sizeof(UINT_PTR), "Size of handle type is "
       "incorrect.");
-    AutoWinObj(T t) 
+    EnsureCleanup(T t) 
       : m_t(reinterpret_cast<UINT_PTR>(t)) 
     { }
 
     // The destructor performs the cleanup.
-    ~AutoWinObj() 
+    ~EnsureCleanup() 
     {
       Cleanup();
     }
@@ -78,7 +78,7 @@ namespace Hades
 
   protected:
     // Disable copying
-    AutoWinObj(const AutoWinObj&);
+    EnsureCleanup(const EnsureCleanup&);
 
   private:
     UINT_PTR m_t; // The member representing the object
@@ -88,10 +88,10 @@ namespace Hades
   // class for specific data types.
 
   #define MakeCleanupClass(className, tData, pfnCleanup) \
-    typedef AutoWinObj<tData, (FnCleanup) pfnCleanup> className
+    typedef EnsureCleanup<tData, (FnCleanup) pfnCleanup> className
 
   #define MakeCleanupClassX(className, tData, pfnCleanup, Invalid) \
-    typedef AutoWinObj<tData, (FnCleanup) pfnCleanup, \
+    typedef EnsureCleanup<tData, (FnCleanup) pfnCleanup, \
     (INT_PTR) Invalid> className
 
   // Instances of the template C++ class for common data types.
