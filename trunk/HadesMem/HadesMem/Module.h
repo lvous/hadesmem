@@ -7,6 +7,7 @@
 // C++ Standard Library
 #include <string>
 #include <vector>
+#include <iostream>
 
 // Boost
 #pragma warning(push, 1)
@@ -27,6 +28,9 @@ namespace Hades
 
     inline std::vector<std::shared_ptr<class Module>> GetModuleList(
       MemoryMgr const& MyMemory);
+
+    inline std::wostream& operator<< (std::wostream& Out, 
+      class Module const& In);
 
     class Module
     {
@@ -131,6 +135,16 @@ namespace Hades
 
       // Return module list
       return ModList;
+    }
+
+    inline std::wostream& operator<< (std::wostream& Stream, 
+      Module const& MyModule)
+    {
+      Stream << "Module Base: " << MyModule.GetBase() << "." << std::endl;
+      Stream << "Module Size: " << MyModule.GetSize() << "." << std::endl;
+      Stream << "Module Name: " << MyModule.GetName() << "." << std::endl;
+      Stream << "Module Path: " << MyModule.GetPath() << "." << std::endl;
+      return Stream;
     }
 
     Module::Module(HMODULE Handle, MemoryMgr const& MyMemory) 
