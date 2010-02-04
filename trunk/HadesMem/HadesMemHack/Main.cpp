@@ -297,10 +297,14 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
             std::for_each(ModList.begin(), ModList.end(), 
               [] (std::shared_ptr<Hades::Memory::Module> MyModule)
             {
-              std::wcout << "Module Base: " << MyModule->GetBase() << std::endl;
-              std::wcout << "Module Size: " << MyModule->GetSize() << std::endl;
-              std::wcout << "Module Name: " << MyModule->GetName() << std::endl;
-              std::wcout << "Module Path: " << MyModule->GetPath() << std::endl;
+              std::wcout << "Module Base: " << MyModule->GetBase() 
+                << std::endl;
+              std::wcout << "Module Size: " << MyModule->GetSize() 
+                << std::endl;
+              std::wcout << "Module Name: " << MyModule->GetName() 
+                << std::endl;
+              std::wcout << "Module Path: " << MyModule->GetPath() 
+                << std::endl;
             });
 
             continue;
