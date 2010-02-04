@@ -6,6 +6,7 @@
 
 // C++ Standard Library
 #include <string>
+#include <vector>
 
 // Boost
 #pragma warning(push, 1)
@@ -23,6 +24,9 @@ namespace Hades
   {
     class ModuleError : public virtual HadesMemError
     { };
+
+    inline std::vector<std::shared_ptr<class Module>> GetModuleList(
+      MemoryMgr const& MyMemory);
 
     class Module
     {
@@ -97,6 +101,36 @@ namespace Hades
 
       // Whether module was found
       m_Found = Found;
+    }
+
+    inline std::vector<std::shared_ptr<class Module>> GetModuleList(
+      MemoryMgr const& MyMemory) 
+    {
+      // Grab a new snapshot of the process
+      EnsureCloseHandle const Snap(CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, 
+        MyMemory.GetProcessID()));
+      if (Snap == INVALID_HANDLE_VALUE)
+      {
+        DWORD LastError = GetLastError();
+        BOOST_THROW_EXCEPTION(ModuleError() << 
+          ErrorFunction("GetModuleList") << 
+          ErrorString("Could not get module snapshot.") << 
+          ErrorCodeWin(LastError));
+      }
+
+      // Container to hold module list
+      std::vector<std::shared_ptr<Module>> ModList;
+
+      // Search for process
+      MODULEENTRY32 ModEntry = { sizeof(ModEntry) };
+      for (BOOL MoreMods = Module32First(Snap, &ModEntry); MoreMods; 
+        MoreMods = Module32Next(Snap, &ModEntry)) 
+      {
+        ModList.push_back(std::make_shared<Module>(ModEntry.hModule, MyMemory));
+      }
+
+      // Return module list
+      return ModList;
     }
 
     Module::Module(HMODULE Handle, MemoryMgr const& MyMemory) 

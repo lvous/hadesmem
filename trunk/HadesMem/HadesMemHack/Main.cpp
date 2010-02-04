@@ -235,9 +235,10 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
         std::wcout << "Choose a module search method:" << std::endl;
         std::wcout << "1. Name." << std::endl;
         std::wcout << "2. Handle." << std::endl;
+        std::wcout << "3. List." << std::endl;
 
         // Get module search method
-        int ModSelect = GetOption("module search method", 1, 2);
+        int ModSelect = GetOption("module search method", 1, 3);
 
         // Module pointer
         std::shared_ptr<Hades::Memory::Module> MyModule;
@@ -259,12 +260,6 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
 
             // Get module
             MyModule.reset(new Hades::Memory::Module(ModName, *MyMemory));
-
-            // Dump module info
-            std::wcout << "Module Base: " << MyModule->GetBase() << std::endl;
-            std::wcout << "Module Size: " << MyModule->GetSize() << std::endl;
-            std::wcout << "Module Name: " << MyModule->GetName() << std::endl;
-            std::wcout << "Module Path: " << MyModule->GetPath() << std::endl;
 
             break;
           }
@@ -290,17 +285,42 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
             MyModule.reset(new Hades::Memory::Module(reinterpret_cast<HMODULE>(
               ModHandle), *MyMemory));
 
-            // Dump module info
-            std::wcout << "Module Base: " << MyModule->GetBase() << std::endl;
-            std::wcout << "Module Size: " << MyModule->GetSize() << std::endl;
-            std::wcout << "Module Name: " << MyModule->GetName() << std::endl;
-            std::wcout << "Module Path: " << MyModule->GetPath() << std::endl;
-
             break;
+          }
+
+        case 3:
+          {
+            // Get module list
+            auto ModList(GetModuleList(*MyMemory));
+
+            // Dump module info
+            std::for_each(ModList.begin(), ModList.end(), 
+              [] (std::shared_ptr<Hades::Memory::Module> MyModule)
+            {
+              std::wcout << "Module Base: " << MyModule->GetBase() << std::endl;
+              std::wcout << "Module Size: " << MyModule->GetSize() << std::endl;
+              std::wcout << "Module Name: " << MyModule->GetName() << std::endl;
+              std::wcout << "Module Path: " << MyModule->GetPath() << std::endl;
+            });
+
+            continue;
           }
 
         default:
           assert("Unsupported module search method.");
+        }
+
+        // Dump module info if found
+        if (MyModule->Found())
+        {
+          std::wcout << "Module Base: " << MyModule->GetBase() << std::endl;
+          std::wcout << "Module Size: " << MyModule->GetSize() << std::endl;
+          std::wcout << "Module Name: " << MyModule->GetName() << std::endl;
+          std::wcout << "Module Path: " << MyModule->GetPath() << std::endl;
+        }
+        // Output if not found
+        {
+          std::wcout << "Module not found." << std::endl;
         }
       }
       // Output for all currently unhandled tasks
