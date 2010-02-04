@@ -43,6 +43,14 @@ namespace Detail
     Task_AllocMem, 
     Task_FreeMem
   };
+  
+  // Module selection methods
+  enum ModSelect
+  {
+    ModSelect_Name = 1, 
+    ModSelect_Base, 
+    ModSelect_List
+  };
 
   // Declare fixed-size types
   typedef char                  Byte;

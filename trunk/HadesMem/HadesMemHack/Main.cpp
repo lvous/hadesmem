@@ -27,8 +27,8 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
     std::wcout << "3. Window name." << std::endl;
 
     // Get process selection method
-    Detail::ProcSelect ProcSelect = static_cast<Detail::ProcSelect>(
-      GetOption("process selection method", 1, 3));
+    auto ProcSelect = static_cast<Detail::ProcSelect>(GetOption("process "
+      "selection method", 1, 3));
 
     // Get process selection data and create memory manager
     std::shared_ptr<Hades::Memory::MemoryMgr> MyMemory;
@@ -66,7 +66,7 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
       std::wcout << "6. Free memory." << std::endl;
 
       // Get task
-      Detail::Task Task = static_cast<Detail::Task>(GetOption("task", 1, 6));
+      auto Task = static_cast<Detail::Task>(GetOption("task", 1, 6));
 
       // Check for task 'Read Memory' or 'Write Memory' and output accordingly
       if (Task == Detail::Task_ReadMem || Task == Detail::Task_ReadMem)
@@ -89,8 +89,8 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
         std::wcout << "14. Pointer." << std::endl;
 
         // Get data type
-        Detail::DataType MyDataType = static_cast<Detail::DataType>(GetOption(
-          "data type", 1, 14));
+        auto MyDataType = static_cast<Detail::DataType>(GetOption("data type", 
+          1, 14));
 
         // Output
         std::wcout << "Enter target address:" << std::endl;
@@ -238,14 +238,15 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
         std::wcout << "3. List." << std::endl;
 
         // Get module search method
-        int ModSelect = GetOption("module search method", 1, 3);
+        auto ModSelect = static_cast<Detail::ModSelect>(GetOption(
+          "module search method", 1, 3));
 
         // Module pointer
         std::shared_ptr<Hades::Memory::Module> MyModule;
 
         switch (ModSelect) 
         {
-        case 1:
+        case Detail::ModSelect_Name:
           {
             // Output
             std::wcout << "Enter target module name:" << std::endl;
@@ -264,7 +265,7 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
             break;
           }
 
-        case 2:
+        case Detail::ModSelect_Base:
           {
             // Output
             std::wcout << "Enter target module base:" << std::endl;
@@ -288,7 +289,7 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
             break;
           }
 
-        case 3:
+        case Detail::ModSelect_List:
           {
             // Get module list
             auto ModList(GetModuleList(*MyMemory));
@@ -300,6 +301,7 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
               std::wcout << *MyModule;
             });
 
+            // Finished
             continue;
           }
 
