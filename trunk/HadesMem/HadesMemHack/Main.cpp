@@ -339,7 +339,7 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
           '\n');
 
         // Call remote function
-        auto ExitCode = MyMemory->Call(Address);
+        auto ExitCode = MyMemory->Call<DWORD ()>(Address);
         
         // Output
         std::wcout << "Thread Exit Code: " << reinterpret_cast<PVOID>(

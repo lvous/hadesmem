@@ -14,6 +14,7 @@
 #pragma warning(disable: 4706)
 #include <boost/exception.hpp>
 #include <boost/noncopyable.hpp>
+#include <boost/type_traits.hpp>
 #pragma warning(pop)
 
 // HadesMem
@@ -41,7 +42,9 @@ namespace Hades
         std::wstring const* const ClassName);
 
       // Call remote function
-      DWORD Call(PVOID Address) const;
+      template <typename T>
+      typename boost::function_traits<T>::result_type Call(PVOID Address) 
+        const;
 
       // Read memory (POD types)
       template <typename T>
@@ -105,7 +108,9 @@ namespace Hades
     { }
 
     // Call remote function
-    DWORD MemoryMgr::Call(PVOID Address) const 
+    template <typename T>
+    typename boost::function_traits<T>::result_type MemoryMgr::Call(
+      PVOID Address) const 
     {
       // Call function via creating a remote thread in the target.
       // Todo: Robust implementation via ASM Jit and SEH.
@@ -144,7 +149,8 @@ namespace Hades
       }
 
       // Return exit code from thread
-      return ExitCode;
+      typedef typename boost::function_traits<T>::result_type RetType;
+      return RetType(ExitCode);
     }
 
     // Read memory (POD types)
