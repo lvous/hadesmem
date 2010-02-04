@@ -19,4 +19,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="WoWAddress.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WoWAuction.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
 </Project>

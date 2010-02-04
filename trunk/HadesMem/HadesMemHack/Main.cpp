@@ -230,7 +230,7 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
         }
       }
       // Check for task 'Find Module'
-      if (Task == Detail::Task_FindMod)
+      else if (Task == Detail::Task_FindMod)
       {
         // Output
         std::wcout << "Choose a module search method:" << std::endl;
@@ -321,7 +321,7 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
         }
       }
       // Handle 'Call Function' task
-      if (Task == Detail::Task_CallFunc)
+      else if (Task == Detail::Task_CallFunc)
       {
         // Output
         std::wcout << "Enter target address:" << std::endl;
