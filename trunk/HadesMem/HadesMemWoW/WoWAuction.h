@@ -32,7 +32,7 @@ struct WoWAuctionData
   unsigned long Unk5C;
   unsigned long Unk60;
   unsigned long Unk64;
-  unsigned long Unk68;
+  unsigned long Count;
   unsigned long Unk6C;
   unsigned long Unk70;
   unsigned long Unk74;
@@ -54,7 +54,7 @@ static_assert(sizeof(WoWAuctionData) == 0xA0, "Size of WoWAuctionData is "
 class WoWAuctionHouse
 {
 public:
-  WoWAuctionHouse(Hades::Memory::MemoryMgr const& MyMemory);
+  inline explicit WoWAuctionHouse(Hades::Memory::MemoryMgr const& MyMemory);
 
   enum List
   {
@@ -63,7 +63,7 @@ public:
     List_List
   };
 
-  void DumpAuction(List MyList, unsigned long Index);
+  inline void DumpAuction(List MyList, unsigned long Index);
 
 private:
   WoWAuctionHouse& operator= (WoWAuctionHouse const&);
@@ -92,10 +92,8 @@ void WoWAuctionHouse::DumpAuction(WoWAuctionHouse::List MyList,
 
   case List_List:
     {
-      auto pListAuctionArray = m_Memory.Read<WoWAuctionData*>(
-        AuctionItemsListAddr);
-      auto MyAuctionData = m_Memory.Read<WoWAuctionData>(pListAuctionArray + 
-        Index);
+      auto MyAuctionData = m_Memory.Read<WoWAuctionData>(m_Memory.
+        Read<WoWAuctionData*>(AuctionItemsListAddr) + Index);
 
       std::wcout << "Unk00: " << MyAuctionData.Unk00 << "." << std::endl;
       std::wcout << "Unk04: " << MyAuctionData.Unk04 << "." << std::endl;
@@ -123,7 +121,7 @@ void WoWAuctionHouse::DumpAuction(WoWAuctionHouse::List MyList,
       std::wcout << "Unk5C: " << MyAuctionData.Unk5C << "." << std::endl;
       std::wcout << "Unk60: " << MyAuctionData.Unk60 << "." << std::endl;
       std::wcout << "Unk64: " << MyAuctionData.Unk64 << "." << std::endl;
-      std::wcout << "Unk68: " << MyAuctionData.Unk68 << "." << std::endl;
+      std::wcout << "Count: " << MyAuctionData.Count << "." << std::endl;
       std::wcout << "Unk6C: " << MyAuctionData.Unk6C << "." << std::endl;
       std::wcout << "Unk70: " << MyAuctionData.Unk70 << "." << std::endl;
       std::wcout << "Unk74: " << MyAuctionData.Unk74 << "." << std::endl;
