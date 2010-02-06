@@ -192,8 +192,8 @@ inline void CreateMemoryFromProcID(std::shared_ptr<Hades::Memory::MemoryMgr>&
 }
 
 // Create Memory object using window name from user
-inline void CreateMemoryFromWindowName(std::shared_ptr<Hades::Memory::MemoryMgr>& 
-  MyMemory)
+inline void CreateMemoryFromWindowName(std::shared_ptr<
+  Hades::Memory::MemoryMgr>& MyMemory)
 {
   // Output
   std::wcout << "Please enter the target window name." << std::endl;
