@@ -85,9 +85,11 @@ namespace Hades
       // Whether an address is currently writable
       inline bool CanWrite(PVOID Address) const;
 
+      // Get process ID of target process
       inline DWORD GetProcessID() const;
 
     private:
+      // Target process
       Process m_Process;
     };
 
@@ -221,7 +223,7 @@ namespace Hades
         Buffer += Current;
 
         // Break on null terminator
-        if (Current == '\0')
+        if (Current == 0)
           break;
       }
 
