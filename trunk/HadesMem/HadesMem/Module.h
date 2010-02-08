@@ -27,7 +27,7 @@ namespace Hades
     class ModuleError : public virtual HadesMemError
     { };
 
-    // Get modules list
+    // Get module list
     inline std::vector<std::shared_ptr<class Module>> GetModuleList(
       MemoryMgr const& MyMemory);
 
@@ -40,22 +40,22 @@ namespace Hades
     {
     public:
       // Find module by name
-      Module(std::wstring const& ModuleName, MemoryMgr const& MyMemory);
+      inline Module(std::wstring const& ModuleName, MemoryMgr const& MyMemory);
       // Find module by handle
-      Module(HMODULE Handle, MemoryMgr const& MyMemory);
+      inline Module(HMODULE Handle, MemoryMgr const& MyMemory);
 
       // Get module base
-      HMODULE GetBase() const;
+      inline HMODULE GetBase() const;
       // Get module size
-      DWORD GetSize() const;
+      inline DWORD GetSize() const;
 
       // Get module name
-      std::wstring GetName() const;
+      inline std::wstring GetName() const;
       // Get module path
-      std::wstring GetPath() const;
+      inline std::wstring GetPath() const;
 
       // Whether module was found
-      bool Found() const;
+      inline bool Found() const;
 
     private:
       // Disable assignment

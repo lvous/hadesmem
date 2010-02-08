@@ -293,7 +293,7 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
         case Detail::ModSelect_List:
           {
             // Get module list
-            auto ModList(GetModuleList(*MyMemory));
+            auto ModList(Hades::Memory::GetModuleList(*MyMemory));
 
             // Dump module info
             std::for_each(ModList.begin(), ModList.end(), 
