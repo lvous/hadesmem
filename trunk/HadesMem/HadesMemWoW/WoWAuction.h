@@ -127,9 +127,11 @@ void WoWAuctionHouse::DumpAuction(WoWAuctionHouse::List MyList,
       std::wcout << "Unk74: " << MyAuctionData.Unk74 << "." << std::endl;
       std::wcout << "Unk78: " << MyAuctionData.Unk78 << "." << std::endl;
       std::wcout << "Unk7C: " << MyAuctionData.Unk7C << "." << std::endl;
-      std::wcout << "StartBidPrice: " << MyAuctionData.StartBidPrice << "." << std::endl;
+      std::wcout << "StartBidPrice: " << MyAuctionData.StartBidPrice << "." 
+        << std::endl;
       std::wcout << "Unk84: " << MyAuctionData.Unk84 << "." << std::endl;
-      std::wcout << "BuyoutPrice: " << MyAuctionData.BuyoutPrice << "." << std::endl;
+      std::wcout << "BuyoutPrice: " << MyAuctionData.BuyoutPrice << "." 
+        << std::endl;
       std::wcout << "Unk8C: " << MyAuctionData.Unk8C << "." << std::endl;
       std::wcout << "Unk90: " << MyAuctionData.Unk90 << "." << std::endl;
       std::wcout << "Unk94: " << MyAuctionData.Unk94 << "." << std::endl;

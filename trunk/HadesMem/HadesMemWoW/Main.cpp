@@ -21,7 +21,7 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
       unsigned long Index = 0;
       while (!(std::wcin >> Index))
       {
-        std::cout << "Invalid index." << std::endl;
+        std::wcout << "Invalid index." << std::endl;
         std::wcin.clear();
         std::wcin.ignore((std::numeric_limits<std::streamsize>::max)(), 
           '\n');

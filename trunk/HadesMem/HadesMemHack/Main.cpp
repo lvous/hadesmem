@@ -27,8 +27,8 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
     std::wcout << "3. Window name." << std::endl;
 
     // Get process selection method
-    auto ProcSelect = static_cast<Detail::ProcSelect>(GetOption("process "
-      "selection method", 1, 3));
+    auto ProcSelect = static_cast<Detail::ProcSelect>(GetOption(L"process "
+      L"selection method", 1, 3));
 
     // Get process selection data and create memory manager
     std::shared_ptr<Hades::Memory::MemoryMgr> MyMemory;
@@ -67,7 +67,7 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
       std::wcout << "7. Disassemble." << std::endl;
 
       // Get task
-      auto Task = static_cast<Detail::Task>(GetOption("task", 1, 6));
+      auto Task = static_cast<Detail::Task>(GetOption(L"task", 1, 6));
 
       // Check for task 'Read Memory' or 'Write Memory' and output accordingly
       if (Task == Detail::Task_ReadMem || Task == Detail::Task_ReadMem)
@@ -90,7 +90,7 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
         std::wcout << "14. Pointer." << std::endl;
 
         // Get data type
-        auto MyDataType = static_cast<Detail::DataType>(GetOption("data type", 
+        auto MyDataType = static_cast<Detail::DataType>(GetOption(L"data type", 
           1, 14));
 
         // Output
@@ -100,7 +100,7 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
         PVOID Address = 0;
         while (!(std::wcin >> std::hex >> Address >> std::dec) || !Address)
         {
-          std::cout << "Invalid address." << std::endl;
+          std::wcout << "Invalid address." << std::endl;
           std::wcin.clear();
           std::wcin.ignore((std::numeric_limits<std::streamsize>::max)(), '\n');
         }
@@ -126,7 +126,7 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
               Detail::Int32 New = 0;
               while (!(std::wcin >> New) || New > 256)
               {
-                std::cout << "Invalid data." << std::endl;
+                std::wcout << "Invalid data." << std::endl;
                 std::wcin.clear();
                 std::wcin.ignore((std::numeric_limits<std::streamsize>::max)(), 
                   '\n');
@@ -174,12 +174,12 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
           break;
 
         case Detail::DataType_StrNarrow:
-          HandleStringReadOrWrite<Detail::StrNarrow>(*MyMemory, Address, Task, 
+          HandleStringReadOrWrite<Detail::CharNarrow>(*MyMemory, Address, Task, 
             std::cin, std::cout);
           break;
 
         case Detail::DataType_StrWide:
-          HandleStringReadOrWrite<Detail::StrWide>(*MyMemory, Address, Task, 
+          HandleStringReadOrWrite<Detail::CharWide>(*MyMemory, Address, Task, 
             std::wcin, std::wcout);
           break;
 
@@ -209,7 +209,7 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
               Detail::Pointer New = 0;
               while (!(std::wcin >> std::hex >> New >> std::dec))
               {
-                std::cout << "Invalid address." << std::endl;
+                std::wcout << "Invalid address." << std::endl;
                 std::wcin.clear();
                 std::wcin.ignore((std::numeric_limits<std::streamsize>::max)(), 
                   '\n');
@@ -240,7 +240,7 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
 
         // Get module search method
         auto ModSelect = static_cast<Detail::ModSelect>(GetOption(
-          "module search method", 1, 3));
+          L"module search method", 1, 3));
 
         // Module pointer
         std::shared_ptr<Hades::Memory::Module> MyModule;
@@ -256,7 +256,7 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
             std::wstring ModName;
             while (!std::getline(std::wcin, ModName) || ModName.empty())
             {
-              std::cout << "Invalid name." << std::endl;
+              std::wcout << "Invalid name." << std::endl;
               std::wcin.clear();
             }
 
@@ -275,7 +275,7 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
             PVOID ModHandle = 0;
             while (!(std::wcin >> std::hex >> ModHandle >> std::dec))
             {
-              std::cout << "Invalid handle." << std::endl;
+              std::wcout << "Invalid handle." << std::endl;
               std::wcin.clear();
               std::wcin.ignore((std::numeric_limits<std::streamsize>::max)(), 
                 '\n');
@@ -330,7 +330,7 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
         PVOID Address = 0;
         while (!(std::wcin >> std::hex >> Address >> std::dec))
         {
-          std::cout << "Invalid handle." << std::endl;
+          std::wcout << "Invalid handle." << std::endl;
           std::wcin.clear();
           std::wcin.ignore((std::numeric_limits<std::streamsize>::max)(), 
             '\n');

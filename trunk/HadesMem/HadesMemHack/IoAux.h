@@ -9,12 +9,12 @@
 #include <iostream>
 
 // Read string from user
-template <typename T, typename CharT>
-T ReadStringDataFromUser(std::basic_istream<CharT>& In, 
+template <typename CharT>
+std::basic_string<CharT> ReadStringDataFromUser(std::basic_istream<CharT>& In, 
   std::basic_ostream<CharT>& Out) 
 {
   // Read data
-  T Data;
+  std::basic_string<CharT> Data;
   while (!std::getline(In, Data) || Data.empty())
   {
     Out << "Invalid data." << std::endl;
@@ -58,18 +58,18 @@ T ReadNumericDataFromUser()
   std::wcin.ignore((std::numeric_limits<std::streamsize>::max)(), 
     '\n');
 
-// Return data
+  // Return data
   return Data;
 }
 
 // Handle 'MemoryRead' or 'MemoryWrite' task for string types
-template <typename T, typename CharT>
+template <typename CharT>
 void HandleStringReadOrWrite(Hades::Memory::MemoryMgr const& MyMemory, 
   PVOID Address, int Task, std::basic_istream<CharT>& In, 
   std::basic_ostream<CharT>& Out)
 {
   // Read data
-  auto Current = MyMemory.Read<T>(Address);
+  auto Current = MyMemory.Read<std::basic_string<CharT>>(Address);
   Out << "Value: " << Current << std::endl;
 
   // Handle 'Write Memory' task
@@ -79,7 +79,7 @@ void HandleStringReadOrWrite(Hades::Memory::MemoryMgr const& MyMemory,
     Out << "Enter new value:" << std::endl;
 
     // Get data
-    auto New = ReadStringDataFromUser<T, CharT>(In, Out);
+    auto New = ReadStringDataFromUser<CharT>(In, Out);
 
     // Write data
     MyMemory.Write(Address, New);
@@ -134,13 +134,13 @@ void HandleNumericReadOrWrite(Hades::Memory::MemoryMgr const& MyMemory,
 }
 
 // Get option ID
-inline int GetOption(std::string Option, int Min, int Max)
+inline int GetOption(std::wstring const& Option, int Min, int Max)
 {
   // Get option ID
   int Value = 0;
   while (!(std::wcin >> Value) || Value < Min  || Value > Max)
   {
-    std::cout << "Invalid " + Option + "." << std::endl;
+    std::wcout << L"Invalid " + Option + L"." << std::endl;
     std::wcin.clear();
     std::wcin.ignore((std::numeric_limits<std::streamsize>::max)(), '\n');
   }
