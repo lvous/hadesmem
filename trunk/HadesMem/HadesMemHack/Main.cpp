@@ -350,10 +350,24 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
       else if (Task == Detail::Task_Disassemble)
       {
         // Output
-        std::wcout << "Disassmble test:" << std::endl;
+        std::wcout << "Enter target offset:" << std::endl;
+
+        // Get address
+        ULONG_PTR Offset = 0;
+        while (!(std::wcin >> std::hex >> Offset >> std::dec))
+        {
+          std::wcout << "Invalid handle." << std::endl;
+          std::wcin.clear();
+          std::wcin.ignore((std::numeric_limits<std::streamsize>::max)(), 
+            '\n');
+        }
+        std::wcin.ignore((std::numeric_limits<std::streamsize>::max)(), 
+          '\n');
+
+        // Create disassembler instance
         Hades::Memory::Disassembler MyDisassembler(*MyMemory);
-        MyDisassembler.DisassembleTest();
-        std::wcout << std::endl;
+        // Test disassembler
+        MyDisassembler.DisassembleTest(Offset);
       }
       // Output for all currently unhandled tasks
       else

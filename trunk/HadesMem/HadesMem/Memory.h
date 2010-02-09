@@ -85,8 +85,11 @@ namespace Hades
       // Whether an address is currently writable
       inline bool CanWrite(PVOID Address) const;
 
-      // Get process ID of target process
+      // Get process ID of target
       inline DWORD GetProcessID() const;
+
+      // Get process handle of target
+      inline HANDLE GetProcessHandle() const;
 
     private:
       // Target process
@@ -391,6 +394,12 @@ namespace Hades
     DWORD MemoryMgr::GetProcessID() const
     {
       return m_Process.GetID();
+    }
+
+    // Get process handle of target
+    HANDLE MemoryMgr::GetProcessHandle() const
+    {
+      return m_Process.GetHandle();
     }
   }
 }
