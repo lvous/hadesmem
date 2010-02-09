@@ -152,14 +152,20 @@ namespace Hades
         #error "Unsupported architecture."
       #endif
 
+      // Disassemble 10 instructions
       for (int i = 0; i < 10; ++i)
       {
+        // Disassemble current instruction
         int Len = Disasm(&MyDisasm);
+        // Ensure disassembly succeeded
         if (Len != UNKNOWN_OPCODE) 
         {
+          // Output current instruction
           std::cout << MyDisasm.CompleteInstr << std::endl;
+          // Advance to next instruction
           MyDisasm.EIP = MyDisasm.EIP + Len;
         }
+        // If disassembly failed then break out
         else 
         {
           break;
