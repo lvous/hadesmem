@@ -319,16 +319,18 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
       // Handle 'Disassemble' task
       else if (Task == Detail::Task_Disassemble)
       {
-        // Output
+        // Get target offset
         std::wcout << "Enter target offset:" << std::endl;
-
-        // Get address
         auto Offset = ReadHexNumericDataFromUser<ULONG_PTR>();
+
+        // Get number of instructions to disassemble
+        std::wcout << "Enter number of instructions:" << std::endl;
+        auto NumInstructions = ReadNumericDataFromUser<unsigned long>();
 
         // Create disassembler instance
         Hades::Memory::Disassembler MyDisassembler(*MyMemory);
         // Test disassembler
-        MyDisassembler.DisassembleTest(Offset);
+        MyDisassembler.DisassembleTest(Offset, NumInstructions);
       }
       // Output for all currently unhandled tasks
       else

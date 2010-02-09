@@ -48,7 +48,8 @@ namespace Hades
       inline explicit Disassembler(MemoryMgr const& MyMemory);
 
       // Test disassembler
-      inline void DisassembleTest(ULONG_PTR Offset);
+      inline void DisassembleTest(ULONG_PTR Offset, 
+        unsigned long NumInstructions);
 
       // Convert RVA to file offset
       inline DWORD RvaToFileOffset(DWORD Rva, PIMAGE_NT_HEADERS pNtHeaders);
@@ -130,7 +131,9 @@ namespace Hades
         OptionalHeader.BaseOfCode, pNtHeader);
     }
 
-    void Disassembler::DisassembleTest(ULONG_PTR Offset) 
+    // Test disassembler
+    void Disassembler::DisassembleTest(ULONG_PTR Offset, 
+      unsigned long NumInstructions) 
     {
       // Calculate target address
       PBYTE Target = m_BaseOfCode + Offset;
@@ -152,8 +155,8 @@ namespace Hades
         #error "Unsupported architecture."
       #endif
 
-      // Disassemble 10 instructions
-      for (int i = 0; i < 10; ++i)
+      // Disassemble instructions
+      for (unsigned int i = 0; i < NumInstructions; ++i)
       {
         // Disassemble current instruction
         int Len = Disasm(&MyDisasm);
