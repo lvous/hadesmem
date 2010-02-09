@@ -232,6 +232,7 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
 
         switch (ModSelect) 
         {
+          // Search via name
         case Detail::ModSelect_Name:
           {
             // Output
@@ -251,6 +252,7 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
             break;
           }
 
+          // Search via base
         case Detail::ModSelect_Base:
           {
             // Output
@@ -266,6 +268,7 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
             break;
           }
 
+          // List all modules
         case Detail::ModSelect_List:
           {
             // Get module list
