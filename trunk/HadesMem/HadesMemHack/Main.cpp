@@ -3,6 +3,7 @@
 #include "Types.h"
 #include "HadesMem/Module.h"
 #include "HadesMem/Memory.h"
+#include "HadesMem/Disassemble.h"
 
 // C++ Standard Library
 #include <limits>
@@ -67,7 +68,7 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
       std::wcout << "7. Disassemble." << std::endl;
 
       // Get task
-      auto Task = static_cast<Detail::Task>(GetOption(L"task", 1, 6));
+      auto Task = static_cast<Detail::Task>(GetOption(L"task", 1, 7));
 
       // Check for task 'Read Memory' or 'Write Memory' and output accordingly
       if (Task == Detail::Task_ReadMem || Task == Detail::Task_ReadMem)
@@ -344,6 +345,15 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
         // Output
         std::wcout << "Thread Exit Code: " << reinterpret_cast<PVOID>(
           ExitCode) << "." << std::endl;
+      }
+      // Handle 'Disassemble' task
+      else if (Task == Detail::Task_Disassemble)
+      {
+        // Output
+        std::wcout << "Disassmble test:" << std::endl;
+        Hades::Memory::Disassembler MyDisassembler(*MyMemory);
+        MyDisassembler.DisassembleTest();
+        std::wcout << std::endl;
       }
       // Output for all currently unhandled tasks
       else

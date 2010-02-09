@@ -2,10 +2,15 @@
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HadesMemHack", "HadesMemHack\HadesMemHack.vcxproj", "{4F5E06F8-4035-4CD9-875A-038185E777F8}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C6FAE7DD-0C35-41A2-9040-24E98121B3F3} = {C6FAE7DD-0C35-41A2-9040-24E98121B3F3}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HadesMem", "HadesMem\HadesMem.vcxproj", "{7699F816-E93B-4C61-B491-2B8405122949}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HadesMemWoW", "HadesMemWoW\HadesMemWoW.vcxproj", "{493C7842-D1F6-41D7-9192-605B9A45067E}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BeaEngine", "BeaEngine\BeaEngine.vcxproj", "{C6FAE7DD-0C35-41A2-9040-24E98121B3F3}"
 EndProject
 Global
 	GlobalSection(SubversionScc) = preSolution
@@ -41,6 +46,14 @@ Global
 		{493C7842-D1F6-41D7-9192-605B9A45067E}.Release|Win32.ActiveCfg = Release|Win32
 		{493C7842-D1F6-41D7-9192-605B9A45067E}.Release|Win32.Build.0 = Release|Win32
 		{493C7842-D1F6-41D7-9192-605B9A45067E}.Release|X64.ActiveCfg = Release|Win32
+		{C6FAE7DD-0C35-41A2-9040-24E98121B3F3}.Debug|Win32.ActiveCfg = Debug|Win32
+		{C6FAE7DD-0C35-41A2-9040-24E98121B3F3}.Debug|Win32.Build.0 = Debug|Win32
+		{C6FAE7DD-0C35-41A2-9040-24E98121B3F3}.Debug|X64.ActiveCfg = Debug|X64
+		{C6FAE7DD-0C35-41A2-9040-24E98121B3F3}.Debug|X64.Build.0 = Debug|X64
+		{C6FAE7DD-0C35-41A2-9040-24E98121B3F3}.Release|Win32.ActiveCfg = Release|Win32
+		{C6FAE7DD-0C35-41A2-9040-24E98121B3F3}.Release|Win32.Build.0 = Release|Win32
+		{C6FAE7DD-0C35-41A2-9040-24E98121B3F3}.Release|X64.ActiveCfg = Release|X64
+		{C6FAE7DD-0C35-41A2-9040-24E98121B3F3}.Release|X64.Build.0 = Release|X64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
