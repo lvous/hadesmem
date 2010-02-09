@@ -5,6 +5,7 @@
 #include <Windows.h>
 #include <atlbase.h>
 #include <atlfile.h>
+#include <DbgHelp.h>
 #pragma comment(lib, "psapi")
 
 // C++ Standard Library
@@ -49,6 +50,9 @@ namespace Hades
       // Test disassembler
       inline void DisassembleTest(ULONG_PTR Offset);
 
+      // Convert RVA to file offset
+      inline DWORD RvaToFileOffset(DWORD Rva, PIMAGE_NT_HEADERS pNtHeaders);
+
     private:
       // Disable assignment
       Disassembler& operator= (Disassembler const&);
@@ -60,6 +64,8 @@ namespace Hades
       CAtlFile m_TargetFile;
       // Handle to target file mapping
       CAtlFileMapping<BYTE> m_TargetFileMapping;
+      // Base of code section in mapping
+      PBYTE m_BaseOfCode;
     };
 
     // Constructor
@@ -102,12 +108,42 @@ namespace Hades
           ErrorString("Could not map view of target.") << 
           ErrorCodeWin(LastError));
       }
+
+      // Get pointer to image headers
+      auto pBase = static_cast<PBYTE>(m_TargetFileMapping);
+      auto pDosHeader = reinterpret_cast<PIMAGE_DOS_HEADER>(pBase);
+      auto pNtHeader = reinterpret_cast<PIMAGE_NT_HEADERS>(pBase + 
+        pDosHeader->e_lfanew);
+
+      // If the two pointers are the same then the header is probably nulled 
+      // out.
+      if (static_cast<PVOID>(pDosHeader) == static_cast<PVOID>(pNtHeader))
+      {
+        BOOST_THROW_EXCEPTION(DisassemblerError() << 
+          ErrorFunction("Disassembler:Disassembler") << 
+          ErrorString("Could not get pointer to image headers."));
+      }
+
+      // Get base of code section
+      m_BaseOfCode =
+        static_cast<PBYTE>(m_TargetFileMapping) + RvaToFileOffset(pNtHeader->
+        OptionalHeader.BaseOfCode, pNtHeader);
     }
 
     void Disassembler::DisassembleTest(ULONG_PTR Offset) 
     {
+      // Calculate target address
+      PBYTE Target = m_BaseOfCode + Offset;
+
+      // Debug output
+      std::wcout << "Base of Mapping: " << static_cast<PBYTE>(
+        m_TargetFileMapping) << std::endl;
+      std::wcout << "Base of Code: " << m_BaseOfCode << std::endl;
+      std::wcout << "Target: " << Target << std::endl;
+
+      // Set up disasm structure for BeaEngine
       DISASM MyDisasm = { 0 };
-      MyDisasm.EIP = reinterpret_cast<long long>(m_TargetFileMapping + Offset);
+      MyDisasm.EIP = reinterpret_cast<long long>(Target);
       #if defined(_M_AMD64) 
         MyDisasm.Archi = 64;
       #elif defined(_M_IX86) 
@@ -116,7 +152,7 @@ namespace Hades
         #error "Unsupported architecture."
       #endif
 
-      for (int i = 0; i < 100; ++i)
+      for (int i = 0; i < 10; ++i)
       {
         int Len = Disasm(&MyDisasm);
         if (Len != UNKNOWN_OPCODE) 
@@ -129,6 +165,40 @@ namespace Hades
           break;
         }
       };
+    }
+
+    // Convert RVA to file offset
+    DWORD Disassembler::RvaToFileOffset(DWORD Rva, 
+      PIMAGE_NT_HEADERS pNtHeaders)
+    {
+      // Get number of sections
+      WORD NumSections = pNtHeaders->FileHeader.NumberOfSections;
+      // Get pointer to first section
+      PIMAGE_SECTION_HEADER pCurrentSection = IMAGE_FIRST_SECTION(pNtHeaders);
+
+      // Loop over all sections
+      for (WORD i = 0; i < NumSections; ++i)
+      {
+        // Check if the RVA may be inside the current section
+        if (pCurrentSection->VirtualAddress <= Rva)
+        {
+          // Check if the RVA is inside the current section
+          if ((pCurrentSection->VirtualAddress + pCurrentSection->
+            Misc.VirtualSize) > Rva)
+          {
+            // Convert RVA to file (raw) offset
+            Rva -= pCurrentSection->VirtualAddress;
+            Rva += pCurrentSection->PointerToRawData;
+            return Rva;
+          }
+        }
+
+        // Advance to next section
+        ++pCurrentSection;
+      }
+
+      // Could not perform conversion. Return number signifying an error.
+      return static_cast<DWORD>(-1);
     }
   }
 }
