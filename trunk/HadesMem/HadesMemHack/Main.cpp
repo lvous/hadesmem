@@ -98,14 +98,7 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
         std::wcout << "Enter target address:" << std::endl;
 
         // Get address
-        PVOID Address = 0;
-        while (!(std::wcin >> std::hex >> Address >> std::dec) || !Address)
-        {
-          std::wcout << "Invalid address." << std::endl;
-          std::wcin.clear();
-          std::wcin.ignore((std::numeric_limits<std::streamsize>::max)(), '\n');
-        }
-        std::wcin.ignore((std::numeric_limits<std::streamsize>::max)(), '\n');
+        auto Address = ReadHexNumericDataFromUser<PVOID>();
 
         // Handle selected data type
         switch (MyDataType)
@@ -207,16 +200,7 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
               std::wcout << "Enter new value:" << std::endl;
 
               // Get data
-              Detail::Pointer New = 0;
-              while (!(std::wcin >> std::hex >> New >> std::dec))
-              {
-                std::wcout << "Invalid address." << std::endl;
-                std::wcin.clear();
-                std::wcin.ignore((std::numeric_limits<std::streamsize>::max)(), 
-                  '\n');
-              }
-              std::wcin.ignore((std::numeric_limits<std::streamsize>::max)(), 
-                '\n');
+              auto New = ReadHexNumericDataFromUser<Detail::Pointer>();
 
               // Write data
               MyMemory->Write(Address, New);
@@ -273,16 +257,7 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
             std::wcout << "Enter target module base:" << std::endl;
 
             // Get handle
-            PVOID ModHandle = 0;
-            while (!(std::wcin >> std::hex >> ModHandle >> std::dec))
-            {
-              std::wcout << "Invalid handle." << std::endl;
-              std::wcin.clear();
-              std::wcin.ignore((std::numeric_limits<std::streamsize>::max)(), 
-                '\n');
-            }
-            std::wcin.ignore((std::numeric_limits<std::streamsize>::max)(), 
-              '\n');
+            auto ModHandle = ReadHexNumericDataFromUser<PVOID>();
 
             // Get module
             MyModule.reset(new Hades::Memory::Module(reinterpret_cast<HMODULE>(
@@ -317,6 +292,7 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
           std::wcout << *MyModule;
         }
         // Output if not found
+        else
         {
           std::wcout << "Module not found." << std::endl;
         }
@@ -328,16 +304,7 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
         std::wcout << "Enter target address:" << std::endl;
 
         // Get address
-        PVOID Address = 0;
-        while (!(std::wcin >> std::hex >> Address >> std::dec))
-        {
-          std::wcout << "Invalid handle." << std::endl;
-          std::wcin.clear();
-          std::wcin.ignore((std::numeric_limits<std::streamsize>::max)(), 
-            '\n');
-        }
-        std::wcin.ignore((std::numeric_limits<std::streamsize>::max)(), 
-          '\n');
+        auto Address = ReadHexNumericDataFromUser<PVOID>();
 
         // Call remote function
         auto ExitCode = MyMemory->Call<DWORD ()>(Address);
@@ -353,16 +320,7 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
         std::wcout << "Enter target offset:" << std::endl;
 
         // Get address
-        ULONG_PTR Offset = 0;
-        while (!(std::wcin >> std::hex >> Offset >> std::dec))
-        {
-          std::wcout << "Invalid handle." << std::endl;
-          std::wcin.clear();
-          std::wcin.ignore((std::numeric_limits<std::streamsize>::max)(), 
-            '\n');
-        }
-        std::wcin.ignore((std::numeric_limits<std::streamsize>::max)(), 
-          '\n');
+        auto Offset = ReadHexNumericDataFromUser<ULONG_PTR>();
 
         // Create disassembler instance
         Hades::Memory::Disassembler MyDisassembler(*MyMemory);

@@ -62,6 +62,26 @@ T ReadNumericDataFromUser()
   return Data;
 }
 
+// Read numeric type from user
+template <typename T>
+T ReadHexNumericDataFromUser() 
+{
+  // Read data
+  T Data = T();
+  while (!(std::wcin >> std::hex >> Data >> std::dec))
+  {
+    std::cout << "Invalid data." << std::endl;
+    std::wcin.clear();
+    std::wcin.ignore((std::numeric_limits<std::streamsize>::max)(), 
+      '\n');
+  }
+  std::wcin.ignore((std::numeric_limits<std::streamsize>::max)(), 
+    '\n');
+
+  // Return data
+  return Data;
+}
+
 // Handle 'MemoryRead' or 'MemoryWrite' task for string types
 template <typename CharT>
 void HandleStringReadOrWrite(Hades::Memory::MemoryMgr const& MyMemory, 
