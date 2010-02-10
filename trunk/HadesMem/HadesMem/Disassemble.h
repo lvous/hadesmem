@@ -139,9 +139,9 @@ namespace Hades
       PBYTE Target = m_BaseOfCode + Offset;
 
       // Debug output
-      std::wcout << "Base of Mapping: " << static_cast<PBYTE>(
+      std::wcout << "Base of Mapping:" << static_cast<PBYTE>(
         m_TargetFileMapping) << std::endl;
-      std::wcout << "Base of Code: " << m_BaseOfCode << std::endl;
+      std::wcout << "Base of Code:" << m_BaseOfCode << std::endl;
       std::wcout << "Target: " << Target << std::endl;
 
       // Set up disasm structure for BeaEngine

@@ -71,7 +71,7 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
       auto Task = static_cast<Detail::Task>(GetOption(L"task", 1, 7));
 
       // Check for task 'Read Memory' or 'Write Memory' and output accordingly
-      if (Task == Detail::Task_ReadMem || Task == Detail::Task_ReadMem)
+      if (Task == Detail::Task_ReadMem || Task == Detail::Task_WriteMem)
       {
         // Output
         std::wcout << "Choose a data type:" << std::endl;
@@ -313,7 +313,7 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
         auto ExitCode = MyMemory->Call<DWORD ()>(Address);
         
         // Output
-        std::wcout << "Thread Exit Code: " << reinterpret_cast<PVOID>(
+        std::wcout << "Thread Exit Code:" << reinterpret_cast<PVOID>(
           ExitCode) << "." << std::endl;
       }
       // Handle 'Disassemble' task
