@@ -52,7 +52,7 @@ namespace Hades
         unsigned long NumInstructions);
 
       // Convert RVA to file offset
-      inline DWORD RvaToFileOffset(DWORD Rva, PIMAGE_NT_HEADERS pNtHeaders);
+      inline DWORD RvaToFileOffset(PIMAGE_NT_HEADERS pNtHeaders, DWORD Rva);
 
     private:
       // Disable assignment
@@ -127,8 +127,8 @@ namespace Hades
 
       // Get base of code section
       m_BaseOfCode =
-        static_cast<PBYTE>(m_TargetFileMapping) + RvaToFileOffset(pNtHeader->
-        OptionalHeader.BaseOfCode, pNtHeader);
+        static_cast<PBYTE>(m_TargetFileMapping) + RvaToFileOffset(pNtHeader, 
+        pNtHeader->OptionalHeader.BaseOfCode);
     }
 
     // Test disassembler
@@ -177,8 +177,8 @@ namespace Hades
     }
 
     // Convert RVA to file offset
-    DWORD Disassembler::RvaToFileOffset(DWORD Rva, 
-      PIMAGE_NT_HEADERS pNtHeaders)
+    DWORD Disassembler::RvaToFileOffset(PIMAGE_NT_HEADERS pNtHeaders, 
+      DWORD Rva)
     {
       // Get number of sections
       WORD NumSections = pNtHeaders->FileHeader.NumberOfSections;
