@@ -9,7 +9,7 @@
 // Boost
 #pragma warning(push, 1)
 #pragma warning(disable: 4706)
-#include <boost/exception.hpp>
+#include <boost/exception/all.hpp>
 #pragma warning(pop)
 
 namespace Hades

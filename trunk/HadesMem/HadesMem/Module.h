@@ -9,12 +9,6 @@
 #include <vector>
 #include <iostream>
 
-// Boost
-#pragma warning(push, 1)
-#pragma warning(disable: 4706)
-#include <boost/exception.hpp>
-#pragma warning(pop)
-
 // HadesMem
 #include "Error.h"
 #include "Memory.h"

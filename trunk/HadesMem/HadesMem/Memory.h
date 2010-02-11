@@ -12,7 +12,6 @@
 // Boost
 #pragma warning(push, 1)
 #pragma warning(disable: 4706)
-#include <boost/exception.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/type_traits.hpp>
 #pragma warning(pop)
