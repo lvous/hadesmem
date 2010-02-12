@@ -126,7 +126,7 @@ namespace Hades
       {
         DWORD LastError = GetLastError();
         BOOST_THROW_EXCEPTION(MemoryError() << 
-          ErrorFunction("Memory:Call") << 
+          ErrorFunction("Memory::Call") << 
           ErrorString("Could not create remote thread.") << 
           ErrorCodeWin(LastError));
       }
@@ -136,7 +136,7 @@ namespace Hades
       {
         DWORD LastError = GetLastError();
         BOOST_THROW_EXCEPTION(MemoryError() << 
-          ErrorFunction("Memory:Call") << 
+          ErrorFunction("Memory::Call") << 
           ErrorString("Could not wait for remote thread.") << 
           ErrorCodeWin(LastError));
       }
@@ -147,7 +147,7 @@ namespace Hades
       {
         DWORD LastError = GetLastError();
         BOOST_THROW_EXCEPTION(MemoryError() << 
-          ErrorFunction("Memory:Call") << 
+          ErrorFunction("Memory::Call") << 
           ErrorString("Could not get remote thread exit code.") << 
           ErrorCodeWin(LastError));
       }
@@ -169,7 +169,7 @@ namespace Hades
       {
         DWORD LastError = GetLastError();
         BOOST_THROW_EXCEPTION(MemoryError() << 
-          ErrorFunction("Memory:Read") << 
+          ErrorFunction("Memory::Read") << 
           ErrorString("Could not change process memory protection.") << 
           ErrorCodeWin(LastError));
       }
@@ -186,7 +186,7 @@ namespace Hades
 
         DWORD LastError = GetLastError();
         BOOST_THROW_EXCEPTION(MemoryError() << 
-          ErrorFunction("Memory:Read") << 
+          ErrorFunction("Memory::Read") << 
           ErrorString("Could not read process memory.") << 
           ErrorCodeWin(LastError));
       }
@@ -197,7 +197,7 @@ namespace Hades
       {
         DWORD LastError = GetLastError();
         BOOST_THROW_EXCEPTION(MemoryError() << 
-          ErrorFunction("Memory:Read") << 
+          ErrorFunction("Memory::Read") << 
           ErrorString("Could not restore process memory protection.") << 
           ErrorCodeWin(LastError));
       }
@@ -267,7 +267,7 @@ namespace Hades
       {
         DWORD LastError = GetLastError();
         BOOST_THROW_EXCEPTION(MemoryError() << 
-          ErrorFunction("Memory:Write") << 
+          ErrorFunction("Memory::Write") << 
           ErrorString("Could not change process memory protection.") << 
           ErrorCodeWin(LastError));
       }
@@ -283,7 +283,7 @@ namespace Hades
 
         DWORD LastError = GetLastError();
         BOOST_THROW_EXCEPTION(MemoryError() << 
-          ErrorFunction("Memory:Write") << 
+          ErrorFunction("Memory::Write") << 
           ErrorString("Could not write process memory.") << 
           ErrorCodeWin(LastError));
       }
@@ -294,7 +294,7 @@ namespace Hades
       {
         DWORD LastError = GetLastError();
         BOOST_THROW_EXCEPTION(MemoryError() << 
-          ErrorFunction("Memory:Write") << 
+          ErrorFunction("Memory::Write") << 
           ErrorString("Could not restore process memory protection.") << 
           ErrorCodeWin(LastError));
       }
@@ -353,7 +353,7 @@ namespace Hades
       {
         DWORD LastError = GetLastError();
         BOOST_THROW_EXCEPTION(MemoryError() << 
-          ErrorFunction("Memory:CanRead") << 
+          ErrorFunction("Memory::CanRead") << 
           ErrorString("Could not read process memory protection.") << 
           ErrorCodeWin(LastError));
       }
@@ -377,7 +377,7 @@ namespace Hades
       {
         DWORD LastError = GetLastError();
         BOOST_THROW_EXCEPTION(MemoryError() << 
-          ErrorFunction("Memory:Write") << 
+          ErrorFunction("Memory::Write") << 
           ErrorString("Could not read process memory protection.") << 
           ErrorCodeWin(LastError));
       }

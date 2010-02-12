@@ -81,7 +81,7 @@ namespace Hades
       {
         DWORD LastError = GetLastError();
         BOOST_THROW_EXCEPTION(DisassemblerError() << 
-          ErrorFunction("Disassembler:Disassembler") << 
+          ErrorFunction("Disassembler::Disassembler") << 
           ErrorString("Could not get path to target.") << 
           ErrorCodeWin(LastError));
       }
@@ -93,7 +93,7 @@ namespace Hades
       {
         DWORD LastError = GetLastError();
         BOOST_THROW_EXCEPTION(DisassemblerError() << 
-          ErrorFunction("Disassembler:Disassembler") << 
+          ErrorFunction("Disassembler::Disassembler") << 
           ErrorString("Could not open target file.") << 
           ErrorCodeWin(LastError));
       }
@@ -104,7 +104,7 @@ namespace Hades
       {
         DWORD LastError = GetLastError();
         BOOST_THROW_EXCEPTION(DisassemblerError() << 
-          ErrorFunction("Disassembler:Disassembler") << 
+          ErrorFunction("Disassembler::Disassembler") << 
           ErrorString("Could not map view of target.") << 
           ErrorCodeWin(LastError));
       }
@@ -120,7 +120,7 @@ namespace Hades
       if (static_cast<PVOID>(pDosHeader) == static_cast<PVOID>(pNtHeader))
       {
         BOOST_THROW_EXCEPTION(DisassemblerError() << 
-          ErrorFunction("Disassembler:Disassembler") << 
+          ErrorFunction("Disassembler::Disassembler") << 
           ErrorString("Could not get pointer to image headers."));
       }
 

@@ -89,7 +89,7 @@ namespace Hades
       {
         DWORD LastError = GetLastError();
         BOOST_THROW_EXCEPTION(ProcessError() << 
-          ErrorFunction("Process:Process") << 
+          ErrorFunction("Process::Process") << 
           ErrorString("Could not get process snapshot.") << 
           ErrorCodeWin(LastError));
       }
@@ -112,7 +112,7 @@ namespace Hades
       if (!Found)
       {
         BOOST_THROW_EXCEPTION(ProcessError() << 
-          ErrorFunction("Process:Process") << 
+          ErrorFunction("Process::Process") << 
           ErrorString("Could not find process."));
       }
 
@@ -137,7 +137,7 @@ namespace Hades
       {
         DWORD LastError = GetLastError();
         BOOST_THROW_EXCEPTION(ProcessError() << 
-          ErrorFunction("Process:Process") << 
+          ErrorFunction("Process::Process") << 
           ErrorString("Could not find window.") << 
           ErrorCodeWin(LastError));
       }
@@ -148,7 +148,7 @@ namespace Hades
       {
         DWORD LastError = GetLastError();
         BOOST_THROW_EXCEPTION(ProcessError() << 
-          ErrorFunction("Process:Process") << 
+          ErrorFunction("Process::Process") << 
           ErrorString("Could not get process id from window.") << 
           ErrorCodeWin(LastError));
       }
@@ -172,7 +172,7 @@ namespace Hades
       {
         DWORD LastError = GetLastError();
         BOOST_THROW_EXCEPTION(ProcessError() << 
-          ErrorFunction("Process:Open") << 
+          ErrorFunction("Process::Open") << 
           ErrorString("Could not open process.") << 
           ErrorCodeWin(LastError));
       }
@@ -189,7 +189,7 @@ namespace Hades
       {
         DWORD LastError = GetLastError();
         BOOST_THROW_EXCEPTION(ProcessError() << 
-          ErrorFunction("Process:GetSeDebugPrivilege") << 
+          ErrorFunction("Process::GetSeDebugPrivilege") << 
           ErrorString("Could not open process token.") << 
           ErrorCodeWin(LastError));
       }
@@ -201,7 +201,7 @@ namespace Hades
       {
         DWORD LastError = GetLastError();
         BOOST_THROW_EXCEPTION(ProcessError() << 
-          ErrorFunction("Process:GetSeDebugPrivilege") << 
+          ErrorFunction("Process::GetSeDebugPrivilege") << 
           ErrorString("Could not look up privilege value for SeDebugName.") << 
           ErrorCodeWin(LastError));
       }
@@ -209,7 +209,7 @@ namespace Hades
       {
         DWORD LastError = GetLastError();
         BOOST_THROW_EXCEPTION(ProcessError() << 
-          ErrorFunction("Process:GetSeDebugPrivilege") << 
+          ErrorFunction("Process::GetSeDebugPrivilege") << 
           ErrorString("Could not get LUID for SeDebugName.") << 
           ErrorCodeWin(LastError));
       }
@@ -227,7 +227,7 @@ namespace Hades
       {
         DWORD LastError = GetLastError();
         BOOST_THROW_EXCEPTION(ProcessError() << 
-          ErrorFunction("Process:GetSeDebugPrivilege") << 
+          ErrorFunction("Process::GetSeDebugPrivilege") << 
           ErrorString("Could not adjust token privileges.") << 
           ErrorCodeWin(LastError));
       }

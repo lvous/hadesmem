@@ -129,7 +129,7 @@ namespace Hades
       {
         DWORD LastError = GetLastError();
         BOOST_THROW_EXCEPTION(ModuleError() << 
-          ErrorFunction("Module:Module") << 
+          ErrorFunction("Module::Module") << 
           ErrorString("Could not get module snapshot.") << 
           ErrorCodeWin(LastError));
       }
@@ -177,7 +177,7 @@ namespace Hades
       {
         DWORD LastError = GetLastError();
         BOOST_THROW_EXCEPTION(ModuleError() << 
-          ErrorFunction("Module:Module") << 
+          ErrorFunction("Module::Module") << 
           ErrorString("Could not get module snapshot.") << 
           ErrorCodeWin(LastError));
       }
