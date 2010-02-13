@@ -27,3 +27,5 @@
 #include "Logger.h"
 
 // no code
+
+void BlahFoo() {}
