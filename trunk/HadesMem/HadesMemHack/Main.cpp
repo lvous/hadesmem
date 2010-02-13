@@ -313,8 +313,7 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
         auto ExitCode = MyMemory->Call<DWORD (DWORD)>(Address, 0);
         
         // Output
-        std::wcout << "Thread Exit Code:" << reinterpret_cast<PVOID>(
-          ExitCode) << "." << std::endl;
+        std::wcout << "Thread Exit Code: " << ExitCode << "." << std::endl;
       }
       // Handle 'Disassemble' task
       else if (Task == Detail::Task_Disassemble)
