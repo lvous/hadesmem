@@ -42,8 +42,8 @@ namespace Hades
 
       // Call remote function
       template <typename T>
-      typename boost::function_traits<T>::result_type Call(PVOID Address) 
-        const;
+      typename boost::function_traits<T>::result_type Call(PVOID Address, 
+        typename boost::function_traits<T>::arg1_type Arg1) const;
 
       // Read memory (POD types)
       template <typename T>
@@ -84,6 +84,12 @@ namespace Hades
       // Whether an address is currently writable
       inline bool CanWrite(PVOID Address) const;
 
+      // Allocate memory
+      PVOID Alloc(SIZE_T Size) const;
+
+      // Free memory
+      void Free(PVOID Address) const;
+
       // Get process ID of target
       inline DWORD GetProcessID() const;
 
@@ -93,6 +99,28 @@ namespace Hades
     private:
       // Target process
       Process m_Process;
+    };
+
+    class AllocAndFree : private boost::noncopyable
+    {
+    public:
+      AllocAndFree(MemoryMgr const& MyMemoryMgr, SIZE_T Size) 
+        : m_Memory(MyMemoryMgr), m_Address(m_Memory.Alloc(Size)) 
+      { }
+
+      ~AllocAndFree()
+      {
+        m_Memory.Free(m_Address);
+      }
+
+      PVOID GetAddress() const 
+      {
+        return m_Address;
+      }
+
+    private:
+      MemoryMgr const& m_Memory;
+      PVOID m_Address;
     };
 
     // Open process from process ID
@@ -114,19 +142,28 @@ namespace Hades
     // Call remote function
     template <typename T>
     typename boost::function_traits<T>::result_type MemoryMgr::Call(
-      PVOID Address) const 
+      PVOID Address, typename boost::function_traits<T>::arg1_type Arg1) 
+      const 
     {
+      // Ensure function prototype is supported
+      static_assert(boost::function_traits<T>::arity == 1, "Unsupported "
+        "function prototype. Too many parameters.");
+
+      // Allocate and write argument to process
+      AllocAndFree MyRemoteMem(*this, sizeof(Arg1));
+      Write(MyRemoteMem.GetAddress(), Arg1);
+
       // Call function via creating a remote thread in the target.
       // Todo: Robust implementation via ASM Jit and SEH.
       // Todo: Support parameters, calling conventions, etc.
       EnsureCloseHandle MyThread = CreateRemoteThread(m_Process.GetHandle(), 
         nullptr, 0, reinterpret_cast<LPTHREAD_START_ROUTINE>(Address), 
-        nullptr, 0, nullptr);
+        MyRemoteMem.GetAddress(), 0, nullptr);
       if (!MyThread)
       {
         DWORD LastError = GetLastError();
         BOOST_THROW_EXCEPTION(MemoryError() << 
-          ErrorFunction("Memory::Call") << 
+          ErrorFunction("MemoryMgr::Call") << 
           ErrorString("Could not create remote thread.") << 
           ErrorCodeWin(LastError));
       }
@@ -136,7 +173,7 @@ namespace Hades
       {
         DWORD LastError = GetLastError();
         BOOST_THROW_EXCEPTION(MemoryError() << 
-          ErrorFunction("Memory::Call") << 
+          ErrorFunction("MemoryMgr::Call") << 
           ErrorString("Could not wait for remote thread.") << 
           ErrorCodeWin(LastError));
       }
@@ -147,7 +184,7 @@ namespace Hades
       {
         DWORD LastError = GetLastError();
         BOOST_THROW_EXCEPTION(MemoryError() << 
-          ErrorFunction("Memory::Call") << 
+          ErrorFunction("MemoryMgr::Call") << 
           ErrorString("Could not get remote thread exit code.") << 
           ErrorCodeWin(LastError));
       }
@@ -169,7 +206,7 @@ namespace Hades
       {
         DWORD LastError = GetLastError();
         BOOST_THROW_EXCEPTION(MemoryError() << 
-          ErrorFunction("Memory::Read") << 
+          ErrorFunction("MemoryMgr::Read") << 
           ErrorString("Could not change process memory protection.") << 
           ErrorCodeWin(LastError));
       }
@@ -186,7 +223,7 @@ namespace Hades
 
         DWORD LastError = GetLastError();
         BOOST_THROW_EXCEPTION(MemoryError() << 
-          ErrorFunction("Memory::Read") << 
+          ErrorFunction("MemoryMgr::Read") << 
           ErrorString("Could not read process memory.") << 
           ErrorCodeWin(LastError));
       }
@@ -197,7 +234,7 @@ namespace Hades
       {
         DWORD LastError = GetLastError();
         BOOST_THROW_EXCEPTION(MemoryError() << 
-          ErrorFunction("Memory::Read") << 
+          ErrorFunction("MemoryMgr::Read") << 
           ErrorString("Could not restore process memory protection.") << 
           ErrorCodeWin(LastError));
       }
@@ -267,7 +304,7 @@ namespace Hades
       {
         DWORD LastError = GetLastError();
         BOOST_THROW_EXCEPTION(MemoryError() << 
-          ErrorFunction("Memory::Write") << 
+          ErrorFunction("MemoryMgr::Write") << 
           ErrorString("Could not change process memory protection.") << 
           ErrorCodeWin(LastError));
       }
@@ -283,7 +320,7 @@ namespace Hades
 
         DWORD LastError = GetLastError();
         BOOST_THROW_EXCEPTION(MemoryError() << 
-          ErrorFunction("Memory::Write") << 
+          ErrorFunction("MemoryMgr::Write") << 
           ErrorString("Could not write process memory.") << 
           ErrorCodeWin(LastError));
       }
@@ -294,7 +331,7 @@ namespace Hades
       {
         DWORD LastError = GetLastError();
         BOOST_THROW_EXCEPTION(MemoryError() << 
-          ErrorFunction("Memory::Write") << 
+          ErrorFunction("MemoryMgr::Write") << 
           ErrorString("Could not restore process memory protection.") << 
           ErrorCodeWin(LastError));
       }
@@ -353,7 +390,7 @@ namespace Hades
       {
         DWORD LastError = GetLastError();
         BOOST_THROW_EXCEPTION(MemoryError() << 
-          ErrorFunction("Memory::CanRead") << 
+          ErrorFunction("MemoryMgr::CanRead") << 
           ErrorString("Could not read process memory protection.") << 
           ErrorCodeWin(LastError));
       }
@@ -377,7 +414,7 @@ namespace Hades
       {
         DWORD LastError = GetLastError();
         BOOST_THROW_EXCEPTION(MemoryError() << 
-          ErrorFunction("Memory::Write") << 
+          ErrorFunction("MemoryMgr::Write") << 
           ErrorString("Could not read process memory protection.") << 
           ErrorCodeWin(LastError));
       }
@@ -387,6 +424,38 @@ namespace Hades
         MyMemInfo.Protect == PAGE_EXECUTE_WRITECOPY || 
         MyMemInfo.Protect == PAGE_READWRITE || 
         MyMemInfo.Protect == PAGE_WRITECOPY;
+    }
+
+
+    // Allocate memory
+    PVOID MemoryMgr::Alloc(SIZE_T Size) const
+    {
+      PVOID Address = VirtualAllocEx(m_Process.GetHandle(), nullptr, Size, 
+        MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+      if (!Address)
+      {
+        DWORD LastError = GetLastError();
+        BOOST_THROW_EXCEPTION(MemoryError() << 
+          ErrorFunction("MemoryMgr::Alloc") << 
+          ErrorString("Could not allocate memory.") << 
+          ErrorCodeWin(LastError));
+      }
+
+      return Address;
+    }
+
+
+    // Free memory
+    void MemoryMgr::Free(PVOID Address) const
+    {
+      if (!VirtualFreeEx(m_Process.GetHandle(), Address, 0, MEM_RELEASE))
+      {
+        DWORD LastError = GetLastError();
+        BOOST_THROW_EXCEPTION(MemoryError() << 
+          ErrorFunction("MemoryMgr::Free") << 
+          ErrorString("Could not free memory.") << 
+          ErrorCodeWin(LastError));
+      }
     }
 
     // Get process ID of target
