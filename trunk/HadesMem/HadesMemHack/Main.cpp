@@ -310,7 +310,7 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
         auto Address = ReadHexNumericDataFromUser<PVOID>();
 
         // Call remote function
-        auto ExitCode = MyMemory->Call<DWORD ()>(Address);
+        auto ExitCode = MyMemory->Call<DWORD (DWORD)>(Address, 0);
         
         // Output
         std::wcout << "Thread Exit Code:" << reinterpret_cast<PVOID>(
