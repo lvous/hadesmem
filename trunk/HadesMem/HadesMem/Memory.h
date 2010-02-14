@@ -40,10 +40,20 @@ namespace Hades
       inline MemoryMgr(std::wstring const& WindowName, 
         std::wstring const* const ClassName);
 
+      // MemoryMgr::Call trait class. Ensures the function arity is valid.
+      template <typename T>
+      struct IsArity1
+      {
+        static const bool value = typename boost::function_traits<T>::arity == 
+          1;
+      };
+
       // Call remote function
       template <typename T>
       typename boost::function_traits<T>::result_type Call(PVOID Address, 
-        typename boost::function_traits<T>::arg1_type const& Arg1) const;
+        typename boost::function_traits<T>::arg1_type const& Arg1,  
+        typename boost::enable_if_c<MemoryMgr::IsArity1<T>::value, T>::type* 
+        Dummy = 0) const;
 
       // Read memory (POD types)
       template <typename T>
@@ -142,13 +152,10 @@ namespace Hades
     // Call remote function
     template <typename T>
     typename boost::function_traits<T>::result_type MemoryMgr::Call(
-      PVOID Address, typename boost::function_traits<T>::arg1_type const& Arg1) 
+      PVOID Address, typename boost::function_traits<T>::arg1_type const& Arg1,  
+      typename boost::enable_if_c<MemoryMgr::IsArity1<T>::value, T>::type*) 
       const 
     {
-      // Ensure function prototype is supported
-      static_assert(boost::function_traits<T>::arity == 1, "Unsupported "
-        "function prototype. Too many parameters.");
-
       // Allocate and write argument to process
       AllocAndFree MyRemoteMem(*this, sizeof(Arg1));
       Write(MyRemoteMem.GetAddress(), Arg1);
