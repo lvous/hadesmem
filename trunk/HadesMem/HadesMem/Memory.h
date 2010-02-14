@@ -43,7 +43,7 @@ namespace Hades
       // Call remote function
       template <typename T>
       typename boost::function_traits<T>::result_type Call(PVOID Address, 
-        typename boost::function_traits<T>::arg1_type Arg1) const;
+        typename boost::function_traits<T>::arg1_type const& Arg1) const;
 
       // Read memory (POD types)
       template <typename T>
@@ -142,7 +142,7 @@ namespace Hades
     // Call remote function
     template <typename T>
     typename boost::function_traits<T>::result_type MemoryMgr::Call(
-      PVOID Address, typename boost::function_traits<T>::arg1_type Arg1) 
+      PVOID Address, typename boost::function_traits<T>::arg1_type const& Arg1) 
       const 
     {
       // Ensure function prototype is supported
