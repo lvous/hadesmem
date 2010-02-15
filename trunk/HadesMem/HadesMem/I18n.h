@@ -11,7 +11,7 @@ namespace Hades
   namespace I18n
   {
     // Convert a wide string to a narrow string
-    inline std::string ConvertStr(const std::wstring& Source)
+    inline std::string ConvertStr(std::wstring const& Source)
     {
       auto const Loc(std::locale(""));
       auto const& MyCType(std::use_facet<std::ctype<wchar_t>>(Loc));
@@ -27,7 +27,7 @@ namespace Hades
     }
 
     // Convert a narrow string to a wide string
-    inline std::wstring ConvertStr(const std::string& Source)
+    inline std::wstring ConvertStr(std::string const& Source)
     {
       auto const Loc(std::locale(""));
       auto const& MyCType(std::use_facet<std::ctype<char>>(Loc));
@@ -43,16 +43,16 @@ namespace Hades
     }
 
     // Convert string to lowercase
-    template <typename charT>
-    inline std::basic_string<charT> ToLower(const std::basic_string<charT>& 
+    template <typename CharT>
+    inline std::basic_string<CharT> ToLower(std::basic_string<CharT> const& 
       Str)
     {
       auto const Loc(std::locale(""));
-      auto const& MyCType(std::use_facet<std::ctype<charT>>(Loc));
+      auto const& MyCType(std::use_facet<std::ctype<CharT>>(Loc));
 
-      std::basic_string<charT> Dest(Str);
+      std::basic_string<CharT> Dest(Str);
       std::transform(Dest.begin(), Dest.end(), Dest.begin(), 
-        [&MyCType] (charT x) 
+        [&MyCType] (CharT x) 
       {
         return MyCType.tolower(x);
       });
@@ -61,16 +61,16 @@ namespace Hades
     }
 
     // Convert string to lowercase
-    template <typename charT>
-    inline std::basic_string<charT> ToUpper(const std::basic_string<charT>& 
+    template <typename CharT>
+    inline std::basic_string<CharT> ToUpper(std::basic_string<CharT> const& 
       Str)
     {
       auto const Loc(std::locale(""));
-      auto const& MyCType(std::use_facet<std::ctype<charT>>(Loc));
+      auto const& MyCType(std::use_facet<std::ctype<CharT>>(Loc));
 
-      std::basic_string<charT> Dest(Str);
+      std::basic_string<CharT> Dest(Str);
       std::transform(Dest.begin(), Dest.end(), Dest.begin(), 
-        [&MyCType] (charT x) 
+        [&MyCType] (CharT x) 
       {
         return MyCType.toupper(x);
       });
