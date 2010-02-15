@@ -52,7 +52,7 @@ namespace Hades
       template <typename T>
       typename boost::function_traits<T>::result_type Call(PVOID Address, 
         typename boost::function_traits<T>::arg1_type const& Arg1,  
-        typename boost::enable_if_c<MemoryMgr::IsArity1<T>::value, T>::type* 
+        typename boost::enable_if_c<MemoryMgr::IsArity1<T>::value>::type* 
         Dummy = 0) const;
 
       // Read memory (POD types)
@@ -152,8 +152,8 @@ namespace Hades
     // Call remote function
     template <typename T>
     typename boost::function_traits<T>::result_type MemoryMgr::Call(
-      PVOID Address, typename boost::function_traits<T>::arg1_type const& Arg1,  
-      typename boost::enable_if_c<MemoryMgr::IsArity1<T>::value, T>::type*) 
+      PVOID Address, typename boost::function_traits<T>::arg1_type const& Arg1, 
+      typename boost::enable_if_c<MemoryMgr::IsArity1<T>::value>::type*) 
       const 
     {
       // Allocate and write argument to process
