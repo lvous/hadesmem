@@ -41,18 +41,18 @@ namespace Hades
         std::wstring const* const ClassName);
 
       // MemoryMgr::Call trait class. Ensures the function arity is valid.
-      template <typename T>
-      struct IsArity1
+      template <typename T, std::size_t Arity>
+      struct IsArity
       {
         static const bool value = typename boost::function_traits<T>::arity == 
-          1;
+          Arity;
       };
 
       // Call remote function
       template <typename T>
       typename boost::function_traits<T>::result_type Call(PVOID Address, 
         typename boost::function_traits<T>::arg1_type const& Arg1,  
-        typename boost::enable_if_c<MemoryMgr::IsArity1<T>::value>::type* 
+        typename boost::enable_if_c<MemoryMgr::IsArity<T, 1>::value>::type* 
         Dummy = 0) const;
 
       // Read memory (POD types)
@@ -153,9 +153,22 @@ namespace Hades
     template <typename T>
     typename boost::function_traits<T>::result_type MemoryMgr::Call(
       PVOID Address, typename boost::function_traits<T>::arg1_type const& Arg1, 
-      typename boost::enable_if_c<MemoryMgr::IsArity1<T>::value>::type*) 
+      typename boost::enable_if_c<MemoryMgr::IsArity<T, 1>::value>::type*) 
       const 
     {
+      // Ensure argument is the same size (or smaller) as the native 
+      // size for the architecture. Larger sized objects must be passed by 
+      // pointer.
+      static_assert(sizeof(Arg1) <= sizeof(PVOID), "Size of argument is "
+        "invalid.");
+
+      // Ensure specified return type is of a valid size and type
+      typedef typename boost::function_traits<T>::result_type RetType;
+      static_assert(std::is_scalar<RetType>::value, "Return type is "
+        "invalid.");
+      static_assert(sizeof(RetType) <= sizeof(DWORD), "Size of return type "
+        "is invalid.");
+
       // Allocate and write argument to process
       AllocAndFree MyRemoteMem(*this, sizeof(Arg1));
       Write(MyRemoteMem.GetAddress(), Arg1);
@@ -163,6 +176,7 @@ namespace Hades
       // Call function via creating a remote thread in the target.
       // Todo: Robust implementation via ASM Jit and SEH.
       // Todo: Support parameters, calling conventions, etc.
+      // Todo: Pass arguments via value not pointer.
       EnsureCloseHandle MyThread = CreateRemoteThread(m_Process.GetHandle(), 
         nullptr, 0, reinterpret_cast<LPTHREAD_START_ROUTINE>(Address), 
         MyRemoteMem.GetAddress(), 0, nullptr);
@@ -197,7 +211,6 @@ namespace Hades
       }
 
       // Return exit code from thread
-      typedef typename boost::function_traits<T>::result_type RetType;
       return RetType(ExitCode);
     }
 
