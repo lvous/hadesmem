@@ -35,11 +35,11 @@ namespace Hades
 {
   namespace Memory
   {
-    // Memory exception type
+    // Disassembler exception type
     class DisassemblerError : public virtual HadesMemError 
     { };
 
-    // Disassmbler managing class
+    // Disassembler managing class
     class Disassembler
     {
     public:
