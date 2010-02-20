@@ -4,6 +4,7 @@
 #include <Windows.h>
 
 // C++ Standard Library
+#include <string>
 #include <stdexcept>
 
 // Boost
