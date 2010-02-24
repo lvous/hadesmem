@@ -67,9 +67,10 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
       std::wcout << "5. Allocate memory." << std::endl;
       std::wcout << "6. Free memory." << std::endl;
       std::wcout << "7. Disassemble." << std::endl;
+      std::wcout << "8. Pattern scan." << std::endl;
 
       // Get task
-      auto Task = static_cast<Detail::Task>(GetOption(L"task", 1, 7));
+      auto Task = static_cast<Detail::Task>(GetOption(L"task", 1, 8));
 
       // Check for task 'Read Memory' or 'Write Memory' and output accordingly
       if (Task == Detail::Task_ReadMem || Task == Detail::Task_WriteMem)
@@ -331,6 +332,86 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
         Hades::Memory::Disassembler MyDisassembler(*MyMemory);
         // Test disassembler
         MyDisassembler.DisassembleTest(Offset, NumInstructions);
+      }
+      // Handle 'Pattern Scan' task
+      else if (Task == Detail::Task_PatternScan)
+      {
+        // Get mask
+        std::wcout << "Enter mask:" << std::endl;
+        std::string Mask;
+        while (!(std::cin >> Mask) || Mask.empty())
+        {
+          std::wcout << "Invalid mask." << std::endl;
+          std::cin.clear();
+        }
+
+        // Get data
+        std::wcout << "Enter data:" << std::endl;
+        std::string Data;
+        while (!(std::cin >> Data) || Data.empty())
+        {
+          std::wcout << "Invalid data." << std::endl;
+          std::wcin.clear();
+        }
+
+        // Ensure data is valid
+        if (Data.size() % 2)
+        {
+          std::wcout << "Invalid data (size of data must be a multiple of "
+            "2)." << std::endl;
+          continue;
+        }
+
+//         // Ensure data is valid
+//         for (auto i = Data.begin(); i != Data.end(); ++i)
+//         {
+//           // Get current character
+//           char Current = *i;
+// 
+//           // Unportable in theory, highly portable in practice.
+//           // Todo: Do this properly
+//           bool IsHex = (Current >= '0' && Current <= '9') || 
+//             (Current >= 'a' && Current <= 'f') || 
+//             (Current >= 'A' && Current <= 'F');
+//           if (!IsHex)
+//           {
+//             std::wcout << "Invalid data (data must be in hexadecimal "
+//               "notation)." << std::endl;
+//             continue;
+//           }
+//         }
+
+        // Convert data to byte buffer
+        std::vector<BYTE> DataReal;
+        for (auto i = Data.begin(); i != Data.end(); i += 2)
+        {
+          std::string CurrentStr(i, i + 2);
+          std::stringstream Converter(CurrentStr);
+          int Current = 0;
+          if (!(Converter >> std::hex >> Current >> std::dec))
+          {
+            std::cout << "Invalid data (could not convert data to byte "
+              "buffer)." << std::endl;
+            continue;
+          }
+          DataReal.push_back(static_cast<BYTE>(Current));
+        }
+
+        // Ensure conversion was successful
+        if (Data.size() != DataReal.size() * 2)
+        {
+          std::cout << "Data conversion failed." << std::endl;
+          continue;
+        }
+
+        // Create pattern scanner
+        Hades::Memory::FindPattern MyFindPattern(*MyMemory);
+        
+        // Perform pattern scan
+        PVOID Address = MyFindPattern.Find(L"", Mask, DataReal);
+
+        // Output
+        std::wcout << "Address: " << Address << "." << std::endl;
       }
       // Output for all currently unhandled tasks
       else

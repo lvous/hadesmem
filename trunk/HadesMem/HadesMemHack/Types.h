@@ -42,7 +42,8 @@ namespace Detail
     Task_CallFunc, 
     Task_AllocMem, 
     Task_FreeMem, 
-    Task_Disassemble
+    Task_Disassemble, 
+    Task_PatternScan
   };
   
   // Module selection methods
