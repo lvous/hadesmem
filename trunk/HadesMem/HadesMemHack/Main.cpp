@@ -362,25 +362,6 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
           continue;
         }
 
-//         // Ensure data is valid
-//         for (auto i = Data.begin(); i != Data.end(); ++i)
-//         {
-//           // Get current character
-//           char Current = *i;
-// 
-//           // Unportable in theory, highly portable in practice.
-//           // Todo: Do this properly
-//           bool IsHex = (Current >= '0' && Current <= '9') || 
-//             (Current >= 'a' && Current <= 'f') || 
-//             (Current >= 'A' && Current <= 'F');
-//           if (!IsHex)
-//           {
-//             std::wcout << "Invalid data (data must be in hexadecimal "
-//               "notation)." << std::endl;
-//             continue;
-//           }
-//         }
-
         // Convert data to byte buffer
         std::vector<BYTE> DataReal;
         for (auto i = Data.begin(); i != Data.end(); i += 2)
