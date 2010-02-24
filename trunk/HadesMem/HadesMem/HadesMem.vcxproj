@@ -25,6 +25,7 @@
     <ClInclude Include="Disassemble.h" />
     <ClInclude Include="EnsureCleanup.h" />
     <ClInclude Include="Error.h" />
+    <ClInclude Include="FindPattern.h" />
     <ClInclude Include="I18n.h" />
     <ClInclude Include="Memory.h" />
     <ClInclude Include="Module.h" />

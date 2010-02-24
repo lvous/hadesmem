@@ -44,5 +44,8 @@
     <ClInclude Include="Toolhelper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="FindPattern.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

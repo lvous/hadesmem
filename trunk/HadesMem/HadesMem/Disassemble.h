@@ -5,23 +5,13 @@
 #include <Windows.h>
 #include <atlbase.h>
 #include <atlfile.h>
-#include <DbgHelp.h>
 #pragma comment(lib, "psapi")
 
 // C++ Standard Library
 #include <array>
 #include <memory>
 #include <string>
-#include <vector>
 #include <iostream>
-#include <type_traits>
-
-// Boost
-#pragma warning(push, 1)
-#pragma warning(disable: 4706)
-#include <boost/noncopyable.hpp>
-#include <boost/type_traits.hpp>
-#pragma warning(pop)
 
 // BeaEngine
 #include "BeaEngine/BeaEngine.h"
@@ -50,10 +40,10 @@ namespace Hades
       inline void DisassembleTest(ULONG_PTR Offset, 
         unsigned long NumInstructions);
 
+    private:
       // Convert RVA to file offset
       inline DWORD RvaToFileOffset(PIMAGE_NT_HEADERS pNtHeaders, DWORD Rva);
 
-    private:
       // Disable assignment
       Disassembler& operator= (Disassembler const&);
 
@@ -125,9 +115,8 @@ namespace Hades
       }
 
       // Get base of code section
-      m_BaseOfCode =
-        static_cast<PBYTE>(m_TargetFileMapping) + RvaToFileOffset(pNtHeader, 
-        pNtHeader->OptionalHeader.BaseOfCode);
+      m_BaseOfCode = static_cast<PBYTE>(m_TargetFileMapping) + RvaToFileOffset(
+        pNtHeader, pNtHeader->OptionalHeader.BaseOfCode);
     }
 
     // Test disassembler

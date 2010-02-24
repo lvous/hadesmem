@@ -4,6 +4,7 @@
 #include "HadesMem/Module.h"
 #include "HadesMem/Memory.h"
 #include "HadesMem/Disassemble.h"
+#include "HadesMem/FindPattern.h"
 
 // C++ Standard Library
 #include <limits>
