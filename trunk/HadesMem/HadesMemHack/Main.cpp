@@ -303,7 +303,7 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
           std::wcout << "Module not found." << std::endl;
         }
       }
-      // Handle 'Call Function' task
+      // Handle 'Call function' task
       else if (Task == Detail::Task_CallFunc)
       {
         // Output
@@ -317,6 +317,39 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
         
         // Output
         std::wcout << "Thread Exit Code: " << ExitCode << "." << std::endl;
+      }
+      // Handle 'Allocate memory' task
+      else if (Task == Detail::Task_AllocMem)
+      {
+        // Output
+        std::wcout << "Enter region size:" << std::endl;
+
+        // Get region size
+        auto Size = ReadHexNumericDataFromUser<SIZE_T>();
+
+        // Allocate memory
+        auto Address = MyMemory->Alloc(Size);
+
+        // Output
+        std::wcout << "Memory allocated at address " << Address << "." 
+          << std::endl;
+
+      }
+      // Handle 'Free memory' task
+      else if (Task == Detail::Task_FreeMem)
+      {
+        // Output
+        std::wcout << "Enter region address:" << std::endl;
+
+        // Get region address
+        auto Address = ReadHexNumericDataFromUser<PVOID>();
+
+        // Free memory
+        MyMemory->Free(Address);
+
+        // Output
+        std::wcout << "Memory freed at address " << Address << "." 
+          << std::endl;
       }
       // Handle 'Disassemble' task
       else if (Task == Detail::Task_Disassemble)

@@ -505,7 +505,7 @@ namespace Hades
     PVOID MemoryMgr::Alloc(SIZE_T Size) const
     {
       PVOID Address = VirtualAllocEx(m_Process.GetHandle(), nullptr, Size, 
-        MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+        MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
       if (!Address)
       {
         DWORD LastError = GetLastError();
