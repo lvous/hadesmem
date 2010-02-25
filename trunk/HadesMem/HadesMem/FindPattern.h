@@ -153,6 +153,12 @@ namespace Hades
     {
       // Open current file
       std::wifstream PatternFile(Path.c_str());
+      if (!PatternFile)
+      {
+        BOOST_THROW_EXCEPTION(FindPatternError() << 
+          ErrorFunction("FindPattern::LoadFromXML") << 
+          ErrorString("Could not open pattern file."));
+      }
 
       // Copy file to buffer
       auto PatFileBeg = std::istreambuf_iterator<wchar_t>(PatternFile);
@@ -166,6 +172,12 @@ namespace Hades
 
       // Loop over all patterns
       auto PatternsTag = AccountsDoc.first_node(L"Patterns");
+      if (!PatternsTag)
+      {
+        BOOST_THROW_EXCEPTION(FindPatternError() << 
+          ErrorFunction("FindPattern::LoadFromXML") << 
+          ErrorString("Invalid pattern file format."));
+      }
       for (auto Pattern = PatternsTag->first_node(L"Pattern"); Pattern; 
         Pattern = Pattern->next_sibling(L"Pattern"))
       {
