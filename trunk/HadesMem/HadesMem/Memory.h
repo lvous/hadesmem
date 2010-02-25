@@ -219,16 +219,22 @@ namespace Hades
     T MemoryMgr::Read(PVOID Address, typename boost::enable_if<
       std::is_pod<T>>::type* /*Dummy*/) const 
     {
+      // Whether we can read the given address
+      bool CanReadMem = CanRead(Address);
+
       // Set page protection for reading
       DWORD OldProtect;
-      if (!VirtualProtectEx(m_Process.GetHandle(), Address, sizeof(T), 
-        PAGE_EXECUTE_READWRITE, &OldProtect))
+      if (!CanReadMem)
       {
-        DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(MemoryError() << 
-          ErrorFunction("MemoryMgr::Read") << 
-          ErrorString("Could not change process memory protection.") << 
-          ErrorCodeWin(LastError));
+        if (!VirtualProtectEx(m_Process.GetHandle(), Address, sizeof(T), 
+          PAGE_EXECUTE_READWRITE, &OldProtect))
+        {
+          DWORD LastError = GetLastError();
+          BOOST_THROW_EXCEPTION(MemoryError() << 
+            ErrorFunction("MemoryMgr::Read") << 
+            ErrorString("Could not change process memory protection.") << 
+            ErrorCodeWin(LastError));
+        }
       }
 
       // Read data
@@ -237,9 +243,12 @@ namespace Hades
       if (!ReadProcessMemory(m_Process.GetHandle(), Address, &Out, sizeof(T), 
         &BytesRead) || BytesRead != sizeof(T))
       {
-        // Restore original page protections
-        VirtualProtectEx(m_Process.GetHandle(), Address, sizeof(T), 
-          OldProtect, &OldProtect);
+        if (!CanReadMem)
+        {
+          // Restore original page protections
+          VirtualProtectEx(m_Process.GetHandle(), Address, sizeof(T), 
+            OldProtect, &OldProtect);
+        }
 
         DWORD LastError = GetLastError();
         BOOST_THROW_EXCEPTION(MemoryError() << 
@@ -249,14 +258,17 @@ namespace Hades
       }
 
       // Restore original page protections
-      if (!VirtualProtectEx(m_Process.GetHandle(), Address, sizeof(T), 
-        OldProtect, &OldProtect))
+      if (!CanReadMem)
       {
-        DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(MemoryError() << 
-          ErrorFunction("MemoryMgr::Read") << 
-          ErrorString("Could not restore process memory protection.") << 
-          ErrorCodeWin(LastError));
+        if (!VirtualProtectEx(m_Process.GetHandle(), Address, sizeof(T), 
+          OldProtect, &OldProtect))
+        {
+          DWORD LastError = GetLastError();
+          BOOST_THROW_EXCEPTION(MemoryError() << 
+            ErrorFunction("MemoryMgr::Read") << 
+            ErrorString("Could not restore process memory protection.") << 
+            ErrorCodeWin(LastError));
+        }
       }
 
       return Out;

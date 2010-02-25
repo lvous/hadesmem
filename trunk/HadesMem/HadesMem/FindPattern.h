@@ -96,8 +96,10 @@ namespace Hades
     PVOID FindPattern::Find(std::wstring const& Name, std::string const& Mask, 
       std::vector<BYTE> const& Data)
     {
-      for (auto i = m_Start; m_Start < m_End; ++i)
+      for (auto i = m_Start; i != m_End; ++i)
       {
+        if (reinterpret_cast<DWORD_PTR>(i) % 0x10000 == 0)
+          std::wcout << i << std::endl;
         if (DataCompare(i, Mask, Data))
         {
           if (!Name.empty())
@@ -107,7 +109,7 @@ namespace Hades
           return i;
         }
       }
-      return nullptr;
+      return nullptr; 
     }
 
     // Check whether an address matches a given pattern

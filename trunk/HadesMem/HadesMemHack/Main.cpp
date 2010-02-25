@@ -362,6 +362,14 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
           continue;
         }
 
+        // Ensure data is valid
+        if (Mask.size() * 2 != Data.size())
+        {
+          std::wcout << "Invalid data (the data must match the mask)." 
+            << std::endl;
+          continue;
+        }
+
         // Convert data to byte buffer
         std::vector<BYTE> DataReal;
         for (auto i = Data.begin(); i != Data.end(); i += 2)
