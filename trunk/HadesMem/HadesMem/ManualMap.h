@@ -216,17 +216,24 @@ namespace Hades
           pCurrent->VirtualAddress; 
         BytesWritten += VirtualSize; 
 
-//         // Set the proper page protections for this section
-//         DWORD OldProtect;
-//         if (!VirtualProtectEx(m_Memory.GetProcessHandle(), TargetAddr, 
-//           VirtualSize, pCurrent->Characteristics & 0x00FFFFFF, &OldProtect))
-//         {
-//           DWORD LastError = GetLastError();
-//           BOOST_THROW_EXCEPTION(ManualMapError() << 
-//             ErrorFunction("ManualMap::MapSections") << 
-//             ErrorString("Could not change page protections for section.") << 
-//             ErrorCodeWin(LastError));
-//         }
+        // Once we've reached the SizeOfImage, the rest of the sections 
+        // don't need to be mapped, if there are any. 
+        if (BytesWritten >= pNtHeaders->OptionalHeader.SizeOfImage)
+        {
+          break;
+        }
+
+        // Set the proper page protections for this section
+        DWORD OldProtect;
+        if (!VirtualProtectEx(m_Memory.GetProcessHandle(), TargetAddr, 
+          VirtualSize, pCurrent->Characteristics & 0x00FFFFFF, &OldProtect))
+        {
+          DWORD LastError = GetLastError();
+          BOOST_THROW_EXCEPTION(ManualMapError() << 
+            ErrorFunction("ManualMap::MapSections") << 
+            ErrorString("Could not change page protections for section.") << 
+            ErrorCodeWin(LastError));
+        }
       } 
     }
   }

@@ -46,6 +46,9 @@ namespace Hades
       // Get address map
       inline std::map<std::wstring, PVOID> GetAddresses() const;
 
+      // Operator[] overload to allow retrieving addresses by name
+      inline PVOID operator[](std::wstring const& Name) const;
+
     private:
       // Disable assignment
       FindPattern& operator= (FindPattern const&);
@@ -409,6 +412,13 @@ namespace Hades
 
       // Calculate end of code section
       m_End = m_Start + NtHeader.OptionalHeader.SizeOfCode;
+    }
+
+    // Operator[] overload to allow retrieving addresses by name
+    PVOID FindPattern::operator[](std::wstring const& Name) const
+    {
+      auto Iter = m_Addresses.find(Name);
+      return Iter != m_Addresses.end() ? Iter->second : nullptr;
     }
   }
 }
