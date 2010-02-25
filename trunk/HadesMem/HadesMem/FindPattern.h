@@ -14,6 +14,7 @@
 #include <RapidXML/rapidxml.hpp>
 
 // HadesMem
+#include "I18n.h"
 #include "Error.h"
 #include "Module.h"
 #include "Memory.h"
@@ -182,8 +183,9 @@ namespace Hades
           auto DataNode = Pattern->first_attribute(L"Data");
           std::wstring Name(NameNode ? NameNode->value() : L"");
           std::wstring Mask(MaskNode ? MaskNode->value() : L"");
+          std::string MaskReal(boost::lexical_cast<std::string>(Mask));
           std::wstring Data(DataNode ? DataNode->value() : L"");
-          std::string DataReal(I18n::ConvertStr(Data));
+          std::string DataReal(boost::lexical_cast<std::string>(Data));
 
           // Ensure pattern attributes are valid
           if (Name.empty() || Mask.empty() || Data.empty())
@@ -210,7 +212,7 @@ namespace Hades
           }
 
           // Find pattern
-          Find(Name, I18n::ConvertStr(Mask), DataBuf);
+          Find(Name, MaskReal, DataBuf);
         }
       }
     }
