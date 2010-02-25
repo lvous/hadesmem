@@ -18,6 +18,7 @@
 
 // HadesMem
 #include "Error.h"
+#include "Module.h"
 #include "Memory.h"
 #include "Process.h"
 
@@ -37,8 +38,7 @@ namespace Hades
       inline explicit Disassembler(MemoryMgr const& MyMemory);
 
       // Test disassembler
-      inline void DisassembleTest(ULONG_PTR Offset, 
-        unsigned long NumInstructions);
+      inline void DisassembleTest(PVOID Address, DWORD NumInstructions);
 
     private:
       // Convert RVA to file offset
@@ -50,91 +50,49 @@ namespace Hades
       // MemoryMgr instance
       MemoryMgr const& m_Memory;
 
-      // Handle to target file
-      CAtlFile m_TargetFile;
-      // Handle to target file mapping
-      CAtlFileMapping<BYTE> m_TargetFileMapping;
       // Base of code section in mapping
       PBYTE m_BaseOfCode;
     };
 
     // Constructor
     Disassembler::Disassembler(MemoryMgr const& MyMemory) 
-      : m_Memory(MyMemory), 
-      m_TargetFile(), 
-      m_TargetFileMapping()
+      : m_Memory(MyMemory)
     {
-      // Get path to target
-      std::array<wchar_t, MAX_PATH> PathToTargetBuf = { 0 };
-      if (!GetModuleFileNameEx(m_Memory.GetProcessHandle(), nullptr, 
-        &PathToTargetBuf[0], MAX_PATH))
-      {
-        DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(DisassemblerError() << 
-          ErrorFunction("Disassembler::Disassembler") << 
-          ErrorString("Could not get path to target.") << 
-          ErrorCodeWin(LastError));
-      }
+      // Get module list
+      auto ModuleList = GetModuleList(MyMemory);
 
-      // Open target file
-      if (FAILED(m_TargetFile.Create(&PathToTargetBuf[0], GENERIC_READ, 
-        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, 
-        OPEN_EXISTING)))
+      // Ensure module list is valid
+      if (ModuleList.empty())
       {
-        DWORD LastError = GetLastError();
         BOOST_THROW_EXCEPTION(DisassemblerError() << 
-          ErrorFunction("Disassembler::Disassembler") << 
-          ErrorString("Could not open target file.") << 
-          ErrorCodeWin(LastError));
-      }
-
-      // Map target file into memory
-      if (FAILED(m_TargetFileMapping.MapFile(m_TargetFile, 0, 0, PAGE_READONLY, 
-        FILE_MAP_READ)))
-      {
-        DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(DisassemblerError() << 
-          ErrorFunction("Disassembler::Disassembler") << 
-          ErrorString("Could not map view of target.") << 
-          ErrorCodeWin(LastError));
+          ErrorFunction("FindPattern::FindPattern") << 
+          ErrorString("Could not get module list."));
       }
 
       // Get pointer to image headers
-      auto pBase = static_cast<PBYTE>(m_TargetFileMapping);
-      auto pDosHeader = reinterpret_cast<PIMAGE_DOS_HEADER>(pBase);
-      auto pNtHeader = reinterpret_cast<PIMAGE_NT_HEADERS>(pBase + 
-        pDosHeader->e_lfanew);
-
-      // If the two pointers are the same then the header is probably nulled 
-      // out.
-      if (static_cast<PVOID>(pDosHeader) == static_cast<PVOID>(pNtHeader))
-      {
-        BOOST_THROW_EXCEPTION(DisassemblerError() << 
-          ErrorFunction("Disassembler::Disassembler") << 
-          ErrorString("Could not get pointer to image headers."));
-      }
+      auto pBase = reinterpret_cast<PBYTE>(ModuleList[0]->GetBase());
+      auto DosHeader = MyMemory.Read<IMAGE_DOS_HEADER>(pBase);
+      auto NtHeader = MyMemory.Read<IMAGE_NT_HEADERS>(pBase + DosHeader.
+        e_lfanew);
 
       // Get base of code section
-      m_BaseOfCode = static_cast<PBYTE>(m_TargetFileMapping) + RvaToFileOffset(
-        pNtHeader, pNtHeader->OptionalHeader.BaseOfCode);
+      m_BaseOfCode = pBase + NtHeader.OptionalHeader.BaseOfCode;
     }
 
     // Test disassembler
-    void Disassembler::DisassembleTest(ULONG_PTR Offset, 
-      unsigned long NumInstructions) 
+    void Disassembler::DisassembleTest(PVOID Address, DWORD NumInstructions) 
     {
       // Calculate target address
-      PBYTE Target = m_BaseOfCode + Offset;
+      PBYTE Target = static_cast<PBYTE>(Address);
 
-      // Debug output
-      std::wcout << "Base of Mapping:" << static_cast<PBYTE>(
-        m_TargetFileMapping) << std::endl;
-      std::wcout << "Base of Code:" << m_BaseOfCode << std::endl;
-      std::wcout << "Target: " << Target << std::endl;
+      // Read data into buffer
+      int MaxInstructionSize = 30;
+      auto Buffer(m_Memory.Read<std::vector<BYTE>>(Target, NumInstructions * 
+        MaxInstructionSize));
 
       // Set up disasm structure for BeaEngine
       DISASM MyDisasm = { 0 };
-      MyDisasm.EIP = reinterpret_cast<long long>(Target);
+      MyDisasm.EIP = reinterpret_cast<long long>(&Buffer[0]);
       #if defined(_M_AMD64) 
         MyDisasm.Archi = 64;
       #elif defined(_M_IX86) 
@@ -144,7 +102,7 @@ namespace Hades
       #endif
 
       // Disassemble instructions
-      for (unsigned int i = 0; i < NumInstructions; ++i)
+      for (DWORD i = 0; i < NumInstructions; ++i)
       {
         // Disassemble current instruction
         int Len = Disasm(&MyDisasm);

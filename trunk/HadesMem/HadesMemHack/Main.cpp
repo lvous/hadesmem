@@ -322,11 +322,11 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
       {
         // Get target offset
         std::wcout << "Enter target offset:" << std::endl;
-        auto Offset = ReadHexNumericDataFromUser<ULONG_PTR>();
+        auto Offset = ReadHexNumericDataFromUser<PVOID>();
 
         // Get number of instructions to disassemble
         std::wcout << "Enter number of instructions:" << std::endl;
-        auto NumInstructions = ReadNumericDataFromUser<unsigned long>();
+        auto NumInstructions = ReadNumericDataFromUser<DWORD>();
 
         // Create disassembler instance
         Hades::Memory::Disassembler MyDisassembler(*MyMemory);
