@@ -34,8 +34,10 @@ namespace Hades
     {
     public:
       // Constructor
-      inline explicit FindPattern(MemoryMgr const& MyMemory, 
-        PVOID Start = nullptr, PVOID End = nullptr);
+      inline explicit FindPattern(MemoryMgr const& MyMemory);
+      inline explicit FindPattern(MemoryMgr const& MyMemory, HMODULE Module);
+      inline explicit FindPattern(MemoryMgr const& MyMemory, PVOID Start, 
+        PVOID End);
       
       // Find pattern
       inline PVOID Find(std::string const& Mask, 
@@ -51,6 +53,9 @@ namespace Hades
       // Check whether an address matches a given pattern
       inline bool DataCompare(DWORD_PTR Offset, std::string const& Mask, 
         std::vector<BYTE> const& Data, std::shared_ptr<std::vector<BYTE>>);
+
+      // Initialize using PE header
+      void Initialize();
 
       // Memory manager instance
       MemoryMgr const& m_Memory;
@@ -73,29 +78,40 @@ namespace Hades
       // If start or end are not specified by the user then calculate them
       if (!m_Start || !m_End)
       {
-        // Get module list
-        auto ModuleList = GetModuleList(MyMemory);
-
-        // Ensure module list is valid
-        if (ModuleList.empty())
-        {
-          BOOST_THROW_EXCEPTION(FindPatternError() << 
-            ErrorFunction("FindPattern::FindPattern") << 
-            ErrorString("Could not get module list."));
-        }
-
-        // Get pointer to image headers
-        auto pBase = reinterpret_cast<PBYTE>(ModuleList[0]->GetBase());
-        auto DosHeader = MyMemory.Read<IMAGE_DOS_HEADER>(pBase);
-        auto NtHeader = MyMemory.Read<IMAGE_NT_HEADERS>(pBase + DosHeader.
-          e_lfanew);
-
-        // Get base of code section
-        m_Start = pBase + NtHeader.OptionalHeader.BaseOfCode;
-
-        // Calculate end of code section
-        m_End = m_Start + NtHeader.OptionalHeader.SizeOfCode;
+        // Initialize using PE header
+        Initialize();
       }
+    }
+
+    // Constructor
+    FindPattern::FindPattern(MemoryMgr const& MyMemory, HMODULE Module) 
+      : m_Memory(MyMemory), 
+      m_Start(nullptr), 
+      m_End(nullptr), 
+      m_Addresses()
+    {
+      // Get pointer to image headers
+      auto pBase = reinterpret_cast<PBYTE>(Module);
+      auto DosHeader = MyMemory.Read<IMAGE_DOS_HEADER>(pBase);
+      auto NtHeader = MyMemory.Read<IMAGE_NT_HEADERS>(pBase + DosHeader.
+        e_lfanew);
+
+      // Get base of code section
+      m_Start = pBase + NtHeader.OptionalHeader.BaseOfCode;
+
+      // Calculate end of code section
+      m_End = m_Start + NtHeader.OptionalHeader.SizeOfCode;
+    }
+
+    // Constructor
+    FindPattern::FindPattern(MemoryMgr const& MyMemory) 
+      : m_Memory(MyMemory), 
+      m_Start(nullptr), 
+      m_End(nullptr), 
+      m_Addresses()
+    {
+      // Initialize using PE header
+      Initialize();
     }
 
     // Find pattern
@@ -354,6 +370,33 @@ namespace Hades
     std::map<std::wstring, PVOID> FindPattern::GetAddresses() const
     {
       return m_Addresses;
+    }
+
+    // Initialize using PE header
+    void FindPattern::Initialize()
+    {
+      // Get module list
+      auto ModuleList = GetModuleList(m_Memory);
+
+      // Ensure module list is valid
+      if (ModuleList.empty())
+      {
+        BOOST_THROW_EXCEPTION(FindPatternError() << 
+          ErrorFunction("FindPattern::FindPattern") << 
+          ErrorString("Could not get module list."));
+      }
+
+      // Get pointer to image headers
+      auto pBase = reinterpret_cast<PBYTE>(ModuleList[0]->GetBase());
+      auto DosHeader = m_Memory.Read<IMAGE_DOS_HEADER>(pBase);
+      auto NtHeader = m_Memory.Read<IMAGE_NT_HEADERS>(pBase + DosHeader.
+        e_lfanew);
+
+      // Get base of code section
+      m_Start = pBase + NtHeader.OptionalHeader.BaseOfCode;
+
+      // Calculate end of code section
+      m_End = m_Start + NtHeader.OptionalHeader.SizeOfCode;
     }
   }
 }
