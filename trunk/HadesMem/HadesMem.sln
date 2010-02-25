@@ -21,6 +21,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AsmJit", "AsmJit\AsmJit.vcx
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RapidXML", "RapidXML\RapidXML.vcxproj", "{48DFDBB1-34B6-4BFA-85C8-99D5CB092EF1}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HadesMemHackDll", "HadesMemHackDll\HadesMemHackDll.vcxproj", "{E9326F05-9583-4B5C-A2C1-1E2377EA21FB}"
+EndProject
 Global
 	GlobalSection(SubversionScc) = preSolution
 		Svn-Managed = True
@@ -79,6 +81,14 @@ Global
 		{48DFDBB1-34B6-4BFA-85C8-99D5CB092EF1}.Release|Win32.Build.0 = Release|Win32
 		{48DFDBB1-34B6-4BFA-85C8-99D5CB092EF1}.Release|X64.ActiveCfg = Release|x64
 		{48DFDBB1-34B6-4BFA-85C8-99D5CB092EF1}.Release|X64.Build.0 = Release|x64
+		{E9326F05-9583-4B5C-A2C1-1E2377EA21FB}.Debug|Win32.ActiveCfg = Debug|Win32
+		{E9326F05-9583-4B5C-A2C1-1E2377EA21FB}.Debug|Win32.Build.0 = Debug|Win32
+		{E9326F05-9583-4B5C-A2C1-1E2377EA21FB}.Debug|X64.ActiveCfg = Debug|x64
+		{E9326F05-9583-4B5C-A2C1-1E2377EA21FB}.Debug|X64.Build.0 = Debug|x64
+		{E9326F05-9583-4B5C-A2C1-1E2377EA21FB}.Release|Win32.ActiveCfg = Release|Win32
+		{E9326F05-9583-4B5C-A2C1-1E2377EA21FB}.Release|Win32.Build.0 = Release|Win32
+		{E9326F05-9583-4B5C-A2C1-1E2377EA21FB}.Release|X64.ActiveCfg = Release|x64
+		{E9326F05-9583-4B5C-A2C1-1E2377EA21FB}.Release|X64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

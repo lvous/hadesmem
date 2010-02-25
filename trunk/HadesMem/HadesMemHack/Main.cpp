@@ -3,6 +3,7 @@
 #include "Types.h"
 #include "HadesMem/Module.h"
 #include "HadesMem/Memory.h"
+#include "HadesMem/Injector.h"
 #include "HadesMem/Disassemble.h"
 #include "HadesMem/FindPattern.h"
 
@@ -69,9 +70,10 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
       std::wcout << "6. Free memory." << std::endl;
       std::wcout << "7. Disassemble." << std::endl;
       std::wcout << "8. Pattern scan." << std::endl;
+      std::wcout << "9. Inject DLL." << std::endl;
 
       // Get task
-      auto Task = static_cast<Detail::Task>(GetOption(L"task", 1, 8));
+      auto Task = static_cast<Detail::Task>(GetOption(L"task", 1, 9));
 
       // Check for task 'Read Memory' or 'Write Memory' and output accordingly
       if (Task == Detail::Task_ReadMem || Task == Detail::Task_WriteMem)
@@ -401,7 +403,7 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
           while (!(std::cin >> Data) || Data.empty())
           {
             std::wcout << "Invalid data." << std::endl;
-            std::wcin.clear();
+            std::cin.clear();
           }
 
           // Ensure data is valid
@@ -489,7 +491,7 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
           std::wstring DumpPath;
           while (!std::getline(std::wcin, DumpPath))
           {
-            std::wcout << "Invalid filename." << std::endl;
+            std::wcout << "Invalid path." << std::endl;
             std::wcin.clear();
           }
 
@@ -510,6 +512,35 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
         {
           assert(!"Unsupported pattern scan method.");
         }
+      }
+      // Handle 'Inject DLL' task
+      else if (Task == Detail::Task_InjectDLL)
+      {
+        // Output
+        std::wcout << "Enter path to DLL:" << std::endl;
+
+        // Get name
+        std::wstring LibPath;
+        while (!std::getline(std::wcin, LibPath) || LibPath.empty())
+        {
+          std::wcout << "Invalid path." << std::endl;
+          std::wcin.clear();
+        }
+
+        // Output
+        std::wcout << "Enter name of export (optional):" << std::endl;
+
+        // Get export
+        std::string Export;
+        while (!(std::cin >> Export))
+        {
+          std::wcout << "Invalid export." << std::endl;
+          std::cin.clear();
+        }
+
+        // Create DLL injector
+        Hades::Memory::Injector MyInjector(*MyMemory);
+        MyInjector.InjectDll(LibPath, Export);
       }
       // Output for all currently unhandled tasks
       else
