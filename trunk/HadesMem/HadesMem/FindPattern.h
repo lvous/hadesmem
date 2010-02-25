@@ -234,16 +234,18 @@ namespace Hades
           bool IsSub = std::wstring(OptionName) == L"Sub";
           if (IsAdd || IsSub)
           {
-            auto AddVal = PatOpts->first_attribute(L"Value");
-            if (!AddVal)
+            // Get the modification value
+            auto ModVal = PatOpts->first_attribute(L"Value");
+            if (!ModVal)
             {
               BOOST_THROW_EXCEPTION(FindPatternError() << 
                 ErrorFunction("FindPattern::LoadFromXML") << 
                 ErrorString("No value specified for 'Add' option."));
             }
-
+            
+            // Convert value to usable form
             DWORD_PTR AddValReal = 0;
-            std::wstringstream Converter(AddVal->value());
+            std::wstringstream Converter(ModVal->value());
             if (!(Converter >> std::hex >> AddValReal >> std::dec))
             {
               BOOST_THROW_EXCEPTION(FindPatternError() << 
@@ -251,6 +253,7 @@ namespace Hades
                 ErrorString("Invalid conversion for 'Add' option."));
             }
 
+            // Perform modification
             if (IsAdd)
             {
               Address += AddValReal;
@@ -266,12 +269,16 @@ namespace Hades
                 ErrorString("Unsupported pattern option."));
             }
           }
+          // Handle 'Lea' option (abs deref)
           else if (OptionName == L"Lea")
           {
+            // Perform absolute 'dereference'
             Address = m_Memory.Read<PBYTE>(Address);
           }
+          // Handle 'Rel' option (rel deref)
           else if (OptionName == L"Rel")
           {
+            // Get instruction size
             auto SizeAttr = PatOpts->first_attribute(L"Size");
             if (!SizeAttr)
             {
@@ -280,6 +287,7 @@ namespace Hades
                 ErrorString("No size specified for 'Size' in 'Rel' option."));
             }
 
+            // Convert instruction size to usable format
             DWORD_PTR Size = 0;
             std::wstringstream SizeConverter(SizeAttr->value());
             if (!(SizeConverter >> std::hex >> Size >> std::dec))
@@ -289,6 +297,7 @@ namespace Hades
                 ErrorString("Invalid conversion for 'Size' in 'Rel' option."));
             }
 
+            // Get instruction offset
             auto OffsetAttr = PatOpts->first_attribute(L"Offset");
             if (!OffsetAttr)
             {
@@ -298,6 +307,7 @@ namespace Hades
                 "option."));
             }
 
+            // Convert instruction onffset to usable format
             DWORD_PTR Offset = 0;
             std::wstringstream OffsetConverter(OffsetAttr->value());
             if (!(OffsetConverter >> std::hex >> Offset >> std::dec))
@@ -308,17 +318,20 @@ namespace Hades
                 "option."));
             }
 
+            // Perform relative 'dereference'
             Address = m_Memory.Read<PBYTE>(Address) + 
               reinterpret_cast<DWORD_PTR>(Address) + Size - Offset;
           }
           else
           {
+            // Unknown pattern option
             BOOST_THROW_EXCEPTION(FindPatternError() << 
               ErrorFunction("FindPattern::LoadFromXML") << 
               ErrorString("Unknown pattern option."));
           }
         }
 
+        // Add address to map
         m_Addresses[Name] = Address;
       }
     }
