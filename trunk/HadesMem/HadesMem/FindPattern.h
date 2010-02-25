@@ -47,6 +47,9 @@ namespace Hades
       inline std::map<std::wstring, PVOID> GetAddresses() const;
 
     private:
+      // Disable assignment
+      FindPattern& operator= (FindPattern const&);
+
       // Check whether an address matches a given pattern
       inline bool DataCompare(DWORD_PTR Offset, std::string const& Mask, 
         std::vector<BYTE> const& Data, std::shared_ptr<std::vector<BYTE>>);
@@ -174,8 +177,8 @@ namespace Hades
       }
 
       // Copy file to buffer
-      auto PatFileBeg = std::istreambuf_iterator<wchar_t>(PatternFile);
-      auto PatFileEnd = std::istreambuf_iterator<wchar_t>();
+      std::istreambuf_iterator<wchar_t> PatFileBeg(PatternFile);
+      std::istreambuf_iterator<wchar_t> PatFileEnd;
       std::vector<wchar_t> PatFileBuf(PatFileBeg, PatFileEnd);
       PatFileBuf.push_back(L'\0');
 
