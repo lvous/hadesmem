@@ -28,6 +28,7 @@
     <ClInclude Include="FindPattern.h" />
     <ClInclude Include="I18n.h" />
     <ClInclude Include="Injector.h" />
+    <ClInclude Include="ManualMap.h" />
     <ClInclude Include="Memory.h" />
     <ClInclude Include="Module.h" />
     <ClInclude Include="Process.h" />

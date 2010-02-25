@@ -1,27 +1,18 @@
 #pragma once
 
 // Windows API
-#include <Psapi.h>
 #include <Windows.h>
-#include <atlbase.h>
-#include <atlfile.h>
-#pragma comment(lib, "psapi")
 
 // C++ Standard Library
-#include <array>
-#include <memory>
 #include <vector>
 #include <string>
-#include <iostream>
 
 // BeaEngine
 #include "BeaEngine/BeaEngine.h"
 
 // HadesMem
-#include "Error.h"
 #include "Module.h"
 #include "Memory.h"
-#include "Process.h"
 
 namespace Hades
 {

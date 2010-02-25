@@ -10,7 +10,6 @@
 #include <iostream>
 
 // HadesMem
-#include "Error.h"
 #include "Memory.h"
 
 namespace Hades

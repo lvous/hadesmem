@@ -10,9 +10,7 @@
 
 // Boost
 #pragma warning(push, 1)
-#pragma warning(disable: 4706)
 #include <boost/noncopyable.hpp>
-#include <boost/lexical_cast.hpp>
 #pragma warning(pop)
 
 // HadesMem

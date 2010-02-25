@@ -8,16 +8,9 @@
 #include <string>
 #include <vector>
 
-// Boost
-#pragma warning(push, 1)
-#include <boost/noncopyable.hpp>
-#pragma warning(pop)
-
 // HadesMem
-#include "Error.h"
-#include "Memory.h"
 #include "Module.h"
-#include "Process.h"
+#include "Memory.h"
 
 // Image base linker 'trick'
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
@@ -58,6 +51,7 @@ namespace Hades
     DWORD Injector::InjectDll(std::wstring const& Path, 
       std::string const& Export)
     {
+      // String to hold 'real' path to module
       std::wstring PathReal(Path);
 
       // Check whether we need to convert the path from a relative to 

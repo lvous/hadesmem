@@ -5,7 +5,6 @@
 
 // C++ Standard Library
 #include <map>
-#include <array>
 #include <string>
 #include <vector>
 #include <fstream>
@@ -16,10 +15,8 @@
 
 // HadesMem
 #include "I18n.h"
-#include "Error.h"
 #include "Module.h"
 #include "Memory.h"
-#include "Process.h"
 
 namespace Hades
 {
