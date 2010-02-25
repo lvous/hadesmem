@@ -124,9 +124,9 @@ namespace Hades
       // Loop over entire memory region
       for (auto Address = m_Start; Address != m_End; ++Address)
       {
-        // Read 0x5000 addresses at a time
+        // Read 0x5000 bytes at a time
         DWORD_PTR ChunkSize = 0x5000;
-        // Calculate current cache offset
+        // Calculate current chunk offset
         DWORD_PTR Offset = reinterpret_cast<DWORD_PTR>(Address) % ChunkSize;
         // Whenever we reach the chunk size we need to re-cache
         if (Offset == 0)
