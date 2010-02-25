@@ -43,13 +43,13 @@ namespace Hades
       // Load patterns from XML file
       inline void LoadFromXML(std::wstring const& Path);
 
+      // Get address map
+      inline std::map<std::wstring, PVOID> GetAddresses() const;
+
     private:
       // Check whether an address matches a given pattern
       inline bool DataCompare(DWORD_PTR Offset, std::string const& Mask, 
         std::vector<BYTE> const& Data, std::shared_ptr<std::vector<BYTE>>);
-
-      // Convert RVA to file offset
-      inline DWORD RvaToFileOffset(PIMAGE_NT_HEADERS pNtHeaders, DWORD Rva);
 
       // Memory manager instance
       MemoryMgr const& m_Memory;
@@ -105,17 +105,17 @@ namespace Hades
       // caching.
       std::shared_ptr<std::vector<BYTE>> MyBuffer;
       // Loop over entire memory region
-      for (auto i = m_Start; i != m_End; ++i)
+      for (auto Address = m_Start; Address != m_End; ++Address)
       {
         // Read 0x5000 addresses at a time
         DWORD_PTR ChunkSize = 0x5000;
         // Calculate current cache offset
-        DWORD_PTR Offset = reinterpret_cast<DWORD_PTR>(i) % ChunkSize;
+        DWORD_PTR Offset = reinterpret_cast<DWORD_PTR>(Address) % ChunkSize;
         // Whenever we reach the chunk size we need to re-cache
         if (Offset == 0)
         {
           MyBuffer.reset(new std::vector<BYTE>(m_Memory.
-            Read<std::vector<BYTE>>(i, ChunkSize + 1)));
+            Read<std::vector<BYTE>>(Address, ChunkSize + Mask.size())));
         }
         // Check if current address matches pattern
         if (DataCompare(Offset, Mask, Data, MyBuffer))
@@ -123,11 +123,16 @@ namespace Hades
           // If name is specified then enter into map
           if (!Name.empty())
           {
-            m_Addresses[Name] = i;
+            m_Addresses[Name] = Address;
           }
           // Return found address
-          return i;
+          return Address;
         }
+      }
+      // If name is specified then enter into map
+      if (!Name.empty())
+      {
+        m_Addresses[Name] = nullptr;
       }
       // Nothing found, return null
       return nullptr; 
@@ -168,53 +173,70 @@ namespace Hades
       rapidxml::xml_document<wchar_t> AccountsDoc;
       AccountsDoc.parse<0>(&PatFileBuf[0]);
 
-      // Loop over all pattern groups
+      // Loop over all patterns
       auto PatternsTag = AccountsDoc.first_node(L"Patterns");
-      for (auto PatternGroups = PatternsTag->first_node(); PatternGroups; 
-        PatternGroups = PatternGroups->next_sibling())
+      for (auto Pattern = PatternsTag->first_node(L"Pattern"); Pattern; 
+        Pattern = Pattern->next_sibling(L"Pattern"))
       {
-        // Loop over all patterns
-        for (auto Pattern = PatternGroups->first_node(L"Pattern"); Pattern; 
-          Pattern = Pattern->next_sibling(L"Pattern"))
-        {
-          // Get pattern attributes
-          auto NameNode = Pattern->first_attribute(L"Name");
-          auto MaskNode = Pattern->first_attribute(L"Mask");
-          auto DataNode = Pattern->first_attribute(L"Data");
-          std::wstring Name(NameNode ? NameNode->value() : L"");
-          std::wstring Mask(MaskNode ? MaskNode->value() : L"");
-          std::string MaskReal(boost::lexical_cast<std::string>(Mask));
-          std::wstring Data(DataNode ? DataNode->value() : L"");
-          std::string DataReal(boost::lexical_cast<std::string>(Data));
+        // Get pattern attributes
+        auto NameNode = Pattern->first_attribute(L"Name");
+        auto MaskNode = Pattern->first_attribute(L"Mask");
+        auto DataNode = Pattern->first_attribute(L"Data");
+        std::wstring Name(NameNode ? NameNode->value() : L"");
+        std::wstring Mask(MaskNode ? MaskNode->value() : L"");
+        std::string MaskReal(boost::lexical_cast<std::string>(Mask));
+        std::wstring Data(DataNode ? DataNode->value() : L"");
+        std::string DataReal(boost::lexical_cast<std::string>(Data));
 
-          // Ensure pattern attributes are valid
-          if (Name.empty() || Mask.empty() || Data.empty())
+        // Ensure pattern attributes are valid
+        if (Name.empty() || Mask.empty() || Data.empty())
+        {
+          BOOST_THROW_EXCEPTION(FindPatternError() << 
+            ErrorFunction("FindPattern::LoadFromXML") << 
+            ErrorString("Invalid pattern attributes."));
+        }
+
+        // Ensure data is valid
+        if (Data.size() % 2)
+        {
+          BOOST_THROW_EXCEPTION(FindPatternError() << 
+            ErrorFunction("FindPattern::LoadFromXML") << 
+            ErrorString("Data size invalid."));
+        }
+
+        // Ensure mask is valid
+        if (Mask.size() * 2 != Data.size())
+        {
+          BOOST_THROW_EXCEPTION(FindPatternError() << 
+            ErrorFunction("FindPattern::LoadFromXML") << 
+            ErrorString("Mask size invalid invalid."));
+        }
+
+        // Convert data to byte buffer
+        std::vector<BYTE> DataBuf;
+        for (auto i = DataReal.begin(); i != DataReal.end(); i += 2)
+        {
+          std::string CurrentStr(i, i + 2);
+          std::stringstream Converter(CurrentStr);
+          int Current = 0;
+          if (!(Converter >> std::hex >> Current >> std::dec))
           {
             BOOST_THROW_EXCEPTION(FindPatternError() << 
               ErrorFunction("FindPattern::LoadFromXML") << 
-              ErrorString("Invalid pattern attributes."));
+              ErrorString("Invalid data conversion."));
           }
-
-          // Convert data to byte buffer
-          std::vector<BYTE> DataBuf;
-          for (auto i = DataReal.begin(); i != DataReal.end(); i += 2)
-          {
-            std::string CurrentStr(i, i + 2);
-            std::stringstream Converter(CurrentStr);
-            int Current = 0;
-            if (!(Converter >> std::hex >> Current >> std::dec))
-            {
-              BOOST_THROW_EXCEPTION(FindPatternError() << 
-                ErrorFunction("FindPattern::LoadFromXML") << 
-                ErrorString("Invalid data."));
-            }
-            DataBuf.push_back(static_cast<BYTE>(Current));
-          }
-
-          // Find pattern
-          Find(Name, MaskReal, DataBuf);
+          DataBuf.push_back(static_cast<BYTE>(Current));
         }
+
+        // Find pattern
+        Find(Name, MaskReal, DataBuf);
       }
+    }
+
+    // Get address map
+    std::map<std::wstring, PVOID> FindPattern::GetAddresses() const
+    {
+      return m_Addresses;
     }
   }
 }

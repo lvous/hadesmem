@@ -336,71 +336,116 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
       // Handle 'Pattern Scan' task
       else if (Task == Detail::Task_PatternScan)
       {
-        // Get mask
-        std::wcout << "Enter mask:" << std::endl;
-        std::string Mask;
-        while (!(std::cin >> Mask) || Mask.empty())
-        {
-          std::wcout << "Invalid mask." << std::endl;
-          std::cin.clear();
-        }
+        // Output
+        std::wcout << "Choose a pattern scan method:" << std::endl;
+        std::wcout << "1. Manual." << std::endl;
+        std::wcout << "2. Automatic (XML)." << std::endl;
 
-        // Get data
-        std::wcout << "Enter data:" << std::endl;
-        std::string Data;
-        while (!(std::cin >> Data) || Data.empty())
-        {
-          std::wcout << "Invalid data." << std::endl;
-          std::wcin.clear();
-        }
+        // Get pattern scan method
+        auto PatScanMethod = GetOption(L"pattern scan method", 1, 2);
 
-        // Ensure data is valid
-        if (Data.size() % 2)
+        // Handle manual pattern scanning
+        if (PatScanMethod == 1)
         {
-          std::wcout << "Invalid data (size of data must be a multiple of "
-            "2)." << std::endl;
-          continue;
-        }
-
-        // Ensure data is valid
-        if (Mask.size() * 2 != Data.size())
-        {
-          std::wcout << "Invalid data (the data must match the mask)." 
-            << std::endl;
-          continue;
-        }
-
-        // Convert data to byte buffer
-        std::vector<BYTE> DataReal;
-        for (auto i = Data.begin(); i != Data.end(); i += 2)
-        {
-          std::string CurrentStr(i, i + 2);
-          std::stringstream Converter(CurrentStr);
-          int Current = 0;
-          if (!(Converter >> std::hex >> Current >> std::dec))
+          // Get mask
+          std::wcout << "Enter mask:" << std::endl;
+          std::string Mask;
+          while (!(std::cin >> Mask) || Mask.empty())
           {
-            std::cout << "Invalid data (could not convert data to byte "
-              "buffer)." << std::endl;
+            std::wcout << "Invalid mask." << std::endl;
+            std::cin.clear();
+          }
+
+          // Get data
+          std::wcout << "Enter data:" << std::endl;
+          std::string Data;
+          while (!(std::cin >> Data) || Data.empty())
+          {
+            std::wcout << "Invalid data." << std::endl;
+            std::wcin.clear();
+          }
+
+          // Ensure data is valid
+          if (Data.size() % 2)
+          {
+            std::wcout << "Invalid data (size of data must be a multiple of "
+              "2)." << std::endl;
             continue;
           }
-          DataReal.push_back(static_cast<BYTE>(Current));
-        }
 
-        // Ensure conversion was successful
-        if (Data.size() != DataReal.size() * 2)
+          // Ensure data is valid
+          if (Mask.size() * 2 != Data.size())
+          {
+            std::wcout << "Invalid data (the data must match the mask)." 
+              << std::endl;
+            continue;
+          }
+
+          // Convert data to byte buffer
+          std::vector<BYTE> DataReal;
+          for (auto i = Data.begin(); i != Data.end(); i += 2)
+          {
+            std::string CurrentStr(i, i + 2);
+            std::stringstream Converter(CurrentStr);
+            int Current = 0;
+            if (!(Converter >> std::hex >> Current >> std::dec))
+            {
+              std::cout << "Invalid data (could not convert data to byte "
+                "buffer)." << std::endl;
+              continue;
+            }
+            DataReal.push_back(static_cast<BYTE>(Current));
+          }
+
+          // Ensure conversion was successful
+          if (Data.size() != DataReal.size() * 2)
+          {
+            std::cout << "Data conversion failed." << std::endl;
+            continue;
+          }
+
+          // Create pattern scanner
+          Hades::Memory::FindPattern MyFindPattern(*MyMemory);
+
+          // Perform pattern scan
+          PVOID Address = MyFindPattern.Find(L"", Mask, DataReal);
+
+          // Output
+          std::wcout << "Address: " << Address << "." << std::endl;
+        }
+        // Handle automatic pattern scanning
+        else if (PatScanMethod == 2)
         {
-          std::cout << "Data conversion failed." << std::endl;
-          continue;
+          // Create pattern scanner
+          Hades::Memory::FindPattern MyFindPattern(*MyMemory);
+
+          // Output
+          std::wcout << "Enter pattern file path:" << std::endl;
+
+          // Get name
+          std::wstring PatFilePath;
+          while (!std::getline(std::wcin, PatFilePath) || PatFilePath.empty())
+          {
+            std::wcout << "Invalid path." << std::endl;
+            std::wcin.clear();
+          }
+
+          // Load patterns from XML file
+          MyFindPattern.LoadFromXML(PatFilePath);
+
+          // Dump all patterns in scanner
+          std::map<std::wstring, PVOID> Addresses(MyFindPattern.GetAddresses());
+          for (auto i = Addresses.begin(); i != Addresses.end(); ++i)
+          {
+            std::wcout << "Name: " << i->first << "." << std::endl;
+            std::wcout << "Address: " << i->second << "." << std::endl;
+          }
         }
-
-        // Create pattern scanner
-        Hades::Memory::FindPattern MyFindPattern(*MyMemory);
-        
-        // Perform pattern scan
-        PVOID Address = MyFindPattern.Find(L"", Mask, DataReal);
-
-        // Output
-        std::wcout << "Address: " << Address << "." << std::endl;
+        // Catch unsupported pattern scan methods
+        else
+        {
+          assert(!"Unsupported pattern scan method.");
+        }
       }
       // Output for all currently unhandled tasks
       else
