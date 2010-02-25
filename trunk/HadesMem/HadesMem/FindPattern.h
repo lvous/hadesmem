@@ -101,7 +101,7 @@ namespace Hades
       }
       auto NtHeader = MyMemory.Read<IMAGE_NT_HEADERS>(pBase + DosHeader.
         e_lfanew);
-      if (NtHeader.OptionalHeader.Magic != IMAGE_NT_SIGNATURE)
+      if (NtHeader.Signature != IMAGE_NT_SIGNATURE)
       {
         BOOST_THROW_EXCEPTION(FindPatternError() << 
           ErrorFunction("ManualMap::Map") << 
