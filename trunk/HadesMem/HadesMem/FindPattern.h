@@ -8,6 +8,10 @@
 #include <array>
 #include <string>
 #include <vector>
+#include <fstream>
+
+// RapidXML
+#include <RapidXML/rapidxml.hpp>
 
 // HadesMem
 #include "Error.h"
@@ -145,6 +149,70 @@ namespace Hades
       }
       // Mask matched
       return true;
+    }
+
+    // Load patterns from XML file
+    void FindPattern::LoadFromXML(std::wstring const& Path)
+    {
+      // Open current file
+      std::wifstream PatternFile(Path.c_str());
+
+      // Copy file to buffer
+      auto PatFileBeg = std::istreambuf_iterator<wchar_t>(PatternFile);
+      auto PatFileEnd = std::istreambuf_iterator<wchar_t>();
+      std::vector<wchar_t> PatFileBuf(PatFileBeg, PatFileEnd);
+      PatFileBuf.push_back(L'\0');
+
+      // Open XML document
+      rapidxml::xml_document<wchar_t> AccountsDoc;
+      AccountsDoc.parse<0>(&PatFileBuf[0]);
+
+      // Loop over all pattern groups
+      auto PatternsTag = AccountsDoc.first_node(L"Patterns");
+      for (auto PatternGroups = PatternsTag->first_node(); PatternGroups; 
+        PatternGroups = PatternGroups->next_sibling())
+      {
+        // Loop over all patterns
+        for (auto Pattern = PatternGroups->first_node(L"Pattern"); Pattern; 
+          Pattern = Pattern->next_sibling(L"Pattern"))
+        {
+          // Get pattern attributes
+          auto NameNode = Pattern->first_attribute(L"Name");
+          auto MaskNode = Pattern->first_attribute(L"Mask");
+          auto DataNode = Pattern->first_attribute(L"Data");
+          std::wstring Name(NameNode ? NameNode->value() : L"");
+          std::wstring Mask(MaskNode ? MaskNode->value() : L"");
+          std::wstring Data(DataNode ? DataNode->value() : L"");
+          std::string DataReal(I18n::ConvertStr(Data));
+
+          // Ensure pattern attributes are valid
+          if (Name.empty() || Mask.empty() || Data.empty())
+          {
+            BOOST_THROW_EXCEPTION(FindPatternError() << 
+              ErrorFunction("FindPattern::LoadFromXML") << 
+              ErrorString("Invalid pattern attributes."));
+          }
+
+          // Convert data to byte buffer
+          std::vector<BYTE> DataBuf;
+          for (auto i = DataReal.begin(); i != DataReal.end(); i += 2)
+          {
+            std::string CurrentStr(i, i + 2);
+            std::stringstream Converter(CurrentStr);
+            int Current = 0;
+            if (!(Converter >> std::hex >> Current >> std::dec))
+            {
+              BOOST_THROW_EXCEPTION(FindPatternError() << 
+                ErrorFunction("FindPattern::LoadFromXML") << 
+                ErrorString("Invalid data."));
+            }
+            DataBuf.push_back(static_cast<BYTE>(Current));
+          }
+
+          // Find pattern
+          Find(Name, I18n::ConvertStr(Mask), DataBuf);
+        }
+      }
     }
   }
 }

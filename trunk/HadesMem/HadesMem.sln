@@ -19,6 +19,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BeaEngine", "BeaEngine\BeaE
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AsmJit", "AsmJit\AsmJit.vcxproj", "{A5EE0725-5D7E-4E91-8A9E-ABC3C9E74226}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RapidXML", "RapidXML\RapidXML.vcxproj", "{48DFDBB1-34B6-4BFA-85C8-99D5CB092EF1}"
+EndProject
 Global
 	GlobalSection(SubversionScc) = preSolution
 		Svn-Managed = True
@@ -69,6 +71,14 @@ Global
 		{A5EE0725-5D7E-4E91-8A9E-ABC3C9E74226}.Release|Win32.Build.0 = Release|Win32
 		{A5EE0725-5D7E-4E91-8A9E-ABC3C9E74226}.Release|X64.ActiveCfg = Release|x64
 		{A5EE0725-5D7E-4E91-8A9E-ABC3C9E74226}.Release|X64.Build.0 = Release|x64
+		{48DFDBB1-34B6-4BFA-85C8-99D5CB092EF1}.Debug|Win32.ActiveCfg = Debug|Win32
+		{48DFDBB1-34B6-4BFA-85C8-99D5CB092EF1}.Debug|Win32.Build.0 = Debug|Win32
+		{48DFDBB1-34B6-4BFA-85C8-99D5CB092EF1}.Debug|X64.ActiveCfg = Debug|x64
+		{48DFDBB1-34B6-4BFA-85C8-99D5CB092EF1}.Debug|X64.Build.0 = Debug|x64
+		{48DFDBB1-34B6-4BFA-85C8-99D5CB092EF1}.Release|Win32.ActiveCfg = Release|Win32
+		{48DFDBB1-34B6-4BFA-85C8-99D5CB092EF1}.Release|Win32.Build.0 = Release|Win32
+		{48DFDBB1-34B6-4BFA-85C8-99D5CB092EF1}.Release|X64.ActiveCfg = Release|x64
+		{48DFDBB1-34B6-4BFA-85C8-99D5CB092EF1}.Release|X64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
