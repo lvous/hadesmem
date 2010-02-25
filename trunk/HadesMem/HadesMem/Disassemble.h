@@ -49,35 +49,12 @@ namespace Hades
 
       // MemoryMgr instance
       MemoryMgr const& m_Memory;
-
-      // Base of code section in mapping
-      PBYTE m_BaseOfCode;
     };
 
     // Constructor
     Disassembler::Disassembler(MemoryMgr const& MyMemory) 
       : m_Memory(MyMemory)
-    {
-      // Get module list
-      auto ModuleList = GetModuleList(MyMemory);
-
-      // Ensure module list is valid
-      if (ModuleList.empty())
-      {
-        BOOST_THROW_EXCEPTION(DisassemblerError() << 
-          ErrorFunction("FindPattern::FindPattern") << 
-          ErrorString("Could not get module list."));
-      }
-
-      // Get pointer to image headers
-      auto pBase = reinterpret_cast<PBYTE>(ModuleList[0]->GetBase());
-      auto DosHeader = MyMemory.Read<IMAGE_DOS_HEADER>(pBase);
-      auto NtHeader = MyMemory.Read<IMAGE_NT_HEADERS>(pBase + DosHeader.
-        e_lfanew);
-
-      // Get base of code section
-      m_BaseOfCode = pBase + NtHeader.OptionalHeader.BaseOfCode;
-    }
+    { }
 
     // Test disassembler
     void Disassembler::DisassembleTest(PVOID Address, DWORD NumInstructions) 
