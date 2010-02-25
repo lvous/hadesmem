@@ -122,7 +122,7 @@ namespace Hades
       // caching.
       std::shared_ptr<std::vector<BYTE>> MyBuffer;
       // Loop over entire memory region
-      for (auto Address = m_Start; Address != m_End; ++Address)
+      for (auto Address = m_Start; Address != m_End - Mask.size(); ++Address)
       {
         // Read 0x5000 bytes at a time
         DWORD_PTR ChunkSize = 0x5000;
