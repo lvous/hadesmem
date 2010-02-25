@@ -332,7 +332,12 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
         // Create disassembler instance
         Hades::Memory::Disassembler MyDisassembler(*MyMemory);
         // Test disassembler
-        MyDisassembler.DisassembleTest(Offset, NumInstructions);
+        auto DisasmResults(MyDisassembler.Disassemble(Offset, 
+          NumInstructions));
+
+        // Print results
+        std::copy(DisasmResults.begin(), DisasmResults.end(), 
+          std::ostream_iterator<std::string>(std::cout, "\n"));
       }
       // Handle 'Pattern Scan' task
       else if (Task == Detail::Task_PatternScan)

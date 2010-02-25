@@ -10,6 +10,7 @@
 // C++ Standard Library
 #include <array>
 #include <memory>
+#include <vector>
 #include <string>
 #include <iostream>
 
@@ -38,7 +39,8 @@ namespace Hades
       inline explicit Disassembler(MemoryMgr const& MyMemory);
 
       // Test disassembler
-      inline void DisassembleTest(PVOID Address, DWORD NumInstructions);
+      inline std::vector<std::string> Disassemble(PVOID Address, 
+        DWORD NumInstructions);
 
     private:
       // Disable assignment
@@ -54,14 +56,12 @@ namespace Hades
     { }
 
     // Test disassembler
-    void Disassembler::DisassembleTest(PVOID Address, DWORD NumInstructions) 
+    std::vector<std::string> Disassembler::Disassemble(PVOID Address, 
+      DWORD NumInstructions) 
     {
-      // Calculate target address
-      PBYTE Target = static_cast<PBYTE>(Address);
-
       // Read data into buffer
       int MaxInstructionSize = 30;
-      auto Buffer(m_Memory.Read<std::vector<BYTE>>(Target, NumInstructions * 
+      auto Buffer(m_Memory.Read<std::vector<BYTE>>(Address, NumInstructions * 
         MaxInstructionSize));
 
       // Set up disasm structure for BeaEngine
@@ -75,6 +75,9 @@ namespace Hades
         #error "Unsupported architecture."
       #endif
 
+      // Container to hold disassembled code as a string
+      std::vector<std::string> Results;
+
       // Disassemble instructions
       for (DWORD i = 0; i < NumInstructions; ++i)
       {
@@ -83,8 +86,8 @@ namespace Hades
         // Ensure disassembly succeeded
         if (Len != UNKNOWN_OPCODE) 
         {
-          // Output current instruction
-          std::cout << MyDisasm.CompleteInstr << std::endl;
+          // Add current instruction to list
+          Results.push_back(MyDisasm.CompleteInstr);
           // Advance to next instruction
           MyDisasm.EIP = MyDisasm.EIP + Len;
         }
@@ -93,7 +96,10 @@ namespace Hades
         {
           break;
         }
-      };
+      }
+
+      // Return disassembled data
+      return Results;
     }
   }
 }
