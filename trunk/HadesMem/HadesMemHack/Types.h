@@ -44,7 +44,8 @@ namespace Detail
     Task_FreeMem, 
     Task_Disassemble, 
     Task_PatternScan, 
-    Task_InjectDLL
+    Task_InjectDLL, 
+    Task_ManualMap
   };
   
   // Module selection methods

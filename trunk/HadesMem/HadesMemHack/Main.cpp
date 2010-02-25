@@ -4,6 +4,7 @@
 #include "HadesMem/Module.h"
 #include "HadesMem/Memory.h"
 #include "HadesMem/Injector.h"
+#include "HadesMem/ManualMap.h"
 #include "HadesMem/Disassemble.h"
 #include "HadesMem/FindPattern.h"
 
@@ -11,6 +12,7 @@
 #include <limits>
 #include <memory>
 #include <fstream>
+#include <iterator>
 #include <iostream>
 
 // Windows API
@@ -71,9 +73,10 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
       std::wcout << "7. Disassemble." << std::endl;
       std::wcout << "8. Pattern scan." << std::endl;
       std::wcout << "9. Inject DLL." << std::endl;
+      std::wcout << "10. Manually map DLL." << std::endl;
 
       // Get task
-      auto Task = static_cast<Detail::Task>(GetOption(L"task", 1, 9));
+      auto Task = static_cast<Detail::Task>(GetOption(L"task", 1, 10));
 
       // Check for task 'Read Memory' or 'Write Memory' and output accordingly
       if (Task == Detail::Task_ReadMem || Task == Detail::Task_WriteMem)
@@ -541,6 +544,27 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
         // Create DLL injector
         Hades::Memory::Injector MyInjector(*MyMemory);
         MyInjector.InjectDll(LibPath, Export);
+      }
+      // Handle 'Manuall map DLL' task
+      else if (Task == Detail::Task_ManualMap)
+      {
+        // Output
+        std::wcout << "Enter path to DLL:" << std::endl;
+
+        // Get name
+        std::wstring LibPath;
+        while (!std::getline(std::wcin, LibPath) || LibPath.empty())
+        {
+          std::wcout << "Invalid path." << std::endl;
+          std::wcin.clear();
+        }
+
+        // Create DLL injector
+        Hades::Memory::ManualMap MyManualMapper(*MyMemory);
+        PVOID ModuleBase = MyManualMapper.Map(LibPath);
+
+        // Output
+        std::wcout << "Module Base: " << ModuleBase << "." << std::endl;
       }
       // Output for all currently unhandled tasks
       else
