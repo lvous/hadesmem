@@ -170,7 +170,7 @@ namespace Hades
       rapidxml::xml_document<wchar_t> AccountsDoc;
       AccountsDoc.parse<0>(&PatFileBuf[0]);
 
-      // Loop over all patterns
+      // Ensure pattern tag is found
       auto PatternsTag = AccountsDoc.first_node(L"Patterns");
       if (!PatternsTag)
       {
@@ -178,6 +178,8 @@ namespace Hades
           ErrorFunction("FindPattern::LoadFromXML") << 
           ErrorString("Invalid pattern file format."));
       }
+
+      // Loop over all patterns
       for (auto Pattern = PatternsTag->first_node(L"Pattern"); Pattern; 
         Pattern = Pattern->next_sibling(L"Pattern"))
       {
