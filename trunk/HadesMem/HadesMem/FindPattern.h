@@ -96,25 +96,35 @@ namespace Hades
     PVOID FindPattern::Find(std::wstring const& Name, std::string const& Mask, 
       std::vector<BYTE> const& Data)
     {
+      // Rather than performing a read for each address we instead perform 
+      // caching.
       std::shared_ptr<std::vector<BYTE>> MyBuffer;
+      // Loop over entire memory region
       for (auto i = m_Start; i != m_End; ++i)
       {
+        // Read 0x5000 addresses at a time
         DWORD_PTR ChunkSize = 0x5000;
+        // Calculate current cache offset
         DWORD_PTR Offset = reinterpret_cast<DWORD_PTR>(i) % ChunkSize;
+        // Whenever we reach the chunk size we need to re-cache
         if (Offset == 0)
         {
           MyBuffer.reset(new std::vector<BYTE>(m_Memory.
             Read<std::vector<BYTE>>(i, ChunkSize + 1)));
         }
+        // Check if current address matches pattern
         if (DataCompare(Offset, Mask, Data, MyBuffer))
         {
+          // If name is specified then enter into map
           if (!Name.empty())
           {
             m_Addresses[Name] = i;
           }
+          // Return found address
           return i;
         }
       }
+      // Nothing found, return null
       return nullptr; 
     }
 
@@ -123,13 +133,17 @@ namespace Hades
       std::vector<BYTE> const& Data, 
       std::shared_ptr<std::vector<BYTE>> MyBuffer)
     {
+      // Loop over all characters in mask
       for (std::string::size_type i = 0; i != Mask.size(); ++i)
       {
+        // Assume anything other than 'x' is a wildcard, and return 
+        // false if the pattern doesn't match
         if (Mask[i] == L'x' && Data[i] != (*MyBuffer)[Offset + i])
         {
           return false;
         }
       }
+      // Mask matched
       return true;
     }
   }
