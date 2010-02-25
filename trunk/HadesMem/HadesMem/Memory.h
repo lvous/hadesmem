@@ -95,10 +95,10 @@ namespace Hades
       inline bool CanWrite(PVOID Address) const;
 
       // Allocate memory
-      PVOID Alloc(SIZE_T Size) const;
+      inline PVOID Alloc(SIZE_T Size) const;
 
       // Free memory
-      void Free(PVOID Address) const;
+      inline void Free(PVOID Address) const;
 
       // Get process ID of target
       inline DWORD GetProcessID() const;
