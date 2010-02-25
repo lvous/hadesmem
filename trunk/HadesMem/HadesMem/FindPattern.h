@@ -40,8 +40,8 @@ namespace Hades
 
     private:
       // Check whether an address matches a given pattern
-      inline bool DataCompare(PBYTE Address, std::string const& Mask, 
-        std::vector<BYTE> const& Data);
+      inline bool DataCompare(DWORD_PTR Offset, std::string const& Mask, 
+        std::vector<BYTE> const& Data, std::shared_ptr<std::vector<BYTE>>);
 
       // Convert RVA to file offset
       inline DWORD RvaToFileOffset(PIMAGE_NT_HEADERS pNtHeaders, DWORD Rva);
@@ -96,11 +96,17 @@ namespace Hades
     PVOID FindPattern::Find(std::wstring const& Name, std::string const& Mask, 
       std::vector<BYTE> const& Data)
     {
+      std::shared_ptr<std::vector<BYTE>> MyBuffer;
       for (auto i = m_Start; i != m_End; ++i)
       {
-        if (reinterpret_cast<DWORD_PTR>(i) % 0x10000 == 0)
-          std::wcout << i << std::endl;
-        if (DataCompare(i, Mask, Data))
+        DWORD_PTR ChunkSize = 0x5000;
+        DWORD_PTR Offset = reinterpret_cast<DWORD_PTR>(i) % ChunkSize;
+        if (Offset == 0)
+        {
+          MyBuffer.reset(new std::vector<BYTE>(m_Memory.
+            Read<std::vector<BYTE>>(i, ChunkSize + 1)));
+        }
+        if (DataCompare(Offset, Mask, Data, MyBuffer))
         {
           if (!Name.empty())
           {
@@ -113,12 +119,13 @@ namespace Hades
     }
 
     // Check whether an address matches a given pattern
-    bool FindPattern::DataCompare(PBYTE Address, std::string const& Mask, 
-      std::vector<BYTE> const& Data)
+    bool FindPattern::DataCompare(DWORD_PTR Offset, std::string const& Mask, 
+      std::vector<BYTE> const& Data, 
+      std::shared_ptr<std::vector<BYTE>> MyBuffer)
     {
       for (std::string::size_type i = 0; i != Mask.size(); ++i)
       {
-        if (Mask[i] == L'x' && Data[i] != m_Memory.Read<BYTE>(Address + i))
+        if (Mask[i] == L'x' && Data[i] != (*MyBuffer)[Offset + i])
         {
           return false;
         }

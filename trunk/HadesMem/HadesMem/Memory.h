@@ -308,16 +308,59 @@ namespace Hades
       value_type>::size_type Size, typename boost::enable_if<std::is_same<T, 
       std::vector<typename T::value_type>>>::type* /*Dummy*/) const
     {
-      // Create value type pointer
-      T::value_type* AddressReal = static_cast<T::value_type*>(Address);
-
       // Create buffer
-      std::vector<T::value_type> Buffer;
-      // Read specified number of elements into buffer
-      while (Size--)
+      T Buffer(Size);
+      SIZE_T BufferSize = sizeof(T::value_type) * Size;
+
+      // Whether we can read the given address
+      bool CanReadMem = CanRead(Address);
+
+      // Set page protection for reading
+      DWORD OldProtect;
+      if (!CanReadMem)
       {
-        // Add current element to buffer
-        Buffer.push_back(Read<T::value_type>(AddressReal++));
+        if (!VirtualProtectEx(m_Process.GetHandle(), Address, BufferSize, 
+          PAGE_EXECUTE_READWRITE, &OldProtect))
+        {
+          DWORD LastError = GetLastError();
+          BOOST_THROW_EXCEPTION(MemoryError() << 
+            ErrorFunction("MemoryMgr::Read") << 
+            ErrorString("Could not change process memory protection.") << 
+            ErrorCodeWin(LastError));
+        }
+      }
+
+      // Read data
+      SIZE_T BytesRead = 0;
+      if (!ReadProcessMemory(m_Process.GetHandle(), Address, &Buffer[0], 
+        BufferSize, &BytesRead) || BytesRead != BufferSize)
+      {
+        if (!CanReadMem)
+        {
+          // Restore original page protections
+          VirtualProtectEx(m_Process.GetHandle(), Address, BufferSize, 
+            OldProtect, &OldProtect);
+        }
+
+        DWORD LastError = GetLastError();
+        BOOST_THROW_EXCEPTION(MemoryError() << 
+          ErrorFunction("MemoryMgr::Read") << 
+          ErrorString("Could not read process memory.") << 
+          ErrorCodeWin(LastError));
+      }
+
+      // Restore original page protections
+      if (!CanReadMem)
+      {
+        if (!VirtualProtectEx(m_Process.GetHandle(), Address, BufferSize, 
+          OldProtect, &OldProtect))
+        {
+          DWORD LastError = GetLastError();
+          BOOST_THROW_EXCEPTION(MemoryError() << 
+            ErrorFunction("MemoryMgr::Read") << 
+            ErrorString("Could not restore process memory protection.") << 
+            ErrorCodeWin(LastError));
+        }
       }
 
       // Return generated buffer
@@ -326,8 +369,8 @@ namespace Hades
 
     // Write memory (POD types)
     template <typename T>
-    void MemoryMgr::Write(PVOID Address, T const& Data, typename boost::enable_if<
-      std::is_pod<T>>::type* /*Dummy*/) const 
+    void MemoryMgr::Write(PVOID Address, T const& Data, typename 
+      boost::enable_if<std::is_pod<T>>::type* /*Dummy*/) const 
     {
       // Set page protections for writing
       DWORD OldProtect;
@@ -371,10 +414,9 @@ namespace Hades
 
     // Write memory (string types)
     template <typename T>
-    void MemoryMgr::Write(PVOID Address, T const& Data, typename boost::enable_if<
-      std::is_same<T, std::basic_string<typename T::value_type>>>::type* 
-      /*Dummy*/) 
-      const
+    void MemoryMgr::Write(PVOID Address, T const& Data, 
+      typename boost::enable_if<std::is_same<T, std::basic_string<
+      typename T::value_type>>>::type* /*Dummy*/) const
     {
       // Character type
       typedef typename T::value_type CharT;
@@ -396,9 +438,9 @@ namespace Hades
 
     // Write memory (vector types)
     template <typename T>
-    void MemoryMgr::Write(PVOID Address, T const& Data, typename boost::enable_if<
-      std::is_same<T, std::vector<typename T::value_type>>>::type* /*Dummy*/) 
-      const
+    void MemoryMgr::Write(PVOID Address, T const& Data, 
+      typename boost::enable_if<std::is_same<T, std::vector<
+      typename T::value_type>>>::type* /*Dummy*/) const
     {
       // Create value type pointer
       T::value_type* AddressReal = static_cast<T::value_type*>(Address);
