@@ -90,11 +90,23 @@ namespace Hades
       m_End(nullptr), 
       m_Addresses()
     {
-      // Get pointer to image headers
+      // Ensure file is a valid PE file
       auto pBase = reinterpret_cast<PBYTE>(Module);
       auto DosHeader = MyMemory.Read<IMAGE_DOS_HEADER>(pBase);
+      if (DosHeader.e_magic != IMAGE_DOS_SIGNATURE)
+      {
+        BOOST_THROW_EXCEPTION(FindPatternError() << 
+          ErrorFunction("ManualMap::Map") << 
+          ErrorString("Target file is not a valid PE file (DOS)."));
+      }
       auto NtHeader = MyMemory.Read<IMAGE_NT_HEADERS>(pBase + DosHeader.
         e_lfanew);
+      if (NtHeader.OptionalHeader.Magic != IMAGE_NT_SIGNATURE)
+      {
+        BOOST_THROW_EXCEPTION(FindPatternError() << 
+          ErrorFunction("ManualMap::Map") << 
+          ErrorString("Target file is not a valid PE file (NT)."));
+      }
 
       // Get base of code section
       m_Start = pBase + NtHeader.OptionalHeader.BaseOfCode;
