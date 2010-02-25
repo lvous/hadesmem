@@ -214,14 +214,7 @@ namespace Hades
         // Calculate virtual size of section
         DWORD VirtualSize = (pCurrent + 1)->VirtualAddress - 
           pCurrent->VirtualAddress; 
-        BytesWritten += VirtualSize; 
-
-        // Once we've reached the SizeOfImage, the rest of the sections 
-        // don't need to be mapped, if there are any. 
-        if (BytesWritten >= pNtHeaders->OptionalHeader.SizeOfImage)
-        {
-          break;
-        }
+        BytesWritten += VirtualSize;
 
         // Set the proper page protections for this section
         DWORD OldProtect;
