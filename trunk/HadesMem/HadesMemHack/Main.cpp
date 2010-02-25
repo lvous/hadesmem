@@ -408,7 +408,7 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
           Hades::Memory::FindPattern MyFindPattern(*MyMemory);
 
           // Perform pattern scan
-          PVOID Address = MyFindPattern.Find(L"", Mask, DataReal);
+          PVOID Address = MyFindPattern.Find(Mask, DataReal);
 
           // Output
           std::wcout << "Address: " << Address << "." << std::endl;

@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#include <sstream>
 
 // RapidXML
 #include <RapidXML/rapidxml.hpp>
@@ -37,7 +38,7 @@ namespace Hades
         PVOID Start = nullptr, PVOID End = nullptr);
       
       // Find pattern
-      inline PVOID Find(std::wstring const& Name, std::string const& Mask, 
+      inline PVOID Find(std::string const& Mask, 
         std::vector<BYTE> const& Data);
 
       // Load patterns from XML file
@@ -98,7 +99,7 @@ namespace Hades
     }
 
     // Find pattern
-    PVOID FindPattern::Find(std::wstring const& Name, std::string const& Mask, 
+    PVOID FindPattern::Find(std::string const& Mask, 
       std::vector<BYTE> const& Data)
     {
       // Rather than performing a read for each address we instead perform 
@@ -120,19 +121,9 @@ namespace Hades
         // Check if current address matches pattern
         if (DataCompare(Offset, Mask, Data, MyBuffer))
         {
-          // If name is specified then enter into map
-          if (!Name.empty())
-          {
-            m_Addresses[Name] = Address;
-          }
           // Return found address
           return Address;
         }
-      }
-      // If name is specified then enter into map
-      if (!Name.empty())
-      {
-        m_Addresses[Name] = nullptr;
       }
       // Nothing found, return null
       return nullptr; 
@@ -229,7 +220,106 @@ namespace Hades
         }
 
         // Find pattern
-        Find(Name, MaskReal, DataBuf);
+        PBYTE Address = static_cast<PBYTE>(Find(MaskReal, DataBuf));
+
+        // Loop over all pattern options
+        for (auto PatOpts = Pattern->first_node(); PatOpts; 
+          PatOpts = PatOpts->next_sibling())
+        {
+          // Get option name
+          std::wstring OptionName(PatOpts->name());
+
+          // Handle 'Add' and 'Sub' options
+          bool IsAdd = std::wstring(OptionName) == L"Add";
+          bool IsSub = std::wstring(OptionName) == L"Sub";
+          if (IsAdd || IsSub)
+          {
+            auto AddVal = PatOpts->first_attribute(L"Value");
+            if (!AddVal)
+            {
+              BOOST_THROW_EXCEPTION(FindPatternError() << 
+                ErrorFunction("FindPattern::LoadFromXML") << 
+                ErrorString("No value specified for 'Add' option."));
+            }
+
+            DWORD_PTR AddValReal = 0;
+            std::wstringstream Converter(AddVal->value());
+            if (!(Converter >> std::hex >> AddValReal >> std::dec))
+            {
+              BOOST_THROW_EXCEPTION(FindPatternError() << 
+                ErrorFunction("FindPattern::LoadFromXML") << 
+                ErrorString("Invalid conversion for 'Add' option."));
+            }
+
+            if (IsAdd)
+            {
+              Address += AddValReal;
+            }
+            else if (IsSub)
+            {
+              Address -= AddValReal;
+            }
+            else
+            {
+              BOOST_THROW_EXCEPTION(FindPatternError() << 
+                ErrorFunction("FindPattern::LoadFromXML") << 
+                ErrorString("Unsupported pattern option."));
+            }
+          }
+          else if (OptionName == L"Lea")
+          {
+            Address = m_Memory.Read<PBYTE>(Address);
+          }
+          else if (OptionName == L"Rel")
+          {
+            auto SizeAttr = PatOpts->first_attribute(L"Size");
+            if (!SizeAttr)
+            {
+              BOOST_THROW_EXCEPTION(FindPatternError() << 
+                ErrorFunction("FindPattern::LoadFromXML") << 
+                ErrorString("No size specified for 'Size' in 'Rel' option."));
+            }
+
+            DWORD_PTR Size = 0;
+            std::wstringstream SizeConverter(SizeAttr->value());
+            if (!(SizeConverter >> std::hex >> Size >> std::dec))
+            {
+              BOOST_THROW_EXCEPTION(FindPatternError() << 
+                ErrorFunction("FindPattern::LoadFromXML") << 
+                ErrorString("Invalid conversion for 'Size' in 'Rel' option."));
+            }
+
+            auto OffsetAttr = PatOpts->first_attribute(L"Offset");
+            if (!OffsetAttr)
+            {
+              BOOST_THROW_EXCEPTION(FindPatternError() << 
+                ErrorFunction("FindPattern::LoadFromXML") << 
+                ErrorString("No value specified for 'Offset' in 'Rel' "
+                "option."));
+            }
+
+            DWORD_PTR Offset = 0;
+            std::wstringstream OffsetConverter(OffsetAttr->value());
+            if (!(OffsetConverter >> std::hex >> Offset >> std::dec))
+            {
+              BOOST_THROW_EXCEPTION(FindPatternError() << 
+                ErrorFunction("FindPattern::LoadFromXML") << 
+                ErrorString("Invalid conversion for 'Offset' in 'Rel' "
+                "option."));
+            }
+
+            Address = m_Memory.Read<PBYTE>(Address) + 
+              reinterpret_cast<DWORD_PTR>(Address) + Size - Offset;
+          }
+          else
+          {
+            BOOST_THROW_EXCEPTION(FindPatternError() << 
+              ErrorFunction("FindPattern::LoadFromXML") << 
+              ErrorString("Unknown pattern option."));
+          }
+        }
+
+        m_Addresses[Name] = Address;
       }
     }
 
