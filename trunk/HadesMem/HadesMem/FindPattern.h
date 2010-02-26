@@ -267,112 +267,118 @@ namespace Hades
         // Find pattern
         PBYTE Address = static_cast<PBYTE>(Find(MaskReal, DataBuf));
 
-        // Loop over all pattern options
-        for (auto PatOpts = Pattern->first_node(); PatOpts; 
-          PatOpts = PatOpts->next_sibling())
+        // Only apply options if pattern was found
+        if (Address != 0)
         {
-          // Get option name
-          std::wstring OptionName(PatOpts->name());
-
-          // Handle 'Add' and 'Sub' options
-          bool IsAdd = std::wstring(OptionName) == L"Add";
-          bool IsSub = std::wstring(OptionName) == L"Sub";
-          if (IsAdd || IsSub)
+          // Loop over all pattern options
+          for (auto PatOpts = Pattern->first_node(); PatOpts; 
+            PatOpts = PatOpts->next_sibling())
           {
-            // Get the modification value
-            auto ModVal = PatOpts->first_attribute(L"Value");
-            if (!ModVal)
-            {
-              BOOST_THROW_EXCEPTION(FindPatternError() << 
-                ErrorFunction("FindPattern::LoadFromXML") << 
-                ErrorString("No value specified for 'Add' option."));
-            }
-            
-            // Convert value to usable form
-            DWORD_PTR AddValReal = 0;
-            std::wstringstream Converter(ModVal->value());
-            if (!(Converter >> std::hex >> AddValReal >> std::dec))
-            {
-              BOOST_THROW_EXCEPTION(FindPatternError() << 
-                ErrorFunction("FindPattern::LoadFromXML") << 
-                ErrorString("Invalid conversion for 'Add' option."));
-            }
+            // Get option name
+            std::wstring OptionName(PatOpts->name());
 
-            // Perform modification
-            if (IsAdd)
+            // Handle 'Add' and 'Sub' options
+            bool IsAdd = std::wstring(OptionName) == L"Add";
+            bool IsSub = std::wstring(OptionName) == L"Sub";
+            if (IsAdd || IsSub)
             {
-              Address += AddValReal;
+              // Get the modification value
+              auto ModVal = PatOpts->first_attribute(L"Value");
+              if (!ModVal)
+              {
+                BOOST_THROW_EXCEPTION(FindPatternError() << 
+                  ErrorFunction("FindPattern::LoadFromXML") << 
+                  ErrorString("No value specified for 'Add' option."));
+              }
+
+              // Convert value to usable form
+              DWORD_PTR AddValReal = 0;
+              std::wstringstream Converter(ModVal->value());
+              if (!(Converter >> std::hex >> AddValReal >> std::dec))
+              {
+                BOOST_THROW_EXCEPTION(FindPatternError() << 
+                  ErrorFunction("FindPattern::LoadFromXML") << 
+                  ErrorString("Invalid conversion for 'Add' option."));
+              }
+
+              // Perform modification
+              if (IsAdd)
+              {
+                Address += AddValReal;
+              }
+              else if (IsSub)
+              {
+                Address -= AddValReal;
+              }
+              else
+              {
+                BOOST_THROW_EXCEPTION(FindPatternError() << 
+                  ErrorFunction("FindPattern::LoadFromXML") << 
+                  ErrorString("Unsupported pattern option."));
+              }
             }
-            else if (IsSub)
+            // Handle 'Lea' option (abs deref)
+            else if (OptionName == L"Lea")
             {
-              Address -= AddValReal;
+              // Perform absolute 'dereference'
+              Address = m_Memory.Read<PBYTE>(Address);
+            }
+            // Handle 'Rel' option (rel deref)
+            else if (OptionName == L"Rel")
+            {
+              // Get instruction size
+              auto SizeAttr = PatOpts->first_attribute(L"Size");
+              if (!SizeAttr)
+              {
+                BOOST_THROW_EXCEPTION(FindPatternError() << 
+                  ErrorFunction("FindPattern::LoadFromXML") << 
+                  ErrorString("No size specified for 'Size' in 'Rel' "
+                  "option."));
+              }
+
+              // Convert instruction size to usable format
+              DWORD_PTR Size = 0;
+              std::wstringstream SizeConverter(SizeAttr->value());
+              if (!(SizeConverter >> std::hex >> Size >> std::dec))
+              {
+                BOOST_THROW_EXCEPTION(FindPatternError() << 
+                  ErrorFunction("FindPattern::LoadFromXML") << 
+                  ErrorString("Invalid conversion for 'Size' in 'Rel' "
+                  "option."));
+              }
+
+              // Get instruction offset
+              auto OffsetAttr = PatOpts->first_attribute(L"Offset");
+              if (!OffsetAttr)
+              {
+                BOOST_THROW_EXCEPTION(FindPatternError() << 
+                  ErrorFunction("FindPattern::LoadFromXML") << 
+                  ErrorString("No value specified for 'Offset' in 'Rel' "
+                  "option."));
+              }
+
+              // Convert instruction onffset to usable format
+              DWORD_PTR Offset = 0;
+              std::wstringstream OffsetConverter(OffsetAttr->value());
+              if (!(OffsetConverter >> std::hex >> Offset >> std::dec))
+              {
+                BOOST_THROW_EXCEPTION(FindPatternError() << 
+                  ErrorFunction("FindPattern::LoadFromXML") << 
+                  ErrorString("Invalid conversion for 'Offset' in 'Rel' "
+                  "option."));
+              }
+
+              // Perform relative 'dereference'
+              Address = m_Memory.Read<PBYTE>(Address) + 
+                reinterpret_cast<DWORD_PTR>(Address) + Size - Offset;
             }
             else
             {
+              // Unknown pattern option
               BOOST_THROW_EXCEPTION(FindPatternError() << 
                 ErrorFunction("FindPattern::LoadFromXML") << 
-                ErrorString("Unsupported pattern option."));
+                ErrorString("Unknown pattern option."));
             }
-          }
-          // Handle 'Lea' option (abs deref)
-          else if (OptionName == L"Lea")
-          {
-            // Perform absolute 'dereference'
-            Address = m_Memory.Read<PBYTE>(Address);
-          }
-          // Handle 'Rel' option (rel deref)
-          else if (OptionName == L"Rel")
-          {
-            // Get instruction size
-            auto SizeAttr = PatOpts->first_attribute(L"Size");
-            if (!SizeAttr)
-            {
-              BOOST_THROW_EXCEPTION(FindPatternError() << 
-                ErrorFunction("FindPattern::LoadFromXML") << 
-                ErrorString("No size specified for 'Size' in 'Rel' option."));
-            }
-
-            // Convert instruction size to usable format
-            DWORD_PTR Size = 0;
-            std::wstringstream SizeConverter(SizeAttr->value());
-            if (!(SizeConverter >> std::hex >> Size >> std::dec))
-            {
-              BOOST_THROW_EXCEPTION(FindPatternError() << 
-                ErrorFunction("FindPattern::LoadFromXML") << 
-                ErrorString("Invalid conversion for 'Size' in 'Rel' option."));
-            }
-
-            // Get instruction offset
-            auto OffsetAttr = PatOpts->first_attribute(L"Offset");
-            if (!OffsetAttr)
-            {
-              BOOST_THROW_EXCEPTION(FindPatternError() << 
-                ErrorFunction("FindPattern::LoadFromXML") << 
-                ErrorString("No value specified for 'Offset' in 'Rel' "
-                "option."));
-            }
-
-            // Convert instruction onffset to usable format
-            DWORD_PTR Offset = 0;
-            std::wstringstream OffsetConverter(OffsetAttr->value());
-            if (!(OffsetConverter >> std::hex >> Offset >> std::dec))
-            {
-              BOOST_THROW_EXCEPTION(FindPatternError() << 
-                ErrorFunction("FindPattern::LoadFromXML") << 
-                ErrorString("Invalid conversion for 'Offset' in 'Rel' "
-                "option."));
-            }
-
-            // Perform relative 'dereference'
-            Address = m_Memory.Read<PBYTE>(Address) + 
-              reinterpret_cast<DWORD_PTR>(Address) + Size - Offset;
-          }
-          else
-          {
-            // Unknown pattern option
-            BOOST_THROW_EXCEPTION(FindPatternError() << 
-              ErrorFunction("FindPattern::LoadFromXML") << 
-              ErrorString("Unknown pattern option."));
           }
         }
 

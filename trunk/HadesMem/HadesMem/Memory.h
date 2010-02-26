@@ -88,6 +88,24 @@ namespace Hades
         std::is_same<T, std::vector<typename T::value_type>>>::type* 
         Dummy = 0) const;
 
+      // Search memory (POD types)
+      template <typename T>
+      PVOID Find(T const& Data, PVOID Start, PVOID End, typename 
+        boost::enable_if<std::is_pod<T>>::type* Dummy = 0) const;
+
+      // Search memory (string types)
+      template <typename T>
+      PVOID Find(T const& Data, PVOID Start, PVOID End, typename boost::
+        enable_if<std::is_same<T, std::basic_string<typename T::value_type>>>::
+        type* Dummy = 0) const;
+
+      // Search memory (vector types)
+      template <typename T>
+      PVOID Find(T const& Data, PVOID Start, PVOID End, typename std::vector<
+        typename T::value_type>::size_type Size, typename boost::enable_if<
+        std::is_same<T, std::vector<typename T::value_type>>>::type* 
+        Dummy = 0) const;
+
       // Whether an address is currently readable
       inline bool CanRead(PVOID Address) const;
 
@@ -500,6 +518,18 @@ namespace Hades
         MyMemInfo.Protect == PAGE_WRITECOPY;
     }
 
+    // Search memory (POD types)
+    template <typename T>
+    PVOID MemoryMgr::Find(T const& Data, PVOID Start, PVOID End, typename 
+      boost::enable_if<std::is_pod<T>>:: type* /*Dummy*/) const
+    {
+      DWORD_PTR NumElems = (reinterpret_cast<DWORD_PTR>(End) - 
+        reinterpret_cast<DWORD_PTR>(Start)) / sizeof(T);
+      auto Buffer(Read<std::vector<T>>(Start, NumElems));
+      auto Iter = std::find(Buffer.begin(), Buffer.end(), Data);
+      return Iter != Buffer.end() ? reinterpret_cast<PBYTE>(Start) + 
+        std::distance(Buffer.begin(), Iter) * sizeof(T) : nullptr;
+    }
 
     // Allocate memory
     PVOID MemoryMgr::Alloc(SIZE_T Size) const

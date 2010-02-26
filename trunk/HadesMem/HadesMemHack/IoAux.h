@@ -153,6 +153,62 @@ void HandleNumericReadOrWrite(Hades::Memory::MemoryMgr const& MyMemory,
   }
 }
 
+// Handle 'MemoryRead' or 'MemoryWrite' task for numeric types
+template <typename T>
+void HandleNumericSearch(Hades::Memory::MemoryMgr const& MyMemory, 
+  PVOID Start, PVOID End)
+{
+  // Output
+  std::wcout << "Enter data:" << std::endl;
+
+  // Get data
+  auto Data = ReadNumericDataFromUser<T>();
+
+  // Find data
+  PVOID Address = MyMemory.Find(Data, Start, End);
+
+  // Output
+  std::wcout << "Address: " << Address << std::endl;
+}
+
+// Handle 'Search memory' task for string types
+template <typename CharT>
+void HandleStringSearch(Hades::Memory::MemoryMgr const& MyMemory, 
+  PVOID Start, PVOID End, std::basic_istream<CharT>& In, 
+  std::basic_ostream<CharT>& Out)
+{
+  // Output
+  std::wcout << "Enter data:" << std::endl;
+
+  // Get data
+  auto Data = ReadStringDataFromUser<CharT>(In, Out);
+
+  // Find data
+  PVOID Address = MyMemory.Find(Data, Start, End);
+
+  // Output
+  std::wcout << "Address: " << Address << std::endl;
+}
+
+// Handle 'Search memory' task for char types
+template <typename T, typename CharT>
+void HandleCharSearch(Hades::Memory::MemoryMgr const& MyMemory, 
+  PVOID Start, PVOID End, std::basic_istream<CharT>& In, 
+  std::basic_ostream<CharT>& Out)
+{
+  // Output
+  std::wcout << "Enter data:" << std::endl;
+
+  // Get data
+  auto Data = ReadCharDataFromUser<CharT>(In, Out);
+
+  // Find data
+  PVOID Address = MyMemory.Find(Data, Start, End);
+
+  // Output
+  std::wcout << "Address: " << Address << std::endl;
+}
+
 // Get option ID
 inline int GetOption(std::wstring const& Option, int Min, int Max)
 {
