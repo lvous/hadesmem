@@ -574,6 +574,19 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
         // Handle 'Search memory' task
         else if (Task == Detail::Task_SearchMem)
         {
+
+          // Output
+          std::wcout << "Enter start address:" << std::endl;
+
+          // Get start address
+          auto Start = ReadHexNumericDataFromUser<PVOID>();
+
+          // Output
+          std::wcout << "Enter end address:" << std::endl;
+
+          // Get end address
+          auto End = ReadHexNumericDataFromUser<PVOID>();
+
           // Output
           std::wcout << "Choose a data type:" << std::endl;
           std::wcout << "1. Byte." << std::endl;
@@ -594,18 +607,6 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
           // Get data type
           auto MyDataType = static_cast<Detail::DataType>(GetOption(L"data "
             L"type", 1, 14));
-
-          // Output
-          std::wcout << "Enter start address:" << std::endl;
-
-          // Get start address
-          auto Start = ReadHexNumericDataFromUser<PVOID>();
-
-          // Output
-          std::wcout << "Enter end address:" << std::endl;
-
-          // Get end address
-          auto End = ReadHexNumericDataFromUser<PVOID>();
 
           // Handle selected data type
           switch (MyDataType)
@@ -714,6 +715,11 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
             // Catch unsupported type
             assert(!"Unsupported data type.");
           }
+
+          BYTE MyBytes[] = { 0xBB, 0x8D, 0x24, 0x3F };
+          std::vector<BYTE> Buffer(MyBytes, MyBytes + 4);
+          std::wcout << "Test: " << MyMemory->Find(Buffer, Start, End) << 
+            std::endl;
         }
         // Output for all currently unhandled tasks
         else
