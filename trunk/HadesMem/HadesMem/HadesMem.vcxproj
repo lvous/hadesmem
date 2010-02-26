@@ -32,6 +32,7 @@
     <ClInclude Include="Memory.h" />
     <ClInclude Include="Module.h" />
     <ClInclude Include="Process.h" />
+    <ClInclude Include="Region.h" />
     <ClInclude Include="Toolhelper.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
