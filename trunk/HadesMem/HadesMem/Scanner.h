@@ -27,7 +27,7 @@ namespace Hades
     class ScannerError : public virtual HadesMemError 
     { };
 
-    // Pattern finding class
+    // Memory searching class
     class Scanner
     {
     public:
