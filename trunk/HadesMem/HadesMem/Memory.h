@@ -102,10 +102,10 @@ namespace Hades
 
       // Search memory (vector types)
       template <typename T>
-      PVOID Find(T const& Data, PVOID Start, PVOID End, typename boost::
-        enable_if<std::is_same<T, std::vector<typename T::value_type>>>::type* 
-        Dummy1 = 0, typename boost::enable_if<std::is_pod<typename T::
-        value_type>>::type* Dummy2 = 0) const;
+      PVOID Find(T const& Data, PVOID Start, PVOID End, std::wstring const& 
+        Mask = L"", typename boost::enable_if<std::is_same<T, std::vector<
+        typename T::value_type>>>::type* Dummy1 = 0, typename boost::enable_if<
+        std::is_pod<typename T::value_type>>::type* Dummy2 = 0) const;
 
       // Whether an address is currently readable
       inline bool CanRead(PVOID Address) const;
@@ -546,16 +546,34 @@ namespace Hades
       boost::enable_if<std::is_same<T, std::basic_string<typename T::
       value_type>>>::type* /*Dummy*/) const
     {
-      assert(!"Operation not yet supported.");
+      BOOST_THROW_EXCEPTION(MemoryError() << 
+        ErrorFunction("MemoryMgr::Find") << 
+        ErrorString("Operation not yet supported."));
     }
 
     // Search memory (vector types)
     template <typename T>
-    PVOID MemoryMgr::Find(T const& Data, PVOID Start, PVOID End, typename 
-      boost::enable_if<std::is_same<T, std::vector<typename T::value_type>>>::
-      type* /*Dummy1*/, typename boost::enable_if<std::is_pod<typename T::
-      value_type>>::type* /*Dummy2*/) const
+    PVOID MemoryMgr::Find(T const& Data, PVOID Start, PVOID End, 
+      std::wstring const& Mask, typename boost::enable_if<std::is_same<T, 
+      std::vector<typename T::value_type>>>::type* /*Dummy1*/, typename boost::
+      enable_if<std::is_pod<typename T::value_type>>::type* /*Dummy2*/) const
     {
+      // Ensure there is data to process
+      if (Data.empty())
+      {
+        BOOST_THROW_EXCEPTION(MemoryError() << 
+          ErrorFunction("MemoryMgr::Find") << 
+          ErrorString("Mask does not match data."));
+      }
+
+      // Ensure mask matches data
+      if (!Mask.empty() && Mask.size() != Data.size())
+      {
+        BOOST_THROW_EXCEPTION(MemoryError() << 
+          ErrorFunction("MemoryMgr::Find") << 
+          ErrorString("Mask does not match data."));
+      }
+
       // Rather than performing a read for each address we instead perform 
       // caching.
       std::shared_ptr<std::vector<BYTE>> MyBuffer;
@@ -582,10 +600,13 @@ namespace Hades
         {
           T::value_type* TempAddr = reinterpret_cast<T::value_type*>(
             reinterpret_cast<PBYTE>(&(*MyBuffer)[0]) + Offset);
-          if (TempAddr[i] != Data[i])
+          if (Mask.empty() || Mask[i] == 'x')
           {
-            Found = false;
-            break;
+            if (TempAddr[i] != Data[i])
+            {
+              Found = false;
+              break;
+            }
           }
         }
         
