@@ -715,11 +715,6 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
             // Catch unsupported type
             assert(!"Unsupported data type.");
           }
-
-          BYTE MyBytes[] = { 0xBB, 0x8D, 0x24, 0x3F };
-          std::vector<BYTE> Buffer(MyBytes, MyBytes + 4);
-          std::wcout << "Test: " << MyMemory->Find(Buffer, Start, End) << 
-            std::endl;
         }
         // Output for all currently unhandled tasks
         else
