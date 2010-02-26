@@ -17,6 +17,7 @@
 #include "I18n.h"
 #include "Module.h"
 #include "Memory.h"
+#include "Region.h"
 
 namespace Hades
 {
@@ -35,10 +36,23 @@ namespace Hades
       inline explicit FindPattern(MemoryMgr const& MyMemory, HMODULE Module);
       inline explicit FindPattern(MemoryMgr const& MyMemory, PVOID Start, 
         PVOID End);
-      
-      // Find pattern
-      inline PVOID Find(std::wstring const& Mask, 
-        std::vector<BYTE> const& Data);
+
+      // Search memory (POD types)
+      template <typename T>
+      PVOID Find(T const& Data, typename boost::enable_if<std::is_pod<T>>::
+        type* Dummy = 0) const;
+
+      // Search memory (string types)
+      template <typename T>
+      PVOID Find(T const& Data, typename boost::enable_if<std::is_same<T, 
+        std::basic_string<typename T::value_type>>>::type* Dummy = 0) const;
+
+      // Search memory (vector types)
+      template <typename T>
+      PVOID Find(T const& Data, std::wstring const& Mask = L"", typename 
+        boost::enable_if<std::is_same<T, std::vector<typename T::value_type>>>
+        ::type* Dummy1 = 0, typename boost::enable_if<std::is_pod<typename 
+        T::value_type>>::type* Dummy2 = 0) const;
 
       // Load patterns from XML file
       inline void LoadFromXML(std::wstring const& Path);
@@ -125,11 +139,130 @@ namespace Hades
       Initialize();
     }
 
-    // Find pattern
-    PVOID FindPattern::Find(std::wstring const& Mask, 
-      std::vector<BYTE> const& Data)
+    // Search memory (POD types)
+    template <typename T>
+    PVOID FindPattern::Find(T const& Data, typename boost::enable_if<std::
+      is_pod<T>>:: type* /*Dummy*/) const
     {
-      return m_Memory.Find(Data, m_Start, m_End, Mask);
+      // Note: Assumes data is aligned to the size of T.
+      // Todo: Unaligned version, and aligned to size of pointer version.
+
+      // Calculate number of elements in address range
+      DWORD_PTR NumElems = (reinterpret_cast<DWORD_PTR>(m_End) - 
+        reinterpret_cast<DWORD_PTR>(m_Start)) / sizeof(T);
+      // Read vector of Ts into cache
+      auto Buffer(m_Memory.Read<std::vector<T>>(m_Start, NumElems));
+      // Search cache for supplied value
+      auto Iter = std::find(Buffer.begin(), Buffer.end(), Data);
+      // If value was found return its address, or null otherwise
+      return Iter != Buffer.end() ? reinterpret_cast<PBYTE>(m_Start) + 
+        std::distance(Buffer.begin(), Iter) * sizeof(T) : nullptr;
+    }
+
+    // Search memory (string types)
+    template <typename T>
+    PVOID FindPattern::Find(T const& Data, typename boost::enable_if<std::
+      is_same<T, std::basic_string<typename T::value_type>>>::type* /*Dummy*/) 
+      const
+    {
+      // Convert string to character buffer
+      std::vector<T::value_type> MyBuffer(Data.begin(), Data.end());
+      // Use vector specialization of find
+      return Find(MyBuffer);
+    }
+
+    // Search memory (vector types)
+    template <typename T>
+    PVOID FindPattern::Find(T const& Data, std::wstring const& Mask, typename 
+      boost::enable_if<std::is_same<T, std::vector<typename T::value_type>>>::
+      type* /*Dummy1*/, typename boost::enable_if<std::is_pod<typename T::
+      value_type>>::type* /*Dummy2*/) const
+    {
+      // Ensure there is data to process
+      if (Data.empty())
+      {
+        BOOST_THROW_EXCEPTION(MemoryError() << 
+          ErrorFunction("MemoryMgr::Find") << 
+          ErrorString("Mask does not match data."));
+      }
+
+      // Ensure mask matches data
+      if (!Mask.empty() && Mask.size() != Data.size())
+      {
+        BOOST_THROW_EXCEPTION(MemoryError() << 
+          ErrorFunction("MemoryMgr::Find") << 
+          ErrorString("Mask does not match data."));
+      }
+
+      // Get memory region list
+      auto RegionList(GetRegionList(m_Memory));
+      // Loop over all regions
+      for (auto Iter = RegionList.begin(); Iter != RegionList.end(); ++Iter)
+      {
+        // Only scan regions which we can read
+        // Note: Doing this to be non-invasive. If you need to scan regions 
+        // for which you don't have read access then disable this check.
+        if (!m_Memory.CanRead((*Iter)->GetBaseAddress()))
+        {
+          continue;
+        }
+
+        // Only scan regions in specified range
+        if ((*Iter)->GetBaseAddress() > m_End || 
+          (*Iter)->GetBaseAddress() < m_Start)
+        {
+          continue;
+        }
+
+        // Get raw size of data
+        DWORD_PTR RawSize = Data.size() * sizeof(std::vector<BYTE>::value_type);
+        
+        // Get start of region
+        PBYTE RegionStart = static_cast<PBYTE>((*Iter)->GetBaseAddress());
+        // Get end of region
+        PBYTE RegionEnd = RegionStart + (*Iter)->GetRegionSize();
+        // Read to end of region, or until specified end address if it's 
+        // inside the region
+        PBYTE EndAddress = RegionEnd > m_End ? m_End : RegionEnd;
+
+        // Rather than performing a read for each address we instead perform 
+        // caching.
+        auto MyBuffer(m_Memory.Read<std::vector<BYTE>>(RegionStart, 
+          (*Iter)->GetRegionSize()));
+
+        // Loop over entire memory region
+        for (auto Address = RegionStart; Address != EndAddress - RawSize; 
+          ++Address) 
+        {
+          DWORD_PTR Offset = reinterpret_cast<DWORD_PTR>(Address) - 
+            reinterpret_cast<DWORD_PTR>(RegionStart);
+
+          // Check if current address matches buffer
+          bool Found = true;
+          for (std::vector<BYTE>::size_type i = 0; i != Data.size(); ++i)
+          {
+            auto TempAddr = reinterpret_cast<std::vector<BYTE>::value_type*>(
+              reinterpret_cast<PBYTE>(&(MyBuffer)[0]) + Offset);
+            if (Mask.empty() || Mask[i] == L'x')
+            {
+              if (TempAddr[i] != Data[i])
+              {
+                Found = false;
+                break;
+              }
+            }
+          }
+
+          // If the buffer matched return the current address
+          if (Found)
+          {
+            return Address;
+          }
+        }
+      }
+
+      // Nothing found, return null
+      return nullptr;
     }
 
     // Load patterns from XML file
@@ -217,7 +350,7 @@ namespace Hades
         }
 
         // Find pattern
-        PBYTE Address = static_cast<PBYTE>(Find(Mask, DataBuf));
+        PBYTE Address = static_cast<PBYTE>(Find(DataBuf, Mask));
 
         // Only apply options if pattern was found
         if (Address != 0)

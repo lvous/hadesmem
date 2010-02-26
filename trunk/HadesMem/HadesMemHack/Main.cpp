@@ -458,7 +458,7 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
             Hades::Memory::FindPattern MyFindPattern(*MyMemory);
 
             // Perform pattern scan
-            PVOID Address = MyFindPattern.Find(Mask, DataReal);
+            PVOID Address = MyFindPattern.Find(DataReal, Mask);
 
             // Output
             std::wcout << "Address: " << Address << "." << std::endl;
@@ -634,7 +634,8 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
               auto Data = static_cast<Detail::Byte>(New);
 
               // Find data
-              PVOID Address = MyMemory->Find(Data, Start, End);
+              Hades::Memory::FindPattern MyFindPattern(*MyMemory, Start, End);
+              PVOID Address = MyFindPattern.Find(Data);
 
               // Output
               std::wcout << "Address: " << Address << std::endl;
@@ -703,7 +704,8 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
               auto Data = ReadHexNumericDataFromUser<Detail::Pointer>();
 
               // Find data
-              PVOID Address = MyMemory->Find(Data, Start, End);
+              Hades::Memory::FindPattern MyFindPattern(*MyMemory, Start, End);
+              PVOID Address = MyFindPattern.Find(Data);
 
               // Output
               std::wcout << "Address: " << Address << std::endl;

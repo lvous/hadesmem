@@ -89,24 +89,6 @@ namespace Hades
         std::is_same<T, std::vector<typename T::value_type>>>::type* 
         Dummy = 0) const;
 
-      // Search memory (POD types)
-      template <typename T>
-      PVOID Find(T const& Data, PVOID Start, PVOID End, typename 
-        boost::enable_if<std::is_pod<T>>::type* Dummy = 0) const;
-
-      // Search memory (string types)
-      template <typename T>
-      PVOID Find(T const& Data, PVOID Start, PVOID End, typename boost::
-        enable_if<std::is_same<T, std::basic_string<typename T::value_type>>>::
-        type* Dummy = 0) const;
-
-      // Search memory (vector types)
-      template <typename T>
-      PVOID Find(T const& Data, PVOID Start, PVOID End, std::wstring const& 
-        Mask = L"", typename boost::enable_if<std::is_same<T, std::vector<
-        typename T::value_type>>>::type* Dummy1 = 0, typename boost::enable_if<
-        std::is_pod<typename T::value_type>>::type* Dummy2 = 0) const;
-
       // Whether an address is currently readable
       inline bool CanRead(PVOID Address) const;
 
@@ -518,111 +500,6 @@ namespace Hades
         MyMemInfo.Protect == PAGE_EXECUTE_WRITECOPY || 
         MyMemInfo.Protect == PAGE_READWRITE || 
         MyMemInfo.Protect == PAGE_WRITECOPY;
-    }
-
-    // Search memory (POD types)
-    template <typename T>
-    PVOID MemoryMgr::Find(T const& Data, PVOID Start, PVOID End, typename 
-      boost::enable_if<std::is_pod<T>>:: type* /*Dummy*/) const
-    {
-      // Note: Assumes data is aligned to the size of T.
-      // Todo: Unaligned version, and aligned to size of pointer version.
-
-      // Calculate number of elements in address range
-      DWORD_PTR NumElems = (reinterpret_cast<DWORD_PTR>(End) - 
-        reinterpret_cast<DWORD_PTR>(Start)) / sizeof(T);
-      // Read vector of Ts into cache
-      auto Buffer(Read<std::vector<T>>(Start, NumElems));
-      // Search cache for supplied value
-      auto Iter = std::find(Buffer.begin(), Buffer.end(), Data);
-      // If value was found return its address, or null otherwise
-      return Iter != Buffer.end() ? reinterpret_cast<PBYTE>(Start) + 
-        std::distance(Buffer.begin(), Iter) * sizeof(T) : nullptr;
-    }
-
-    // Search memory (string types)
-    template <typename T>
-    PVOID MemoryMgr::Find(T const& Data, PVOID Start, PVOID End, typename 
-      boost::enable_if<std::is_same<T, std::basic_string<typename T::
-      value_type>>>::type* /*Dummy*/) const
-    {
-      // Convert string to character buffer
-      std::vector<T::value_type> MyBuffer(Data.begin(), Data.end());
-      // Use vector specialization of find
-      return Find(MyBuffer, Start, End);
-    }
-
-    // Search memory (vector types)
-    template <typename T>
-    PVOID MemoryMgr::Find(T const& Data, PVOID Start, PVOID End, 
-      std::wstring const& Mask, typename boost::enable_if<std::is_same<T, 
-      std::vector<typename T::value_type>>>::type* /*Dummy1*/, typename boost::
-      enable_if<std::is_pod<typename T::value_type>>::type* /*Dummy2*/) const
-    {
-      // Ensure there is data to process
-      if (Data.empty())
-      {
-        BOOST_THROW_EXCEPTION(MemoryError() << 
-          ErrorFunction("MemoryMgr::Find") << 
-          ErrorString("Mask does not match data."));
-      }
-
-      // Ensure mask matches data
-      if (!Mask.empty() && Mask.size() != Data.size())
-      {
-        BOOST_THROW_EXCEPTION(MemoryError() << 
-          ErrorFunction("MemoryMgr::Find") << 
-          ErrorString("Mask does not match data."));
-      }
-
-      // Get raw size of data
-      DWORD_PTR RawSize = Data.size() * sizeof(T::value_type);
-
-      // Rather than performing a read for each address we instead perform 
-      // caching.
-      std::shared_ptr<std::vector<BYTE>> MyBuffer;
-
-      // Loop over entire memory region
-      for (auto Address = static_cast<PBYTE>(Start); 
-        Address != static_cast<PBYTE>(End) - RawSize; 
-        ++Address) 
-      {
-        // Read 0x5000 bytes at a time
-        DWORD_PTR ChunkSize = 0x5000;
-        // Calculate current chunk offset
-        DWORD_PTR Offset = reinterpret_cast<DWORD_PTR>(Address) % ChunkSize;
-        // Whenever we reach the chunk size we need to re-cache
-        if (Offset == 0 || !MyBuffer)
-        {
-          MyBuffer.reset(new std::vector<BYTE>(Read<std::vector<BYTE>>(Address, 
-            ChunkSize + RawSize)));
-        }
-
-        // Check if current address matches buffer
-        bool Found = true;
-        for (T::size_type i = 0; i != Data.size(); ++i)
-        {
-          T::value_type* TempAddr = reinterpret_cast<T::value_type*>(
-            reinterpret_cast<PBYTE>(&(*MyBuffer)[0]) + Offset);
-          if (Mask.empty() || Mask[i] == 'x')
-          {
-            if (TempAddr[i] != Data[i])
-            {
-              Found = false;
-              break;
-            }
-          }
-        }
-        
-        // If the buffer matched return the current address
-        if (Found)
-        {
-          return Address;
-        }
-      }
-
-      // Nothing found, return null
-      return nullptr;
     }
 
     // Allocate memory
