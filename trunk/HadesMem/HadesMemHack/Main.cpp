@@ -397,11 +397,11 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
           {
             // Get mask
             std::wcout << "Enter mask:" << std::endl;
-            std::string Mask;
-            while (!(std::cin >> Mask) || Mask.empty())
+            std::wstring Mask;
+            while (!(std::wcin >> Mask) || Mask.empty())
             {
               std::wcout << "Invalid mask." << std::endl;
-              std::cin.clear();
+              std::wcin.clear();
             }
 
             // Get data

@@ -37,7 +37,7 @@ namespace Hades
         PVOID End);
       
       // Find pattern
-      inline PVOID Find(std::string const& Mask, 
+      inline PVOID Find(std::wstring const& Mask, 
         std::vector<BYTE> const& Data);
 
       // Load patterns from XML file
@@ -52,10 +52,6 @@ namespace Hades
     private:
       // Disable assignment
       FindPattern& operator= (FindPattern const&);
-
-      // Check whether an address matches a given pattern
-      inline bool DataCompare(DWORD_PTR Offset, std::string const& Mask, 
-        std::vector<BYTE> const& Data, std::shared_ptr<std::vector<BYTE>>);
 
       // Initialize using PE header
       void Initialize();
@@ -130,53 +126,10 @@ namespace Hades
     }
 
     // Find pattern
-    PVOID FindPattern::Find(std::string const& Mask, 
+    PVOID FindPattern::Find(std::wstring const& Mask, 
       std::vector<BYTE> const& Data)
     {
-      // Rather than performing a read for each address we instead perform 
-      // caching.
-      std::shared_ptr<std::vector<BYTE>> MyBuffer;
-      // Loop over entire memory region
-      for (auto Address = m_Start; Address != m_End - Mask.size(); ++Address)
-      {
-        // Read 0x5000 bytes at a time
-        DWORD_PTR ChunkSize = 0x5000;
-        // Calculate current chunk offset
-        DWORD_PTR Offset = reinterpret_cast<DWORD_PTR>(Address) % ChunkSize;
-        // Whenever we reach the chunk size we need to re-cache
-        if (Offset == 0 || !MyBuffer)
-        {
-          MyBuffer.reset(new std::vector<BYTE>(m_Memory.
-            Read<std::vector<BYTE>>(Address, ChunkSize + Mask.size())));
-        }
-        // Check if current address matches pattern
-        if (DataCompare(Offset, Mask, Data, MyBuffer))
-        {
-          // Return found address
-          return Address;
-        }
-      }
-      // Nothing found, return null
-      return nullptr; 
-    }
-
-    // Check whether an address matches a given pattern
-    bool FindPattern::DataCompare(DWORD_PTR Offset, std::string const& Mask, 
-      std::vector<BYTE> const& Data, 
-      std::shared_ptr<std::vector<BYTE>> MyBuffer)
-    {
-      // Loop over all characters in mask
-      for (std::string::size_type i = 0; i != Mask.size(); ++i)
-      {
-        // Assume anything other than 'x' is a wildcard, and return 
-        // false if the pattern doesn't match
-        if (Mask[i] == L'x' && Data[i] != (*MyBuffer)[Offset + i])
-        {
-          return false;
-        }
-      }
-      // Mask matched
-      return true;
+      return m_Memory.Find(Data, m_Start, m_End, Mask);
     }
 
     // Load patterns from XML file
@@ -220,7 +173,6 @@ namespace Hades
         auto DataNode = Pattern->first_attribute(L"Data");
         std::wstring Name(NameNode ? NameNode->value() : L"");
         std::wstring Mask(MaskNode ? MaskNode->value() : L"");
-        std::string MaskReal(boost::lexical_cast<std::string>(Mask));
         std::wstring Data(DataNode ? DataNode->value() : L"");
         std::string DataReal(boost::lexical_cast<std::string>(Data));
 
@@ -265,7 +217,7 @@ namespace Hades
         }
 
         // Find pattern
-        PBYTE Address = static_cast<PBYTE>(Find(MaskReal, DataBuf));
+        PBYTE Address = static_cast<PBYTE>(Find(Mask, DataBuf));
 
         // Only apply options if pattern was found
         if (Address != 0)
