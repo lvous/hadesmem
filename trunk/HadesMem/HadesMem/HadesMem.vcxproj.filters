@@ -53,7 +53,7 @@
     <ClInclude Include="Region.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="FindPattern.h">
+    <ClInclude Include="Scanner.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

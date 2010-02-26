@@ -7,7 +7,7 @@
 #include "HadesMem/Injector.h"
 #include "HadesMem/ManualMap.h"
 #include "HadesMem/Disassemble.h"
-#include "HadesMem/FindPattern.h"
+#include "HadesMem/Scanner.h"
 
 // C++ Standard Library
 #include <limits>
