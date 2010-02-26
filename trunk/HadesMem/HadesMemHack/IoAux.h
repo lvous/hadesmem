@@ -165,8 +165,8 @@ void HandleNumericSearch(Hades::Memory::MemoryMgr const& MyMemory,
   auto Data = ReadNumericDataFromUser<T>();
 
   // Find data
-  Hades::Memory::FindPattern MyFindPattern(MyMemory, Start, End);
-  PVOID Address = MyFindPattern.Find(Data);
+  Hades::Memory::Scanner MyScanner(MyMemory, Start, End);
+  PVOID Address = MyScanner.Find(Data);
 
   // Output
   std::wcout << "Address: " << Address << std::endl;
@@ -185,8 +185,8 @@ void HandleStringSearch(Hades::Memory::MemoryMgr const& MyMemory,
   auto Data = ReadStringDataFromUser<CharT>(In, Out);
 
   // Find data
-  Hades::Memory::FindPattern MyFindPattern(MyMemory, Start, End);
-  PVOID Address = MyFindPattern.Find(Data);
+  Hades::Memory::Scanner MyScanner(MyMemory, Start, End);
+  PVOID Address = MyScanner.Find(Data);
 
   // Output
   std::wcout << "Address: " << Address << std::endl;
@@ -205,8 +205,8 @@ void HandleCharSearch(Hades::Memory::MemoryMgr const& MyMemory,
   auto Data = ReadCharDataFromUser<CharT>(In, Out);
 
   // Find data
-  Hades::Memory::FindPattern MyFindPattern(MyMemory, Start, End);
-  PVOID Address = MyFindPattern.Find(Data);
+  Hades::Memory::Scanner MyScanner(MyMemory, Start, End);
+  PVOID Address = MyScanner.Find(Data);
 
   // Output
   std::wcout << "Address: " << Address << std::endl;

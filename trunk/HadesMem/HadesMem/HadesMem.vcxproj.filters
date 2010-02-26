@@ -44,9 +44,6 @@
     <ClInclude Include="Toolhelper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="FindPattern.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Injector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -54,6 +51,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Region.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FindPattern.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
