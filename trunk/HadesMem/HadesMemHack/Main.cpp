@@ -3,6 +3,7 @@
 #include "Types.h"
 #include "HadesMem/Module.h"
 #include "HadesMem/Memory.h"
+#include "HadesMem/Region.h"
 #include "HadesMem/Injector.h"
 #include "HadesMem/ManualMap.h"
 #include "HadesMem/Disassemble.h"
@@ -77,9 +78,10 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
         std::wcout << "9. Inject DLL." << std::endl;
         std::wcout << "10. Manually map DLL." << std::endl;
         std::wcout << "11. Search memory." << std::endl;
+        std::wcout << "12. Query memory." << std::endl;
 
         // Get task
-        auto Task = static_cast<Detail::Task>(GetOption(L"task", 1, 11));
+        auto Task = static_cast<Detail::Task>(GetOption(L"task", 1, 12));
 
         // Check for task 'Read Memory' or 'Write Memory' and output 
         // accordingly
@@ -290,7 +292,7 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
               std::for_each(ModList.begin(), ModList.end(), 
                 [] (std::shared_ptr<Hades::Memory::Module> MyModule)
               {
-                std::wcout << *MyModule;
+                std::wcout << *MyModule << std::endl;
               });
 
               // Finished
@@ -713,6 +715,16 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
             // Catch unsupported type
             assert(!"Unsupported data type.");
           }
+        }
+        // Handle 'Query memory' task
+        else if (Task == Detail::Task_QueryMem)
+        {
+          auto RegionList(GetRegionList(*MyMemory));
+          std::for_each(RegionList.begin(), RegionList.end(), 
+            [] (std::shared_ptr<Hades::Memory::MemoryRegion> Current) 
+          {
+            std::wcout << *Current << std::endl;
+          });
         }
         // Output for all currently unhandled tasks
         else

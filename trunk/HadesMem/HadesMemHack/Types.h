@@ -46,7 +46,8 @@ namespace Detail
     Task_PatternScan, 
     Task_InjectDLL, 
     Task_ManualMap, 
-    Task_SearchMem
+    Task_SearchMem, 
+    Task_QueryMem
   };
   
   // Module selection methods
