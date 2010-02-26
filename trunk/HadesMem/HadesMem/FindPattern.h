@@ -144,7 +144,7 @@ namespace Hades
         // Calculate current chunk offset
         DWORD_PTR Offset = reinterpret_cast<DWORD_PTR>(Address) % ChunkSize;
         // Whenever we reach the chunk size we need to re-cache
-        if (Offset == 0)
+        if (Offset == 0 || !MyBuffer)
         {
           MyBuffer.reset(new std::vector<BYTE>(m_Memory.
             Read<std::vector<BYTE>>(Address, ChunkSize + Mask.size())));
