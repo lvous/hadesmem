@@ -546,9 +546,10 @@ namespace Hades
       boost::enable_if<std::is_same<T, std::basic_string<typename T::
       value_type>>>::type* /*Dummy*/) const
     {
-      BOOST_THROW_EXCEPTION(MemoryError() << 
-        ErrorFunction("MemoryMgr::Find") << 
-        ErrorString("Operation not yet supported."));
+      // Convert string to character buffer
+      std::vector<T::value_type> MyBuffer(Data.begin(), Data.end());
+      // Use vector specialization of find
+      return Find(MyBuffer, Start, End);
     }
 
     // Search memory (vector types)
@@ -574,13 +575,16 @@ namespace Hades
           ErrorString("Mask does not match data."));
       }
 
+      // Get raw size of data
+      DWORD_PTR RawSize = Data.size() * sizeof(T::value_type);
+
       // Rather than performing a read for each address we instead perform 
       // caching.
       std::shared_ptr<std::vector<BYTE>> MyBuffer;
 
       // Loop over entire memory region
       for (auto Address = static_cast<PBYTE>(Start); 
-        Address != static_cast<PBYTE>(End) - Data.size(); 
+        Address != static_cast<PBYTE>(End) - RawSize; 
         ++Address) 
       {
         // Read 0x5000 bytes at a time
@@ -591,7 +595,7 @@ namespace Hades
         if (Offset == 0 || !MyBuffer)
         {
           MyBuffer.reset(new std::vector<BYTE>(Read<std::vector<BYTE>>(Address, 
-            ChunkSize + Data.size())));
+            ChunkSize + RawSize)));
         }
 
         // Check if current address matches buffer

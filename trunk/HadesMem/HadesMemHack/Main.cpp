@@ -672,7 +672,6 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
             HandleNumericSearch<Detail::Double>(*MyMemory, Start, End);
             break;
 
-            /*
         case Detail::DataType_StrNarrow:
           HandleStringSearch<Detail::CharNarrow>(*MyMemory, Start, End, 
             std::cin, std::cout);
@@ -692,7 +691,6 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
           HandleCharSearch<Detail::CharWide>(*MyMemory, Start, End, std::wcin, 
             std::wcout);
           break;
-          */
 
           case Detail::DataType_Pointer:
             {
