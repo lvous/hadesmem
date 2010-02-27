@@ -17,6 +17,7 @@
 #include "I18n.h"
 #include "Memory.h"
 #include "Module.h"
+#include "Injector.h"
 
 namespace Hades
 {
@@ -48,6 +49,11 @@ namespace Hades
       // Fix imports
       inline void FixImports(std::vector<BYTE>& ModBuffer, 
         PIMAGE_NT_HEADERS pNtHeaders, PIMAGE_IMPORT_DESCRIPTOR pImpDesc);
+
+      // Fix relocations
+      inline void FixRelocations(std::vector<BYTE>& ModBuffer, 
+        PIMAGE_NT_HEADERS pNtHeaders, PIMAGE_BASE_RELOCATION pRelocDesc, 
+        DWORD RelocDirSize, PVOID RemoteBase);
 
       // Get address of export in remote process
       inline FARPROC GetRemoteProcAddress(HMODULE RemoteMod, 
@@ -114,21 +120,6 @@ namespace Hades
         FixImports(ModuleFileBuf, pNtHeaders, pImpDir);
       }
 
-      // Fix relocations if applicable
-      auto RelocDirSize = pNtHeaders->OptionalHeader.DataDirectory[
-        IMAGE_DIRECTORY_ENTRY_BASERELOC].Size;
-      if (RelocDirSize)
-      {
-        auto pRelocDir = reinterpret_cast<PIMAGE_IMPORT_DESCRIPTOR>(pBase + 
-          RvaToFileOffset(pNtHeaders, pNtHeaders->OptionalHeader.
-          DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC].VirtualAddress));
-
-        // Todo: Fix relocs here
-        pRelocDir;
-      }
-
-      // Todo: TLS support
-
       // Allocate memory for image
       std::wcout << "Allocating memory for module." << std::endl;
       PVOID RemoteBase = m_Memory.Alloc(pNtHeaders->OptionalHeader.
@@ -136,6 +127,21 @@ namespace Hades
       std::wcout << "Module base address: " << RemoteBase << "." << std::endl;
       std::wcout << "Module size: " << pNtHeaders->OptionalHeader.SizeOfImage 
         << "." << std::endl;
+
+      // Fix relocations if applicable
+      auto RelocDirSize = pNtHeaders->OptionalHeader.DataDirectory[
+        IMAGE_DIRECTORY_ENTRY_BASERELOC].Size;
+      if (RelocDirSize)
+      {
+        auto pRelocDir = reinterpret_cast<PIMAGE_BASE_RELOCATION>(pBase + 
+          RvaToFileOffset(pNtHeaders, pNtHeaders->OptionalHeader.
+          DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC].VirtualAddress));
+
+        FixRelocations(ModuleFileBuf, pNtHeaders, pRelocDir, RelocDirSize, 
+          RemoteBase);
+      }
+
+      // Todo: TLS support
 
       // Write DOS header to process
       PBYTE DosHeaderStart = pBase;
@@ -160,9 +166,35 @@ namespace Hades
       // Write sections to process
       MapSections(pNtHeaders, RemoteBase, ModuleFileBuf);
 
-      // Todo: Write EP calling stub to process here
+      // Calculate module entry point
+      PVOID EntryPoint = static_cast<PBYTE>(RemoteBase) + pNtHeaders->
+        OptionalHeader.AddressOfEntryPoint;
+      std::wcout << "Entry Point: " << EntryPoint << "." << std::endl;
 
-      // Todo: Call EIP calling stub here
+      // Create and write calling code
+      // Todo: Code generation for EP calling
+      BYTE EpCaller[] = 
+      {
+        0x6a, 0x00, // push 0
+        0x6a, 0x01, // push 1
+        0xff, 0x74, 0x24, 0x0C, // push [esp+c]
+        0xb8, 0xef, 0xbe, 0xad, 0xde, // mov eax, 0xdeadbeef
+        0xff, 0xd0, // call eax
+        0xb8, 0xef, 0xbe, 0xad, 0xde, // mov eax, 0xdeadbeef
+        0x6a, 0x00, // push 0
+        0xff, 0xd0 // call eax
+      };
+      *reinterpret_cast<PVOID*>(&EpCaller[9]) = GetRemoteProcAddress(
+        reinterpret_cast<HMODULE>(RemoteBase), Path, "Initialize");
+      *reinterpret_cast<PVOID*>(&EpCaller[16]) = GetRemoteProcAddress(
+        GetModuleHandle(L"kernel32.dll"), L"kernel32.dll", "ExitThread");
+      std::vector<BYTE> EpCallerReal(EpCaller, EpCaller + sizeof(EpCaller));
+      PVOID EpCallerMem = m_Memory.Alloc(sizeof(EpCaller));
+      m_Memory.Write(EpCallerMem, EpCallerReal);
+      std::wcout << "EP Call Stub: " << EpCallerMem << "." << std::endl;
+
+      // Execute EP calling stub
+      m_Memory.Call<BOOL (DWORD)>(EpCallerMem, 0);
 
       // Return pointer to module in remote process
       return RemoteBase;
@@ -271,8 +303,7 @@ namespace Hades
         std::wstring ModuleNameW(boost::lexical_cast<std::wstring>(ModuleName));
         std::wcout << "Module Name: " << ModuleNameW << "." << std::endl;
 
-        // Ensure dependent module is already loaded
-        // Todo: Recursive loading.
+        // Check whether dependent module is already loaded
         auto ModuleList(GetModuleList(m_Memory));
         auto ModIter = std::find_if(ModuleList.begin(), ModuleList.end(), 
           [&ModuleNameW] (std::shared_ptr<Module> Current)
@@ -282,14 +313,27 @@ namespace Hades
             I18n::ToLower<wchar_t>(Current->GetPath()) == 
             I18n::ToLower<wchar_t>(ModuleNameW);
         });
+
+        // Module base address and name
+        HMODULE CurModBase = 0;
+        std::wstring CurModName;
+
+        // If dependent module is not yet loaded then inject it
         if (ModIter == ModuleList.end())
         {
-          BOOST_THROW_EXCEPTION(ManualMapError() << 
-            ErrorFunction("ManualMap::FixImports") << 
-            ErrorString("Dependent module not loaded in remote process."));
+          // Inject dependent DLL
+          std::wcout << "Injecting dependent DLL." << std::endl;
+          Injector MyInjector(m_Memory);
+          DWORD ReturnValue = 0;
+          CurModBase = MyInjector.InjectDll(ModuleNameW, "", ReturnValue, 
+            false);
+          CurModName = ModuleNameW;
         }
-        HMODULE CurModBase = (*ModIter)->GetBase();
-        std::wstring const CurModName((*ModIter)->GetName());
+        else
+        {
+          CurModBase = (*ModIter)->GetBase();
+          CurModName = (*ModIter)->GetName();
+        }
 
         // Lookup the first import thunk for this module
         // Todo: Support for forwarded functions
@@ -364,6 +408,50 @@ namespace Hades
 
       // Return remote function location
       return RemoteFunc;
+    }
+
+    // Fix relocations
+    void ManualMap::FixRelocations(std::vector<BYTE>& ModBuffer, 
+      PIMAGE_NT_HEADERS pNtHeaders, PIMAGE_BASE_RELOCATION pRelocDesc, 
+      DWORD RelocDirSize, PVOID RemoteBase)
+    {
+      // Debug output
+      std::wcout << "Fixing relocations." << std::endl;
+
+      DWORD_PTR ImageBase = pNtHeaders->OptionalHeader.ImageBase;
+
+      DWORD_PTR Delta = reinterpret_cast<DWORD_PTR>(RemoteBase) > ImageBase ? 
+        reinterpret_cast<DWORD_PTR>(RemoteBase) - ImageBase : 
+      ImageBase - reinterpret_cast<DWORD_PTR>(RemoteBase);
+
+      PBYTE ModBase = &ModBuffer[0];
+
+      unsigned int BytesProcessed = 0; 
+      for (;;) 
+      { 
+        PVOID RelocBase = ModBase + RvaToFileOffset(pNtHeaders, 
+          pRelocDesc->VirtualAddress);
+
+        DWORD NumRelocs = (pRelocDesc->SizeOfBlock - 
+          sizeof(IMAGE_BASE_RELOCATION)) / sizeof(WORD); 
+
+        if(BytesProcessed >= RelocDirSize) 
+          break; 
+
+        WORD* pRelocData = reinterpret_cast<WORD*>(reinterpret_cast<PBYTE>(
+          pRelocDesc) + sizeof(IMAGE_BASE_RELOCATION)); 
+        for(DWORD i = 0; i < NumRelocs; ++i, ++pRelocData) 
+        {        
+          if(((*pRelocData >> 12) & IMAGE_REL_BASED_HIGHLOW)) 
+          {
+            *reinterpret_cast<DWORD_PTR*>(static_cast<PBYTE>(RelocBase) + 
+              (*pRelocData & 0x0FFF)) += Delta; 
+          }
+        } 
+
+        BytesProcessed += pRelocDesc->SizeOfBlock; 
+        pRelocDesc = reinterpret_cast<PIMAGE_BASE_RELOCATION>(pRelocData); 
+      } 
     }
   }
 }

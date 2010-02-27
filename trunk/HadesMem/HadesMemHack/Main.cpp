@@ -542,7 +542,7 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
 
           // Get export
           std::string Export;
-          while (!(std::cin >> Export))
+          while (!std::getline(std::cin, Export))
           {
             std::wcout << "Invalid export." << std::endl;
             std::cin.clear();
@@ -550,7 +550,11 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
 
           // Create DLL injector
           Hades::Memory::Injector MyInjector(*MyMemory);
-          MyInjector.InjectDll(LibPath, Export);
+          DWORD ReturnValue = 0;
+          HMODULE ModBase = MyInjector.InjectDll(LibPath, Export, ReturnValue);
+
+          // Output
+          std::wcout << "Module Base: " << ModBase << "." << std::endl;
         }
         // Handle 'Manuall map DLL' task
         else if (Task == Detail::Task_ManualMap)

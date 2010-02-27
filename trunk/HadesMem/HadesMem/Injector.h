@@ -31,8 +31,9 @@ namespace Hades
       inline Injector(MemoryMgr const& MyMemory);
 
       // Inject DLL
-      inline DWORD InjectDll(std::wstring const& Path, 
-        std::string const& Export);
+      inline HMODULE InjectDll(std::wstring const& Path, 
+        std::string const& Export, DWORD& ReturnValue, 
+        bool PathResolution = true);
 
     private:
       // Disable assignment
@@ -48,15 +49,15 @@ namespace Hades
     { }
 
     // Inject DLL
-    DWORD Injector::InjectDll(std::wstring const& Path, 
-      std::string const& Export)
+    HMODULE Injector::InjectDll(std::wstring const& Path, 
+      std::string const& Export, DWORD& ReturnValue, bool PathResolution)
     {
       // String to hold 'real' path to module
       std::wstring PathReal(Path);
 
       // Check whether we need to convert the path from a relative to 
       // an absolute
-      if (PathReal[1] != ':')
+      if (PathResolution && PathReal[1] != ':')
       {
         // Get handle to self
         HMODULE const Self = reinterpret_cast<HMODULE>(&__ImageBase);
@@ -83,13 +84,16 @@ namespace Hades
       }
 
       // Check path/file is valid
-      if (GetFileAttributes(PathReal.c_str()) == INVALID_FILE_ATTRIBUTES)
+      if (PathResolution)
       {
-        DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(InjectorError() << 
-          ErrorFunction("Injector::InjectDll") << 
-          ErrorString("Could not find module file.") << 
-          ErrorCodeWin(LastError));
+        if (GetFileAttributes(PathReal.c_str()) == INVALID_FILE_ATTRIBUTES)
+        {
+          DWORD LastError = GetLastError();
+          BOOST_THROW_EXCEPTION(InjectorError() << 
+            ErrorFunction("Injector::InjectDll") << 
+            ErrorString("Could not find module file.") << 
+            ErrorCodeWin(LastError));
+        }
       }
 
       // Get process handle
@@ -195,9 +199,14 @@ namespace Hades
           ErrorString("Could not find module in remote process."));
       }
 
+      // Base of remote module
+      PBYTE ModRemote = reinterpret_cast<PBYTE>((*Iter)->GetBase());
+
       // If no export has been specified then there's nothing left to do
       if (Export.empty() || Export == " ")
-        return 0;
+      {
+        return reinterpret_cast<HMODULE>(ModRemote);
+      }
 
       // Load module as data so we can read the EAT locally
       EnsureFreeLibrary const MyModule(LoadLibraryExW(PathLower.c_str(), NULL, 
@@ -224,9 +233,6 @@ namespace Hades
           ErrorFunction("Injector::InjectDll") << 
           ErrorString("Could not find export."));
       }
-
-      // Base of remote module
-      PBYTE ModRemote = reinterpret_cast<PBYTE>((*Iter)->GetBase());
 
       // If image is relocated we need to recalculate the address
       if (Module != ModRemote)
@@ -271,8 +277,12 @@ namespace Hades
           ErrorString("Could not get export remote thread exit code.") << 
           ErrorCodeWin(LastError));
       }
+      
+      // Set return value
+      ReturnValue = ExitCodeExport;
 
-      return ExitCodeExport;
+      // Return base address of remote module
+      return reinterpret_cast<HMODULE>(ModRemote);
     }
   }
 }
