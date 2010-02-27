@@ -11,6 +11,7 @@
 #include <vector>
 #include <fstream>
 #include <iterator>
+#include <iostream>
 
 // HadesMem
 #include "Memory.h"
@@ -118,6 +119,8 @@ namespace Hades
 
       // Allocate memory for image
       PVOID RemoteBase = m_Memory.Alloc(pNtHeader->OptionalHeader.SizeOfImage);
+      std::wcout << "RemoteBase: " << RemoteBase << std::endl;
+      std::wcout << "SizeOfImage: " << pNtHeader->OptionalHeader.SizeOfImage << std::endl;
 
       // Write DOS header to process
       PBYTE DosHeaderStart = pBase;
@@ -133,6 +136,7 @@ namespace Hades
       std::vector<BYTE> PeHeaderBuf(PeHeaderStart, PeHeaderEnd);
       PBYTE TargetAddr = reinterpret_cast<PBYTE>(RemoteBase) + 
         pDosHeader->e_lfanew;
+      std::wcout << "NT Header: " << TargetAddr << std::endl;
       m_Memory.Write(TargetAddr, PeHeaderBuf);
       
       // Write sections to process
@@ -187,8 +191,11 @@ namespace Hades
       // Loop over all sections 
       DWORD BytesWritten = 0; 
       PIMAGE_SECTION_HEADER pCurrent = IMAGE_FIRST_SECTION(pNtHeaders);
-      for(WORD i = 0; pNtHeaders->FileHeader.NumberOfSections; ++i, ++pCurrent) 
+      for(WORD i = 0; i != pNtHeaders->FileHeader.NumberOfSections; ++i, 
+        ++pCurrent) 
       { 
+        std::wcout << "Current Section: " << (char*)pCurrent->Name << std::endl;
+
         // Once we've reached the SizeOfImage, the rest of the sections 
         // don't need to be mapped, if there are any. 
         if(BytesWritten >= pNtHeaders->OptionalHeader.SizeOfImage) 
@@ -199,6 +206,7 @@ namespace Hades
         // Calculate target address for section in remote process
         PVOID TargetAddr = reinterpret_cast<PBYTE>(RemoteAddr) + 
           pCurrent->VirtualAddress;
+        std::wcout << "Target Address: " << TargetAddr << std::endl;
         
         // Calculate start and end of section data in buffer
         PBYTE DataStart = const_cast<PBYTE>(&ModBuffer[0]) + 
@@ -212,9 +220,10 @@ namespace Hades
         m_Memory.Write(TargetAddr, SectionData);
 
         // Calculate virtual size of section
-        DWORD VirtualSize = (pCurrent + 1)->VirtualAddress - 
-          pCurrent->VirtualAddress; 
+        DWORD VirtualSize = pCurrent->Misc.VirtualSize; 
+        std::wcout << "VirtualSize: " << VirtualSize << std::endl;
         BytesWritten += VirtualSize;
+        std::wcout << "BytesWritten: " << BytesWritten << std::endl;
 
         // Set the proper page protections for this section
         DWORD OldProtect;
@@ -227,7 +236,7 @@ namespace Hades
             ErrorString("Could not change page protections for section.") << 
             ErrorCodeWin(LastError));
         }
-      } 
+      }
     }
   }
 }
