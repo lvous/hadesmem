@@ -360,15 +360,10 @@ namespace Hades
 
           // Get function address in remote process
           FARPROC FuncAddr = GetRemoteProcAddress(CurModBase, CurModName, 
-            reinterpret_cast<char*>(pNameImport->
-            Name));
+            reinterpret_cast<char*>(pNameImport->Name));
 
-          // Calculate function delta
-          DWORD_PTR FuncDelta = reinterpret_cast<DWORD_PTR>(FuncAddr) - 
-            reinterpret_cast<DWORD_PTR>(CurModBase);
-
-          // Set function delta
-          pThunkData->u1.Function = FuncDelta;
+          // Set function address
+          pThunkData->u1.Function = reinterpret_cast<DWORD_PTR>(FuncAddr);
 
           // Advance to next function
           pThunkData++;
