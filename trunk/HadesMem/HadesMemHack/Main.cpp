@@ -570,9 +570,20 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
             std::wcin.clear();
           }
 
+          // Output
+          std::wcout << "Enter name of export (optional):" << std::endl;
+
+          // Get export
+          std::string Export;
+          while (!std::getline(std::cin, Export))
+          {
+            std::wcout << "Invalid export." << std::endl;
+            std::cin.clear();
+          }
+
           // Create DLL injector
           Hades::Memory::ManualMap MyManualMapper(*MyMemory);
-          PVOID ModuleBase = MyManualMapper.Map(LibPath);
+          PVOID ModuleBase = MyManualMapper.Map(LibPath, Export);
 
           // Output
           std::wcout << "Module Base: " << ModuleBase << "." << std::endl;

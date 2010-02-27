@@ -36,7 +36,8 @@ namespace Hades
       inline ManualMap(MemoryMgr const& MyMemory);
 
       // Manually map a DLL
-      inline PVOID Map(std::wstring const& Path);
+      inline PVOID Map(std::wstring const& Path, std::string const& Export = 
+        "");
 
     private:
       // Convert RVA to file offset
@@ -72,7 +73,7 @@ namespace Hades
     { }
 
     // Manually map a DLL
-    PVOID ManualMap::Map(std::wstring const& Path)
+    PVOID ManualMap::Map(std::wstring const& Path, std::string const& Export)
     {
       // Open file for reading
       std::wcout << "Opening module file for reading." << std::endl;
@@ -181,13 +182,32 @@ namespace Hades
         0xb8, 0xef, 0xbe, 0xad, 0xde, // mov eax, 0xdeadbeef
         0xff, 0xd0, // call eax
         0xb8, 0xef, 0xbe, 0xad, 0xde, // mov eax, 0xdeadbeef
+        0xff, 0xd0, // call eax
+        0xb8, 0xef, 0xbe, 0xad, 0xde, // mov eax, 0xdeadbeef
         0x6a, 0x00, // push 0
         0xff, 0xd0, // call eax
         0xc3 // ret
       };
       *reinterpret_cast<PVOID*>(&EpCaller[9]) = reinterpret_cast<PBYTE>(
         RemoteBase) + pNtHeaders->OptionalHeader.AddressOfEntryPoint;
-      *reinterpret_cast<PVOID*>(&EpCaller[16]) = GetRemoteProcAddress(
+      PVOID ExportAddr = GetRemoteProcAddress(reinterpret_cast<HMODULE>(
+        RemoteBase), Path, Export.c_str());
+      if (ExportAddr)
+      {
+        *reinterpret_cast<PVOID*>(&EpCaller[16]) = ExportAddr;
+      }
+      else
+      {
+        if (!Export.empty())
+        {
+          BOOST_THROW_EXCEPTION(ManualMapError() << 
+            ErrorFunction("ManualMap::Map") << 
+            ErrorString("Target export could not be found."));
+        }
+
+        memset(&EpCaller[15], 0x90, 7);
+      }
+      *reinterpret_cast<PVOID*>(&EpCaller[23]) = GetRemoteProcAddress(
         GetModuleHandle(L"kernel32.dll"), L"kernel32.dll", "ExitThread");
       std::vector<BYTE> EpCallerReal(EpCaller, EpCaller + sizeof(EpCaller));
       PVOID EpCallerMem = m_Memory.Alloc(sizeof(EpCaller));
