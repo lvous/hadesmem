@@ -240,8 +240,8 @@ namespace Hades
         reinterpret_cast<PTHREAD_START_ROUTINE>(pExportAddr);
 
       // Create a remote thread that calls the desired export
-      EnsureCloseHandle const ThreadExport(CreateRemoteThread(MyProcess, NULL, 0, 
-        pfnThreadRtn, ModRemote, 0, NULL));
+      EnsureCloseHandle const ThreadExport(CreateRemoteThread(MyProcess, NULL, 
+        0, pfnThreadRtn, ModRemote, 0, NULL));
       if (!ThreadExport) 
       {
         DWORD LastError = GetLastError();
