@@ -142,8 +142,6 @@ namespace Hades
           RemoteBase);
       }
 
-      // Todo: TLS support
-
       // Write DOS header to process
       PBYTE DosHeaderStart = pBase;
       PBYTE DosHeaderEnd = DosHeaderStart + sizeof(IMAGE_DOS_HEADER);
@@ -167,6 +165,27 @@ namespace Hades
       // Write sections to process
       MapSections(pNtHeaders, RemoteBase, ModuleFileBuf);
 
+      // Get all TLS callbacks
+      std::vector<PIMAGE_TLS_CALLBACK> TlsCallbacks;
+      auto TlsDirSize = pNtHeaders->OptionalHeader.DataDirectory[
+        IMAGE_DIRECTORY_ENTRY_TLS].Size;
+      if (TlsDirSize)
+      {
+        auto pTlsDir = reinterpret_cast<PIMAGE_TLS_DIRECTORY>(pBase + 
+          RvaToFileOffset(pNtHeaders, pNtHeaders->OptionalHeader.
+          DataDirectory[IMAGE_DIRECTORY_ENTRY_TLS].VirtualAddress));
+
+        std::wcout << "Enumerating TLS callbacks." << std::endl;
+
+        for (auto pCallbacks = reinterpret_cast<PIMAGE_TLS_CALLBACK*>(pBase + 
+          RvaToFileOffset(pNtHeaders, pTlsDir->AddressOfCallBacks)); 
+          *pCallbacks; ++pCallbacks)
+        {
+          std::wcout << "TLS Callback: " << *pCallbacks << "." << std::endl;
+          TlsCallbacks.push_back(*pCallbacks);
+        }
+      }
+
       // Calculate module entry point
       PVOID EntryPoint = static_cast<PBYTE>(RemoteBase) + pNtHeaders->
         OptionalHeader.AddressOfEntryPoint;
@@ -182,9 +201,6 @@ namespace Hades
         0xb8, 0xef, 0xbe, 0xad, 0xde, // mov eax, 0xdeadbeef
         0xff, 0xd0, // call eax
         0xb8, 0xef, 0xbe, 0xad, 0xde, // mov eax, 0xdeadbeef
-        0xff, 0xd0, // call eax
-        0xb8, 0xef, 0xbe, 0xad, 0xde, // mov eax, 0xdeadbeef
-        0x6a, 0x00, // push 0
         0xff, 0xd0, // call eax
         0xc3 // ret
       };
@@ -207,15 +223,14 @@ namespace Hades
 
         memset(&EpCaller[15], 0x90, 7);
       }
-      *reinterpret_cast<PVOID*>(&EpCaller[23]) = GetRemoteProcAddress(
-        GetModuleHandle(L"kernel32.dll"), L"kernel32.dll", "ExitThread");
       std::vector<BYTE> EpCallerReal(EpCaller, EpCaller + sizeof(EpCaller));
-      PVOID EpCallerMem = m_Memory.Alloc(sizeof(EpCaller));
-      m_Memory.Write(EpCallerMem, EpCallerReal);
-      std::wcout << "EP Call Stub: " << EpCallerMem << "." << std::endl;
+      AllocAndFree EpCallerMem(m_Memory, sizeof(EpCaller));
+      m_Memory.Write(EpCallerMem.GetAddress(), EpCallerReal);
+      std::wcout << "EP Call Stub: " << EpCallerMem.GetAddress() << "." << 
+        std::endl;
 
       // Execute EP calling stub
-      m_Memory.Call<BOOL (DWORD)>(EpCallerMem, 0);
+      m_Memory.Call<BOOL (DWORD)>(EpCallerMem.GetAddress(), 0);
 
       // Return pointer to module in remote process
       return RemoteBase;
@@ -357,6 +372,7 @@ namespace Hades
         }
 
         // Lookup the first import thunk for this module
+        // Todo: Forwarded import support
         auto pThunkData = reinterpret_cast<PIMAGE_THUNK_DATA>(ModBase + 
           RvaToFileOffset(pNtHeaders, pImpDesc->FirstThunk));
         while(pThunkData->u1.AddressOfData) 
