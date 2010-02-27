@@ -176,6 +176,10 @@ namespace Hades
           DataDirectory[IMAGE_DIRECTORY_ENTRY_TLS].VirtualAddress));
 
         std::wcout << "Enumerating TLS callbacks." << std::endl;
+        std::wcout << "Image Base: " << reinterpret_cast<PVOID>(pNtHeaders->
+          OptionalHeader.ImageBase) << "." << std::endl;
+        std::wcout << "Address Of Callbacks: " << reinterpret_cast<PVOID>(
+          pTlsDir->AddressOfCallBacks) << "." << std::endl;
 
         for (auto pCallbacks = reinterpret_cast<PIMAGE_TLS_CALLBACK*>(pBase + 
           RvaToFileOffset(pNtHeaders, pTlsDir->AddressOfCallBacks)); 
