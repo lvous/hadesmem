@@ -182,7 +182,8 @@ namespace Hades
         0xff, 0xd0, // call eax
         0xb8, 0xef, 0xbe, 0xad, 0xde, // mov eax, 0xdeadbeef
         0x6a, 0x00, // push 0
-        0xff, 0xd0 // call eax
+        0xff, 0xd0, // call eax
+        0xc3 // ret
       };
       *reinterpret_cast<PVOID*>(&EpCaller[9]) = GetRemoteProcAddress(
         reinterpret_cast<HMODULE>(RemoteBase), Path, "Initialize");
@@ -420,9 +421,7 @@ namespace Hades
 
       DWORD_PTR ImageBase = pNtHeaders->OptionalHeader.ImageBase;
 
-      DWORD_PTR Delta = reinterpret_cast<DWORD_PTR>(RemoteBase) > ImageBase ? 
-        reinterpret_cast<DWORD_PTR>(RemoteBase) - ImageBase : 
-      ImageBase - reinterpret_cast<DWORD_PTR>(RemoteBase);
+      DWORD_PTR Delta = reinterpret_cast<DWORD_PTR>(RemoteBase) - ImageBase;
 
       PBYTE ModBase = &ModBuffer[0];
 

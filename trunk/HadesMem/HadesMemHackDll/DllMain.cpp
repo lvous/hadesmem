@@ -3,7 +3,7 @@
 
 extern "C" __declspec(dllexport) void Initialize(HMODULE /*MyModule*/)
 {
-  //MessageBox(nullptr, L"It works!", L"HadesMemHackDll", MB_OK);
+  MessageBox(nullptr, L"It works!", L"HadesMemHackDll", MB_OK);
   return;
 }
 
