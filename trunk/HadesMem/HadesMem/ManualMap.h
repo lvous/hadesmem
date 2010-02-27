@@ -331,6 +331,7 @@ namespace Hades
       } 
     }
 
+    // Get address of export in remote process
     FARPROC ManualMap::GetRemoteProcAddress(HMODULE RemoteMod, 
       std::wstring const& ModulePath, std::string const& Function)
     {
