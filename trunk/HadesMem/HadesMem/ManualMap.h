@@ -59,6 +59,7 @@ namespace Hades
     PVOID ManualMap::Map(std::wstring const& Path)
     {
       // Open file for reading
+      std::wcout << "Opening module file for reading." << std::endl;
       std::ifstream ModuleFile(Path.c_str(), std::ios::binary);
       if (!ModuleFile)
       {
@@ -68,10 +69,12 @@ namespace Hades
       }
 
       // Read file into buffer
+      std::wcout << "Reading module file into buffer." << std::endl;
       std::vector<BYTE> ModuleFileBuf((std::istreambuf_iterator<char>(
         ModuleFile)), std::istreambuf_iterator<char>());
 
       // Ensure file is a valid PE file
+      std::wcout << "Performing PE file format validation." << std::endl;
       auto pBase = &ModuleFileBuf[0];
       auto pDosHeader = reinterpret_cast<PIMAGE_DOS_HEADER>(pBase);
       if (pDosHeader->e_magic != IMAGE_DOS_SIGNATURE)
@@ -90,9 +93,9 @@ namespace Hades
       }
 
       // Fix import table if it exists
-      auto ImpDircSize = pNtHeader->OptionalHeader.DataDirectory[
+      auto ImpDirSize = pNtHeader->OptionalHeader.DataDirectory[
         IMAGE_DIRECTORY_ENTRY_IMPORT].Size;
-      if (ImpDircSize)
+      if (ImpDirSize)
       {
         auto pImpDir = reinterpret_cast<PIMAGE_IMPORT_DESCRIPTOR>(pBase + 
           RvaToFileOffset(pNtHeader, pNtHeader->OptionalHeader.
@@ -118,14 +121,18 @@ namespace Hades
       // Todo: TLS support
 
       // Allocate memory for image
+      std::wcout << "Allocating memory for module." << std::endl;
       PVOID RemoteBase = m_Memory.Alloc(pNtHeader->OptionalHeader.SizeOfImage);
-      std::wcout << "RemoteBase: " << RemoteBase << std::endl;
-      std::wcout << "SizeOfImage: " << pNtHeader->OptionalHeader.SizeOfImage << std::endl;
+      std::wcout << "Module base address: " << RemoteBase << "." << std::endl;
+      std::wcout << "Module size: " << pNtHeader->OptionalHeader.SizeOfImage 
+        << "." << std::endl;
 
       // Write DOS header to process
       PBYTE DosHeaderStart = pBase;
       PBYTE DosHeaderEnd = DosHeaderStart + sizeof(IMAGE_DOS_HEADER);
       std::vector<BYTE> DosHeaderBuf(DosHeaderStart, DosHeaderEnd);
+      std::wcout << "Writing DOS header." << std::endl;
+      std::wcout << "DOS Header: " << DosHeaderStart << std::endl;
       m_Memory.Write(RemoteBase, DosHeaderBuf);
 
       // Write PE header to process
@@ -136,6 +143,7 @@ namespace Hades
       std::vector<BYTE> PeHeaderBuf(PeHeaderStart, PeHeaderEnd);
       PBYTE TargetAddr = reinterpret_cast<PBYTE>(RemoteBase) + 
         pDosHeader->e_lfanew;
+      std::wcout << "Writing NT header." << std::endl;
       std::wcout << "NT Header: " << TargetAddr << std::endl;
       m_Memory.Write(TargetAddr, PeHeaderBuf);
       
@@ -188,26 +196,28 @@ namespace Hades
     void ManualMap::MapSections(PIMAGE_NT_HEADERS pNtHeaders, PVOID RemoteAddr, 
       std::vector<BYTE> const& ModBuffer)
     {
+      // Debug output
+      std::wcout << "Mapping sections." << std::endl;
+
       // Loop over all sections 
       DWORD BytesWritten = 0; 
       PIMAGE_SECTION_HEADER pCurrent = IMAGE_FIRST_SECTION(pNtHeaders);
       for(WORD i = 0; i != pNtHeaders->FileHeader.NumberOfSections; ++i, 
         ++pCurrent) 
-      { 
-        std::wcout << "Current Section: " << (char*)pCurrent->Name << std::endl;
-
-        // Once we've reached the SizeOfImage, the rest of the sections 
-        // don't need to be mapped, if there are any. 
-        if(BytesWritten >= pNtHeaders->OptionalHeader.SizeOfImage) 
-        {
-          break;
-        }
+      {
+        // Debug output
+        std::string Name(pCurrent->Name, pCurrent->Name + 8);
+        std::wcout << "Section Name: " << Name.c_str() << std::endl;
 
         // Calculate target address for section in remote process
         PVOID TargetAddr = reinterpret_cast<PBYTE>(RemoteAddr) + 
           pCurrent->VirtualAddress;
         std::wcout << "Target Address: " << TargetAddr << std::endl;
-        
+
+        // Calculate virtual size of section
+        DWORD VirtualSize = pCurrent->Misc.VirtualSize; 
+        std::wcout << "Virtual Size: " << TargetAddr << std::endl;
+
         // Calculate start and end of section data in buffer
         PBYTE DataStart = const_cast<PBYTE>(&ModBuffer[0]) + 
           pCurrent->PointerToRawData;
@@ -218,12 +228,6 @@ namespace Hades
         
         // Write section data to process
         m_Memory.Write(TargetAddr, SectionData);
-
-        // Calculate virtual size of section
-        DWORD VirtualSize = pCurrent->Misc.VirtualSize; 
-        std::wcout << "VirtualSize: " << VirtualSize << std::endl;
-        BytesWritten += VirtualSize;
-        std::wcout << "BytesWritten: " << BytesWritten << std::endl;
 
         // Set the proper page protections for this section
         DWORD OldProtect;
