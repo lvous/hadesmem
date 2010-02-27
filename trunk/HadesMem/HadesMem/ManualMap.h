@@ -57,7 +57,7 @@ namespace Hades
 
       // Get address of export in remote process
       inline FARPROC GetRemoteProcAddress(HMODULE RemoteMod, 
-        std::wstring const& Module, std::string const& Function);
+        std::wstring const& Module, LPCSTR Function, bool ByOrdinal = false);
 
       // Disable assignment
       ManualMap& operator= (ManualMap const&);
@@ -301,7 +301,7 @@ namespace Hades
         ModuleName = reinterpret_cast<char*>(ModBase + RvaToFileOffset(
           pNtHeaders, pImpDesc->Name));
         std::string ModuleNameA(ModuleName);
-        std::wstring ModuleNameW(boost::lexical_cast<std::wstring>(ModuleName));
+        auto ModuleNameW(boost::lexical_cast<std::wstring>(ModuleName));
         std::wcout << "Module Name: " << ModuleNameW << "." << std::endl;
 
         // Check whether dependent module is already loaded
@@ -337,8 +337,6 @@ namespace Hades
         }
 
         // Lookup the first import thunk for this module
-        // Todo: Support for forwarded functions
-        // Todo: Support functions imported by ordinal
         auto pThunkData = reinterpret_cast<PIMAGE_THUNK_DATA>(ModBase + 
           RvaToFileOffset(pNtHeaders, pImpDesc->FirstThunk));
         while(pThunkData->u1.AddressOfData) 
@@ -347,20 +345,16 @@ namespace Hades
           auto pNameImport = reinterpret_cast<PIMAGE_IMPORT_BY_NAME>(ModBase + 
             RvaToFileOffset(pNtHeaders, pThunkData->u1.AddressOfData));
 
-          // Skip imports by ordinal for now
-          if (IMAGE_SNAP_BY_ORDINAL(pNameImport->Hint))
-          {
-            std::wcout << "Skipping import by ordinal." << std::endl;
-            continue;
-          }
-
           // Get name of function
           std::string const ImpName(reinterpret_cast<char*>(pNameImport->Name));
           std::cout << "Function Name: " << ImpName << "." << std::endl;
 
           // Get function address in remote process
+          bool ByOrdinal = IMAGE_SNAP_BY_ORDINAL(pNameImport->Hint);
+          LPCSTR Function = ByOrdinal ? reinterpret_cast<LPCSTR>(IMAGE_ORDINAL(
+            pNameImport->Hint)) : reinterpret_cast<LPCSTR>(pNameImport->Name);
           FARPROC FuncAddr = GetRemoteProcAddress(CurModBase, CurModName, 
-            reinterpret_cast<char*>(pNameImport->Name));
+            Function, ByOrdinal);
 
           // Set function address
           pThunkData->u1.Function = reinterpret_cast<DWORD_PTR>(FuncAddr);
@@ -373,7 +367,7 @@ namespace Hades
 
     // Get address of export in remote process
     FARPROC ManualMap::GetRemoteProcAddress(HMODULE RemoteMod, 
-      std::wstring const& ModulePath, std::string const& Function)
+      std::wstring const& ModulePath, LPCSTR Function, bool ByOrdinal)
     {
       // Load module as data so we can read the EAT locally
       EnsureFreeLibrary LocalMod(LoadLibraryExW(ModulePath.c_str(), NULL, 
@@ -388,7 +382,9 @@ namespace Hades
       }
 
       // Find target function in module
-      FARPROC LocalFunc = GetProcAddress(LocalMod, Function.c_str());
+      FARPROC LocalFunc = GetProcAddress(LocalMod, ByOrdinal ? 
+        reinterpret_cast<LPCSTR>(IMAGE_ORDINAL(reinterpret_cast<DWORD_PTR>(
+        Function))) : Function);
       if (!LocalFunc)
       {
         return nullptr;
