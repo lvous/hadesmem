@@ -14,7 +14,9 @@
 #include <iostream>
 
 // HadesMem
+#include "I18n.h"
 #include "Memory.h"
+#include "Module.h"
 
 namespace Hades
 {
@@ -42,6 +44,14 @@ namespace Hades
       // Map sections
       inline void MapSections(PIMAGE_NT_HEADERS pNtHeaders, PVOID RemoteAddr, 
         std::vector<BYTE> const& ModBuffer);
+
+      // Fix imports
+      inline void FixImports(std::vector<BYTE>& ModBuffer, 
+        PIMAGE_NT_HEADERS pNtHeaders, PIMAGE_IMPORT_DESCRIPTOR pImpDesc);
+
+      // Get address of export in remote process
+      inline FARPROC GetRemoteProcAddress(HMODULE RemoteMod, 
+        std::wstring const& Module, std::string const& Function);
 
       // Disable assignment
       ManualMap& operator= (ManualMap const&);
@@ -83,9 +93,9 @@ namespace Hades
           ErrorFunction("ManualMap::Map") << 
           ErrorString("Target file is not a valid PE file (DOS)."));
       }
-      auto pNtHeader = reinterpret_cast<PIMAGE_NT_HEADERS>(pBase + 
+      auto pNtHeaders = reinterpret_cast<PIMAGE_NT_HEADERS>(pBase + 
         pDosHeader->e_lfanew);
-      if (pNtHeader->Signature != IMAGE_NT_SIGNATURE)
+      if (pNtHeaders->Signature != IMAGE_NT_SIGNATURE)
       {
         BOOST_THROW_EXCEPTION(ManualMapError() << 
           ErrorFunction("ManualMap::Map") << 
@@ -93,25 +103,24 @@ namespace Hades
       }
 
       // Fix import table if it exists
-      auto ImpDirSize = pNtHeader->OptionalHeader.DataDirectory[
+      auto ImpDirSize = pNtHeaders->OptionalHeader.DataDirectory[
         IMAGE_DIRECTORY_ENTRY_IMPORT].Size;
       if (ImpDirSize)
       {
         auto pImpDir = reinterpret_cast<PIMAGE_IMPORT_DESCRIPTOR>(pBase + 
-          RvaToFileOffset(pNtHeader, pNtHeader->OptionalHeader.
+          RvaToFileOffset(pNtHeaders, pNtHeaders->OptionalHeader.
           DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress));
 
-        // Todo: Fix imports here
-        pImpDir;
+        FixImports(ModuleFileBuf, pNtHeaders, pImpDir);
       }
 
       // Fix relocations if applicable
-      auto RelocDirSize = pNtHeader->OptionalHeader.DataDirectory[
+      auto RelocDirSize = pNtHeaders->OptionalHeader.DataDirectory[
         IMAGE_DIRECTORY_ENTRY_BASERELOC].Size;
       if (RelocDirSize)
       {
         auto pRelocDir = reinterpret_cast<PIMAGE_IMPORT_DESCRIPTOR>(pBase + 
-          RvaToFileOffset(pNtHeader, pNtHeader->OptionalHeader.
+          RvaToFileOffset(pNtHeaders, pNtHeaders->OptionalHeader.
           DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC].VirtualAddress));
 
         // Todo: Fix relocs here
@@ -122,9 +131,10 @@ namespace Hades
 
       // Allocate memory for image
       std::wcout << "Allocating memory for module." << std::endl;
-      PVOID RemoteBase = m_Memory.Alloc(pNtHeader->OptionalHeader.SizeOfImage);
+      PVOID RemoteBase = m_Memory.Alloc(pNtHeaders->OptionalHeader.
+        SizeOfImage);
       std::wcout << "Module base address: " << RemoteBase << "." << std::endl;
-      std::wcout << "Module size: " << pNtHeader->OptionalHeader.SizeOfImage 
+      std::wcout << "Module size: " << pNtHeaders->OptionalHeader.SizeOfImage 
         << "." << std::endl;
 
       // Write DOS header to process
@@ -136,9 +146,9 @@ namespace Hades
       m_Memory.Write(RemoteBase, DosHeaderBuf);
 
       // Write PE header to process
-      PBYTE PeHeaderStart = reinterpret_cast<PBYTE>(pNtHeader);
-      PBYTE PeHeaderEnd = PeHeaderStart + sizeof(pNtHeader->Signature) + 
-        sizeof(pNtHeader->FileHeader) + pNtHeader->FileHeader.
+      PBYTE PeHeaderStart = reinterpret_cast<PBYTE>(pNtHeaders);
+      PBYTE PeHeaderEnd = PeHeaderStart + sizeof(pNtHeaders->Signature) + 
+        sizeof(pNtHeaders->FileHeader) + pNtHeaders->FileHeader.
         SizeOfOptionalHeader;
       std::vector<BYTE> PeHeaderBuf(PeHeaderStart, PeHeaderEnd);
       PBYTE TargetAddr = reinterpret_cast<PBYTE>(RemoteBase) + 
@@ -148,7 +158,7 @@ namespace Hades
       m_Memory.Write(TargetAddr, PeHeaderBuf);
       
       // Write sections to process
-      MapSections(pNtHeader, RemoteBase, ModuleFileBuf);
+      MapSections(pNtHeaders, RemoteBase, ModuleFileBuf);
 
       // Todo: Write EP calling stub to process here
 
@@ -200,7 +210,6 @@ namespace Hades
       std::wcout << "Mapping sections." << std::endl;
 
       // Loop over all sections 
-      DWORD BytesWritten = 0; 
       PIMAGE_SECTION_HEADER pCurrent = IMAGE_FIRST_SECTION(pNtHeaders);
       for(WORD i = 0; i != pNtHeaders->FileHeader.NumberOfSections; ++i, 
         ++pCurrent) 
@@ -241,6 +250,119 @@ namespace Hades
             ErrorCodeWin(LastError));
         }
       }
+    }
+
+    // Fix imports
+    void ManualMap::FixImports(std::vector<BYTE>& ModBuffer, 
+      PIMAGE_NT_HEADERS pNtHeaders, PIMAGE_IMPORT_DESCRIPTOR pImpDesc)
+    {
+      // Debug output
+      std::wcout << "Fixing imports." << std::endl;
+
+      // Loop through all the required modules
+      char* ModuleName = nullptr;
+      PBYTE ModBase = &ModBuffer[0];
+      for (; pImpDesc && pImpDesc->Name; ++pImpDesc) 
+      {
+        // Get module name
+        ModuleName = reinterpret_cast<char*>(ModBase + RvaToFileOffset(
+          pNtHeaders, pImpDesc->Name));
+        std::string ModuleNameA(ModuleName);
+        std::wstring ModuleNameW(boost::lexical_cast<std::wstring>(ModuleName));
+        std::wcout << "Module Name: " << ModuleNameW << "." << std::endl;
+
+        // Ensure dependent module is already loaded
+        // Todo: Recursive loading.
+        auto ModuleList(GetModuleList(m_Memory));
+        auto ModIter = std::find_if(ModuleList.begin(), ModuleList.end(), 
+          [&ModuleNameW] (std::shared_ptr<Module> Current)
+        {
+          return I18n::ToLower<wchar_t>(Current->GetName()) == 
+            I18n::ToLower<wchar_t>(ModuleNameW) || 
+            I18n::ToLower<wchar_t>(Current->GetPath()) == 
+            I18n::ToLower<wchar_t>(ModuleNameW);
+        });
+        if (ModIter == ModuleList.end())
+        {
+          BOOST_THROW_EXCEPTION(ManualMapError() << 
+            ErrorFunction("ManualMap::FixImports") << 
+            ErrorString("Dependent module not loaded in remote process."));
+        }
+        HMODULE CurModBase = (*ModIter)->GetBase();
+        std::wstring const CurModName((*ModIter)->GetName());
+
+        // Lookup the first import thunk for this module
+        // Todo: Support for forwarded functions
+        // Todo: Support functions imported by ordinal
+        auto pThunkData = reinterpret_cast<PIMAGE_THUNK_DATA>(ModBase + 
+          RvaToFileOffset(pNtHeaders, pImpDesc->FirstThunk));
+        while(pThunkData->u1.AddressOfData) 
+        {
+          // Get import data
+          auto pNameImport = reinterpret_cast<PIMAGE_IMPORT_BY_NAME>(ModBase + 
+            RvaToFileOffset(pNtHeaders, pThunkData->u1.AddressOfData));
+
+          // Skip imports by ordinal for now
+          if (IMAGE_SNAP_BY_ORDINAL(pNameImport->Hint))
+          {
+            std::wcout << "Skipping import by ordinal." << std::endl;
+            continue;
+          }
+
+          // Get name of function
+          std::string const ImpName(reinterpret_cast<char*>(pNameImport->Name));
+          std::cout << "Function Name: " << ImpName << "." << std::endl;
+
+          // Get function address in remote process
+          FARPROC FuncAddr = GetRemoteProcAddress(CurModBase, CurModName, 
+            reinterpret_cast<char*>(pNameImport->
+            Name));
+
+          // Calculate function delta
+          DWORD_PTR FuncDelta = reinterpret_cast<DWORD_PTR>(FuncAddr) - 
+            reinterpret_cast<DWORD_PTR>(CurModBase);
+
+          // Set function delta
+          pThunkData->u1.Function = FuncDelta;
+
+          // Advance to next function
+          pThunkData++;
+        }
+      } 
+    }
+
+    FARPROC ManualMap::GetRemoteProcAddress(HMODULE RemoteMod, 
+      std::wstring const& ModulePath, std::string const& Function)
+    {
+      // Load module as data so we can read the EAT locally
+      EnsureFreeLibrary LocalMod(LoadLibraryExW(ModulePath.c_str(), NULL, 
+        DONT_RESOLVE_DLL_REFERENCES));
+      if (!LocalMod)
+      {
+        DWORD LastError = GetLastError();
+        BOOST_THROW_EXCEPTION(ManualMapError() << 
+          ErrorFunction("ManualMap::GetRemoteProcAddress") << 
+          ErrorString("Could not load module locally.") << 
+          ErrorCodeWin(LastError));
+      }
+
+      // Find target function in module
+      FARPROC LocalFunc = GetProcAddress(LocalMod, Function.c_str());
+      if (!LocalFunc)
+      {
+        return nullptr;
+      }
+      
+      // Calculate function delta
+      DWORD_PTR FuncDelta = reinterpret_cast<DWORD_PTR>(LocalFunc) - 
+        reinterpret_cast<DWORD_PTR>(static_cast<HMODULE>(LocalMod));
+
+      // Calculate function location in remote process
+      auto RemoteFunc = reinterpret_cast<FARPROC>(reinterpret_cast<DWORD_PTR>(
+        RemoteMod) + FuncDelta);
+
+      // Return remote function location
+      return RemoteFunc;
     }
   }
 }
