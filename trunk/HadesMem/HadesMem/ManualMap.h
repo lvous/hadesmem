@@ -185,8 +185,8 @@ namespace Hades
         0xff, 0xd0, // call eax
         0xc3 // ret
       };
-      *reinterpret_cast<PVOID*>(&EpCaller[9]) = GetRemoteProcAddress(
-        reinterpret_cast<HMODULE>(RemoteBase), Path, "Initialize");
+      *reinterpret_cast<PVOID*>(&EpCaller[9]) = reinterpret_cast<PBYTE>(
+        RemoteBase) + pNtHeaders->OptionalHeader.AddressOfEntryPoint;
       *reinterpret_cast<PVOID*>(&EpCaller[16]) = GetRemoteProcAddress(
         GetModuleHandle(L"kernel32.dll"), L"kernel32.dll", "ExitThread");
       std::vector<BYTE> EpCallerReal(EpCaller, EpCaller + sizeof(EpCaller));
