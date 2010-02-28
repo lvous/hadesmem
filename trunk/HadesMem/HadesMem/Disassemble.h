@@ -58,6 +58,7 @@ namespace Hades
       // Set up disasm structure for BeaEngine
       DISASM MyDisasm = { 0 };
       MyDisasm.EIP = reinterpret_cast<long long>(&Buffer[0]);
+      MyDisasm.VirtualAddr = reinterpret_cast<long long>(Address);
       #if defined(_M_AMD64) 
         MyDisasm.Archi = 64;
       #elif defined(_M_IX86) 
@@ -81,6 +82,7 @@ namespace Hades
           Results.push_back(MyDisasm.CompleteInstr);
           // Advance to next instruction
           MyDisasm.EIP = MyDisasm.EIP + Len;
+          MyDisasm.VirtualAddr = MyDisasm.VirtualAddr + Len;
         }
         // If disassembly failed then break out
         else 
