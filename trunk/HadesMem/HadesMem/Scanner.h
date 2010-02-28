@@ -87,14 +87,7 @@ namespace Hades
       m_Start(static_cast<PBYTE>(Start)), 
       m_End(static_cast<PBYTE>(End)), 
       m_Addresses()
-    {
-      // If start or end are not specified by the user then calculate them
-      if (!m_Start || !m_End)
-      {
-        // Initialize using PE header
-        Initialize();
-      }
-    }
+    { }
 
     // Constructor
     Scanner::Scanner(MemoryMgr const& MyMemory, HMODULE Module) 
@@ -194,70 +187,75 @@ namespace Hades
           ErrorString("Mask does not match data."));
       }
 
-      // Get memory region list
-      auto RegionList(GetRegionList(m_Memory));
-      // Loop over all regions
-      for (auto Iter = RegionList.begin(); Iter != RegionList.end(); ++Iter)
+      // Get system information
+      SYSTEM_INFO MySystemInfo = { 0 };
+      GetSystemInfo(&MySystemInfo);
+      DWORD const PageSize = MySystemInfo.dwPageSize;
+      PVOID const MinAddr = MySystemInfo.lpMinimumApplicationAddress;
+      PVOID const MaxAddr = MySystemInfo.lpMaximumApplicationAddress;
+
+      // Loop over all memory pages
+      for (auto Address = static_cast<PBYTE>(MinAddr); Address < MaxAddr; 
+        Address += PageSize)
       {
-        // Only scan regions which we can read
-        // Note: Doing this to be non-invasive. If you need to scan regions 
-        // for which you don't have read access then disable this check.
-        if (!m_Memory.CanRead((*Iter)->GetBaseAddress()))
+        try
         {
-          continue;
-        }
-
-        // Only scan regions in specified range
-        if ((*Iter)->GetBaseAddress() > m_End || 
-          (*Iter)->GetBaseAddress() < m_Start)
-        {
-          continue;
-        }
-
-        // Get raw size of data
-        DWORD_PTR RawSize = Data.size() * sizeof(std::vector<BYTE>::value_type);
-        
-        // Get start of region
-        PBYTE RegionStart = static_cast<PBYTE>((*Iter)->GetBaseAddress());
-        // Get end of region
-        PBYTE RegionEnd = RegionStart + (*Iter)->GetRegionSize();
-        // Read to end of region, or until specified end address if it's 
-        // inside the region
-        PBYTE EndAddress = RegionEnd > m_End ? m_End : RegionEnd;
-
-        // Rather than performing a read for each address we instead perform 
-        // caching.
-        auto MyBuffer(m_Memory.Read<std::vector<BYTE>>(RegionStart, 
-          (*Iter)->GetRegionSize()));
-
-        // Loop over entire memory region
-        for (auto Address = RegionStart; Address != EndAddress - RawSize; 
-          ++Address) 
-        {
-          DWORD_PTR Offset = reinterpret_cast<DWORD_PTR>(Address) - 
-            reinterpret_cast<DWORD_PTR>(RegionStart);
-
-          // Check if current address matches buffer
-          bool Found = true;
-          for (std::vector<BYTE>::size_type i = 0; i != Data.size(); ++i)
+          if (Address > m_End || Address < m_Start)
           {
-            auto TempAddr = reinterpret_cast<std::vector<BYTE>::value_type*>(
-              reinterpret_cast<PBYTE>(&(MyBuffer)[0]) + Offset);
-            if (Mask.empty() || Mask[i] == L'x')
+            continue;
+          }
+
+          MEMORY_BASIC_INFORMATION MyMbi1 = { 0 };
+          if (!VirtualQueryEx(m_Memory.GetProcessHandle(), Address, &MyMbi1, 
+            sizeof(MyMbi1)))
+          {
+            continue;
+          }
+
+          MEMORY_BASIC_INFORMATION MyMbi2 = { 0 };
+          if (!VirtualQueryEx(m_Memory.GetProcessHandle(), Address + PageSize, 
+            &MyMbi2, sizeof(MyMbi2)))
+          {
+            continue;
+          }
+          
+          if ((MyMbi1.Protect & PAGE_GUARD) == PAGE_GUARD || 
+            (MyMbi2.Protect & PAGE_GUARD) == PAGE_GUARD) 
+          {
+            continue;
+          }
+
+          // Read vector of Ts into cache
+          auto Buffer(m_Memory.Read<std::vector<BYTE>>(Address, PageSize + 
+            Data.size() * sizeof(T::value_type)));
+
+          // Loop over entire memory region
+          for (auto Current = &Buffer[0]; Current != &Buffer[0] + 
+            Buffer.size(); ++Current) 
+          {
+            // Check if current address matches buffer
+            bool Found = true;
+            for (std::vector<BYTE>::size_type i = 0; i != Data.size(); ++i)
             {
-              if (TempAddr[i] != Data[i])
+              auto CurrentTemp = reinterpret_cast<T::value_type*>(Current);
+              if ((Mask.empty() || Mask[i] == L'x') && 
+                (CurrentTemp[i] != Data[i]))
               {
                 Found = false;
                 break;
               }
             }
-          }
 
-          // If the buffer matched return the current address
-          if (Found)
-          {
-            return Address;
+            // If the buffer matched return the current address
+            if (Found)
+            {
+              return Address + (Current - &Buffer[0]);
+            }
           }
+        }
+        catch (boost::exception const& /*e*/)
+        {
+          continue;
         }
       }
 

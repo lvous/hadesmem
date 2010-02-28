@@ -31,7 +31,7 @@ namespace Hades
     public:
       // Constructor
       inline explicit MemoryRegion(MemoryMgr const& MyMemory, 
-        MEMORY_BASIC_INFORMATION RegionInfo);
+        MEMORY_BASIC_INFORMATION const& RegionInfo);
 
       // Get base address
       inline PVOID GetBaseAddress() const;
@@ -99,7 +99,7 @@ namespace Hades
 
     // Constructor
     MemoryRegion::MemoryRegion(MemoryMgr const& MyMemory, 
-      MEMORY_BASIC_INFORMATION RegionInfo) 
+      MEMORY_BASIC_INFORMATION const& RegionInfo) 
       : m_Memory(MyMemory), 
       m_RegionInfo(RegionInfo) 
     { }
