@@ -182,8 +182,8 @@ namespace Hades
           pTlsDir->AddressOfCallBacks) << "." << std::endl;
 
         for (auto pCallbacks = reinterpret_cast<PIMAGE_TLS_CALLBACK*>(pBase + 
-          RvaToFileOffset(pNtHeaders, pTlsDir->AddressOfCallBacks)); 
-          *pCallbacks; ++pCallbacks)
+          RvaToFileOffset(pNtHeaders, static_cast<DWORD>(pTlsDir->
+          AddressOfCallBacks))); *pCallbacks; ++pCallbacks)
         {
           std::wcout << "TLS Callback: " << *pCallbacks << "." << std::endl;
           TlsCallbacks.push_back(*pCallbacks);
@@ -383,7 +383,8 @@ namespace Hades
         {
           // Get import data
           auto pNameImport = reinterpret_cast<PIMAGE_IMPORT_BY_NAME>(ModBase + 
-            RvaToFileOffset(pNtHeaders, pThunkData->u1.AddressOfData));
+            RvaToFileOffset(pNtHeaders, static_cast<DWORD>(pThunkData->u1.
+            AddressOfData)));
 
           // Get name of function
           std::string const ImpName(reinterpret_cast<char*>(pNameImport->Name));
