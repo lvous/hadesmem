@@ -39,20 +39,22 @@ namespace Hades
 
       // Search memory (POD types)
       template <typename T>
-      PVOID Find(T const& Data, typename boost::enable_if<std::is_pod<T>>::
-        type* Dummy = 0) const;
+      PVOID Find(T const& Data, PVOID Start = 0, PVOID End = 0, 
+        typename boost::enable_if<std::is_pod<T>>::type* Dummy = 0) const;
 
       // Search memory (string types)
       template <typename T>
-      PVOID Find(T const& Data, typename boost::enable_if<std::is_same<T, 
-        std::basic_string<typename T::value_type>>>::type* Dummy = 0) const;
+      PVOID Find(T const& Data, PVOID Start = 0, PVOID End = 0, typename 
+        boost::enable_if<std::is_same<T, std::basic_string<typename T::
+        value_type>>>::type* Dummy = 0) const;
 
       // Search memory (vector types)
       template <typename T>
-      PVOID Find(T const& Data, std::wstring const& Mask = L"", typename 
-        boost::enable_if<std::is_same<T, std::vector<typename T::value_type>>>
-        ::type* Dummy1 = 0, typename boost::enable_if<std::is_pod<typename 
-        T::value_type>>::type* Dummy2 = 0) const;
+      PVOID Find(T const& Data, std::wstring const& Mask = L"", 
+        PVOID Start = 0, PVOID End = 0, typename boost::enable_if<std::is_same<
+        T, std::vector<typename T::value_type>>>::type* Dummy1 = 0, typename 
+        boost::enable_if<std::is_pod<typename T::value_type>>::type* 
+        Dummy2 = 0) const;
 
       // Load patterns from XML file
       inline void LoadFromXML(std::wstring const& Path);
@@ -87,7 +89,14 @@ namespace Hades
       m_Start(static_cast<PBYTE>(Start)), 
       m_End(static_cast<PBYTE>(End)), 
       m_Addresses()
-    { }
+    {
+      // Ensure range is valid
+      if (m_End < m_Start)
+      {
+        BOOST_THROW_EXCEPTION(ScannerError() << 
+          ErrorFunction("Scanner::Scanner") << 
+          ErrorString("Start or end address is invalid."));
+      }}
 
     // Constructor
     Scanner::Scanner(MemoryMgr const& MyMemory, HMODULE Module) 
@@ -102,7 +111,7 @@ namespace Hades
       if (DosHeader.e_magic != IMAGE_DOS_SIGNATURE)
       {
         BOOST_THROW_EXCEPTION(ScannerError() << 
-          ErrorFunction("ManualMap::Map") << 
+          ErrorFunction("Scanner::Scanner") << 
           ErrorString("Target file is not a valid PE file (DOS)."));
       }
       auto NtHeader = MyMemory.Read<IMAGE_NT_HEADERS>(pBase + DosHeader.
@@ -110,7 +119,7 @@ namespace Hades
       if (NtHeader.Signature != IMAGE_NT_SIGNATURE)
       {
         BOOST_THROW_EXCEPTION(ScannerError() << 
-          ErrorFunction("ManualMap::Map") << 
+          ErrorFunction("Scanner::Scanner") << 
           ErrorString("Target file is not a valid PE file (NT)."));
       }
 
@@ -134,42 +143,52 @@ namespace Hades
 
     // Search memory (POD types)
     template <typename T>
-    PVOID Scanner::Find(T const& Data, typename boost::enable_if<std::
-      is_pod<T>>:: type* /*Dummy*/) const
+    PVOID Scanner::Find(T const& Data, PVOID Start, PVOID End, typename boost::
+      enable_if<std::is_pod<T>>:: type* /*Dummy*/) const
     {
       // Note: Assumes data is aligned to the size of T.
       // Todo: Unaligned version, and aligned to size of pointer version.
 
+      // Get real start and end addresses
+      PBYTE StartReal = Start || End ? static_cast<PBYTE>(Start) : m_Start;
+      PBYTE EndReal = Start || End ? static_cast<PBYTE>(End) : m_End;
+      if (EndReal < StartReal)
+      {
+        BOOST_THROW_EXCEPTION(ScannerError() << 
+          ErrorFunction("Scanner::Find") << 
+          ErrorString("Start or end address is invalid."));
+      }
+
       // Calculate number of elements in address range
-      DWORD_PTR NumElems = (reinterpret_cast<DWORD_PTR>(m_End) - 
-        reinterpret_cast<DWORD_PTR>(m_Start)) / sizeof(T);
+      DWORD_PTR NumElems = (reinterpret_cast<DWORD_PTR>(EndReal) - 
+        reinterpret_cast<DWORD_PTR>(StartReal)) / sizeof(T);
       // Read vector of Ts into cache
-      auto Buffer(m_Memory.Read<std::vector<T>>(m_Start, NumElems));
+      auto Buffer(m_Memory.Read<std::vector<T>>(StartReal, NumElems));
       // Search cache for supplied value
       auto Iter = std::find(Buffer.begin(), Buffer.end(), Data);
       // If value was found return its address, or null otherwise
-      return Iter != Buffer.end() ? reinterpret_cast<PBYTE>(m_Start) + 
-        std::distance(Buffer.begin(), Iter) * sizeof(T) : nullptr;
+      return Iter != Buffer.end() ? StartReal + std::distance(Buffer.begin(), 
+        Iter) * sizeof(T) : nullptr;
     }
 
     // Search memory (string types)
     template <typename T>
-    PVOID Scanner::Find(T const& Data, typename boost::enable_if<std::
-      is_same<T, std::basic_string<typename T::value_type>>>::type* /*Dummy*/) 
-      const
+    PVOID Scanner::Find(T const& Data, PVOID Start, PVOID End, typename boost::
+      enable_if<std::is_same<T, std::basic_string<typename T::value_type>>>::
+      type* /*Dummy*/) const
     {
       // Convert string to character buffer
       std::vector<T::value_type> MyBuffer(Data.begin(), Data.end());
       // Use vector specialization of find
-      return Find(MyBuffer);
+      return Find(MyBuffer, L"", Start, End);
     }
 
     // Search memory (vector types)
     template <typename T>
-    PVOID Scanner::Find(T const& Data, std::wstring const& Mask, typename 
-      boost::enable_if<std::is_same<T, std::vector<typename T::value_type>>>::
-      type* /*Dummy1*/, typename boost::enable_if<std::is_pod<typename T::
-      value_type>>::type* /*Dummy2*/) const
+    PVOID Scanner::Find(T const& Data, std::wstring const& Mask, PVOID Start, 
+      PVOID End, typename boost::enable_if<std::is_same<T, std::vector<
+      typename T::value_type>>>::type* /*Dummy1*/, typename boost::enable_if<
+      std::is_pod<typename T::value_type>>::type* /*Dummy2*/) const
     {
       // Ensure there is data to process
       if (Data.empty())
@@ -187,6 +206,16 @@ namespace Hades
           ErrorString("Mask does not match data."));
       }
 
+      // Get real start and end addresses
+      PBYTE StartReal = Start || End ? static_cast<PBYTE>(Start) : m_Start;
+      PBYTE EndReal = Start || End ? static_cast<PBYTE>(End) : m_End;
+      if (EndReal < StartReal)
+      {
+        BOOST_THROW_EXCEPTION(ScannerError() << 
+          ErrorFunction("Scanner::Find") << 
+          ErrorString("Start or end address is invalid."));
+      }
+
       // Get system information
       SYSTEM_INFO MySystemInfo = { 0 };
       GetSystemInfo(&MySystemInfo);
@@ -200,11 +229,6 @@ namespace Hades
       {
         try
         {
-          if (Address > m_End || Address < m_Start)
-          {
-            continue;
-          }
-
           MEMORY_BASIC_INFORMATION MyMbi1 = { 0 };
           if (!VirtualQueryEx(m_Memory.GetProcessHandle(), Address, &MyMbi1, 
             sizeof(MyMbi1)))
@@ -249,7 +273,13 @@ namespace Hades
             // If the buffer matched return the current address
             if (Found)
             {
-              return Address + (Current - &Buffer[0]);
+              PVOID AddressReal = Address + (Current - &Buffer[0]);
+              if (AddressReal > EndReal || AddressReal < StartReal)
+              {
+                continue;
+              }
+
+              return AddressReal;
             }
           }
         }
