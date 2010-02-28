@@ -31,7 +31,7 @@ namespace Hades
 
       // Test disassembler
       inline std::vector<std::string> Disassemble(PVOID Address, 
-        DWORD NumInstructions);
+        DWORD_PTR NumInstructions);
 
     private:
       // Disable assignment
@@ -48,7 +48,7 @@ namespace Hades
 
     // Test disassembler
     std::vector<std::string> Disassembler::Disassemble(PVOID Address, 
-      DWORD NumInstructions) 
+      DWORD_PTR NumInstructions) 
     {
       // Read data into buffer
       int MaxInstructionSize = 30;
@@ -71,7 +71,7 @@ namespace Hades
       std::vector<std::string> Results;
 
       // Disassemble instructions
-      for (DWORD i = 0; i < NumInstructions; ++i)
+      for (DWORD_PTR i = 0; i < NumInstructions; ++i)
       {
         // Disassemble current instruction
         int Len = Disasm(&MyDisasm);
