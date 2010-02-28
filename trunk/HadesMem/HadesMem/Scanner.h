@@ -229,6 +229,7 @@ namespace Hades
       {
         try
         {
+          // Check for invalid memory
           MEMORY_BASIC_INFORMATION MyMbi1 = { 0 };
           if (!VirtualQueryEx(m_Memory.GetProcessHandle(), Address, &MyMbi1, 
             sizeof(MyMbi1)))
@@ -236,13 +237,17 @@ namespace Hades
             continue;
           }
 
+          // Check for invalid memory
+          // Todo: If this fails, we should fall back to simply reading as 
+          // much as we can, rather than dropping the region entirely.
           MEMORY_BASIC_INFORMATION MyMbi2 = { 0 };
           if (!VirtualQueryEx(m_Memory.GetProcessHandle(), Address + PageSize, 
             &MyMbi2, sizeof(MyMbi2)))
           {
             continue;
           }
-          
+
+          // Check for guard pages
           if ((MyMbi1.Protect & PAGE_GUARD) == PAGE_GUARD || 
             (MyMbi2.Protect & PAGE_GUARD) == PAGE_GUARD) 
           {
@@ -273,6 +278,8 @@ namespace Hades
             // If the buffer matched return the current address
             if (Found)
             {
+              // Todo: Do this check in the outer loop, and break if possible 
+              // rather than continuing.
               PVOID AddressReal = Address + (Current - &Buffer[0]);
               if (AddressReal > EndReal || AddressReal < StartReal)
               {
@@ -283,7 +290,10 @@ namespace Hades
             }
           }
         }
-        catch (boost::exception const& /*e*/)
+        // Ignore any memory errors, as there's nothing we can do about them
+        // Todo: Detect memory read errors and drop back to a slower but 
+        // more reliable impl.
+        catch (MemoryError& /*e*/)
         {
           continue;
         }
