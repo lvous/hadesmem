@@ -51,7 +51,7 @@ namespace Hades
       DWORD_PTR NumInstructions) 
     {
       // Read data into buffer
-      int MaxInstructionSize = 30;
+      int MaxInstructionSize = 15;
       auto Buffer(m_Memory.Read<std::vector<BYTE>>(Address, NumInstructions * 
         MaxInstructionSize));
 
@@ -76,19 +76,17 @@ namespace Hades
         // Disassemble current instruction
         int Len = Disasm(&MyDisasm);
         // Ensure disassembly succeeded
-        if (Len != UNKNOWN_OPCODE) 
-        {
-          // Add current instruction to list
-          Results.push_back(MyDisasm.CompleteInstr);
-          // Advance to next instruction
-          MyDisasm.EIP = MyDisasm.EIP + Len;
-          MyDisasm.VirtualAddr = MyDisasm.VirtualAddr + Len;
-        }
-        // If disassembly failed then break out
-        else 
+        if (Len == UNKNOWN_OPCODE)
         {
           break;
         }
+
+        // Add current instruction to list
+        Results.push_back(MyDisasm.CompleteInstr);
+
+        // Advance to next instruction
+        MyDisasm.EIP += Len;
+        MyDisasm.VirtualAddr += Len;
       }
 
       // Return disassembled data
