@@ -34,6 +34,7 @@
     <ClInclude Include="Process.h" />
     <ClInclude Include="Region.h" />
     <ClInclude Include="Toolhelper.h" />
+    <ClInclude Include="Types.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{7699F816-E93B-4C61-B491-2B8405122949}</ProjectGuid>
