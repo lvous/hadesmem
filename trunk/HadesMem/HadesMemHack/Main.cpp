@@ -1,12 +1,14 @@
 // HadesMem
 #include "IoAux.h"
 #include "Types.h"
+#include "HadesMem/Types.h"
 #include "HadesMem/Module.h"
 #include "HadesMem/Memory.h"
 #include "HadesMem/Region.h"
 #include "HadesMem/Scanner.h"
 #include "HadesMem/Injector.h"
 #include "HadesMem/ManualMap.h"
+#include "HadesMem/Scripting.h"
 #include "HadesMem/Disassemble.h"
 
 // C++ Standard Library
@@ -79,9 +81,10 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
         std::wcout << "10. Manually map DLL." << std::endl;
         std::wcout << "11. Search memory." << std::endl;
         std::wcout << "12. Query memory." << std::endl;
+        std::wcout << "13. Run script." << std::endl;
 
         // Get task
-        auto Task = static_cast<Detail::Task>(GetOption(L"task", 1, 12));
+        auto Task = static_cast<Detail::Task>(GetOption(L"task", 1, 13));
 
         // Check for task 'Read Memory' or 'Write Memory' and output 
         // accordingly
@@ -742,6 +745,26 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
           {
             std::wcout << *Current << std::endl;
           });
+        }
+        // Handle 'Run script' task
+        else if (Task == Detail::Task_RunScript)
+        {
+          // Create script manager
+          Hades::Memory::ScriptMgr MyScriptMgr;
+
+          // Output
+          std::wcout << "Enter script:" << std::endl;
+
+          // Get script
+          std::string Script;
+          while (!std::getline(std::cin, Script) || Script.empty())
+          {
+            std::wcout << "Invalid script." << std::endl;
+            std::cin.clear();
+          }
+
+          // Run script
+          MyScriptMgr.RunString(Script);
         }
         // Output for all currently unhandled tasks
         else

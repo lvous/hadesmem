@@ -23,7 +23,7 @@ namespace Hades
       typedef wchar_t               CharWide;
       typedef std::string           StrNarrow;
       typedef std::wstring          StrWide;
-      typedef Byte*                 Pointer;
+      typedef void*                 Pointer;
 
       // Ensure data type are correct
       static_assert(sizeof(char) == 1, "Size of Byte is wrong.");

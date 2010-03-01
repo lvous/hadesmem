@@ -47,7 +47,8 @@ namespace Detail
     Task_InjectDLL, 
     Task_ManualMap, 
     Task_SearchMem, 
-    Task_QueryMem
+    Task_QueryMem, 
+    Task_RunScript
   };
   
   // Module selection methods
