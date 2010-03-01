@@ -75,6 +75,10 @@
     <ClInclude Include="lvm.h" />
     <ClInclude Include="lzio.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="COPYRIGHT" />
+    <None Include="README" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{23386633-27E7-4D8C-BA6D-C181742FAC6B}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>

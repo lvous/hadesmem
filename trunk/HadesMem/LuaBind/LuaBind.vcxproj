@@ -253,6 +253,10 @@
     <ClCompile Include="weak_ref.cpp" />
     <ClCompile Include="wrapper_base.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="INSTALL" />
+    <None Include="LICENSE" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
