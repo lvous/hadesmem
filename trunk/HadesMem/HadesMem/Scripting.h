@@ -50,22 +50,24 @@ namespace Hades
     namespace Wrappers
     {
       // Console output wrapper
-      void WriteLn(std::string const& Data)
+      inline void WriteLn(std::string const& Data)
       {
         std::cout << Data << std::endl;
       }
 
-      // MemoryMgr constructor wrappers
-      boost::shared_ptr<MemoryMgr> CreateMemoryMgr(DWORD ProcId)
+      // MemoryMgr::MemoryMgr wrappers
+      inline boost::shared_ptr<MemoryMgr> CreateMemoryMgr(DWORD ProcId)
       {
         return boost::make_shared<MemoryMgr>(ProcId);
       }
-      boost::shared_ptr<MemoryMgr> CreateMemoryMgr(std::string const& ProcName)
+      inline boost::shared_ptr<MemoryMgr> CreateMemoryMgr(
+        std::string const& ProcName)
       {
         return boost::make_shared<MemoryMgr>(boost::lexical_cast<std::wstring>(
           ProcName));
       }
-      boost::shared_ptr<MemoryMgr> CreateMemoryMgr(std::string const& WindowName, 
+      inline boost::shared_ptr<MemoryMgr> CreateMemoryMgr(
+        std::string const& WindowName, 
         std::string const* const ClassName)
       {
         std::wstring ClassNameW(ClassName ? boost::lexical_cast<std::wstring>(
@@ -74,7 +76,19 @@ namespace Hades
           WindowName), ClassName ? &ClassNameW : nullptr);
       }
 
-      // Generate ReadType functions
+      // MemoryMgr::CanRead wrapper
+      inline bool CanRead(MemoryMgr const& MyMemory, DWORD_PTR Address)
+      {
+        return MyMemory.CanRead(reinterpret_cast<PVOID>(Address));
+      }
+
+      // MemoryMgr::CanWrite wrapper
+      inline bool CanWrite(MemoryMgr const& MyMemory, DWORD_PTR Address)
+      {
+        return MyMemory.CanWrite(reinterpret_cast<PVOID>(Address));
+      }
+
+      // MemoryMgr::Read<T> wrappers
       HADESMEM_SCRIPTING_GEN_READ(Byte)
       HADESMEM_SCRIPTING_GEN_READ(Int16)
       HADESMEM_SCRIPTING_GEN_READ(UInt16)
@@ -90,7 +104,7 @@ namespace Hades
       HADESMEM_SCRIPTING_GEN_READ(StrWide)
       HADESMEM_SCRIPTING_GEN_READ(Pointer)
 
-      // Generate WriteType functions
+      // MemoryMgr::Write<T> wrappers
       HADESMEM_SCRIPTING_GEN_WRITE(Byte)
       HADESMEM_SCRIPTING_GEN_WRITE(Int16)
       HADESMEM_SCRIPTING_GEN_WRITE(UInt16)
