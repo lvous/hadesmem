@@ -323,8 +323,6 @@ namespace Hades
 
       // Output
       std::wcout << "Loader Stub Size: " << StubSize << "." << std::endl;
-
-      // Output
       std::wcout << "Loader Stub (Local): " << LoaderStub.Get() << "." << 
         std::endl;
 
