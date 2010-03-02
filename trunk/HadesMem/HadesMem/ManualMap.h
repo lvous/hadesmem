@@ -270,10 +270,6 @@ namespace Hades
       std::wcout << "EP Call Stub: " << EpCallerMem.GetAddress() << "." << 
         std::endl;
 
-      std::wcin.clear();
-      std::wcin.sync();
-      std::wcin.get();
-
       // Execute EP calling stub
       m_Memory.Call<BOOL (PVOID)>(EpCallerMem.GetAddress(), RemoteBase);
 
