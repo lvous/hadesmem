@@ -17,14 +17,15 @@ extern "C" __declspec(dllexport) void Initialize(HMODULE /*Module*/)
   MessageBox(NULL, L"Initialize called.", L"HadesMemHackDLL", MB_OK);
 
   // Force TLS to be used
-  // But don't run it yet
-  volatile bool AlwaysFalse = false;
-  if (AlwaysFalse)
+  volatile bool UseTls = false;
+  if (UseTls)
   {
-    boost::thread_specific_ptr<std::string> MyInt;
-    if (!MyInt.get())
-      MyInt.reset();
-    *MyInt = "asdf";
+    boost::thread_specific_ptr<std::string> MyString;
+    if (!MyString.get())
+    {
+      MyString.reset(new std::string());
+    }
+    *MyString = "asdf";
   }
 }
 

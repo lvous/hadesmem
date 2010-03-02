@@ -277,10 +277,25 @@ namespace Hades
       MyJitFunc.push(AsmJit::ebp);
       MyJitFunc.mov(AsmJit::ebp, AsmJit::esp);
 
+      // TLS calling code
+      std::for_each(TlsCallbacks.begin(), TlsCallbacks.end(), 
+        [&MyJitFunc, RemoteBase] (PIMAGE_TLS_CALLBACK pCallback) 
+      {
+        // Entry-point calling code
+        AsmJit::Immediate MyImmediate0(0);
+        MyJitFunc.push(MyImmediate0);
+        AsmJit::Immediate MyImmediate1(DLL_PROCESS_ATTACH);
+        MyJitFunc.push(MyImmediate1);
+        AsmJit::Immediate MyImmediateMod(reinterpret_cast<DWORD_PTR>(RemoteBase));
+        MyJitFunc.push(MyImmediateMod);
+        MyJitFunc.mov(AsmJit::eax, reinterpret_cast<DWORD_PTR>(pCallback));
+        MyJitFunc.call(AsmJit::eax);
+      });
+
       // Entry-point calling code
       AsmJit::Immediate MyImmediate0(0);
       MyJitFunc.push(MyImmediate0);
-      AsmJit::Immediate MyImmediate1(1);
+      AsmJit::Immediate MyImmediate1(DLL_PROCESS_ATTACH);
       MyJitFunc.push(MyImmediate1);
       AsmJit::Immediate MyImmediateMod(reinterpret_cast<DWORD_PTR>(RemoteBase));
       MyJitFunc.push(MyImmediateMod);
