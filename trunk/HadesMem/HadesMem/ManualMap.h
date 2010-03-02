@@ -109,7 +109,40 @@ namespace Hades
           ErrorString("Target file is not a valid PE file (NT)."));
       }
 
-      // Fix import table if it exists
+      // Allocate memory for image
+      std::wcout << "Allocating memory for module." << std::endl;
+      PVOID RemoteBase = m_Memory.Alloc(pNtHeaders->OptionalHeader.
+        SizeOfImage);
+      std::wcout << "Module base address: " << RemoteBase << "." << std::endl;
+      std::wcout << "Module size: " << pNtHeaders->OptionalHeader.SizeOfImage 
+        << "." << std::endl;
+
+      // Get all TLS callbacks
+      std::vector<PIMAGE_TLS_CALLBACK> TlsCallbacks;
+      auto TlsDirSize = pNtHeaders->OptionalHeader.DataDirectory
+        [IMAGE_DIRECTORY_ENTRY_TLS].Size;
+      if (TlsDirSize)
+      {
+        auto pTlsDir = reinterpret_cast<PIMAGE_TLS_DIRECTORY>(pBase + 
+          RvaToFileOffset(pNtHeaders, pNtHeaders->OptionalHeader.
+          DataDirectory[IMAGE_DIRECTORY_ENTRY_TLS].VirtualAddress));
+
+        std::wcout << "Enumerating TLS callbacks." << std::endl;
+        std::wcout << "Image Base: " << reinterpret_cast<PVOID>(pNtHeaders->
+          OptionalHeader.ImageBase) << "." << std::endl;
+        std::wcout << "Address Of Callbacks: " << reinterpret_cast<PVOID>(
+          pTlsDir->AddressOfCallBacks) << "." << std::endl;
+
+        for (auto pCallbacks = reinterpret_cast<PIMAGE_TLS_CALLBACK*>(pBase + 
+          RvaToFileOffset(pNtHeaders, pTlsDir->AddressOfCallBacks - 
+          pNtHeaders->OptionalHeader.ImageBase)); *pCallbacks; ++pCallbacks)
+        {
+          std::wcout << "TLS Callback: " << *pCallbacks << "." << std::endl;
+          TlsCallbacks.push_back(*pCallbacks);
+        }
+      }
+
+      // Fix import table if appliciable
       auto ImpDirSize = pNtHeaders->OptionalHeader.DataDirectory[
         IMAGE_DIRECTORY_ENTRY_IMPORT].Size;
       if (ImpDirSize)
@@ -120,14 +153,6 @@ namespace Hades
 
         FixImports(ModuleFileBuf, pNtHeaders, pImpDir);
       }
-
-      // Allocate memory for image
-      std::wcout << "Allocating memory for module." << std::endl;
-      PVOID RemoteBase = m_Memory.Alloc(pNtHeaders->OptionalHeader.
-        SizeOfImage);
-      std::wcout << "Module base address: " << RemoteBase << "." << std::endl;
-      std::wcout << "Module size: " << pNtHeaders->OptionalHeader.SizeOfImage 
-        << "." << std::endl;
 
       // Fix relocations if applicable
       auto RelocDirSize = pNtHeaders->OptionalHeader.DataDirectory[
@@ -161,34 +186,9 @@ namespace Hades
       std::wcout << "Writing NT header." << std::endl;
       std::wcout << "NT Header: " << TargetAddr << std::endl;
       m_Memory.Write(TargetAddr, PeHeaderBuf);
-      
+
       // Write sections to process
       MapSections(pNtHeaders, RemoteBase, ModuleFileBuf);
-
-      // Get all TLS callbacks
-      std::vector<PIMAGE_TLS_CALLBACK> TlsCallbacks;
-      auto TlsDirSize = pNtHeaders->OptionalHeader.DataDirectory[
-        IMAGE_DIRECTORY_ENTRY_TLS].Size;
-      if (TlsDirSize)
-      {
-        auto pTlsDir = reinterpret_cast<PIMAGE_TLS_DIRECTORY>(pBase + 
-          RvaToFileOffset(pNtHeaders, pNtHeaders->OptionalHeader.
-          DataDirectory[IMAGE_DIRECTORY_ENTRY_TLS].VirtualAddress));
-
-        std::wcout << "Enumerating TLS callbacks." << std::endl;
-        std::wcout << "Image Base: " << reinterpret_cast<PVOID>(pNtHeaders->
-          OptionalHeader.ImageBase) << "." << std::endl;
-        std::wcout << "Address Of Callbacks: " << reinterpret_cast<PVOID>(
-          pTlsDir->AddressOfCallBacks) << "." << std::endl;
-
-        for (auto pCallbacks = reinterpret_cast<PIMAGE_TLS_CALLBACK*>(pBase + 
-          RvaToFileOffset(pNtHeaders, static_cast<DWORD>(pTlsDir->
-          AddressOfCallBacks))); *pCallbacks; ++pCallbacks)
-        {
-          std::wcout << "TLS Callback: " << *pCallbacks << "." << std::endl;
-          TlsCallbacks.push_back(*pCallbacks);
-        }
-      }
 
       // Calculate module entry point
       PVOID EntryPoint = static_cast<PBYTE>(RemoteBase) + pNtHeaders->
