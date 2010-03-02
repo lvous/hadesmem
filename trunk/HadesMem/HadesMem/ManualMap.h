@@ -243,39 +243,64 @@ namespace Hades
       
       #if defined(_M_AMD64) 
       // Prologue
-      MyJitFunc.push(AsmJit::rbp); // 55
-      MyJitFunc.mov(AsmJit::rbp, AsmJit::rsp); // 488bec
+      MyJitFunc.push(AsmJit::rbp);
+      MyJitFunc.mov(AsmJit::rbp, AsmJit::rsp);
+
+      // TLS calling code
+      std::for_each(TlsCallbacks.begin(), TlsCallbacks.end(), 
+        [&MyJitFunc, RemoteBase] (PIMAGE_TLS_CALLBACK pCallback) 
+      {
+        // Entry-point calling code
+        AsmJit::Immediate MyImmediate0(0);
+        MyJitFunc.push(MyImmediate0);
+        MyJitFunc.push(MyImmediate0);
+        MyJitFunc.push(MyImmediate0);
+        MyJitFunc.push(MyImmediate0);
+        MyJitFunc.mov(AsmJit::rcx, reinterpret_cast<DWORD_PTR>(RemoteBase));
+        MyJitFunc.mov(AsmJit::rdx, DLL_PROCESS_ATTACH);
+        MyJitFunc.mov(AsmJit::r8, 0);
+        MyJitFunc.mov(AsmJit::r9, 0);
+        MyJitFunc.mov(AsmJit::rax, reinterpret_cast<DWORD_PTR>(RemoteBase) + 
+          reinterpret_cast<DWORD_PTR>(pCallback));
+        MyJitFunc.call(AsmJit::rax);
+        MyJitFunc.pop(AsmJit::rax);
+        MyJitFunc.pop(AsmJit::rax);
+        MyJitFunc.pop(AsmJit::rax);
+        MyJitFunc.pop(AsmJit::rax);
+      });
 
       // Entry-point calling code
       AsmJit::Immediate MyImmediate0(0);
-      MyJitFunc.push(MyImmediate0); // 6a00
-      MyJitFunc.push(MyImmediate0); // 6a00
-      MyJitFunc.push(MyImmediate0); // 6a00
-      MyJitFunc.push(MyImmediate0); // 6a00
-      // 48c7c000c70102
+      MyJitFunc.push(MyImmediate0);
+      MyJitFunc.push(MyImmediate0);
+      MyJitFunc.push(MyImmediate0);
+      MyJitFunc.push(MyImmediate0);
+      MyJitFunc.mov(AsmJit::rcx, reinterpret_cast<DWORD_PTR>(RemoteBase));
+      MyJitFunc.mov(AsmJit::rdx, DLL_PROCESS_ATTACH);
+      MyJitFunc.mov(AsmJit::r8, 0);
+      MyJitFunc.mov(AsmJit::r9, 0);
       MyJitFunc.mov(AsmJit::rax, reinterpret_cast<DWORD_PTR>(EntryPoint));
-      MyJitFunc.call(AsmJit::rax); // ffd0
+      MyJitFunc.call(AsmJit::rax);
 
       // Export calling code (if necessary)
       if (ExportAddr)
       {
-        // 48c7c081110102
         MyJitFunc.mov(AsmJit::rax, reinterpret_cast<DWORD_PTR>(ExportAddr));
-        MyJitFunc.call(AsmJit::rax); // ffd0
+        MyJitFunc.call(AsmJit::rax);
       }
       
       // Cleanup ghost code
-      MyJitFunc.pop(AsmJit::rax); // ffd0
-      MyJitFunc.pop(AsmJit::rax); // ffd0
-      MyJitFunc.pop(AsmJit::rax); // ffd0
-      MyJitFunc.pop(AsmJit::rax); // ffd0
+      MyJitFunc.pop(AsmJit::rax);
+      MyJitFunc.pop(AsmJit::rax);
+      MyJitFunc.pop(AsmJit::rax);
+      MyJitFunc.pop(AsmJit::rax);
 
       // Epilogue
-      MyJitFunc.mov(AsmJit::rsp, AsmJit::rbp); // 488be5
-      MyJitFunc.pop(AsmJit::rbp); // 5d
+      MyJitFunc.mov(AsmJit::rsp, AsmJit::rbp);
+      MyJitFunc.pop(AsmJit::rbp);
 
       // Return
-      MyJitFunc.ret(); // c3
+      MyJitFunc.ret();
       #elif defined(_M_IX86) 
       // Prologue
       MyJitFunc.push(AsmJit::ebp);
@@ -288,8 +313,8 @@ namespace Hades
         // Entry-point calling code
         AsmJit::Immediate MyImmediate0(0);
         MyJitFunc.push(MyImmediate0);
-        AsmJit::Immediate MyImmediate1(DLL_PROCESS_ATTACH);
-        MyJitFunc.push(MyImmediate1);
+        AsmJit::Immediate MyImmProcAttach(DLL_PROCESS_ATTACH);
+        MyJitFunc.push(MyImmProcAttach);
         AsmJit::Immediate MyImmediateMod(reinterpret_cast<DWORD_PTR>(
           RemoteBase));
         MyJitFunc.push(MyImmediateMod);
@@ -301,8 +326,8 @@ namespace Hades
       // Entry-point calling code
       AsmJit::Immediate MyImmediate0(0);
       MyJitFunc.push(MyImmediate0);
-      AsmJit::Immediate MyImmediate1(DLL_PROCESS_ATTACH);
-      MyJitFunc.push(MyImmediate1);
+      AsmJit::Immediate MyImmProcAttach(DLL_PROCESS_ATTACH);
+      MyJitFunc.push(MyImmProcAttach);
       AsmJit::Immediate MyImmediateMod(reinterpret_cast<DWORD_PTR>(
         RemoteBase));
       MyJitFunc.push(MyImmediateMod);

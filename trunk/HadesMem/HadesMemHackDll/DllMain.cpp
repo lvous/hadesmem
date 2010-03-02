@@ -25,8 +25,13 @@ extern "C" __declspec(dllexport) void Initialize(HMODULE /*Module*/)
   *MyString = "asdf";
 }
 
-BOOL WINAPI DllMain(HINSTANCE /*hinstDLL*/, DWORD /*fdwReason*/, 
+BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD /*fdwReason*/, 
   LPVOID /*lpvReserved*/)
 {
+  if (hinstDLL)
+  {
+    MessageBox(NULL, L"DllMain called.", L"HadesMemHackDLL", MB_OK);
+  }
+
   return TRUE;
 }
