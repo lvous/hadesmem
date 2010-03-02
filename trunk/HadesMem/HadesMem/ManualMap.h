@@ -252,13 +252,15 @@ namespace Hades
       MyJitFunc.push(MyImmediate0); // 6a00
       MyJitFunc.push(MyImmediate0); // 6a00
       MyJitFunc.push(MyImmediate0); // 6a00
-      MyJitFunc.mov(AsmJit::rax, reinterpret_cast<DWORD_PTR>(EntryPoint)); // 48c7c000c70102
+      // 48c7c000c70102
+      MyJitFunc.mov(AsmJit::rax, reinterpret_cast<DWORD_PTR>(EntryPoint));
       MyJitFunc.call(AsmJit::rax); // ffd0
 
       // Export calling code (if necessary)
       if (ExportAddr)
       {
-        MyJitFunc.mov(AsmJit::rax, reinterpret_cast<DWORD_PTR>(ExportAddr)); // 48c7c081110102
+        // 48c7c081110102
+        MyJitFunc.mov(AsmJit::rax, reinterpret_cast<DWORD_PTR>(ExportAddr));
         MyJitFunc.call(AsmJit::rax); // ffd0
       }
       
@@ -301,7 +303,8 @@ namespace Hades
       MyJitFunc.push(MyImmediate0);
       AsmJit::Immediate MyImmediate1(DLL_PROCESS_ATTACH);
       MyJitFunc.push(MyImmediate1);
-      AsmJit::Immediate MyImmediateMod(reinterpret_cast<DWORD_PTR>(RemoteBase));
+      AsmJit::Immediate MyImmediateMod(reinterpret_cast<DWORD_PTR>(
+        RemoteBase));
       MyJitFunc.push(MyImmediateMod);
       MyJitFunc.mov(AsmJit::eax, reinterpret_cast<DWORD_PTR>(EntryPoint));
       MyJitFunc.call(AsmJit::eax);
