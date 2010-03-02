@@ -275,9 +275,6 @@ namespace Hades
         #error "Unsupported architecture."
       #endif
       
-      // Get stub size
-      DWORD_PTR FuncSize = MyJitFunc.codeSize();
-
       // Make JIT function.
       auto LoaderStub = AsmJit::function_cast<void (*)(HMODULE)>(
         MyJitFunc.make());
@@ -290,14 +287,20 @@ namespace Hades
           ErrorString("Error JIT'ing loader stub."));
       }
 
+      // Get stub size
+      DWORD_PTR StubSize = MyJitFunc.codeSize();
+
+      // Output
+      std::wcout << "Loader Stub Size: " << StubSize << "." << std::endl;
+
       // Output
       std::wcout << "Loader Stub (Local): " << LoaderStub << "." << std::endl;
 
       // Copy loader stub to stub buffer
       std::vector<BYTE> EpCallerBuf(reinterpret_cast<PBYTE>(LoaderStub), 
-        reinterpret_cast<PBYTE>(LoaderStub) + FuncSize);
+        reinterpret_cast<PBYTE>(LoaderStub) + StubSize);
       // Allocate memory for stub buffer
-      AllocAndFree EpCallerMem(m_Memory, FuncSize);
+      AllocAndFree EpCallerMem(m_Memory, StubSize);
       // Write stub buffer to process
       m_Memory.Write(EpCallerMem.GetAddress(), EpCallerBuf);
 
