@@ -63,7 +63,7 @@ namespace Hades
         MyDisasm.Archi = 64;
       #elif defined(_M_IX86) 
         MyDisasm.Archi = 32;
-      #elif 
+      #else 
         #error "Unsupported architecture."
       #endif
 

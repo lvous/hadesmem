@@ -143,7 +143,7 @@ namespace Hades
         }
       }
 
-      // Fix import table if appliciable
+      // Fix import table if applicable
       auto ImpDirSize = pNtHeaders->OptionalHeader.DataDirectory[
         IMAGE_DIRECTORY_ENTRY_IMPORT].Size;
       if (ImpDirSize)
@@ -200,22 +200,58 @@ namespace Hades
       // Todo: Code generation for EP calling
       BYTE EpCaller[] = 
       {
-        0x6a, 0x00, // push 0
-        0x6a, 0x01, // push 1
-        0xff, 0x74, 0x24, 0x0C, // push [esp+c]
-        0xb8, 0xef, 0xbe, 0xad, 0xde, // mov eax, 0xdeadbeef
-        0xff, 0xd0, // call eax
-        0xb8, 0xef, 0xbe, 0xad, 0xde, // mov eax, 0xdeadbeef
-        0xff, 0xd0, // call eax
-        0xc3 // ret
+
+        #if defined(_M_AMD64) 
+          0x6a, 0x00, // push 0
+          0x6a, 0x00, // push 0
+          0x6a, 0x00, // push 0
+          0x6a, 0x00, // push 0
+          // mov rax, 0xdeadbeefdeadbeef
+          0x48, 0xb8, 0xef, 0xbe, 0xad, 0xde, 0xef, 0xbe, 0xad, 0xde, 
+          0xff, 0xd0, // call $ax
+          // mov rax, 0xdeadbeefdeadbeef
+          0x48, 0xb8, 0xef, 0xbe, 0xad, 0xde, 0xef, 0xbe, 0xad, 0xde, 
+          0xff, 0xd0, // call $ax
+          0x5B, // pop ebx
+          0x5B, // pop ebx
+          0x5B, // pop ebx
+          0x5B, // pop ebx
+          0xc3 // ret
+        #elif defined(_M_IX86) 
+          0x6a, 0x00, // push 0
+          0x6a, 0x01, // push 1
+          0xff, 0x74, 0x24, 0x0C, // push [$sp+c]
+          0xb8, 0xef, 0xbe, 0xad, 0xde, // mov eax, 0xdeadbeef
+          0xff, 0xd0, // call $ax
+          0xb8, 0xef, 0xbe, 0xad, 0xde, // mov eax, 0xdeadbeef
+          0xff, 0xd0, // call $ax
+          0xc3 // ret
+        #else
+          #error "Unsupported architecture."
+        #endif
       };
-      *reinterpret_cast<PVOID*>(&EpCaller[9]) = reinterpret_cast<PBYTE>(
+
+      #if defined(_M_AMD64) 
+      int EpOffset = 10;
+      int ExpOffset = 22;
+      int ExpInstrOffset = ExpOffset - 2;
+      int ExpInstrSize = 12;
+      #elif defined(_M_IX86) 
+      int EpOffset = 9;
+      int ExpOffset = 16;
+      int ExpInstrOffset = ExpOffset - 1;
+      int ExpInstrSize = 7;
+      #else 
+        #error "Unsupported architecture."
+      #endif
+
+      *reinterpret_cast<PVOID*>(&EpCaller[EpOffset]) = reinterpret_cast<PBYTE>(
         RemoteBase) + pNtHeaders->OptionalHeader.AddressOfEntryPoint;
       PVOID ExportAddr = GetRemoteProcAddress(reinterpret_cast<HMODULE>(
         RemoteBase), Path, Export.c_str());
       if (ExportAddr)
       {
-        *reinterpret_cast<PVOID*>(&EpCaller[16]) = ExportAddr;
+        *reinterpret_cast<PVOID*>(&EpCaller[ExpOffset]) = ExportAddr;
       }
       else
       {
@@ -226,7 +262,7 @@ namespace Hades
             ErrorString("Target export could not be found."));
         }
 
-        memset(&EpCaller[15], 0x90, 7);
+        memset(&EpCaller[ExpInstrOffset], 0x90, ExpInstrSize);
       }
       std::vector<BYTE> EpCallerReal(EpCaller, EpCaller + sizeof(EpCaller));
       AllocAndFree EpCallerMem(m_Memory, sizeof(EpCaller));
@@ -234,8 +270,12 @@ namespace Hades
       std::wcout << "EP Call Stub: " << EpCallerMem.GetAddress() << "." << 
         std::endl;
 
+      std::wcin.clear();
+      std::wcin.sync();
+      std::wcin.get();
+
       // Execute EP calling stub
-      m_Memory.Call<BOOL (DWORD)>(EpCallerMem.GetAddress(), 0);
+      m_Memory.Call<BOOL (PVOID)>(EpCallerMem.GetAddress(), RemoteBase);
 
       // Return pointer to module in remote process
       return RemoteBase;

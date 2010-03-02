@@ -13,11 +13,19 @@
 
 extern "C" __declspec(dllexport) void Initialize(HMODULE /*MyModule*/)
 {
+  // Test IAT
+  MessageBox(NULL, L"Initialize called.", L"HadesMemHackDLL", MB_OK);
+
   // Force TLS to be used
-  boost::thread_specific_ptr<std::string> MyInt;
-  if (!MyInt.get())
-    MyInt.reset();
-  *MyInt = "asdf";
+  // But don't run it yet
+  volatile bool AlwaysFalse = false;
+  if (AlwaysFalse)
+  {
+    boost::thread_specific_ptr<std::string> MyInt;
+    if (!MyInt.get())
+      MyInt.reset();
+    *MyInt = "asdf";
+  }
 }
 
 BOOL WINAPI DllMain(HINSTANCE /*hinstDLL*/, DWORD /*fdwReason*/, 
