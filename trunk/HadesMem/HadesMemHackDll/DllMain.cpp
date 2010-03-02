@@ -25,7 +25,7 @@ extern "C" __declspec(dllexport) void Initialize(HMODULE /*Module*/)
   *MyString = L"asdf";
 }
 
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD /*fdwReason*/, 
+BOOL WINAPI DllMain(HINSTANCE /*hinstDLL*/, DWORD /*fdwReason*/, 
   LPVOID /*lpvReserved*/)
 {
   return TRUE;
