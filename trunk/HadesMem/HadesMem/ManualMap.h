@@ -288,9 +288,11 @@ namespace Hades
         MyJitFunc.push(MyImmediate0);
         AsmJit::Immediate MyImmediate1(DLL_PROCESS_ATTACH);
         MyJitFunc.push(MyImmediate1);
-        AsmJit::Immediate MyImmediateMod(reinterpret_cast<DWORD_PTR>(RemoteBase));
+        AsmJit::Immediate MyImmediateMod(reinterpret_cast<DWORD_PTR>(
+          RemoteBase));
         MyJitFunc.push(MyImmediateMod);
-        MyJitFunc.mov(AsmJit::eax, reinterpret_cast<DWORD_PTR>(RemoteBase) + reinterpret_cast<DWORD_PTR>(pCallback));
+        MyJitFunc.mov(AsmJit::eax, reinterpret_cast<DWORD_PTR>(RemoteBase) + 
+          reinterpret_cast<DWORD_PTR>(pCallback));
         MyJitFunc.call(AsmJit::eax);
       });
 
