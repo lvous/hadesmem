@@ -73,6 +73,36 @@ namespace Hades
       MemoryMgr const& m_Memory;
     };
 
+    // RAII class for AsmJit
+    class EnsureAsmJitFree : private boost::noncopyable
+    {
+    public:
+      // Constructor
+      EnsureAsmJitFree(PVOID Address) 
+        : m_Address(Address)
+      { }
+
+      // Destructor
+      ~EnsureAsmJitFree()
+      {
+        // Free memory if necessary
+        if (m_Address)
+        {
+          AsmJit::MemoryManager::global()->free(m_Address);
+        }
+      }
+
+      // Get address
+      PVOID Get() const 
+      {
+        return m_Address;
+      }
+
+    private:
+      // Address
+      PVOID m_Address;
+    };
+
     // Constructor
     ManualMap::ManualMap(MemoryMgr const& MyMemory) 
       : m_Memory(MyMemory)
@@ -276,11 +306,12 @@ namespace Hades
       #endif
       
       // Make JIT function.
-      auto LoaderStub = AsmJit::function_cast<void (*)(HMODULE)>(
-        MyJitFunc.make());
+      typedef void (*JitFuncT)(HMODULE);
+      EnsureAsmJitFree LoaderStub(AsmJit::function_cast<JitFuncT>(
+        MyJitFunc.make()));
 
       // Ensure function creation succeeded
-      if (!LoaderStub)
+      if (!LoaderStub.Get())
       {
         BOOST_THROW_EXCEPTION(ManualMapError() << 
           ErrorFunction("ManualMap::Map") << 
@@ -294,13 +325,14 @@ namespace Hades
       std::wcout << "Loader Stub Size: " << StubSize << "." << std::endl;
 
       // Output
-      std::wcout << "Loader Stub (Local): " << LoaderStub << "." << std::endl;
+      std::wcout << "Loader Stub (Local): " << LoaderStub.Get() << "." << 
+        std::endl;
 
-      // Copy loader stub to stub buffer
-      std::vector<BYTE> EpCallerBuf(reinterpret_cast<PBYTE>(LoaderStub), 
-        reinterpret_cast<PBYTE>(LoaderStub) + StubSize);
       // Allocate memory for stub buffer
       AllocAndFree EpCallerMem(m_Memory, StubSize);
+      // Copy loader stub to stub buffer
+      std::vector<BYTE> EpCallerBuf(reinterpret_cast<PBYTE>(LoaderStub.Get()), 
+        reinterpret_cast<PBYTE>(LoaderStub.Get()) + StubSize);
       // Write stub buffer to process
       m_Memory.Write(EpCallerMem.GetAddress(), EpCallerBuf);
 
@@ -310,9 +342,6 @@ namespace Hades
 
       // Execute EP calling stub
       m_Memory.Call<BOOL (PVOID)>(EpCallerMem.GetAddress(), RemoteBase);
-
-      // We need the function anymore, it should be freed.
-      AsmJit::MemoryManager::global()->free(LoaderStub);
 
       // Return pointer to module in remote process
       return RemoteBase;
