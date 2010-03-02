@@ -105,7 +105,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
       <AdditionalLibraryDirectories>$(SolutionDir)Binaries\$(Configuration)-$(Platform)\</AdditionalLibraryDirectories>
-      <AdditionalDependencies>LuaBind.lib;Lua.lib;BeaEngine.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>AsmJit.lib;LuaBind.lib;Lua.lib;BeaEngine.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)Binaries\Full-$(Configuration)\" /y</Command>
@@ -133,7 +133,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
       <AdditionalLibraryDirectories>$(SolutionDir)Binaries\$(Configuration)-$(Platform)\</AdditionalLibraryDirectories>
-      <AdditionalDependencies>LuaBind.lib;Lua.lib;BeaEngine.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>AsmJit.lib;LuaBind.lib;Lua.lib;BeaEngine.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)Binaries\Full-$(Configuration)\" /y</Command>
@@ -163,7 +163,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
       <AdditionalLibraryDirectories>$(SolutionDir)Binaries\$(Configuration)-$(Platform)\</AdditionalLibraryDirectories>
-      <AdditionalDependencies>LuaBind.lib;Lua.lib;BeaEngine.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>AsmJit.lib;LuaBind.lib;Lua.lib;BeaEngine.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)Binaries\Full-$(Configuration)\" /y</Command>
@@ -193,7 +193,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
       <AdditionalLibraryDirectories>$(SolutionDir)Binaries\$(Configuration)-$(Platform)\</AdditionalLibraryDirectories>
-      <AdditionalDependencies>LuaBind.lib;Lua.lib;BeaEngine.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>AsmJit.lib;LuaBind.lib;Lua.lib;BeaEngine.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)Binaries\Full-$(Configuration)\" /y</Command>

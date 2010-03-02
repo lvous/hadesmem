@@ -11,7 +11,7 @@
 #include <boost/thread.hpp>
 #pragma warning(pop)
 
-extern "C" __declspec(dllexport) void Initialize(HMODULE /*MyModule*/)
+extern "C" __declspec(dllexport) void Initialize(HMODULE /*Module*/)
 {
   // Test IAT
   MessageBox(NULL, L"Initialize called.", L"HadesMemHackDLL", MB_OK);

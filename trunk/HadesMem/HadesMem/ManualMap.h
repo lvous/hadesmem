@@ -13,6 +13,11 @@
 #include <iterator>
 #include <iostream>
 
+// AsmJit
+#pragma warning(push, 1)
+#include "AsmJit/AsmJit.h"
+#pragma warning(pop)
+
 // HadesMem
 #include "I18n.h"
 #include "Memory.h"
@@ -35,7 +40,7 @@ namespace Hades
       // Constructor
       inline ManualMap(MemoryMgr const& MyMemory);
 
-      // Manually map a DLL
+      // Manually map MyJitFunc DLL
       inline PVOID Map(std::wstring const& Path, std::string const& Export = 
         "");
 
@@ -73,7 +78,7 @@ namespace Hades
       : m_Memory(MyMemory)
     { }
 
-    // Manually map a DLL
+    // Manually map MyJitFunc DLL
     PVOID ManualMap::Map(std::wstring const& Path, std::string const& Export)
     {
       // Open file for reading
@@ -91,7 +96,7 @@ namespace Hades
       std::vector<BYTE> ModuleFileBuf((std::istreambuf_iterator<char>(
         ModuleFile)), std::istreambuf_iterator<char>());
 
-      // Ensure file is a valid PE file
+      // Ensure file is MyJitFunc valid PE file
       std::wcout << "Performing PE file format validation." << std::endl;
       auto pBase = &ModuleFileBuf[0];
       auto pDosHeader = reinterpret_cast<PIMAGE_DOS_HEADER>(pBase);
@@ -99,7 +104,7 @@ namespace Hades
       {
         BOOST_THROW_EXCEPTION(ManualMapError() << 
           ErrorFunction("ManualMap::Map") << 
-          ErrorString("Target file is not a valid PE file (DOS)."));
+          ErrorString("Target file is not MyJitFunc valid PE file (DOS)."));
       }
       auto pNtHeaders = reinterpret_cast<PIMAGE_NT_HEADERS>(pBase + 
         pDosHeader->e_lfanew);
@@ -107,7 +112,7 @@ namespace Hades
       {
         BOOST_THROW_EXCEPTION(ManualMapError() << 
           ErrorFunction("ManualMap::Map") << 
-          ErrorString("Target file is not a valid PE file (NT)."));
+          ErrorString("Target file is not MyJitFunc valid PE file (NT)."));
       }
 
       // Allocate memory for image
@@ -195,82 +200,120 @@ namespace Hades
       PVOID EntryPoint = static_cast<PBYTE>(RemoteBase) + pNtHeaders->
         OptionalHeader.AddressOfEntryPoint;
       std::wcout << "Entry Point: " << EntryPoint << "." << std::endl;
+      
+      // Get address of export in remote process
+      PVOID ExportAddr = GetRemoteProcAddress(reinterpret_cast<HMODULE>(
+        RemoteBase), Path, Export.c_str());
+      std::wcout << "Export Address: " << ExportAddr << "." << std::endl;
 
-      // Create and write calling code
-      // Todo: Code generation for EP calling
-      BYTE EpCaller[] = 
-      {
-        #if defined(_M_AMD64) 
-          0x6a, 0x00, // push 0
-          0x6a, 0x00, // push 0
-          0x6a, 0x00, // push 0
-          0x6a, 0x00, // push 0
-          // mov rax, 0xdeadbeefdeadbeef
-          0x48, 0xb8, 0xef, 0xbe, 0xad, 0xde, 0xef, 0xbe, 0xad, 0xde, 
-          0xff, 0xd0, // call $ax
-          // mov rax, 0xdeadbeefdeadbeef
-          0x48, 0xb8, 0xef, 0xbe, 0xad, 0xde, 0xef, 0xbe, 0xad, 0xde, 
-          0xff, 0xd0, // call $ax
-          0x5B, // pop ebx
-          0x5B, // pop ebx
-          0x5B, // pop ebx
-          0x5B, // pop ebx
-          0xc3 // ret
-        #elif defined(_M_IX86) 
-          0x6a, 0x00, // push 0
-          0x6a, 0x01, // push 1
-          0xff, 0x74, 0x24, 0x0C, // push [$sp+c]
-          0xb8, 0xef, 0xbe, 0xad, 0xde, // mov eax, 0xdeadbeef
-          0xff, 0xd0, // call $ax
-          0xb8, 0xef, 0xbe, 0xad, 0xde, // mov eax, 0xdeadbeef
-          0xff, 0xd0, // call $ax
-          0xc3 // ret
-        #else
-          #error "Unsupported architecture."
-        #endif
-      };
+      // Create Assembler.
+      AsmJit::Assembler MyJitFunc;
 
+      
       #if defined(_M_AMD64) 
-      int EpOffset = 10;
-      int ExpOffset = 22;
-      int ExpInstrOffset = ExpOffset - 2;
-      int ExpInstrSize = 12;
+      // Get size of loader stub
+      int FuncSize = ExportAddr ? 33 + 9 : 33;
+
+      // Prologue
+      MyJitFunc.push(AsmJit::rbp); // 55
+      MyJitFunc.mov(AsmJit::rbp, AsmJit::rsp); // 488bec
+
+      // Entry-point calling code
+      AsmJit::Immediate MyImmediate0(0);
+      MyJitFunc.push(MyImmediate0); // 6a00
+      MyJitFunc.push(MyImmediate0); // 6a00
+      MyJitFunc.push(MyImmediate0); // 6a00
+      MyJitFunc.push(MyImmediate0); // 6a00
+      MyJitFunc.mov(AsmJit::rax, reinterpret_cast<DWORD_PTR>(EntryPoint)); // 48c7c000c70102
+      MyJitFunc.call(AsmJit::rax); // ffd0
+
+      // Export calling code (if necessary)
+      if (ExportAddr)
+      {
+        MyJitFunc.mov(AsmJit::rax, reinterpret_cast<DWORD_PTR>(ExportAddr)); // 48c7c081110102
+        MyJitFunc.call(AsmJit::rax); // ffd0
+      }
+      
+      // Cleanup ghost code
+      MyJitFunc.pop(AsmJit::rax); // ffd0
+      MyJitFunc.pop(AsmJit::rax); // ffd0
+      MyJitFunc.pop(AsmJit::rax); // ffd0
+      MyJitFunc.pop(AsmJit::rax); // ffd0
+
+      // Epilogue
+      MyJitFunc.mov(AsmJit::rsp, AsmJit::rbp); // 488be5
+      MyJitFunc.pop(AsmJit::rbp); // 5d
+
+      // Return
+      MyJitFunc.ret(); // c3
       #elif defined(_M_IX86) 
-      int EpOffset = 9;
-      int ExpOffset = 16;
-      int ExpInstrOffset = ExpOffset - 1;
-      int ExpInstrSize = 7;
+      // Get size of loader stub
+      int FuncSize = ExportAddr ? 23 + 12 : 23;
+
+      // Prologue
+      MyJitFunc.push(AsmJit::ebp);
+      MyJitFunc.mov(AsmJit::ebp, AsmJit::esp);
+
+      // Entry-point calling code
+      AsmJit::Immediate MyImmediate0(0);
+      MyJitFunc.push(MyImmediate0);
+      AsmJit::Immediate MyImmediate1(1);
+      MyJitFunc.push(MyImmediate1);
+      AsmJit::Immediate MyImmediateMod(reinterpret_cast<DWORD_PTR>(RemoteBase));
+      MyJitFunc.push(MyImmediateMod);
+      MyJitFunc.mov(AsmJit::eax, reinterpret_cast<DWORD_PTR>(EntryPoint));
+      MyJitFunc.call(AsmJit::eax);
+
+      // Export calling code (if necessary)
+      if (ExportAddr)
+      {
+        MyJitFunc.push(MyImmediateMod);
+        MyJitFunc.mov(AsmJit::eax, reinterpret_cast<DWORD_PTR>(ExportAddr));
+        MyJitFunc.call(AsmJit::eax);
+      }
+
+      // Epilogue
+      MyJitFunc.mov(AsmJit::esp, AsmJit::ebp);
+      MyJitFunc.pop(AsmJit::ebp);
+
+      // Return
+      MyJitFunc.ret();
       #else 
         #error "Unsupported architecture."
       #endif
 
-      *reinterpret_cast<PVOID*>(&EpCaller[EpOffset]) = reinterpret_cast<PBYTE>(
-        RemoteBase) + pNtHeaders->OptionalHeader.AddressOfEntryPoint;
-      PVOID ExportAddr = GetRemoteProcAddress(reinterpret_cast<HMODULE>(
-        RemoteBase), Path, Export.c_str());
-      if (ExportAddr)
-      {
-        *reinterpret_cast<PVOID*>(&EpCaller[ExpOffset]) = ExportAddr;
-      }
-      else
-      {
-        if (!Export.empty())
-        {
-          BOOST_THROW_EXCEPTION(ManualMapError() << 
-            ErrorFunction("ManualMap::Map") << 
-            ErrorString("Target export could not be found."));
-        }
+      // Make JIT function.
+      auto LoaderStub = AsmJit::function_cast<void (*)(HMODULE)>(
+        MyJitFunc.make());
 
-        memset(&EpCaller[ExpInstrOffset], 0x90, ExpInstrSize);
+      // Ensure function creation succeeded
+      if (!LoaderStub)
+      {
+        BOOST_THROW_EXCEPTION(ManualMapError() << 
+          ErrorFunction("ManualMap::Map") << 
+          ErrorString("Error JIT'ing loader stub."));
       }
-      std::vector<BYTE> EpCallerReal(EpCaller, EpCaller + sizeof(EpCaller));
-      AllocAndFree EpCallerMem(m_Memory, sizeof(EpCaller));
-      m_Memory.Write(EpCallerMem.GetAddress(), EpCallerReal);
-      std::wcout << "EP Call Stub: " << EpCallerMem.GetAddress() << "." << 
-        std::endl;
+
+      // Output
+      std::wcout << "Loader Stub (Local): " << LoaderStub << "." << std::endl;
+
+      // Copy loader stub to stub buffer
+      std::vector<BYTE> EpCallerBuf(reinterpret_cast<PBYTE>(LoaderStub), 
+        reinterpret_cast<PBYTE>(LoaderStub) + FuncSize);
+      // Allocate memory for stub buffer
+      AllocAndFree EpCallerMem(m_Memory, FuncSize);
+      // Write stub buffer to process
+      m_Memory.Write(EpCallerMem.GetAddress(), EpCallerBuf);
+
+      // Output
+      std::wcout << "Loader Stub (Remote): " << EpCallerMem.GetAddress() << 
+        "." << std::endl;
 
       // Execute EP calling stub
       m_Memory.Call<BOOL (PVOID)>(EpCallerMem.GetAddress(), RemoteBase);
+
+      // We need the function anymore, it should be freed.
+      AsmJit::MemoryManager::global()->free(LoaderStub);
 
       // Return pointer to module in remote process
       return RemoteBase;
