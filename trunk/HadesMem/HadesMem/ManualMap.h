@@ -41,7 +41,8 @@ namespace Hades
 
     private:
       // Convert RVA to file offset
-      inline DWORD RvaToFileOffset(PIMAGE_NT_HEADERS pNtHeaders, DWORD Rva);
+      inline DWORD_PTR RvaToFileOffset(PIMAGE_NT_HEADERS pNtHeaders, 
+        DWORD_PTR Rva);
 
       // Map sections
       inline void MapSections(PIMAGE_NT_HEADERS pNtHeaders, PVOID RemoteAddr, 
@@ -241,8 +242,8 @@ namespace Hades
     }
 
     // Convert RVA to file offset
-    DWORD ManualMap::RvaToFileOffset(PIMAGE_NT_HEADERS pNtHeaders, 
-      DWORD Rva)
+    DWORD_PTR ManualMap::RvaToFileOffset(PIMAGE_NT_HEADERS pNtHeaders, 
+      DWORD_PTR Rva)
     {
       // Get number of sections
       WORD NumSections = pNtHeaders->FileHeader.NumberOfSections;
