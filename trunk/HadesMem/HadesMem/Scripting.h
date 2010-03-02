@@ -8,8 +8,8 @@
 
 // Boost
 #pragma warning(push, 1)
-#include <boost/noncopyable.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/noncopyable.hpp>
 #include <boost/make_shared.hpp>
 #pragma warning(pop)
 
