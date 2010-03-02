@@ -188,7 +188,9 @@ namespace Hades
         int Status = luaL_dofile(m_State, Path.c_str());
         // Clean up if an error occurred
         if (Status != 0) 
+        {
           lua_gc(m_State, LUA_GCCOLLECT, 0);
+        }
         // Report any errors
         ReportError(Status);
       }
@@ -200,7 +202,9 @@ namespace Hades
         int Status = luaL_dostring(m_State, Script.c_str());
         // Clean up if an error occurred
         if (Status != 0) 
+        {
           lua_gc(m_State, LUA_GCCOLLECT, 0);
+        }
         // Report any errors
         ReportError(Status);
       }
@@ -215,7 +219,9 @@ namespace Hades
           const char* Message = lua_tostring(m_State, -1);
           // If a conversion to string is not possible set that as the message
           if (Message == NULL) 
+          {
             Message = "Error object is not a string";
+          }
           // Pop error message off stack
           lua_pop(m_State, 1);
           // Throw exception for error
