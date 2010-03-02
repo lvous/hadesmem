@@ -38,8 +38,8 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
       std::wcout << "3. Window name." << std::endl;
 
       // Get process selection method
-      auto ProcSelect = static_cast<Detail::ProcSelect>(GetOption(L"process "
-        L"selection method", 1, 3));
+      auto ProcSelect = GetOption<Detail::ProcSelect>(L"process selection "
+        L"method", 1, 3);
 
       // Get process selection data and create memory manager
       std::shared_ptr<Hades::Memory::MemoryMgr> MyMemory;
@@ -84,7 +84,7 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
         std::wcout << "13. Run script." << std::endl;
 
         // Get task
-        auto Task = static_cast<Detail::Task>(GetOption(L"task", 1, 13));
+        auto Task = GetOption<Detail::Task>(L"task", 1, 13);
 
         // Check for task 'Read Memory' or 'Write Memory' and output 
         // accordingly
@@ -108,8 +108,7 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
           std::wcout << "14. Pointer." << std::endl;
 
           // Get data type
-          auto MyDataType = static_cast<Detail::DataType>(GetOption(L"data "
-            L"type", 1, 14));
+          auto MyDataType = GetOption<Detail::DataType>(L"data type", 1, 14);
 
           // Output
           std::wcout << "Enter target address:" << std::endl;
@@ -241,8 +240,8 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
           std::wcout << "3. List." << std::endl;
 
           // Get module search method
-          auto ModSelect = static_cast<Detail::ModSelect>(GetOption(
-            L"module search method", 1, 3));
+          auto ModSelect = GetOption<Detail::ModSelect>(L"module search "
+            L"method", 1, 3);
 
           // Module pointer
           std::shared_ptr<Hades::Memory::Module> MyModule;
@@ -395,7 +394,7 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
           std::wcout << "2. Automatic (XML)." << std::endl;
 
           // Get pattern scan method
-          auto PatScanMethod = GetOption(L"pattern scan method", 1, 2);
+          auto PatScanMethod = GetOption<int>(L"pattern scan method", 1, 2);
 
           // Handle manual pattern scanning
           if (PatScanMethod == 1)
@@ -625,8 +624,7 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
           std::wcout << "14. Pointer." << std::endl;
 
           // Get data type
-          auto MyDataType = static_cast<Detail::DataType>(GetOption(L"data "
-            L"type", 1, 14));
+          auto MyDataType = GetOption<Detail::DataType>(L"data type", 1, 14);
 
           // Handle selected data type
           switch (MyDataType)

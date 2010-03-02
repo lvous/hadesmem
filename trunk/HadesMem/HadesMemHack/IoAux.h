@@ -213,6 +213,7 @@ void HandleCharSearch(Hades::Memory::MemoryMgr const& MyMemory,
 }
 
 // Get option ID
+template <typename T>
 inline int GetOption(std::wstring const& Option, int Min, int Max)
 {
   // Get option ID
@@ -226,7 +227,7 @@ inline int GetOption(std::wstring const& Option, int Min, int Max)
   std::wcin.ignore((std::numeric_limits<std::streamsize>::max)(), '\n');
 
   // Return option ID
-  return Value;
+  return static_cast<T>(Value);
 }
 
 // Create Memory object using process name from user
