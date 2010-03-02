@@ -17,21 +17,16 @@ extern "C" __declspec(dllexport) void Initialize(HMODULE /*Module*/)
   MessageBox(NULL, L"Initialize called.", L"HadesMemHackDLL", MB_OK);
 
   // Force TLS to be used
-  boost::thread_specific_ptr<std::string> MyString;
+  boost::thread_specific_ptr<std::wstring> MyString;
   if (!MyString.get())
   {
-    MyString.reset(new std::string());
+    MyString.reset(new std::wstring());
   }
-  *MyString = "asdf";
+  *MyString = L"asdf";
 }
 
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD /*fdwReason*/, 
   LPVOID /*lpvReserved*/)
 {
-  if (hinstDLL)
-  {
-    MessageBox(NULL, L"DllMain called.", L"HadesMemHackDLL", MB_OK);
-  }
-
   return TRUE;
 }
