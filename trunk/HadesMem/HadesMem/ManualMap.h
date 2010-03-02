@@ -200,7 +200,6 @@ namespace Hades
       // Todo: Code generation for EP calling
       BYTE EpCaller[] = 
       {
-
         #if defined(_M_AMD64) 
           0x6a, 0x00, // push 0
           0x6a, 0x00, // push 0
