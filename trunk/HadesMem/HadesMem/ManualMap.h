@@ -208,12 +208,8 @@ namespace Hades
 
       // Create Assembler.
       AsmJit::Assembler MyJitFunc;
-
       
       #if defined(_M_AMD64) 
-      // Get size of loader stub
-      int FuncSize = ExportAddr ? 33 + 9 : 33;
-
       // Prologue
       MyJitFunc.push(AsmJit::rbp); // 55
       MyJitFunc.mov(AsmJit::rbp, AsmJit::rsp); // 488bec
@@ -247,9 +243,6 @@ namespace Hades
       // Return
       MyJitFunc.ret(); // c3
       #elif defined(_M_IX86) 
-      // Get size of loader stub
-      int FuncSize = ExportAddr ? 23 + 12 : 23;
-
       // Prologue
       MyJitFunc.push(AsmJit::ebp);
       MyJitFunc.mov(AsmJit::ebp, AsmJit::esp);
@@ -281,6 +274,9 @@ namespace Hades
       #else 
         #error "Unsupported architecture."
       #endif
+      
+      // Get stub size
+      DWORD_PTR FuncSize = MyJitFunc.codeSize();
 
       // Make JIT function.
       auto LoaderStub = AsmJit::function_cast<void (*)(HMODULE)>(
