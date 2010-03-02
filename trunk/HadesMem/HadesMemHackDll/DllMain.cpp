@@ -13,10 +13,16 @@
 
 extern "C" __declspec(dllexport) void Initialize(HMODULE /*Module*/)
 {
-  // Test IAT
-  MessageBox(NULL, L"Initialize called.", L"HadesMemHackDLL", MB_OK);
+  // Break to debugger if present
+  if (IsDebuggerPresent())
+  {
+    DebugBreak();
+  }
 
-  // Force TLS to be used
+  // Test IAT
+  MessageBox(NULL, L"Initialize called.", L"HadesMemHackDll", MB_OK);
+
+  // Test TLS callbacks
   boost::thread_specific_ptr<std::wstring> MyString;
   if (!MyString.get())
   {
