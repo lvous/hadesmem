@@ -174,7 +174,9 @@ namespace Hades
           pNtHeaders->OptionalHeader.ImageBase)); *pCallbacks; ++pCallbacks)
         {
           std::wcout << "TLS Callback: " << *pCallbacks << "." << std::endl;
-          TlsCallbacks.push_back(*pCallbacks);
+          TlsCallbacks.push_back(reinterpret_cast<PIMAGE_TLS_CALLBACK>(
+            reinterpret_cast<DWORD_PTR>(*pCallbacks) - pNtHeaders->
+            OptionalHeader.ImageBase));
         }
       }
 
@@ -288,7 +290,7 @@ namespace Hades
         MyJitFunc.push(MyImmediate1);
         AsmJit::Immediate MyImmediateMod(reinterpret_cast<DWORD_PTR>(RemoteBase));
         MyJitFunc.push(MyImmediateMod);
-        MyJitFunc.mov(AsmJit::eax, reinterpret_cast<DWORD_PTR>(pCallback));
+        MyJitFunc.mov(AsmJit::eax, reinterpret_cast<DWORD_PTR>(RemoteBase) + reinterpret_cast<DWORD_PTR>(pCallback));
         MyJitFunc.call(AsmJit::eax);
       });
 
