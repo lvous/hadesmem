@@ -45,8 +45,20 @@ namespace Hades
       inline MemoryMgr(std::wstring const& WindowName, 
         std::wstring const* const ClassName);
 
+      // Calling conventions
+      enum CallConv
+      {
+        CallConv_CDECL, 
+        CallConv_STDCALL, 
+        CallConv_THISCALL, 
+        CallConv_FASTCALL, 
+        CallConv_X64, 
+        CallConv_Default
+      };
+
       // Call remote function
-      DWORD Call(PVOID Address, std::vector<PVOID> const& Args) const;
+      DWORD Call(PVOID Address, std::vector<PVOID> const& Args, 
+        CallConv MyCallConv = CallConv_Default) const;
 
       // Read memory (POD types)
       template <typename T>
@@ -174,81 +186,126 @@ namespace Hades
     { }
 
     // Call remote function
-    DWORD MemoryMgr::Call(PVOID Address, std::vector<PVOID> const& Args) const 
+    DWORD MemoryMgr::Call(PVOID Address, std::vector<PVOID> const& Args, 
+      CallConv MyCallConv) const 
     {
+      // Get number of arguments
+      std::size_t NumArgs = Args.size();
+
       // Create Assembler.
       AsmJit::Assembler MyJitFunc;
       
       #if defined(_M_AMD64) 
-      // Prologue
-      MyJitFunc.push(AsmJit::rbp);
-      MyJitFunc.mov(AsmJit::rbp, AsmJit::rsp);
+        // Check calling convention
+        if (MyCallConv != CallConv_X64 && MyCallConv != CallConv_Default)
+        {
+          BOOST_THROW_EXCEPTION(MemoryError() << 
+            ErrorFunction("MemoryMgr::Call") << 
+            ErrorString("Invalid calling convention."));
+        }
 
-      // Function calling code
-      MyJitFunc.push(AsmJit::Immediate(0));
-      MyJitFunc.push(AsmJit::Immediate(0));
-      MyJitFunc.push(AsmJit::Immediate(0));
-      MyJitFunc.push(AsmJit::Immediate(0));
-      MyJitFunc.mov(AsmJit::rcx, Args.size() > 0 ? reinterpret_cast<DWORD_PTR>(
-        Args[0]) : 0);
-      MyJitFunc.mov(AsmJit::rdx, Args.size() > 1 ? reinterpret_cast<DWORD_PTR>(
-        Args[1]) : 0);
-      MyJitFunc.mov(AsmJit::r8, Args.size() > 2 ? reinterpret_cast<DWORD_PTR>(
-        Args[2]) : 0);
-      MyJitFunc.mov(AsmJit::r9, Args.size() > 3 ? reinterpret_cast<DWORD_PTR>(
-        Args[3]) : 0);
-      if (Args.size() > 4)
-      {
-        std::for_each(Args.rbegin(), Args.rend() - 4, 
+        // Prologue
+        MyJitFunc.push(AsmJit::rbp);
+        MyJitFunc.mov(AsmJit::rbp, AsmJit::rsp);
+
+        // Allocate ghost space
+        MyJitFunc.sub(AsmJit::rsp, AsmJit::Immediate(0x20));
+        
+        // Set up first 4 parameters
+        MyJitFunc.mov(AsmJit::rcx, NumArgs > 0 ? reinterpret_cast<DWORD_PTR>(
+          Args[0]) : 0);
+        MyJitFunc.mov(AsmJit::rdx, NumArgs > 1 ? reinterpret_cast<DWORD_PTR>(
+          Args[1]) : 0);
+        MyJitFunc.mov(AsmJit::r8, NumArgs > 2 ? reinterpret_cast<DWORD_PTR>(
+          Args[2]) : 0);
+        MyJitFunc.mov(AsmJit::r9, NumArgs > 3 ? reinterpret_cast<DWORD_PTR>(
+          Args[3]) : 0);
+
+        // Handle remaining parameters (if any)
+        if (NumArgs > 4)
+        {
+          std::for_each(Args.rbegin(), Args.rend() - 4, 
+            [&MyJitFunc] (PVOID Arg)
+          {
+            MyJitFunc.mov(AsmJit::rax, reinterpret_cast<DWORD_PTR>(Arg));
+            MyJitFunc.push(AsmJit::rax);
+          });
+        }
+        
+        // Call target
+        MyJitFunc.mov(AsmJit::rax, reinterpret_cast<DWORD_PTR>(Address));
+        MyJitFunc.call(AsmJit::rax);
+        
+        // Cleanup ghost space
+        MyJitFunc.add(AsmJit::rsp, AsmJit::Immediate(0x20));
+
+        // Clean up remaining stack space
+        std::size_t StackArgs(NumArgs > 4 ? NumArgs - 4 : 0);
+        while (StackArgs--)
+        {
+          MyJitFunc.add(AsmJit::rsp, AsmJit::Immediate(0x8));
+        }
+
+        // Epilogue
+        MyJitFunc.mov(AsmJit::rsp, AsmJit::rbp);
+        MyJitFunc.pop(AsmJit::rbp);
+
+        // Return
+        MyJitFunc.ret();
+      #elif defined(_M_IX86) 
+        // Check calling convention
+        if (MyCallConv == CallConv_X64)
+        {
+          BOOST_THROW_EXCEPTION(MemoryError() << 
+            ErrorFunction("MemoryMgr::Call") << 
+            ErrorString("Invalid calling convention."));
+        }
+        if (MyCallConv == CallConv_FASTCALL)
+        {
+          BOOST_THROW_EXCEPTION(MemoryError() << 
+            ErrorFunction("MemoryMgr::Call") << 
+            ErrorString("Currently unsupported calling convention."));
+        }
+
+        // Prologue
+        MyJitFunc.push(AsmJit::ebp);
+        MyJitFunc.mov(AsmJit::ebp, AsmJit::esp);
+
+        // Get stack arguments offset
+        int StackArgOffs = MyCallConv == CallConv_THISCALL ? 1 : 0;
+
+        // Pass first arg in through ECX if __thiscall is specified
+        if (MyCallConv == CallConv_THISCALL)
+        {
+          MyJitFunc.mov(AsmJit::eax, reinterpret_cast<DWORD_PTR>(Args[0]));
+          MyJitFunc.push(AsmJit::eax);
+        }
+
+        // Set up args
+        std::for_each(Args.rbegin(), Args.rend() - StackArgOffs, 
           [&MyJitFunc] (PVOID Arg)
         {
-          MyJitFunc.mov(AsmJit::rax, reinterpret_cast<DWORD_PTR>(Arg));
-          MyJitFunc.push(AsmJit::rax);
+          MyJitFunc.mov(AsmJit::eax, reinterpret_cast<DWORD_PTR>(Arg));
+          MyJitFunc.push(AsmJit::eax);
         });
-      }
-      MyJitFunc.mov(AsmJit::rax, reinterpret_cast<DWORD_PTR>(Address));
-      MyJitFunc.call(AsmJit::rax);
-      
-      // Cleanup ghost space
-      MyJitFunc.pop(AsmJit::rdx);
-      MyJitFunc.pop(AsmJit::rdx);
-      MyJitFunc.pop(AsmJit::rdx);
-      MyJitFunc.pop(AsmJit::rdx);
 
-      // Clean up remaining stack space
-      std::size_t StackArgs(Args.size() > 4 ? Args.size() - 4 : 0);
-      while (StackArgs--)
-      {
-        MyJitFunc.pop(AsmJit::rdx);
-      }
+        // Call target
+        MyJitFunc.mov(AsmJit::eax, reinterpret_cast<DWORD_PTR>(Address));
+        MyJitFunc.call(AsmJit::eax);
 
-      // Epilogue
-      MyJitFunc.mov(AsmJit::rsp, AsmJit::rbp);
-      MyJitFunc.pop(AsmJit::rbp);
+        // Clean up stack if necessary
+        if (MyCallConv == CallConv_CDECL)
+        {
+          MyJitFunc.add(AsmJit::esp, AsmJit::Immediate(NumArgs * sizeof(
+            PVOID)));
+        }
 
-      // Return
-      MyJitFunc.ret();
-      #elif defined(_M_IX86) 
-      // Prologue
-      MyJitFunc.push(AsmJit::ebp);
-      MyJitFunc.mov(AsmJit::ebp, AsmJit::esp);
+        // Epilogue
+        MyJitFunc.mov(AsmJit::esp, AsmJit::ebp);
+        MyJitFunc.pop(AsmJit::ebp);
 
-      // Function calling code
-      std::for_each(Args.rbegin(), Args.rend(), 
-        [&MyJitFunc] (PVOID Arg)
-      {
-        MyJitFunc.mov(AsmJit::eax, reinterpret_cast<DWORD_PTR>(Arg));
-        MyJitFunc.push(AsmJit::eax);
-      });
-      MyJitFunc.mov(AsmJit::eax, reinterpret_cast<DWORD_PTR>(Address));
-      MyJitFunc.call(AsmJit::eax);
-
-      // Epilogue
-      MyJitFunc.mov(AsmJit::esp, AsmJit::ebp);
-      MyJitFunc.pop(AsmJit::ebp);
-
-      // Return
-      MyJitFunc.ret();
+        // Return
+        MyJitFunc.ret();
       #else 
         #error "Unsupported architecture."
       #endif
@@ -276,9 +333,6 @@ namespace Hades
       Write(EpCallerMem.GetAddress(), EpCallerBuf);
 
       // Call stub via creating a remote thread in the target.
-      // Todo: Robust implementation via ASM Jit and SEH.
-      // Todo: Support parameters, calling conventions, etc.
-      // Todo: Pass arguments via value not pointer.
       EnsureCloseHandle MyThread = CreateRemoteThread(m_Process.GetHandle(), 
         nullptr, 0, reinterpret_cast<LPTHREAD_START_ROUTINE>(Address), 
         EpCallerMem.GetAddress(), 0, nullptr);

@@ -11,7 +11,7 @@
 #include <boost/thread.hpp>
 #pragma warning(pop)
 
-extern "C" __declspec(dllexport) void Initialize(HMODULE /*Module*/)
+extern "C" __declspec(dllexport) void __stdcall Initialize(HMODULE /*Module*/)
 {
   // Break to debugger if present
   if (IsDebuggerPresent())
