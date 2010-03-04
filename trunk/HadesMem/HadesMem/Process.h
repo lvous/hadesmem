@@ -194,7 +194,7 @@ namespace Hades
       EnsureCloseHandle const Token(TempToken);
 
       // Get the LUID for SE_DEBUG_NAME 
-      LUID Luid = { NULL }; // Locally unique identifier
+      LUID Luid = { 0 }; // Locally unique identifier
       if (!LookupPrivilegeValue(NULL, SE_DEBUG_NAME, &Luid)) 
       {
         DWORD LastError = GetLastError();
@@ -203,7 +203,7 @@ namespace Hades
           ErrorString("Could not look up privilege value for SeDebugName.") << 
           ErrorCodeWin(LastError));
       }
-      if (Luid.LowPart == NULL && Luid.HighPart == NULL) 
+      if (Luid.LowPart == 0 && Luid.HighPart == 0) 
       {
         DWORD LastError = GetLastError();
         BOOST_THROW_EXCEPTION(ProcessError() << 
@@ -213,7 +213,7 @@ namespace Hades
       }
 
       // Process privileges
-      TOKEN_PRIVILEGES Privileges = { NULL };
+      TOKEN_PRIVILEGES Privileges = { 0 };
       // Set the privileges we need
       Privileges.PrivilegeCount = 1;
       Privileges.Privileges[0].Luid = Luid;
