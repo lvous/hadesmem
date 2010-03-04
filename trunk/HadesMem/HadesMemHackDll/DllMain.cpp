@@ -20,7 +20,7 @@ extern "C" __declspec(dllexport) DWORD __stdcall Initialize(HMODULE Module)
   }
 
   // Test IAT
-  MessageBox(NULL, L"Invalid parameter.", L"HadesMemHackDll", MB_OK);
+  MessageBox(NULL, L"Initialize called.", L"HadesMemHackDll", MB_OK);
 
   // Test parameter
   if (!Module)
