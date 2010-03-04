@@ -13,11 +13,6 @@
 #include <iterator>
 #include <iostream>
 
-// AsmJit
-#pragma warning(push, 1)
-#include "AsmJit/AsmJit.h"
-#pragma warning(pop)
-
 // HadesMem
 #include "I18n.h"
 #include "Memory.h"
@@ -71,36 +66,6 @@ namespace Hades
 
       // MemoryMgr instance
       MemoryMgr const& m_Memory;
-    };
-
-    // RAII class for AsmJit
-    class EnsureAsmJitFree : private boost::noncopyable
-    {
-    public:
-      // Constructor
-      EnsureAsmJitFree(PVOID Address) 
-        : m_Address(Address)
-      { }
-
-      // Destructor
-      ~EnsureAsmJitFree()
-      {
-        // Free memory if necessary
-        if (m_Address)
-        {
-          AsmJit::MemoryManager::global()->free(m_Address);
-        }
-      }
-
-      // Get address
-      PVOID Get() const 
-      {
-        return m_Address;
-      }
-
-    private:
-      // Address
-      PVOID m_Address;
     };
 
     // Constructor
@@ -238,155 +203,32 @@ namespace Hades
         RemoteBase), Path, Export.c_str());
       std::wcout << "Export Address: " << ExportAddr << "." << std::endl;
 
-      // Create Assembler.
-      AsmJit::Assembler MyJitFunc;
-      
-      #if defined(_M_AMD64) 
-      // Prologue
-      MyJitFunc.push(AsmJit::rbp);
-      MyJitFunc.mov(AsmJit::rbp, AsmJit::rsp);
-
-      // TLS calling code
+      // Call all TLS callbacks
       std::for_each(TlsCallbacks.begin(), TlsCallbacks.end(), 
-        [&MyJitFunc, RemoteBase] (PIMAGE_TLS_CALLBACK pCallback) 
+        [this, RemoteBase] (PIMAGE_TLS_CALLBACK pCallback) 
       {
-        // Entry-point calling code
-        AsmJit::Immediate MyImmediate0(0);
-        MyJitFunc.push(MyImmediate0);
-        MyJitFunc.push(MyImmediate0);
-        MyJitFunc.push(MyImmediate0);
-        MyJitFunc.push(MyImmediate0);
-        MyJitFunc.mov(AsmJit::rcx, reinterpret_cast<DWORD_PTR>(RemoteBase));
-        MyJitFunc.mov(AsmJit::rdx, DLL_PROCESS_ATTACH);
-        MyJitFunc.mov(AsmJit::r8, 0);
-        MyJitFunc.mov(AsmJit::r9, 0);
-        MyJitFunc.mov(AsmJit::rax, reinterpret_cast<DWORD_PTR>(RemoteBase) + 
-          reinterpret_cast<DWORD_PTR>(pCallback));
-        MyJitFunc.call(AsmJit::rax);
-        MyJitFunc.pop(AsmJit::rax);
-        MyJitFunc.pop(AsmJit::rax);
-        MyJitFunc.pop(AsmJit::rax);
-        MyJitFunc.pop(AsmJit::rax);
+        std::vector<PVOID> TlsCallArgs;
+        TlsCallArgs.push_back(RemoteBase);
+        TlsCallArgs.push_back(reinterpret_cast<PVOID>(DLL_PROCESS_ATTACH));
+        TlsCallArgs.push_back(0);
+        m_Memory.Call(reinterpret_cast<PBYTE>(RemoteBase) + 
+          reinterpret_cast<DWORD_PTR>(pCallback), TlsCallArgs);
       });
 
-      // Entry-point calling code
-      AsmJit::Immediate MyImmediate0(0);
-      MyJitFunc.push(MyImmediate0);
-      MyJitFunc.push(MyImmediate0);
-      MyJitFunc.push(MyImmediate0);
-      MyJitFunc.push(MyImmediate0);
-      MyJitFunc.mov(AsmJit::rcx, reinterpret_cast<DWORD_PTR>(RemoteBase));
-      MyJitFunc.mov(AsmJit::rdx, DLL_PROCESS_ATTACH);
-      MyJitFunc.mov(AsmJit::r8, 0);
-      MyJitFunc.mov(AsmJit::r9, 0);
-      MyJitFunc.mov(AsmJit::rax, reinterpret_cast<DWORD_PTR>(EntryPoint));
-      MyJitFunc.call(AsmJit::rax);
+      // Call entry point
+      std::vector<PVOID> EpArgs;
+      EpArgs.push_back(RemoteBase);
+      EpArgs.push_back(reinterpret_cast<PVOID>(DLL_PROCESS_ATTACH));
+      EpArgs.push_back(0);
+      m_Memory.Call(EntryPoint, EpArgs);
 
-      // Export calling code (if necessary)
+      // Call remote export (if specified)
       if (ExportAddr)
       {
-        MyJitFunc.mov(AsmJit::rax, reinterpret_cast<DWORD_PTR>(ExportAddr));
-        MyJitFunc.call(AsmJit::rax);
+        std::vector<PVOID> ExpArgs;
+        ExpArgs.push_back(RemoteBase);
+        m_Memory.Call(ExportAddr, ExpArgs);
       }
-      
-      // Cleanup ghost code
-      MyJitFunc.pop(AsmJit::rax);
-      MyJitFunc.pop(AsmJit::rax);
-      MyJitFunc.pop(AsmJit::rax);
-      MyJitFunc.pop(AsmJit::rax);
-
-      // Epilogue
-      MyJitFunc.mov(AsmJit::rsp, AsmJit::rbp);
-      MyJitFunc.pop(AsmJit::rbp);
-
-      // Return
-      MyJitFunc.ret();
-      #elif defined(_M_IX86) 
-      // Prologue
-      MyJitFunc.push(AsmJit::ebp);
-      MyJitFunc.mov(AsmJit::ebp, AsmJit::esp);
-
-      // TLS calling code
-      std::for_each(TlsCallbacks.begin(), TlsCallbacks.end(), 
-        [&MyJitFunc, RemoteBase] (PIMAGE_TLS_CALLBACK pCallback) 
-      {
-        // Entry-point calling code
-        AsmJit::Immediate MyImmediate0(0);
-        MyJitFunc.push(MyImmediate0);
-        AsmJit::Immediate MyImmProcAttach(DLL_PROCESS_ATTACH);
-        MyJitFunc.push(MyImmProcAttach);
-        AsmJit::Immediate MyImmediateMod(reinterpret_cast<DWORD_PTR>(
-          RemoteBase));
-        MyJitFunc.push(MyImmediateMod);
-        MyJitFunc.mov(AsmJit::eax, reinterpret_cast<DWORD_PTR>(RemoteBase) + 
-          reinterpret_cast<DWORD_PTR>(pCallback));
-        MyJitFunc.call(AsmJit::eax);
-      });
-
-      // Entry-point calling code
-      AsmJit::Immediate MyImmediate0(0);
-      MyJitFunc.push(MyImmediate0);
-      AsmJit::Immediate MyImmProcAttach(DLL_PROCESS_ATTACH);
-      MyJitFunc.push(MyImmProcAttach);
-      AsmJit::Immediate MyImmediateMod(reinterpret_cast<DWORD_PTR>(
-        RemoteBase));
-      MyJitFunc.push(MyImmediateMod);
-      MyJitFunc.mov(AsmJit::eax, reinterpret_cast<DWORD_PTR>(EntryPoint));
-      MyJitFunc.call(AsmJit::eax);
-
-      // Export calling code (if necessary)
-      if (ExportAddr)
-      {
-        MyJitFunc.push(MyImmediateMod);
-        MyJitFunc.mov(AsmJit::eax, reinterpret_cast<DWORD_PTR>(ExportAddr));
-        MyJitFunc.call(AsmJit::eax);
-      }
-
-      // Epilogue
-      MyJitFunc.mov(AsmJit::esp, AsmJit::ebp);
-      MyJitFunc.pop(AsmJit::ebp);
-
-      // Return
-      MyJitFunc.ret();
-      #else 
-        #error "Unsupported architecture."
-      #endif
-      
-      // Make JIT function.
-      typedef void (*JitFuncT)(HMODULE);
-      EnsureAsmJitFree LoaderStub(AsmJit::function_cast<JitFuncT>(
-        MyJitFunc.make()));
-
-      // Ensure function creation succeeded
-      if (!LoaderStub.Get())
-      {
-        BOOST_THROW_EXCEPTION(ManualMapError() << 
-          ErrorFunction("ManualMap::Map") << 
-          ErrorString("Error JIT'ing loader stub."));
-      }
-
-      // Get stub size
-      DWORD_PTR StubSize = MyJitFunc.codeSize();
-
-      // Output
-      std::wcout << "Loader Stub Size: " << StubSize << "." << std::endl;
-      std::wcout << "Loader Stub (Local): " << LoaderStub.Get() << "." << 
-        std::endl;
-
-      // Allocate memory for stub buffer
-      AllocAndFree EpCallerMem(m_Memory, StubSize);
-      // Copy loader stub to stub buffer
-      std::vector<BYTE> EpCallerBuf(reinterpret_cast<PBYTE>(LoaderStub.Get()), 
-        reinterpret_cast<PBYTE>(LoaderStub.Get()) + StubSize);
-      // Write stub buffer to process
-      m_Memory.Write(EpCallerMem.GetAddress(), EpCallerBuf);
-
-      // Output
-      std::wcout << "Loader Stub (Remote): " << EpCallerMem.GetAddress() << 
-        "." << std::endl;
-
-      // Execute EP calling stub
-      m_Memory.Call<BOOL (PVOID)>(EpCallerMem.GetAddress(), RemoteBase);
 
       // Return pointer to module in remote process
       return RemoteBase;

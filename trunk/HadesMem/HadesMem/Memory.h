@@ -16,6 +16,11 @@
 #include <boost/type_traits.hpp>
 #pragma warning(pop)
 
+// AsmJit
+#pragma warning(push, 1)
+#include "AsmJit/AsmJit.h"
+#pragma warning(pop)
+
 // HadesMem
 #include "Error.h"
 #include "Process.h"
@@ -40,20 +45,8 @@ namespace Hades
       inline MemoryMgr(std::wstring const& WindowName, 
         std::wstring const* const ClassName);
 
-      // MemoryMgr::Call trait class. Ensures the function arity is valid.
-      template <typename T, std::size_t Arity>
-      struct IsArity
-      {
-        static const bool value = typename boost::function_traits<T>::arity == 
-          Arity;
-      };
-
       // Call remote function
-      template <typename T>
-      typename boost::function_traits<T>::result_type Call(PVOID Address, 
-        typename boost::function_traits<T>::arg1_type const& Arg1,  
-        typename boost::enable_if_c<MemoryMgr::IsArity<T, 1>::value>::type* 
-        Dummy = 0) const;
+      DWORD Call(PVOID Address, std::vector<PVOID> const& Args) const;
 
       // Read memory (POD types)
       template <typename T>
@@ -134,6 +127,36 @@ namespace Hades
       PVOID m_Address;
     };
 
+    // RAII class for AsmJit
+    class EnsureAsmJitFree : private boost::noncopyable
+    {
+    public:
+      // Constructor
+      EnsureAsmJitFree(PVOID Address) 
+        : m_Address(Address)
+      { }
+
+      // Destructor
+      ~EnsureAsmJitFree()
+      {
+        // Free memory if necessary
+        if (m_Address)
+        {
+          AsmJit::MemoryManager::global()->free(m_Address);
+        }
+      }
+
+      // Get address
+      PVOID Get() const 
+      {
+        return m_Address;
+      }
+
+    private:
+      // Address
+      PVOID m_Address;
+    };
+
     // Open process from process ID
     MemoryMgr::MemoryMgr(DWORD ProcID) 
       : m_Process(ProcID) 
@@ -151,36 +174,114 @@ namespace Hades
     { }
 
     // Call remote function
-    template <typename T>
-    typename boost::function_traits<T>::result_type MemoryMgr::Call(
-      PVOID Address, typename boost::function_traits<T>::arg1_type const& Arg1, 
-      typename boost::enable_if_c<MemoryMgr::IsArity<T, 1>::value>::type*) 
-      const 
+    DWORD MemoryMgr::Call(PVOID Address, std::vector<PVOID> const& Args) const 
     {
-      // Ensure argument is the same size (or smaller) as the native 
-      // size for the architecture. Larger sized objects must be passed by 
-      // pointer.
-      static_assert(sizeof(Arg1) <= sizeof(PVOID), "Size of argument is "
-        "invalid.");
+      // Create Assembler.
+      AsmJit::Assembler MyJitFunc;
+      
+      #if defined(_M_AMD64) 
+      // Prologue
+      MyJitFunc.push(AsmJit::rbp);
+      MyJitFunc.mov(AsmJit::rbp, AsmJit::rsp);
 
-      // Ensure specified return type is of a valid size and type
-      typedef typename boost::function_traits<T>::result_type RetType;
-      static_assert(std::is_scalar<RetType>::value, "Return type is "
-        "invalid.");
-      static_assert(sizeof(RetType) <= sizeof(DWORD), "Size of return type "
-        "is invalid.");
+      // Function calling code
+      MyJitFunc.push(AsmJit::Immediate(0));
+      MyJitFunc.push(AsmJit::Immediate(0));
+      MyJitFunc.push(AsmJit::Immediate(0));
+      MyJitFunc.push(AsmJit::Immediate(0));
+      MyJitFunc.mov(AsmJit::rcx, Args.size() > 0 ? reinterpret_cast<DWORD_PTR>(
+        Args[0]) : 0);
+      MyJitFunc.mov(AsmJit::rdx, Args.size() > 1 ? reinterpret_cast<DWORD_PTR>(
+        Args[1]) : 0);
+      MyJitFunc.mov(AsmJit::r8, Args.size() > 2 ? reinterpret_cast<DWORD_PTR>(
+        Args[2]) : 0);
+      MyJitFunc.mov(AsmJit::r9, Args.size() > 3 ? reinterpret_cast<DWORD_PTR>(
+        Args[3]) : 0);
+      if (Args.size() > 4)
+      {
+        std::for_each(Args.rbegin(), Args.rend() - 4, 
+          [&MyJitFunc] (PVOID Arg)
+        {
+          MyJitFunc.mov(AsmJit::rax, reinterpret_cast<DWORD_PTR>(Arg));
+          MyJitFunc.push(AsmJit::rax);
+        });
+      }
+      MyJitFunc.mov(AsmJit::rax, reinterpret_cast<DWORD_PTR>(Address));
+      MyJitFunc.call(AsmJit::rax);
+      
+      // Cleanup ghost space
+      MyJitFunc.pop(AsmJit::rdx);
+      MyJitFunc.pop(AsmJit::rdx);
+      MyJitFunc.pop(AsmJit::rdx);
+      MyJitFunc.pop(AsmJit::rdx);
 
-      // Allocate and write argument to process
-      AllocAndFree MyRemoteMem(*this, sizeof(Arg1));
-      Write(MyRemoteMem.GetAddress(), Arg1);
+      // Clean up remaining stack space
+      std::size_t StackArgs(Args.size() > 4 ? Args.size() - 4 : 0);
+      while (StackArgs--)
+      {
+        MyJitFunc.pop(AsmJit::rdx);
+      }
 
-      // Call function via creating a remote thread in the target.
+      // Epilogue
+      MyJitFunc.mov(AsmJit::rsp, AsmJit::rbp);
+      MyJitFunc.pop(AsmJit::rbp);
+
+      // Return
+      MyJitFunc.ret();
+      #elif defined(_M_IX86) 
+      // Prologue
+      MyJitFunc.push(AsmJit::ebp);
+      MyJitFunc.mov(AsmJit::ebp, AsmJit::esp);
+
+      // Function calling code
+      std::for_each(Args.rbegin(), Args.rend(), 
+        [&MyJitFunc] (PVOID Arg)
+      {
+        MyJitFunc.mov(AsmJit::eax, reinterpret_cast<DWORD_PTR>(Arg));
+        MyJitFunc.push(AsmJit::eax);
+      });
+      MyJitFunc.mov(AsmJit::eax, reinterpret_cast<DWORD_PTR>(Address));
+      MyJitFunc.call(AsmJit::eax);
+
+      // Epilogue
+      MyJitFunc.mov(AsmJit::esp, AsmJit::ebp);
+      MyJitFunc.pop(AsmJit::ebp);
+
+      // Return
+      MyJitFunc.ret();
+      #else 
+        #error "Unsupported architecture."
+      #endif
+      
+      // Make JIT function.
+      EnsureAsmJitFree LoaderStub(MyJitFunc.make());
+
+      // Ensure function creation succeeded
+      if (!LoaderStub.Get())
+      {
+        BOOST_THROW_EXCEPTION(MemoryError() << 
+          ErrorFunction("MemoryMgr::Call") << 
+          ErrorString("Error JIT'ing loader stub."));
+      }
+
+      // Get stub size
+      DWORD_PTR StubSize = MyJitFunc.codeSize();
+
+      // Allocate memory for stub buffer
+      AllocAndFree EpCallerMem(*this, StubSize);
+      // Copy loader stub to stub buffer
+      std::vector<BYTE> EpCallerBuf(reinterpret_cast<PBYTE>(LoaderStub.Get()), 
+        reinterpret_cast<PBYTE>(LoaderStub.Get()) + StubSize);
+      // Write stub buffer to process
+      Write(EpCallerMem.GetAddress(), EpCallerBuf);
+
+      // Call stub via creating a remote thread in the target.
       // Todo: Robust implementation via ASM Jit and SEH.
       // Todo: Support parameters, calling conventions, etc.
       // Todo: Pass arguments via value not pointer.
       EnsureCloseHandle MyThread = CreateRemoteThread(m_Process.GetHandle(), 
         nullptr, 0, reinterpret_cast<LPTHREAD_START_ROUTINE>(Address), 
-        MyRemoteMem.GetAddress(), 0, nullptr);
+        EpCallerMem.GetAddress(), 0, nullptr);
       if (!MyThread)
       {
         DWORD LastError = GetLastError();
@@ -212,7 +313,7 @@ namespace Hades
       }
 
       // Return exit code from thread
-      return RetType(ExitCode);
+      return ExitCode;
     }
 
     // Read memory (POD types)
