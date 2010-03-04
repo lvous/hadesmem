@@ -208,18 +208,18 @@ namespace Hades
         [this, RemoteBase] (PIMAGE_TLS_CALLBACK pCallback) 
       {
         std::vector<PVOID> TlsCallArgs;
-        TlsCallArgs.push_back(RemoteBase);
-        TlsCallArgs.push_back(reinterpret_cast<PVOID>(DLL_PROCESS_ATTACH));
         TlsCallArgs.push_back(0);
+        TlsCallArgs.push_back(reinterpret_cast<PVOID>(DLL_PROCESS_ATTACH));
+        TlsCallArgs.push_back(RemoteBase);
         m_Memory.Call(reinterpret_cast<PBYTE>(RemoteBase) + 
           reinterpret_cast<DWORD_PTR>(pCallback), TlsCallArgs);
       });
 
       // Call entry point
       std::vector<PVOID> EpArgs;
-      EpArgs.push_back(RemoteBase);
-      EpArgs.push_back(reinterpret_cast<PVOID>(DLL_PROCESS_ATTACH));
       EpArgs.push_back(0);
+      EpArgs.push_back(reinterpret_cast<PVOID>(DLL_PROCESS_ATTACH));
+      EpArgs.push_back(RemoteBase);
       m_Memory.Call(EntryPoint, EpArgs);
 
       // Call remote export (if specified)
