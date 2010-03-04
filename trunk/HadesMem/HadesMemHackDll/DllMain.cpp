@@ -11,7 +11,7 @@
 #include <boost/thread.hpp>
 #pragma warning(pop)
 
-extern "C" __declspec(dllexport) void __stdcall Initialize(HMODULE /*Module*/)
+extern "C" __declspec(dllexport) DWORD __stdcall Initialize(HMODULE Module)
 {
   // Break to debugger if present
   if (IsDebuggerPresent())
@@ -20,7 +20,13 @@ extern "C" __declspec(dllexport) void __stdcall Initialize(HMODULE /*Module*/)
   }
 
   // Test IAT
-  MessageBox(NULL, L"Initialize called.", L"HadesMemHackDll", MB_OK);
+  MessageBox(NULL, L"Invalid parameter.", L"HadesMemHackDll", MB_OK);
+
+  // Test parameter
+  if (!Module)
+  {
+    MessageBox(NULL, L"Invalid parameter.", L"HadesMemHackDll", MB_OK);
+  }
 
   // Test TLS callbacks
   boost::thread_specific_ptr<std::wstring> MyString;
@@ -29,6 +35,9 @@ extern "C" __declspec(dllexport) void __stdcall Initialize(HMODULE /*Module*/)
     MyString.reset(new std::wstring());
   }
   *MyString = L"asdf";
+
+  // Test return values
+  return 1337;
 }
 
 BOOL WINAPI DllMain(HINSTANCE /*hinstDLL*/, DWORD /*fdwReason*/, 

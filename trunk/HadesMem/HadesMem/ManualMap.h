@@ -211,8 +211,9 @@ namespace Hades
         TlsCallArgs.push_back(0);
         TlsCallArgs.push_back(reinterpret_cast<PVOID>(DLL_PROCESS_ATTACH));
         TlsCallArgs.push_back(RemoteBase);
-        m_Memory.Call(reinterpret_cast<PBYTE>(RemoteBase) + 
+        DWORD TlsRet = m_Memory.Call(reinterpret_cast<PBYTE>(RemoteBase) + 
           reinterpret_cast<DWORD_PTR>(pCallback), TlsCallArgs);
+        std::wcout << "Tls Callback Returned: " << TlsRet << "." << std::endl;
       });
 
       // Call entry point
@@ -220,14 +221,16 @@ namespace Hades
       EpArgs.push_back(0);
       EpArgs.push_back(reinterpret_cast<PVOID>(DLL_PROCESS_ATTACH));
       EpArgs.push_back(RemoteBase);
-      m_Memory.Call(EntryPoint, EpArgs);
+      DWORD EpRet = m_Memory.Call(EntryPoint, EpArgs);
+      std::wcout << "Entry Point Returned: " << EpRet << "." << std::endl;
 
       // Call remote export (if specified)
       if (ExportAddr)
       {
         std::vector<PVOID> ExpArgs;
         ExpArgs.push_back(RemoteBase);
-        m_Memory.Call(ExportAddr, ExpArgs);
+        DWORD ExpRet = m_Memory.Call(ExportAddr, ExpArgs);
+        std::wcout << "Export Returned: " << ExpRet << "." << std::endl;
       }
 
       // Return pointer to module in remote process
