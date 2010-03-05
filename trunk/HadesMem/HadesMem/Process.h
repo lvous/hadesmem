@@ -158,6 +158,8 @@ namespace Hades
     // Open process given process id
     void Process::Open(DWORD ProcID)
     {
+      // Todo: WoW64 detection.
+
       // Open process
       m_Handle = OpenProcess(PROCESS_CREATE_THREAD | 
         PROCESS_QUERY_INFORMATION | 
