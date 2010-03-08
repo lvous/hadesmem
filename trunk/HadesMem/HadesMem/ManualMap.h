@@ -37,7 +37,7 @@ namespace Hades
 
       // Manually map MyJitFunc DLL
       inline PVOID Map(std::wstring const& Path, std::string const& Export = 
-        "");
+        "", bool InjectHelper = true);
 
     private:
       // Convert RVA to file offset
@@ -74,7 +74,8 @@ namespace Hades
     { }
 
     // Manually map MyJitFunc DLL
-    PVOID ManualMap::Map(std::wstring const& Path, std::string const& Export)
+    PVOID ManualMap::Map(std::wstring const& Path, std::string const& Export, 
+      bool InjectHelper)
     {
       // Open file for reading
       std::wcout << "Opening module file for reading." << std::endl;
@@ -171,20 +172,15 @@ namespace Hades
       }
 
       // Write DOS header to process
-      PBYTE DosHeaderStart = pBase;
-      PBYTE DosHeaderEnd = DosHeaderStart + sizeof(IMAGE_DOS_HEADER);
-      std::vector<BYTE> DosHeaderBuf(DosHeaderStart, DosHeaderEnd);
       std::wcout << "Writing DOS header." << std::endl;
-      std::wcout << "DOS Header: " << DosHeaderStart << std::endl;
-      m_Memory.Write(RemoteBase, DosHeaderBuf);
+      std::wcout << "DOS Header: " << pBase << std::endl;
+      m_Memory.Write(RemoteBase, *reinterpret_cast<PIMAGE_DOS_HEADER>(pBase));
 
       // Write PE header to process
       PBYTE PeHeaderStart = reinterpret_cast<PBYTE>(pNtHeaders);
-      PBYTE PeHeaderEnd = PeHeaderStart + sizeof(pNtHeaders->Signature) + 
-        sizeof(pNtHeaders->FileHeader) + pNtHeaders->FileHeader.
-        SizeOfOptionalHeader;
+      PBYTE PeHeaderEnd = reinterpret_cast<PBYTE>(IMAGE_FIRST_SECTION(pNtHeaders));
       std::vector<BYTE> PeHeaderBuf(PeHeaderStart, PeHeaderEnd);
-      PBYTE TargetAddr = reinterpret_cast<PBYTE>(RemoteBase) + 
+      PBYTE TargetAddr = static_cast<PBYTE>(RemoteBase) + 
         pDosHeader->e_lfanew;
       std::wcout << "Writing NT header." << std::endl;
       std::wcout << "NT Header: " << TargetAddr << std::endl;
@@ -202,6 +198,18 @@ namespace Hades
       PVOID ExportAddr = GetRemoteProcAddress(reinterpret_cast<HMODULE>(
         RemoteBase), Path, Export.c_str());
       std::wcout << "Export Address: " << ExportAddr << "." << std::endl;
+
+      // Inject helper module
+      if (InjectHelper)
+      {
+        #if defined(_M_AMD64) 
+          Map(L"HadesMMHelper_AMD64.dll", "Initialize", false);
+        #elif defined(_M_IX86) 
+          Map(L"HadesMMHelper_IA32.dll", "_Initialize@12", false);
+        #else 
+          #error "Unsupported architecture."
+        #endif
+      }
 
       // Call all TLS callbacks
       std::for_each(TlsCallbacks.begin(), TlsCallbacks.end(), 

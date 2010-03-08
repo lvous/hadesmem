@@ -24,6 +24,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Lua", "Lua\Lua.vcxproj", "{
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LuaBind", "LuaBind\LuaBind.vcxproj", "{B2A72C23-ECF0-4424-80F5-555A8641FCC2}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HadesMMHelper", "HadesMMHelper\HadesMMHelper.vcxproj", "{94BFB374-35DE-453C-BA5E-4035F52E5C70}"
+EndProject
 Global
 	GlobalSection(SubversionScc) = preSolution
 		Svn-Managed = True
@@ -100,6 +102,14 @@ Global
 		{B2A72C23-ECF0-4424-80F5-555A8641FCC2}.Release|Win32.Build.0 = Release|Win32
 		{B2A72C23-ECF0-4424-80F5-555A8641FCC2}.Release|X64.ActiveCfg = Release|x64
 		{B2A72C23-ECF0-4424-80F5-555A8641FCC2}.Release|X64.Build.0 = Release|x64
+		{94BFB374-35DE-453C-BA5E-4035F52E5C70}.Debug|Win32.ActiveCfg = Debug|Win32
+		{94BFB374-35DE-453C-BA5E-4035F52E5C70}.Debug|Win32.Build.0 = Debug|Win32
+		{94BFB374-35DE-453C-BA5E-4035F52E5C70}.Debug|X64.ActiveCfg = Debug|x64
+		{94BFB374-35DE-453C-BA5E-4035F52E5C70}.Debug|X64.Build.0 = Debug|x64
+		{94BFB374-35DE-453C-BA5E-4035F52E5C70}.Release|Win32.ActiveCfg = Release|Win32
+		{94BFB374-35DE-453C-BA5E-4035F52E5C70}.Release|Win32.Build.0 = Release|Win32
+		{94BFB374-35DE-453C-BA5E-4035F52E5C70}.Release|X64.ActiveCfg = Release|x64
+		{94BFB374-35DE-453C-BA5E-4035F52E5C70}.Release|X64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

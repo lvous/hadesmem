@@ -158,8 +158,6 @@ namespace Hades
     // Open process given process id
     void Process::Open(DWORD ProcID)
     {
-      // Todo: WoW64 detection.
-
       // Open process
       m_Handle = OpenProcess(PROCESS_CREATE_THREAD | 
         PROCESS_QUERY_INFORMATION | 
@@ -175,6 +173,35 @@ namespace Hades
           ErrorFunction("Process::Open") << 
           ErrorString("Could not open process.") << 
           ErrorCodeWin(LastError));
+      }
+
+      // Get WoW64 status of self
+      BOOL IsWoW64Me = FALSE;
+      if (!IsWow64Process(GetCurrentProcess(), &IsWoW64Me))
+      {
+        DWORD LastError = GetLastError();
+        BOOST_THROW_EXCEPTION(ProcessError() << 
+          ErrorFunction("Process::Open") << 
+          ErrorString("Could not detect WoW64 status of current process.") << 
+          ErrorCodeWin(LastError));
+      }
+
+      // If current process is not running under WoW64 then it must be a 
+      // 'native' process. If the target process is a WoW64 process that 
+      // must mean that our process is a different architecture to the 
+      // target process, which this library currently does not 'support'.
+      // Todo: Support cross-architecture process manipulation.
+      if (!IsWoW64Me)
+      {
+        BOOL IsWoW64 = FALSE;
+        if (!IsWow64Process(m_Handle, &IsWoW64))
+        {
+          DWORD LastError = GetLastError();
+          BOOST_THROW_EXCEPTION(ProcessError() << 
+            ErrorFunction("Process::Open") << 
+            ErrorString("Could not detect WoW64 status of target process.") << 
+            ErrorCodeWin(LastError));
+        }
       }
     }
 

@@ -36,6 +36,16 @@ extern "C" __declspec(dllexport) DWORD __stdcall Initialize(HMODULE Module)
   }
   *MyString = L"asdf";
 
+  // Test C++ EH
+  try
+  {
+    throw std::runtime_error("Testing C++ EH.");
+  }
+  catch (std::exception const& e)
+  {
+    MessageBoxA(NULL, e.what(), "HadesMemHackDll", MB_OK);
+  }
+
   // Test return values
   return 1337;
 }
