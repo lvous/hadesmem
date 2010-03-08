@@ -8,6 +8,9 @@
 #include <string>
 #include <vector>
 
+// Boost
+#include <boost/filesystem.hpp>
+
 // HadesMem
 #include "Module.h"
 #include "Memory.h"
@@ -57,12 +60,13 @@ namespace Hades
 
       // Check whether we need to convert the path from a relative to 
       // an absolute
-      if (PathResolution && PathReal[1] != ':')
+      if (PathResolution && !boost::filesystem::wpath(Path).
+        has_root_directory())
       {
         // Get handle to self
         HMODULE const Self = reinterpret_cast<HMODULE>(&__ImageBase);
 
-        // Get path to loader
+        // Get path to self
         std::vector<wchar_t> SelfPath(MAX_PATH);
         if (!GetModuleFileName(Self, &SelfPath[0], MAX_PATH) || 
           GetLastError() == ERROR_INSUFFICIENT_BUFFER)
@@ -74,39 +78,32 @@ namespace Hades
             ErrorCodeWin(LastError));
         }
 
-        // ConvertStr path to loader to path to module
-        std::wstring ModulePath(&SelfPath[0]);
-        ModulePath = ModulePath.substr(0, ModulePath.rfind(L"\\") + 1);
-        ModulePath.append(Path);
-
-        // Set new path
-        PathReal = ModulePath;
+        // Convert relative path to absolute path
+        PathReal = boost::filesystem::complete(Path, boost::filesystem::wpath(
+          &SelfPath[0]).parent_path()).file_string();
       }
 
-      // Check path/file is valid
-      if (PathResolution)
+      // Convert path to lower case
+      PathReal = I18n::ToLower<wchar_t>(PathReal);
+
+      // Ensure target file exists
+      if (!boost::filesystem::exists(PathReal))
       {
-        if (GetFileAttributes(PathReal.c_str()) == INVALID_FILE_ATTRIBUTES)
-        {
-          DWORD LastError = GetLastError();
-          BOOST_THROW_EXCEPTION(InjectorError() << 
-            ErrorFunction("Injector::InjectDll") << 
-            ErrorString("Could not find module file.") << 
-            ErrorCodeWin(LastError));
-        }
+        DWORD LastError = GetLastError();
+        BOOST_THROW_EXCEPTION(InjectorError() << 
+          ErrorFunction("Injector::InjectDll") << 
+          ErrorString("Could not find module file.") << 
+          ErrorCodeWin(LastError));
       }
 
       // Get process handle
-      HANDLE MyProcess = m_Memory.GetProcessHandle();
-
-      // Convert path to lower case
-      std::wstring const PathLower(I18n::ToLower<wchar_t>(PathReal));
+      HANDLE const MyProcess = m_Memory.GetProcessHandle();
 
       // Calculate the number of bytes needed for the DLL's pathname
       size_t const PathBufSize  = (Path.length() + 1) * sizeof(wchar_t);
 
       // Allocate space in the remote process for the pathname
-      AllocAndFree LibFileRemote(m_Memory, PathBufSize);
+      AllocAndFree const LibFileRemote(m_Memory, PathBufSize);
       if (!LibFileRemote.GetAddress())
       {
         DWORD LastError = GetLastError();
@@ -183,13 +180,13 @@ namespace Hades
       }
       
       // Get module list for remote process
-      auto ModuleList(GetModuleList(m_Memory));
+      auto const ModuleList(GetModuleList(m_Memory));
       // Look for target module
-      auto Iter = std::find_if(ModuleList.begin(), ModuleList.end(), 
-        [&PathLower] (std::shared_ptr<Module> const& MyModule) 
+      auto const Iter = std::find_if(ModuleList.begin(), ModuleList.end(), 
+        [&PathReal] (std::shared_ptr<Module> const& MyModule) 
       {
-        return I18n::ToLower<wchar_t>(MyModule->GetName()) == PathLower || 
-          I18n::ToLower<wchar_t>(MyModule->GetPath()) == PathLower;
+        return I18n::ToLower<wchar_t>(MyModule->GetName()) == PathReal || 
+          I18n::ToLower<wchar_t>(MyModule->GetPath()) == PathReal;
       });
       // Ensure target module was found
       if (Iter == ModuleList.end())
@@ -200,7 +197,7 @@ namespace Hades
       }
 
       // Base of remote module
-      PBYTE ModRemote = reinterpret_cast<PBYTE>((*Iter)->GetBase());
+      PBYTE const ModRemote = reinterpret_cast<PBYTE>((*Iter)->GetBase());
 
       // If no export has been specified then there's nothing left to do
       if (Export.empty() || Export == " ")
@@ -209,7 +206,7 @@ namespace Hades
       }
 
       // Load module as data so we can read the EAT locally
-      EnsureFreeLibrary const MyModule(LoadLibraryExW(PathLower.c_str(), NULL, 
+      EnsureFreeLibrary const MyModule(LoadLibraryExW(PathReal.c_str(), NULL, 
         DONT_RESOLVE_DLL_REFERENCES));
       if (!MyModule)
       {
