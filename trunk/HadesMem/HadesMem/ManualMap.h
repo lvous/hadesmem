@@ -32,7 +32,7 @@ namespace Hades
       // Constructor
       inline ManualMap(MemoryMgr const& MyMemory);
 
-      // Manually map MyJitFunc DLL
+      // Manually map DLL
       inline PVOID Map(std::wstring const& Path, std::string const& Export = 
         "", bool InjectHelper = true);
 
