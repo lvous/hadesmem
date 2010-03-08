@@ -2,8 +2,6 @@
 
 // Windows API
 #include <Windows.h>
-#include <atlbase.h>
-#include <atlfile.h>
 
 // C++ Standard Library
 #include <memory>
@@ -14,7 +12,6 @@
 #include <iostream>
 
 // HadesMem
-#include "I18n.h"
 #include "Memory.h"
 #include "Module.h"
 #include "Injector.h"
@@ -95,14 +92,14 @@ namespace Hades
       // Ensure file is MyJitFunc valid PE file
       std::wcout << "Performing PE file format validation." << std::endl;
       auto pBase = &ModuleFileBuf[0];
-      auto pDosHeader = reinterpret_cast<PIMAGE_DOS_HEADER>(pBase);
+      auto const pDosHeader = reinterpret_cast<PIMAGE_DOS_HEADER>(pBase);
       if (pDosHeader->e_magic != IMAGE_DOS_SIGNATURE)
       {
         BOOST_THROW_EXCEPTION(ManualMapError() << 
           ErrorFunction("ManualMap::Map") << 
           ErrorString("Target file is not MyJitFunc valid PE file (DOS)."));
       }
-      auto pNtHeaders = reinterpret_cast<PIMAGE_NT_HEADERS>(pBase + 
+      auto const pNtHeaders = reinterpret_cast<PIMAGE_NT_HEADERS>(pBase + 
         pDosHeader->e_lfanew);
       if (pNtHeaders->Signature != IMAGE_NT_SIGNATURE)
       {
@@ -113,7 +110,7 @@ namespace Hades
 
       // Allocate memory for image
       std::wcout << "Allocating memory for module." << std::endl;
-      PVOID RemoteBase = m_Memory.Alloc(pNtHeaders->OptionalHeader.
+      PVOID const RemoteBase = m_Memory.Alloc(pNtHeaders->OptionalHeader.
         SizeOfImage);
       std::wcout << "Module base address: " << RemoteBase << "." << std::endl;
       std::wcout << "Module size: " << pNtHeaders->OptionalHeader.SizeOfImage 
@@ -121,11 +118,11 @@ namespace Hades
 
       // Get all TLS callbacks
       std::vector<PIMAGE_TLS_CALLBACK> TlsCallbacks;
-      auto TlsDirSize = pNtHeaders->OptionalHeader.DataDirectory
+      auto const TlsDirSize = pNtHeaders->OptionalHeader.DataDirectory
         [IMAGE_DIRECTORY_ENTRY_TLS].Size;
       if (TlsDirSize)
       {
-        auto pTlsDir = reinterpret_cast<PIMAGE_TLS_DIRECTORY>(pBase + 
+        auto const pTlsDir = reinterpret_cast<PIMAGE_TLS_DIRECTORY>(pBase + 
           RvaToFileOffset(pNtHeaders, pNtHeaders->OptionalHeader.
           DataDirectory[IMAGE_DIRECTORY_ENTRY_TLS].VirtualAddress));
 
@@ -147,11 +144,11 @@ namespace Hades
       }
 
       // Fix import table if applicable
-      auto ImpDirSize = pNtHeaders->OptionalHeader.DataDirectory[
-        IMAGE_DIRECTORY_ENTRY_IMPORT].Size;
+      auto const ImpDirSize = pNtHeaders->OptionalHeader.DataDirectory
+        [IMAGE_DIRECTORY_ENTRY_IMPORT].Size;
       if (ImpDirSize)
       {
-        auto pImpDir = reinterpret_cast<PIMAGE_IMPORT_DESCRIPTOR>(pBase + 
+        auto const pImpDir = reinterpret_cast<PIMAGE_IMPORT_DESCRIPTOR>(pBase + 
           RvaToFileOffset(pNtHeaders, pNtHeaders->OptionalHeader.
           DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress));
 
@@ -159,11 +156,11 @@ namespace Hades
       }
 
       // Fix relocations if applicable
-      auto RelocDirSize = pNtHeaders->OptionalHeader.DataDirectory[
-        IMAGE_DIRECTORY_ENTRY_BASERELOC].Size;
+      auto const RelocDirSize = pNtHeaders->OptionalHeader.DataDirectory
+        [IMAGE_DIRECTORY_ENTRY_BASERELOC].Size;
       if (RelocDirSize)
       {
-        auto pRelocDir = reinterpret_cast<PIMAGE_BASE_RELOCATION>(pBase + 
+        auto const pRelocDir = reinterpret_cast<PIMAGE_BASE_RELOCATION>(pBase + 
           RvaToFileOffset(pNtHeaders, pNtHeaders->OptionalHeader.
           DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC].VirtualAddress));
 
@@ -177,10 +174,11 @@ namespace Hades
       m_Memory.Write(RemoteBase, *reinterpret_cast<PIMAGE_DOS_HEADER>(pBase));
 
       // Write PE header to process
-      PBYTE PeHeaderStart = reinterpret_cast<PBYTE>(pNtHeaders);
-      PBYTE PeHeaderEnd = reinterpret_cast<PBYTE>(IMAGE_FIRST_SECTION(pNtHeaders));
+      PBYTE const PeHeaderStart = reinterpret_cast<PBYTE>(pNtHeaders);
+      PBYTE const PeHeaderEnd = reinterpret_cast<PBYTE>(IMAGE_FIRST_SECTION(
+        pNtHeaders));
       std::vector<BYTE> PeHeaderBuf(PeHeaderStart, PeHeaderEnd);
-      PBYTE TargetAddr = static_cast<PBYTE>(RemoteBase) + 
+      PBYTE const TargetAddr = static_cast<PBYTE>(RemoteBase) + 
         pDosHeader->e_lfanew;
       std::wcout << "Writing NT header." << std::endl;
       std::wcout << "NT Header: " << TargetAddr << std::endl;
@@ -190,12 +188,12 @@ namespace Hades
       MapSections(pNtHeaders, RemoteBase, ModuleFileBuf);
 
       // Calculate module entry point
-      PVOID EntryPoint = static_cast<PBYTE>(RemoteBase) + pNtHeaders->
+      PVOID const EntryPoint = static_cast<PBYTE>(RemoteBase) + pNtHeaders->
         OptionalHeader.AddressOfEntryPoint;
       std::wcout << "Entry Point: " << EntryPoint << "." << std::endl;
       
       // Get address of export in remote process
-      PVOID ExportAddr = GetRemoteProcAddress(reinterpret_cast<HMODULE>(
+      PVOID const ExportAddr = GetRemoteProcAddress(reinterpret_cast<HMODULE>(
         RemoteBase), Path, Export.c_str());
       std::wcout << "Export Address: " << ExportAddr << "." << std::endl;
 
@@ -229,7 +227,7 @@ namespace Hades
       EpArgs.push_back(0);
       EpArgs.push_back(reinterpret_cast<PVOID>(DLL_PROCESS_ATTACH));
       EpArgs.push_back(RemoteBase);
-      DWORD EpRet = m_Memory.Call(EntryPoint, EpArgs);
+      DWORD const EpRet = m_Memory.Call(EntryPoint, EpArgs);
       std::wcout << "Entry Point Returned: " << EpRet << "." << std::endl;
 
       // Call remote export (if specified)
@@ -250,29 +248,25 @@ namespace Hades
       DWORD_PTR Rva)
     {
       // Get number of sections
-      WORD NumSections = pNtHeaders->FileHeader.NumberOfSections;
+      WORD const NumSections = pNtHeaders->FileHeader.NumberOfSections;
       // Get pointer to first section
-      PIMAGE_SECTION_HEADER pCurrentSection = IMAGE_FIRST_SECTION(pNtHeaders);
+      PIMAGE_SECTION_HEADER pCurrent = IMAGE_FIRST_SECTION(pNtHeaders);
 
       // Loop over all sections
-      for (WORD i = 0; i < NumSections; ++i)
+      for (WORD i = 0; i < NumSections; ++i, ++pCurrent)
       {
         // Check if the RVA may be inside the current section
-        if (pCurrentSection->VirtualAddress <= Rva)
+        if (pCurrent->VirtualAddress <= Rva)
         {
           // Check if the RVA is inside the current section
-          if ((pCurrentSection->VirtualAddress + pCurrentSection->
-            Misc.VirtualSize) > Rva)
+          if ((pCurrent->VirtualAddress + pCurrent->Misc.VirtualSize) > Rva)
           {
             // Convert RVA to file (raw) offset
-            Rva -= pCurrentSection->VirtualAddress;
-            Rva += pCurrentSection->PointerToRawData;
+            Rva -= pCurrent->VirtualAddress;
+            Rva += pCurrent->PointerToRawData;
             return Rva;
           }
         }
-
-        // Advance to next section
-        ++pCurrentSection;
       }
 
       // Could not perform conversion. Return number signifying an error.
@@ -286,31 +280,34 @@ namespace Hades
       // Debug output
       std::wcout << "Mapping sections." << std::endl;
 
-      // Loop over all sections 
+      // Get number of sections
+      WORD const NumSections = pNtHeaders->FileHeader.NumberOfSections;
+      // Get pointer to first section
       PIMAGE_SECTION_HEADER pCurrent = IMAGE_FIRST_SECTION(pNtHeaders);
-      for(WORD i = 0; i != pNtHeaders->FileHeader.NumberOfSections; ++i, 
-        ++pCurrent) 
+
+      // Loop over all sections
+      for(WORD i = 0; i != NumSections; ++i, ++pCurrent) 
       {
         // Debug output
         std::string Name(pCurrent->Name, pCurrent->Name + 8);
         std::wcout << "Section Name: " << Name.c_str() << std::endl;
 
         // Calculate target address for section in remote process
-        PVOID TargetAddr = reinterpret_cast<PBYTE>(RemoteAddr) + 
+        PVOID const TargetAddr = reinterpret_cast<PBYTE>(RemoteAddr) + 
           pCurrent->VirtualAddress;
         std::wcout << "Target Address: " << TargetAddr << std::endl;
 
         // Calculate virtual size of section
-        DWORD VirtualSize = pCurrent->Misc.VirtualSize; 
+        DWORD const VirtualSize = pCurrent->Misc.VirtualSize; 
         std::wcout << "Virtual Size: " << TargetAddr << std::endl;
 
         // Calculate start and end of section data in buffer
-        PBYTE DataStart = const_cast<PBYTE>(&ModBuffer[0]) + 
+        PBYTE const DataStart = const_cast<PBYTE>(&ModBuffer[0]) + 
           pCurrent->PointerToRawData;
-        PBYTE DataEnd = DataStart + pCurrent->SizeOfRawData;
+        PBYTE const DataEnd = DataStart + pCurrent->SizeOfRawData;
 
         // Get section data
-        std::vector<BYTE> SectionData(DataStart, DataEnd);
+        std::vector<BYTE> const SectionData(DataStart, DataEnd);
         
         // Write section data to process
         m_Memory.Write(TargetAddr, SectionData);
@@ -344,13 +341,13 @@ namespace Hades
         // Get module name
         ModuleName = reinterpret_cast<char*>(ModBase + RvaToFileOffset(
           pNtHeaders, pImpDesc->Name));
-        std::string ModuleNameA(ModuleName);
-        auto ModuleNameW(boost::lexical_cast<std::wstring>(ModuleName));
+        std::string const ModuleNameA(ModuleName);
+        auto const ModuleNameW(boost::lexical_cast<std::wstring>(ModuleName));
         std::wcout << "Module Name: " << ModuleNameW << "." << std::endl;
 
         // Check whether dependent module is already loaded
-        auto ModuleList(GetModuleList(m_Memory));
-        auto ModIter = std::find_if(ModuleList.begin(), ModuleList.end(), 
+        auto const ModuleList(GetModuleList(m_Memory));
+        auto const ModIter = std::find_if(ModuleList.begin(), ModuleList.end(), 
           [&ModuleNameW] (std::shared_ptr<Module> Current)
         {
           return I18n::ToLower<wchar_t>(Current->GetName()) == 
@@ -387,16 +384,16 @@ namespace Hades
         while(pThunkData->u1.AddressOfData) 
         {
           // Get import data
-          auto pNameImport = reinterpret_cast<PIMAGE_IMPORT_BY_NAME>(ModBase + 
-            RvaToFileOffset(pNtHeaders, static_cast<DWORD>(pThunkData->u1.
-            AddressOfData)));
+          auto const pNameImport = reinterpret_cast<PIMAGE_IMPORT_BY_NAME>(
+            ModBase + RvaToFileOffset(pNtHeaders, pThunkData->u1.
+            AddressOfData));
 
           // Get name of function
           std::string const ImpName(reinterpret_cast<char*>(pNameImport->Name));
           std::cout << "Function Name: " << ImpName << "." << std::endl;
 
           // Get function address in remote process
-          bool ByOrdinal = IMAGE_SNAP_BY_ORDINAL(pNameImport->Hint);
+          bool const ByOrdinal = IMAGE_SNAP_BY_ORDINAL(pNameImport->Hint);
           LPCSTR Function = ByOrdinal ? reinterpret_cast<LPCSTR>(IMAGE_ORDINAL(
             pNameImport->Hint)) : reinterpret_cast<LPCSTR>(pNameImport->Name);
           FARPROC FuncAddr = GetRemoteProcAddress(CurModBase, CurModName, 
@@ -416,7 +413,7 @@ namespace Hades
       std::wstring const& ModulePath, LPCSTR Function, bool ByOrdinal)
     {
       // Load module as data so we can read the EAT locally
-      EnsureFreeLibrary LocalMod(LoadLibraryExW(ModulePath.c_str(), NULL, 
+      EnsureFreeLibrary const LocalMod(LoadLibraryExW(ModulePath.c_str(), NULL, 
         DONT_RESOLVE_DLL_REFERENCES));
       if (!LocalMod)
       {
@@ -428,7 +425,7 @@ namespace Hades
       }
 
       // Find target function in module
-      FARPROC LocalFunc = GetProcAddress(LocalMod, ByOrdinal ? 
+      FARPROC const LocalFunc = GetProcAddress(LocalMod, ByOrdinal ? 
         reinterpret_cast<LPCSTR>(IMAGE_ORDINAL(reinterpret_cast<DWORD_PTR>(
         Function))) : Function);
       if (!LocalFunc)
@@ -437,12 +434,12 @@ namespace Hades
       }
       
       // Calculate function delta
-      DWORD_PTR FuncDelta = reinterpret_cast<DWORD_PTR>(LocalFunc) - 
+      DWORD_PTR const FuncDelta = reinterpret_cast<DWORD_PTR>(LocalFunc) - 
         reinterpret_cast<DWORD_PTR>(static_cast<HMODULE>(LocalMod));
 
       // Calculate function location in remote process
-      auto RemoteFunc = reinterpret_cast<FARPROC>(reinterpret_cast<DWORD_PTR>(
-        RemoteMod) + FuncDelta);
+      auto const RemoteFunc = reinterpret_cast<FARPROC>(
+        reinterpret_cast<DWORD_PTR>(RemoteMod) + FuncDelta);
 
       // Return remote function location
       return RemoteFunc;
@@ -456,38 +453,47 @@ namespace Hades
       // Debug output
       std::wcout << "Fixing relocations." << std::endl;
 
-      DWORD_PTR ImageBase = pNtHeaders->OptionalHeader.ImageBase;
+      // Get image base
+      DWORD_PTR const ImageBase = pNtHeaders->OptionalHeader.ImageBase;
 
-      DWORD_PTR Delta = reinterpret_cast<DWORD_PTR>(RemoteBase) - ImageBase;
+      // Calcuate module delta
+      DWORD_PTR const Delta = reinterpret_cast<DWORD_PTR>(RemoteBase) - ImageBase;
 
-      PBYTE ModBase = &ModBuffer[0];
+      // Get local module buffer base
+      PBYTE const ModBase = &ModBuffer[0];
 
-      unsigned int BytesProcessed = 0; 
-      for (;;) 
-      { 
+      // Number of bytes processed
+      DWORD BytesProcessed = 0; 
+
+      // Ensure we don't read into invalid data
+      while (BytesProcessed < RelocDirSize)
+      {
+        // Get base of reloc dir
         PVOID RelocBase = ModBase + RvaToFileOffset(pNtHeaders, 
           pRelocDesc->VirtualAddress);
 
-        DWORD NumRelocs = (pRelocDesc->SizeOfBlock - 
-          sizeof(IMAGE_BASE_RELOCATION)) / sizeof(WORD); 
+        // Get number of relocs
+        DWORD const NumRelocs = (pRelocDesc->SizeOfBlock - sizeof(
+          IMAGE_BASE_RELOCATION)) / sizeof(WORD); 
 
-        if(BytesProcessed >= RelocDirSize) 
-          break; 
+        // Get pointer to reloc data
+        auto pRelocData = reinterpret_cast<WORD*>(reinterpret_cast<DWORD_PTR>(
+          pRelocDesc) + sizeof(IMAGE_BASE_RELOCATION));
 
-        WORD* pRelocData = reinterpret_cast<WORD*>(reinterpret_cast<PBYTE>(
-          pRelocDesc) + sizeof(IMAGE_BASE_RELOCATION)); 
+        // Loop over all relocation entries
         for(DWORD i = 0; i < NumRelocs; ++i, ++pRelocData) 
-        {        
-          if(((*pRelocData >> 12) & IMAGE_REL_BASED_HIGHLOW)) 
+        {
+          // Perform relocation if necessary
+          if ((*pRelocData >> 12) & IMAGE_REL_BASED_HIGHLOW)
           {
             *reinterpret_cast<DWORD_PTR*>(static_cast<PBYTE>(RelocBase) + 
-              (*pRelocData & 0x0FFF)) += Delta; 
+              (*pRelocData & 0x0FFF)) += Delta;
           }
-        } 
+        }
 
-        BytesProcessed += pRelocDesc->SizeOfBlock; 
+        // Advance to next reloc info block
         pRelocDesc = reinterpret_cast<PIMAGE_BASE_RELOCATION>(pRelocData); 
-      } 
+      }
     }
   }
 }

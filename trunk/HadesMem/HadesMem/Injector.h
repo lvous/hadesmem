@@ -87,7 +87,7 @@ namespace Hades
       PathReal = I18n::ToLower<wchar_t>(PathReal);
 
       // Ensure target file exists
-      if (!boost::filesystem::exists(PathReal))
+      if (PathResolution && !boost::filesystem::exists(PathReal))
       {
         DWORD LastError = GetLastError();
         BOOST_THROW_EXCEPTION(InjectorError() << 
