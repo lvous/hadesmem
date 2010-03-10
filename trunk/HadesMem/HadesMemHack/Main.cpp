@@ -122,9 +122,10 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
           case Detail::DataType_Byte:
             {
               // Read data
-              auto Current = MyMemory->Read<Detail::Byte>(Address);
-              std::wcout << "Value: " << static_cast<Detail::Int32>(Current) 
-                << std::endl;
+              auto Current = MyMemory->Read<Hades::Memory::Types::Byte>(
+                Address);
+              std::wcout << "Value: " << static_cast<Hades::Memory::Types::
+                Int32>(Current) << std::endl;
 
               // Handle 'Write Memory' task
               if (Task == Detail::Task_WriteMem)
@@ -133,7 +134,7 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
                 std::wcout << "Enter new value:" << std::endl;
 
                 // Get data
-                Detail::Int32 New = 0;
+                Hades::Memory::Types::Int32 New = 0;
                 while (!(std::wcin >> New) || New > 256)
                 {
                   std::wcout << "Invalid data." << std::endl;
@@ -145,68 +146,78 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
                   '\n');
 
                 // Write data
-                MyMemory->Write(Address, static_cast<Detail::Byte>(New));
+                MyMemory->Write(Address, static_cast<Hades::Memory::Types::
+                  Byte>(New));
               }
 
               break;
             }
 
           case Detail::DataType_Int16:
-            HandleNumericReadOrWrite<Detail::Int16>(*MyMemory, Address, Task);
+            HandleNumericReadOrWrite<Hades::Memory::Types::Int16>(*MyMemory, 
+              Address, Task);
             break;
 
           case Detail::DataType_UInt16:
-            HandleNumericReadOrWrite<Detail::UInt16>(*MyMemory, Address, Task);
+            HandleNumericReadOrWrite<Hades::Memory::Types::UInt16>(*MyMemory, 
+              Address, Task);
             break;
 
           case Detail::DataType_Int32:
-            HandleNumericReadOrWrite<Detail::Int32>(*MyMemory, Address, Task);
+            HandleNumericReadOrWrite<Hades::Memory::Types::Int32>(*MyMemory, 
+              Address, Task);
             break;
 
           case Detail::DataType_UInt32:
-            HandleNumericReadOrWrite<Detail::UInt32>(*MyMemory, Address, Task);
+            HandleNumericReadOrWrite<Hades::Memory::Types::UInt32>(*MyMemory, 
+              Address, Task);
             break;
 
           case Detail::DataType_Int64:
-            HandleNumericReadOrWrite<Detail::Int64>(*MyMemory, Address, Task);
+            HandleNumericReadOrWrite<Hades::Memory::Types::Int64>(*MyMemory, 
+              Address, Task);
             break;
 
           case Detail::DataType_UInt64:
-            HandleNumericReadOrWrite<Detail::UInt64>(*MyMemory, Address, Task);
+            HandleNumericReadOrWrite<Hades::Memory::Types::UInt64>(*MyMemory, 
+              Address, Task);
             break;
 
           case Detail::DataType_Float:
-            HandleNumericReadOrWrite<Detail::Float>(*MyMemory, Address, Task);
+            HandleNumericReadOrWrite<Hades::Memory::Types::Float>(*MyMemory, 
+              Address, Task);
             break;
 
           case Detail::DataType_Double:
-            HandleNumericReadOrWrite<Detail::Double>(*MyMemory, Address, Task);
+            HandleNumericReadOrWrite<Hades::Memory::Types::Double>(*MyMemory, 
+              Address, Task);
             break;
 
           case Detail::DataType_StrNarrow:
-            HandleStringReadOrWrite<Detail::CharNarrow>(*MyMemory, Address, 
-              Task, std::cin, std::cout);
+            HandleStringReadOrWrite<Hades::Memory::Types::CharNarrow>(
+              *MyMemory, Address, Task, std::cin, std::cout);
             break;
 
           case Detail::DataType_StrWide:
-            HandleStringReadOrWrite<Detail::CharWide>(*MyMemory, Address, Task, 
-              std::wcin, std::wcout);
+            HandleStringReadOrWrite<Hades::Memory::Types::CharWide>(*MyMemory, 
+              Address, Task, std::wcin, std::wcout);
             break;
 
           case Detail::DataType_CharNarrow:
-            HandleCharReadOrWrite<Detail::CharNarrow>(*MyMemory, Address, Task, 
-              std::cin, std::cout);
+            HandleCharReadOrWrite<Hades::Memory::Types::CharNarrow>(*MyMemory, 
+              Address, Task, std::cin, std::cout);
             break;
 
           case Detail::DataType_CharWide:
-            HandleCharReadOrWrite<Detail::CharWide>(*MyMemory, Address, Task, 
-              std::wcin, std::wcout);
+            HandleCharReadOrWrite<Hades::Memory::Types::CharWide>(*MyMemory, 
+              Address, Task, std::wcin, std::wcout);
             break;
 
           case Detail::DataType_Pointer:
             {
               // Read data
-              auto Current = MyMemory->Read<Detail::Pointer>(Address);
+              auto Current = MyMemory->Read<Hades::Memory::Types::Pointer>(
+                Address);
               std::wcout << "Value: " << Current << std::endl;
 
               // Handle 'Write Memory' task
@@ -216,7 +227,8 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
                 std::wcout << "Enter new value:" << std::endl;
 
                 // Get data
-                auto New = ReadHexNumericDataFromUser<Detail::Pointer>();
+                auto New = ReadHexNumericDataFromUser<Hades::Memory::Types::
+                  Pointer>();
 
                 // Write data
                 MyMemory->Write(Address, New);
@@ -637,7 +649,7 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
               std::wcout << "Enter data:" << std::endl;
 
               // Get data
-              Detail::Int32 New = 0;
+              Hades::Memory::Types::Int32 New = 0;
               while (!(std::wcin >> New) || New > 256)
               {
                 std::wcout << "Invalid data." << std::endl;
@@ -649,7 +661,7 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
                 '\n');
 
               // Real data
-              auto Data = static_cast<Detail::Byte>(New);
+              auto Data = static_cast<Hades::Memory::Types::Byte>(New);
 
               // Find data
               Hades::Memory::Scanner MyScanner(*MyMemory, Start, End);
@@ -662,55 +674,63 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
             }
 
           case Detail::DataType_Int16:
-            HandleNumericSearch<Detail::Int16>(*MyMemory, Start, End);
+            HandleNumericSearch<Hades::Memory::Types::Int16>(*MyMemory, Start, 
+              End);
             break;
 
           case Detail::DataType_UInt16:
-            HandleNumericSearch<Detail::UInt16>(*MyMemory, Start, End);
+            HandleNumericSearch<Hades::Memory::Types::UInt16>(*MyMemory, Start, 
+              End);
             break;
 
           case Detail::DataType_Int32:
-            HandleNumericSearch<Detail::Int32>(*MyMemory, Start, End);
+            HandleNumericSearch<Hades::Memory::Types::Int32>(*MyMemory, Start, 
+              End);
             break;
 
           case Detail::DataType_UInt32:
-            HandleNumericSearch<Detail::UInt32>(*MyMemory, Start, End);
+            HandleNumericSearch<Hades::Memory::Types::UInt32>(*MyMemory, Start, 
+              End);
             break;
 
           case Detail::DataType_Int64:
-            HandleNumericSearch<Detail::Int64>(*MyMemory, Start, End);
+            HandleNumericSearch<Hades::Memory::Types::Int64>(*MyMemory, Start, 
+              End);
             break;
 
           case Detail::DataType_UInt64:
-            HandleNumericSearch<Detail::UInt64>(*MyMemory, Start, End);
+            HandleNumericSearch<Hades::Memory::Types::UInt64>(*MyMemory, Start, 
+              End);
             break;
 
           case Detail::DataType_Float:
-            HandleNumericSearch<Detail::Float>(*MyMemory, Start, End);
+            HandleNumericSearch<Hades::Memory::Types::Float>(*MyMemory, Start, 
+              End);
             break;
 
           case Detail::DataType_Double:
-            HandleNumericSearch<Detail::Double>(*MyMemory, Start, End);
+            HandleNumericSearch<Hades::Memory::Types::Double>(*MyMemory, Start, 
+              End);
             break;
 
         case Detail::DataType_StrNarrow:
-          HandleStringSearch<Detail::CharNarrow>(*MyMemory, Start, End, 
-            std::cin, std::cout);
+          HandleStringSearch<Hades::Memory::Types::CharNarrow>(*MyMemory, 
+            Start, End, std::cin, std::cout);
           break;
 
         case Detail::DataType_StrWide:
-          HandleStringSearch<Detail::CharWide>(*MyMemory, Start, End, 
-            std::wcin, std::wcout);
+          HandleStringSearch<Hades::Memory::Types::CharWide>(*MyMemory, Start, 
+            End, std::wcin, std::wcout);
           break;
 
         case Detail::DataType_CharNarrow:
-          HandleCharSearch<Detail::CharNarrow>(*MyMemory, Start, End, std::cin, 
-            std::cout);
+          HandleCharSearch<Hades::Memory::Types::CharNarrow>(*MyMemory, Start, 
+            End, std::cin, std::cout);
           break;
 
         case Detail::DataType_CharWide:
-          HandleCharSearch<Detail::CharWide>(*MyMemory, Start, End, std::wcin, 
-            std::wcout);
+          HandleCharSearch<Hades::Memory::Types::CharWide>(*MyMemory, Start, 
+            End, std::wcin, std::wcout);
           break;
 
           case Detail::DataType_Pointer:
@@ -719,7 +739,8 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
               std::wcout << "Enter data:" << std::endl;
 
               // Get data
-              auto Data = ReadHexNumericDataFromUser<Detail::Pointer>();
+              auto Data = ReadHexNumericDataFromUser<Hades::Memory::Types::
+                Pointer>();
 
               // Find data
               Hades::Memory::Scanner MyScanner(*MyMemory, Start, End);
