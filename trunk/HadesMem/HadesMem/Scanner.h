@@ -96,7 +96,8 @@ namespace Hades
         BOOST_THROW_EXCEPTION(ScannerError() << 
           ErrorFunction("Scanner::Scanner") << 
           ErrorString("Start or end address is invalid."));
-      }}
+      }
+    }
 
     // Constructor
     Scanner::Scanner(MemoryMgr const& MyMemory, HMODULE Module) 
