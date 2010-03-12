@@ -202,6 +202,14 @@ namespace Hades
             ErrorString("Could not detect WoW64 status of target process.") << 
             ErrorCodeWin(LastError));
         }
+
+        if (IsWoW64)
+        {
+          BOOST_THROW_EXCEPTION(ProcessError() << 
+            ErrorFunction("Process::Open") << 
+            ErrorString("Cross-architecture process manipulation is "
+              "currently unsupported."));
+        }
       }
     }
 
