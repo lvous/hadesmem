@@ -277,8 +277,7 @@ namespace Hades
         // Pass first arg in through ECX if __thiscall is specified
         if (MyCallConv == CallConv_THISCALL)
         {
-          MyJitFunc.mov(AsmJit::eax, reinterpret_cast<DWORD_PTR>(Args[0]));
-          MyJitFunc.push(AsmJit::eax);
+          MyJitFunc.mov(AsmJit::ecx, reinterpret_cast<DWORD_PTR>(Args[0]));
         }
 
         // Set up args
