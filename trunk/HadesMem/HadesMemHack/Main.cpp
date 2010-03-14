@@ -607,6 +607,13 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
         // Handle 'Search memory' task
         else if (Task == Detail::Task_SearchMem)
         {
+          // Output
+          std::wcout << "Choose a memory searching mode:" << std::endl;
+          std::wcout << "1. Find first instance." << std::endl;
+          std::wcout << "2. Find all instances." << std::endl;
+
+          // Get memory searching mode
+          auto SearchMode = GetOption<int>(L"memory searching mode", 1, 2);
 
           // Output
           std::wcout << "Enter start address:" << std::endl;
@@ -664,74 +671,70 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
               auto Data = static_cast<Hades::Memory::Types::Byte>(New);
 
               // Find data
-              Hades::Memory::Scanner MyScanner(*MyMemory, Start, End);
-              PVOID Address = MyScanner.Find(Data);
-
-              // Output
-              std::wcout << "Address: " << Address << std::endl;
+              HandleGenericSearch(*MyMemory, Start, End, SearchMode, Data);
 
               break;
             }
 
           case Detail::DataType_Int16:
             HandleNumericSearch<Hades::Memory::Types::Int16>(*MyMemory, Start, 
-              End);
+              End, SearchMode);
             break;
 
           case Detail::DataType_UInt16:
             HandleNumericSearch<Hades::Memory::Types::UInt16>(*MyMemory, Start, 
-              End);
+              End, SearchMode);
             break;
 
           case Detail::DataType_Int32:
             HandleNumericSearch<Hades::Memory::Types::Int32>(*MyMemory, Start, 
-              End);
+              End, SearchMode);
             break;
 
           case Detail::DataType_UInt32:
             HandleNumericSearch<Hades::Memory::Types::UInt32>(*MyMemory, Start, 
-              End);
+              End, SearchMode);
             break;
 
           case Detail::DataType_Int64:
             HandleNumericSearch<Hades::Memory::Types::Int64>(*MyMemory, Start, 
-              End);
+              End, SearchMode);
             break;
 
           case Detail::DataType_UInt64:
             HandleNumericSearch<Hades::Memory::Types::UInt64>(*MyMemory, Start, 
-              End);
+              End, SearchMode);
             break;
 
           case Detail::DataType_Float:
             HandleNumericSearch<Hades::Memory::Types::Float>(*MyMemory, Start, 
-              End);
+              End, SearchMode);
             break;
 
           case Detail::DataType_Double:
             HandleNumericSearch<Hades::Memory::Types::Double>(*MyMemory, Start, 
-              End);
+              End, SearchMode);
             break;
 
-        case Detail::DataType_StrNarrow:
-          HandleStringSearch<Hades::Memory::Types::CharNarrow>(*MyMemory, 
-            Start, End, std::cin, std::cout);
-          break;
+          case Detail::DataType_StrNarrow:
+            HandleStringSearch<Hades::Memory::Types::CharNarrow>(*MyMemory, 
+              Start, End, std::cin, std::cout, SearchMode);
+            break;
 
-        case Detail::DataType_StrWide:
-          HandleStringSearch<Hades::Memory::Types::CharWide>(*MyMemory, Start, 
-            End, std::wcin, std::wcout);
-          break;
+          case Detail::DataType_StrWide:
+            HandleStringSearch<Hades::Memory::Types::CharWide>(*MyMemory, Start, 
+              End, std::wcin, std::wcout, SearchMode);
+            break;
 
-        case Detail::DataType_CharNarrow:
-          HandleCharSearch<Hades::Memory::Types::CharNarrow>(*MyMemory, Start, 
-            End, std::cin, std::cout);
-          break;
+          case Detail::DataType_CharNarrow:
+            HandleCharSearch<Hades::Memory::Types::CharNarrow>(*MyMemory, Start, 
+              End, std::cin, std::cout, SearchMode);
+            break;
 
-        case Detail::DataType_CharWide:
-          HandleCharSearch<Hades::Memory::Types::CharWide>(*MyMemory, Start, 
-            End, std::wcin, std::wcout);
-          break;
+          case Detail::DataType_CharWide:
+            HandleCharSearch<Hades::Memory::Types::CharWide>(*MyMemory, Start, 
+              End, std::wcin, std::wcout, SearchMode);
+            break;
 
           case Detail::DataType_Pointer:
             {
@@ -743,11 +746,7 @@ int wmain(int /*argc*/, wchar_t* /*argv*/[], wchar_t* /*envp*/[])
                 Pointer>();
 
               // Find data
-              Hades::Memory::Scanner MyScanner(*MyMemory, Start, End);
-              PVOID Address = MyScanner.Find(Data);
-
-              // Output
-              std::wcout << "Address: " << Address << std::endl;
+              HandleGenericSearch(*MyMemory, Start, End, SearchMode, Data);
 
               break;
             }

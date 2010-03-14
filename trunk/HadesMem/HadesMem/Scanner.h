@@ -56,6 +56,25 @@ namespace Hades
         boost::enable_if<std::is_pod<typename T::value_type>>::type* 
         Dummy2 = 0) const;
 
+      // Search memory (POD types)
+      template <typename T>
+      std::vector<PVOID> FindAll(T const& data, PVOID Start = 0, PVOID End = 0, 
+        typename boost::enable_if<std::is_pod<T>>::type* Dummy = 0) const;
+
+      // Search memory (string types)
+      template <typename T>
+      std::vector<PVOID> FindAll(T const& Data, PVOID Start = 0, PVOID End = 0, 
+        typename boost::enable_if<std::is_same<T, std::basic_string<typename T::
+        value_type>>>::type* Dummy = 0) const;
+
+      // Search memory (vector types)
+      template <typename T>
+      std::vector<PVOID> FindAll(T const& Data, std::wstring const& Mask = L"", 
+        PVOID Start = 0, PVOID End = 0, typename boost::enable_if<std::is_same<
+        T, std::vector<typename T::value_type>>>::type* Dummy1 = 0, typename 
+        boost::enable_if<std::is_pod<typename T::value_type>>::type* Dummy2 = 
+        0) const;
+
       // Load patterns from XML file
       inline void LoadFromXML(std::wstring const& Path);
 
@@ -147,29 +166,23 @@ namespace Hades
     PVOID Scanner::Find(T const& Data, PVOID Start, PVOID End, typename boost::
       enable_if<std::is_pod<T>>:: type* /*Dummy*/) const
     {
-      // Note: Assumes data is aligned to the size of T.
-      // Todo: Unaligned version, and aligned to size of pointer version.
+      // Put data in container
+      std::vector<T> Buffer;
+      Buffer.push_back(Data);
+      // Use vector specialization of FindAll
+      return Find(Buffer, L"", Start, End);
+    }
 
-      // Get real start and end addresses
-      PBYTE StartReal = Start || End ? static_cast<PBYTE>(Start) : m_Start;
-      PBYTE EndReal = Start || End ? static_cast<PBYTE>(End) : m_End;
-      if (EndReal < StartReal)
-      {
-        BOOST_THROW_EXCEPTION(ScannerError() << 
-          ErrorFunction("Scanner::Find") << 
-          ErrorString("Start or end address is invalid."));
-      }
-
-      // Calculate number of elements in address range
-      DWORD_PTR NumElems = (reinterpret_cast<DWORD_PTR>(EndReal) - 
-        reinterpret_cast<DWORD_PTR>(StartReal)) / sizeof(T);
-      // Read vector of Ts into cache
-      auto Buffer(m_Memory.Read<std::vector<T>>(StartReal, NumElems));
-      // Search cache for supplied value
-      auto Iter = std::find(Buffer.begin(), Buffer.end(), Data);
-      // If value was found return its address, or null otherwise
-      return Iter != Buffer.end() ? StartReal + std::distance(Buffer.begin(), 
-        Iter) * sizeof(T) : nullptr;
+    // Search memory (POD types)
+    template <typename T>
+    std::vector<PVOID> Scanner::FindAll(T const& Data, PVOID Start, PVOID End, 
+      typename boost::enable_if<std::is_pod<T>>::type* /*Dummy*/) const
+    {
+      // Put data in container
+      std::vector<T> Buffer;
+      Buffer.push_back(Data);
+      // Use vector specialization of FindAll
+      return FindAll(Buffer, L"", Start, End);
     }
 
     // Search memory (string types)
@@ -182,6 +195,17 @@ namespace Hades
       std::vector<T::value_type> MyBuffer(Data.begin(), Data.end());
       // Use vector specialization of find
       return Find(MyBuffer, L"", Start, End);
+    }
+
+    template <typename T>
+    std::vector<PVOID> Scanner::FindAll(T const& Data, PVOID Start, PVOID End, 
+      typename boost::enable_if<std::is_same<T, std::basic_string<typename T::
+      value_type>>>::type* /*Dummy*/) const
+    {
+      // Convert string to character buffer
+      std::vector<T::value_type> MyBuffer(Data.begin(), Data.end());
+      // Use vector specialization of find all
+      return FindAll(MyBuffer, L"", Start, End);
     }
 
     // Search memory (vector types)
@@ -208,8 +232,8 @@ namespace Hades
       }
 
       // Get real start and end addresses
-      PBYTE StartReal = Start || End ? static_cast<PBYTE>(Start) : m_Start;
-      PBYTE EndReal = Start || End ? static_cast<PBYTE>(End) : m_End;
+      PBYTE const StartReal = Start || End ? static_cast<PBYTE>(Start) : m_Start;
+      PBYTE const EndReal = Start || End ? static_cast<PBYTE>(End) : m_End;
       if (EndReal < StartReal)
       {
         BOOST_THROW_EXCEPTION(ScannerError() << 
@@ -233,30 +257,25 @@ namespace Hades
           // Check for invalid memory
           MEMORY_BASIC_INFORMATION MyMbi1 = { 0 };
           if (!VirtualQueryEx(m_Memory.GetProcessHandle(), Address, &MyMbi1, 
-            sizeof(MyMbi1)))
+            sizeof(MyMbi1)) || (MyMbi1.Protect & PAGE_GUARD) == PAGE_GUARD)
           {
             continue;
           }
 
           // Check for invalid memory
-          // Todo: If this fails, we should fall back to simply reading as 
-          // much as we can, rather than dropping the region entirely.
           MEMORY_BASIC_INFORMATION MyMbi2 = { 0 };
           if (!VirtualQueryEx(m_Memory.GetProcessHandle(), Address + PageSize, 
-            &MyMbi2, sizeof(MyMbi2)))
-          {
-            continue;
-          }
-
-          // Check for guard pages
-          if ((MyMbi1.Protect & PAGE_GUARD) == PAGE_GUARD || 
-            (MyMbi2.Protect & PAGE_GUARD) == PAGE_GUARD) 
+            &MyMbi2, sizeof(MyMbi2)) || (MyMbi2.Protect & PAGE_GUARD) == 
+            PAGE_GUARD)
           {
             continue;
           }
 
           // Read vector of Ts into cache
-          auto Buffer(m_Memory.Read<std::vector<BYTE>>(Address, PageSize + 
+          // Todo: If we're reading across a region boundary and we hit 
+          // inaccessible memory we should simply read all we can, rather 
+          // than skipping the block entirely.
+          auto const Buffer(m_Memory.Read<std::vector<BYTE>>(Address, PageSize + 
             Data.size() * sizeof(T::value_type)));
 
           // Loop over entire memory region
@@ -267,7 +286,8 @@ namespace Hades
             bool Found = true;
             for (std::vector<BYTE>::size_type i = 0; i != Data.size(); ++i)
             {
-              auto CurrentTemp = reinterpret_cast<T::value_type*>(Current);
+              auto CurrentTemp = reinterpret_cast<T::value_type const* const>(
+                Current);
               if ((Mask.empty() || Mask[i] == L'x') && 
                 (CurrentTemp[i] != Data[i]))
               {
@@ -279,22 +299,22 @@ namespace Hades
             // If the buffer matched return the current address
             if (Found)
             {
+              // If the buffer matched and the address is valid, return the 
+              // current address.
               // Todo: Do this check in the outer loop, and break if possible 
               // rather than continuing.
-              PVOID AddressReal = Address + (Current - &Buffer[0]);
-              if (AddressReal > EndReal || AddressReal < StartReal)
+              PVOID const AddressReal = Address + (Current - &Buffer[0]);
+              if (AddressReal >= StartReal && AddressReal <= EndReal)
               {
-                continue;
+                return AddressReal;
               }
-
-              return AddressReal;
             }
           }
         }
         // Ignore any memory errors, as there's nothing we can do about them
         // Todo: Detect memory read errors and drop back to a slower but 
-        // more reliable impl.
-        catch (MemoryError& /*e*/)
+        // more reliable implementation.
+        catch (MemoryError const& /*e*/)
         {
           continue;
         }
@@ -302,6 +322,126 @@ namespace Hades
 
       // Nothing found, return null
       return nullptr;
+    }
+
+    template <typename T>
+    std::vector<PVOID> Scanner::FindAll(T const& Data, 
+      std::wstring const& Mask, PVOID Start, PVOID End, typename boost::
+      enable_if<std::is_same<T, std::vector<typename T::value_type>>>::type* 
+      /*Dummy1*/, typename boost::enable_if<std::is_pod<typename T::
+      value_type>>::type* /*Dummy2*/) const
+    {
+      // Ensure there is data to process
+      if (Data.empty())
+      {
+        BOOST_THROW_EXCEPTION(MemoryError() << 
+          ErrorFunction("MemoryMgr::Find") << 
+          ErrorString("Mask does not match data."));
+      }
+
+      // Ensure mask matches data
+      if (!Mask.empty() && Mask.size() != Data.size())
+      {
+        BOOST_THROW_EXCEPTION(MemoryError() << 
+          ErrorFunction("MemoryMgr::Find") << 
+          ErrorString("Mask does not match data."));
+      }
+
+      // Get real start and end addresses
+      PBYTE const StartReal = Start || End ? static_cast<PBYTE>(Start) : 
+        m_Start;
+      PBYTE const EndReal = Start || End ? static_cast<PBYTE>(End) : m_End;
+      if (EndReal < StartReal)
+      {
+        BOOST_THROW_EXCEPTION(ScannerError() << 
+          ErrorFunction("Scanner::Find") << 
+          ErrorString("Start or end address is invalid."));
+      }
+      
+      // Addresses of matches
+      std::vector<PVOID> Matches;
+
+      // Get system information
+      SYSTEM_INFO MySystemInfo = { 0 };
+      GetSystemInfo(&MySystemInfo);
+      DWORD const PageSize = MySystemInfo.dwPageSize;
+      PVOID const MinAddr = MySystemInfo.lpMinimumApplicationAddress;
+      PVOID const MaxAddr = MySystemInfo.lpMaximumApplicationAddress;
+
+      // Loop over all memory pages
+      for (auto Address = static_cast<PBYTE>(MinAddr); Address < MaxAddr; 
+        Address += PageSize)
+      {
+        try
+        {
+          // Check for invalid memory
+          MEMORY_BASIC_INFORMATION MyMbi1 = { 0 };
+          if (!VirtualQueryEx(m_Memory.GetProcessHandle(), Address, &MyMbi1, 
+            sizeof(MyMbi1)) || (MyMbi1.Protect & PAGE_GUARD) == PAGE_GUARD)
+          {
+            continue;
+          }
+
+          // Check for invalid memory
+          MEMORY_BASIC_INFORMATION MyMbi2 = { 0 };
+          if (!VirtualQueryEx(m_Memory.GetProcessHandle(), Address + PageSize, 
+            &MyMbi2, sizeof(MyMbi2)) || (MyMbi2.Protect & PAGE_GUARD) == 
+            PAGE_GUARD)
+          {
+            continue;
+          }
+
+          // Read vector of Ts into cache
+          // Todo: If we're reading across a region boundary and we hit 
+          // inaccessible memory we should simply read all we can, rather 
+          // than skipping the block entirely.
+          auto const Buffer(m_Memory.Read<std::vector<BYTE>>(Address, PageSize + 
+            Data.size() * sizeof(T::value_type)));
+
+          // Loop over entire memory region
+          for (auto Current = &Buffer[0]; Current != &Buffer[0] + 
+            Buffer.size(); ++Current) 
+          {
+            // Check if current address matches buffer
+            bool Found = true;
+            for (std::vector<BYTE>::size_type i = 0; i != Data.size(); ++i)
+            {
+              auto CurrentTemp = reinterpret_cast<T::value_type const* const>(
+                Current);
+              if ((Mask.empty() || Mask[i] == L'x') && 
+                (CurrentTemp[i] != Data[i]))
+              {
+                Found = false;
+                break;
+              }
+            }
+
+            // If the buffer matched return the current address
+            if (Found)
+            {
+              // If the buffer matched and the address is valid, return the 
+              // current address.
+              // Todo: Do this check in the outer loop, and break if possible 
+              // rather than continuing.
+              PVOID const AddressReal = Address + (Current - &Buffer[0]);
+              if (AddressReal >= StartReal && AddressReal <= EndReal)
+              {
+                Matches.push_back(AddressReal);
+              }
+            }
+          }
+        }
+        // Ignore any memory errors, as there's nothing we can do about them
+        // Todo: Detect memory read errors and drop back to a slower but 
+        // more reliable implementation.
+        catch (MemoryError const& /*e*/)
+        {
+          continue;
+        }
+      }
+
+      // Return matches
+      return Matches;
     }
 
     // Load patterns from XML file

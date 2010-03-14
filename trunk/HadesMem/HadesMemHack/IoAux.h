@@ -153,10 +153,43 @@ void HandleNumericReadOrWrite(Hades::Memory::MemoryMgr const& MyMemory,
   }
 }
 
-// Handle 'MemoryRead' or 'MemoryWrite' task for numeric types
+// Handle 'Search memory' task for generic types
+template <typename T>
+void HandleGenericSearch(Hades::Memory::MemoryMgr const& MyMemory, 
+  PVOID Start, PVOID End, int SearchMode, T Data)
+{
+  // Find data
+  Hades::Memory::Scanner MyScanner(MyMemory, Start, End);
+  if (SearchMode == 1)
+  {
+    // Find data
+    PVOID Address = MyScanner.Find(Data);
+
+    // Output
+    std::wcout << "Address: " << Address << std::endl;
+  }
+  else if (SearchMode == 2)
+  {
+    // Find data
+    auto Addresses(MyScanner.FindAll(Data));
+
+    // Output
+    std::for_each(Addresses.begin(), Addresses.end(), 
+      [] (PVOID Address)
+    {
+      std::wcout << "Address: " << Address << std::endl;
+    });
+  }
+  else
+  {
+    assert(!"Unsupported search mode.");
+  }
+}
+
+// Handle 'Search memory' task for numeric types
 template <typename T>
 void HandleNumericSearch(Hades::Memory::MemoryMgr const& MyMemory, 
-  PVOID Start, PVOID End)
+  PVOID Start, PVOID End, int SearchMode)
 {
   // Output
   std::wcout << "Enter data:" << std::endl;
@@ -165,18 +198,14 @@ void HandleNumericSearch(Hades::Memory::MemoryMgr const& MyMemory,
   auto Data = ReadNumericDataFromUser<T>();
 
   // Find data
-  Hades::Memory::Scanner MyScanner(MyMemory, Start, End);
-  PVOID Address = MyScanner.Find(Data);
-
-  // Output
-  std::wcout << "Address: " << Address << std::endl;
+  HandleGenericSearch(MyMemory, Start, End, SearchMode, Data);
 }
 
 // Handle 'Search memory' task for string types
 template <typename CharT>
 void HandleStringSearch(Hades::Memory::MemoryMgr const& MyMemory, 
   PVOID Start, PVOID End, std::basic_istream<CharT>& In, 
-  std::basic_ostream<CharT>& Out)
+  std::basic_ostream<CharT>& Out, int SearchMode)
 {
   // Output
   std::wcout << "Enter data:" << std::endl;
@@ -185,18 +214,14 @@ void HandleStringSearch(Hades::Memory::MemoryMgr const& MyMemory,
   auto Data = ReadStringDataFromUser<CharT>(In, Out);
 
   // Find data
-  Hades::Memory::Scanner MyScanner(MyMemory, Start, End);
-  PVOID Address = MyScanner.Find(Data);
-
-  // Output
-  std::wcout << "Address: " << Address << std::endl;
+  HandleGenericSearch(MyMemory, Start, End, SearchMode, Data);
 }
 
 // Handle 'Search memory' task for char types
 template <typename T, typename CharT>
 void HandleCharSearch(Hades::Memory::MemoryMgr const& MyMemory, 
   PVOID Start, PVOID End, std::basic_istream<CharT>& In, 
-  std::basic_ostream<CharT>& Out)
+  std::basic_ostream<CharT>& Out, int SearchMode)
 {
   // Output
   std::wcout << "Enter data:" << std::endl;
@@ -205,11 +230,7 @@ void HandleCharSearch(Hades::Memory::MemoryMgr const& MyMemory,
   auto Data = ReadCharDataFromUser<CharT>(In, Out);
 
   // Find data
-  Hades::Memory::Scanner MyScanner(MyMemory, Start, End);
-  PVOID Address = MyScanner.Find(Data);
-
-  // Output
-  std::wcout << "Address: " << Address << std::endl;
+  HandleGenericSearch(MyMemory, Start, End, SearchMode, Data);
 }
 
 // Get option ID
@@ -222,9 +243,9 @@ inline int GetOption(std::wstring const& Option, int Min, int Max)
   {
     std::wcout << L"Invalid " + Option + L"." << std::endl;
     std::wcin.clear();
-    std::wcin.ignore((std::numeric_limits<std::streamsize>::max)(), '\n');
+    std::wcin.ignore((std::numeric_limits<std::streamsize>::max)(), L'\n');
   }
-  std::wcin.ignore((std::numeric_limits<std::streamsize>::max)(), '\n');
+  std::wcin.ignore((std::numeric_limits<std::streamsize>::max)(), L'\n');
 
   // Return option ID
   return static_cast<T>(Value);
