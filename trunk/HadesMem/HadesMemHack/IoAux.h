@@ -1,12 +1,12 @@
 #pragma once
 
-// HadesMem
-#include "HadesMem/Memory.h"
-
 // C++ Standard Library
 #include <string>
 #include <memory>
 #include <iostream>
+
+// HadesMem
+#include "HadesMem/Memory.h"
 
 // Read string from user
 template <typename CharT>
@@ -82,160 +82,9 @@ T ReadHexNumericDataFromUser()
   return Data;
 }
 
-// Handle 'MemoryRead' or 'MemoryWrite' task for string types
-template <typename CharT>
-void HandleStringReadOrWrite(Hades::Memory::MemoryMgr const& MyMemory, 
-  PVOID Address, int Task, std::basic_istream<CharT>& In, 
-  std::basic_ostream<CharT>& Out)
-{
-  // Read data
-  auto Current = MyMemory.Read<std::basic_string<CharT>>(Address);
-  Out << "Value: " << Current << std::endl;
-
-  // Handle 'Write Memory' task
-  if (Task == 2)
-  {
-    // Output
-    Out << "Enter new value:" << std::endl;
-
-    // Get data
-    auto New = ReadStringDataFromUser<CharT>(In, Out);
-
-    // Write data
-    MyMemory.Write(Address, New);
-  }
-}
-
-// Handle 'MemoryRead' or 'MemoryWrite' task for char types
-template <typename T, typename CharT>
-void HandleCharReadOrWrite(Hades::Memory::MemoryMgr const& MyMemory, 
-  PVOID Address, int Task, std::basic_istream<CharT>& In, 
-  std::basic_ostream<CharT>& Out)
-{
-  // Read data
-  auto Current = MyMemory.Read<T>(Address);
-  Out << "Value: " << Current << std::endl;
-
-  // Handle 'Write Memory' task
-  if (Task == 2)
-  {
-    // Output
-    Out << "Enter new value:" << std::endl;
-
-    // Get data
-    auto New = ReadCharDataFromUser<T, CharT>(In, Out);
-
-    // Write data
-    MyMemory.Write(Address, New);
-  }
-}
-
-// Handle 'MemoryRead' or 'MemoryWrite' task for numeric types
-template <typename T>
-void HandleNumericReadOrWrite(Hades::Memory::MemoryMgr const& MyMemory, 
-  PVOID Address, int Task)
-{
-  // Read data
-  auto Current = MyMemory.Read<T>(Address);
-  std::wcout << "Value: " << Current << std::endl;
-
-  // Handle 'Write Memory' task
-  if (Task == 2)
-  {
-    // Output
-    std::wcout << "Enter new value:" << std::endl;
-
-    // Get data
-    auto New = ReadNumericDataFromUser<T>();
-
-    // Write data
-    MyMemory.Write(Address, New);
-  }
-}
-
-// Handle 'Search memory' task for generic types
-template <typename T>
-void HandleGenericSearch(Hades::Memory::MemoryMgr const& MyMemory, 
-  PVOID Start, PVOID End, int SearchMode, T Data)
-{
-  // Find data
-  Hades::Memory::Scanner MyScanner(MyMemory, Start, End);
-  if (SearchMode == 1)
-  {
-    // Find data
-    PVOID Address = MyScanner.Find(Data);
-
-    // Output
-    std::wcout << "Address: " << Address << std::endl;
-  }
-  else if (SearchMode == 2)
-  {
-    // Find data
-    auto Addresses(MyScanner.FindAll(Data));
-
-    // Output
-    std::for_each(Addresses.begin(), Addresses.end(), 
-      [] (PVOID Address)
-    {
-      std::wcout << "Address: " << Address << std::endl;
-    });
-  }
-  else
-  {
-    assert(!"Unsupported search mode.");
-  }
-}
-
-// Handle 'Search memory' task for numeric types
-template <typename T>
-void HandleNumericSearch(Hades::Memory::MemoryMgr const& MyMemory, 
-  PVOID Start, PVOID End, int SearchMode)
-{
-  // Output
-  std::wcout << "Enter data:" << std::endl;
-
-  // Get data
-  auto Data = ReadNumericDataFromUser<T>();
-
-  // Find data
-  HandleGenericSearch(MyMemory, Start, End, SearchMode, Data);
-}
-
-// Handle 'Search memory' task for string types
-template <typename CharT>
-void HandleStringSearch(Hades::Memory::MemoryMgr const& MyMemory, 
-  PVOID Start, PVOID End, std::basic_istream<CharT>& In, 
-  std::basic_ostream<CharT>& Out, int SearchMode)
-{
-  // Output
-  std::wcout << "Enter data:" << std::endl;
-
-  // Get data
-  auto Data = ReadStringDataFromUser<CharT>(In, Out);
-
-  // Find data
-  HandleGenericSearch(MyMemory, Start, End, SearchMode, Data);
-}
-
-// Handle 'Search memory' task for char types
-template <typename T, typename CharT>
-void HandleCharSearch(Hades::Memory::MemoryMgr const& MyMemory, 
-  PVOID Start, PVOID End, std::basic_istream<CharT>& In, 
-  std::basic_ostream<CharT>& Out, int SearchMode)
-{
-  // Output
-  std::wcout << "Enter data:" << std::endl;
-
-  // Get data
-  auto Data = ReadCharDataFromUser<CharT>(In, Out);
-
-  // Find data
-  HandleGenericSearch(MyMemory, Start, End, SearchMode, Data);
-}
-
 // Get option ID
 template <typename T>
-inline int GetOption(std::wstring const& Option, int Min, int Max)
+inline T GetOption(std::wstring const& Option, int Min, int Max)
 {
   // Get option ID
   int Value = 0;
@@ -251,62 +100,22 @@ inline int GetOption(std::wstring const& Option, int Min, int Max)
   return static_cast<T>(Value);
 }
 
-// Create Memory object using process name from user
-inline void CreateMemoryFromProcName(std::shared_ptr<Hades::Memory::MemoryMgr>& 
-  MyMemory)
+// Print data type list
+inline void PrintDataTypeList()
 {
-  // Output
-  std::wcout << "Please enter the target process name." << std::endl;
-
-  // Get process name
-  std::wstring ProcessName;
-  while (!std::getline(std::wcin, ProcessName) || ProcessName.empty())
-  {
-    std::wcout << "Invalid process name." << std::endl;
-    std::wcin.clear();
-  }
-
-  // Create memory manager
-  MyMemory.reset(new Hades::Memory::MemoryMgr(ProcessName));
-}
-
-// Create Memory object using process ID from user
-inline void CreateMemoryFromProcID(std::shared_ptr<Hades::Memory::MemoryMgr>& 
-  MyMemory)
-{
-  // Output
-  std::wcout << "Please enter the target process ID." << std::endl;
-
-  // Get process ID
-  DWORD ProcessID;
-  while (!(std::wcin >> ProcessID) || !ProcessID)
-  {
-    std::wcout << "Invalid process ID." << std::endl;
-    std::wcin.clear();
-    std::wcin.ignore((std::numeric_limits<std::streamsize>::max)(), 
-      '\n');
-  }
-  std::wcin.ignore((std::numeric_limits<std::streamsize>::max)(), '\n');
-
-  // Create memory manager
-  MyMemory.reset(new Hades::Memory::MemoryMgr(ProcessID));
-}
-
-// Create Memory object using window name from user
-inline void CreateMemoryFromWindowName(std::shared_ptr<
-  Hades::Memory::MemoryMgr>& MyMemory)
-{
-  // Output
-  std::wcout << "Please enter the target window name." << std::endl;
-
-  // Get window name
-  std::wstring WindowName;
-  while (!std::getline(std::wcin, WindowName) || WindowName.empty())
-  {
-    std::wcout << "Invalid window name." << std::endl;
-    std::wcin.clear();
-  }
-
-  // Create memory manager
-  MyMemory.reset(new Hades::Memory::MemoryMgr(WindowName, nullptr));
+  std::wcout << "Choose a data type:" << std::endl;
+  std::wcout << "1. Byte." << std::endl;
+  std::wcout << "2. Int16." << std::endl;
+  std::wcout << "3. UInt16." << std::endl;
+  std::wcout << "4. Int32." << std::endl;
+  std::wcout << "5. UInt32." << std::endl;
+  std::wcout << "6. Int64." << std::endl;
+  std::wcout << "7. UInt64." << std::endl;
+  std::wcout << "8. Float." << std::endl;
+  std::wcout << "9. Double." << std::endl;
+  std::wcout << "10. String (Narrow)." << std::endl;
+  std::wcout << "11. String (Wide)." << std::endl;
+  std::wcout << "12. Char (Narrow)." << std::endl;
+  std::wcout << "13. Char (Wide)." << std::endl;
+  std::wcout << "14. Pointer." << std::endl;
 }
