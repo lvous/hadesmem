@@ -350,10 +350,10 @@ namespace Hades
         auto const ModIter = std::find_if(ModuleList.begin(), ModuleList.end(), 
           [&ModuleNameW] (std::shared_ptr<Module> Current)
         {
-          return I18n::ToLower<wchar_t>(Current->GetName()) == 
-            I18n::ToLower<wchar_t>(ModuleNameW) || 
-            I18n::ToLower<wchar_t>(Current->GetPath()) == 
-            I18n::ToLower<wchar_t>(ModuleNameW);
+          return Util::ToLower<wchar_t>(Current->GetName()) == 
+            Util::ToLower<wchar_t>(ModuleNameW) || 
+            Util::ToLower<wchar_t>(Current->GetPath()) == 
+            Util::ToLower<wchar_t>(ModuleNameW);
         });
 
         // Module base address and name
@@ -366,9 +366,7 @@ namespace Hades
           // Inject dependent DLL
           std::wcout << "Injecting dependent DLL." << std::endl;
           Injector MyInjector(m_Memory);
-          DWORD ReturnValue = 0;
-          CurModBase = MyInjector.InjectDll(ModuleNameW, "", ReturnValue, 
-            false);
+          CurModBase = MyInjector.InjectDll(ModuleNameW, false);
           CurModName = ModuleNameW;
         }
         else
@@ -413,8 +411,8 @@ namespace Hades
       std::wstring const& ModulePath, LPCSTR Function, bool ByOrdinal)
     {
       // Load module as data so we can read the EAT locally
-      EnsureFreeLibrary const LocalMod(LoadLibraryExW(ModulePath.c_str(), NULL, 
-        DONT_RESOLVE_DLL_REFERENCES));
+      Util::EnsureFreeLibrary const LocalMod(LoadLibraryExW(ModulePath.c_str(), 
+        NULL, DONT_RESOLVE_DLL_REFERENCES));
       if (!LocalMod)
       {
         DWORD LastError = GetLastError();

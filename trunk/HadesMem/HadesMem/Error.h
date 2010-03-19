@@ -15,18 +15,15 @@
 
 namespace Hades
 {
-  namespace Memory
-  {
-    // Error info (function name)
-    typedef boost::error_info<struct TagErrorFunc, std::string> ErrorFunction;
-    // Error info (error string)
-    typedef boost::error_info<struct TagErrorString, std::string> ErrorString;
-    // Error info (Windows error code)
-    typedef boost::error_info<struct TagErrorCodeWin, DWORD> ErrorCodeWin;
+  // Error info (function name)
+  typedef boost::error_info<struct TagErrorFunc, std::string> ErrorFunction;
+  // Error info (error string)
+  typedef boost::error_info<struct TagErrorString, std::string> ErrorString;
+  // Error info (Windows error code)
+  typedef boost::error_info<struct TagErrorCodeWin, DWORD> ErrorCodeWin;
 
-    // Base exception class
-    class HadesMemError : public virtual std::exception, 
-      public virtual boost::exception
-    { };
-  }
+  // Base exception class
+  class HadesMemError : public virtual std::exception, 
+    public virtual boost::exception
+  { };
 }

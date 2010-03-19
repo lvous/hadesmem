@@ -5,7 +5,7 @@
 #include <memory>
 #include <iostream>
 
-// HadesMem
+// Hades Memory
 #include "HadesMem/Memory.h"
 
 // Read string from user

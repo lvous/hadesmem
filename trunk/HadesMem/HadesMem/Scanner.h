@@ -14,10 +14,10 @@
 #include <RapidXML/rapidxml.hpp>
 
 // HadesMem
-#include "I18n.h"
 #include "Module.h"
 #include "Memory.h"
 #include "Region.h"
+#include "I18n.h"
 
 namespace Hades
 {
@@ -232,7 +232,8 @@ namespace Hades
       }
 
       // Get real start and end addresses
-      PBYTE const StartReal = Start || End ? static_cast<PBYTE>(Start) : m_Start;
+      PBYTE const StartReal = Start || End ? static_cast<PBYTE>(Start) : 
+        m_Start;
       PBYTE const EndReal = Start || End ? static_cast<PBYTE>(End) : m_End;
       if (EndReal < StartReal)
       {
@@ -275,8 +276,8 @@ namespace Hades
           // Todo: If we're reading across a region boundary and we hit 
           // inaccessible memory we should simply read all we can, rather 
           // than skipping the block entirely.
-          auto const Buffer(m_Memory.Read<std::vector<BYTE>>(Address, PageSize + 
-            Data.size() * sizeof(T::value_type)));
+          auto const Buffer(m_Memory.Read<std::vector<BYTE>>(Address, 
+            PageSize + Data.size() * sizeof(T::value_type)));
 
           // Loop over entire memory region
           for (auto Current = &Buffer[0]; Current != &Buffer[0] + 
@@ -395,8 +396,8 @@ namespace Hades
           // Todo: If we're reading across a region boundary and we hit 
           // inaccessible memory we should simply read all we can, rather 
           // than skipping the block entirely.
-          auto const Buffer(m_Memory.Read<std::vector<BYTE>>(Address, PageSize + 
-            Data.size() * sizeof(T::value_type)));
+          auto const Buffer(m_Memory.Read<std::vector<BYTE>>(Address, 
+            PageSize + Data.size() * sizeof(T::value_type)));
 
           // Loop over entire memory region
           for (auto Current = &Buffer[0]; Current != &Buffer[0] + 

@@ -75,8 +75,8 @@ namespace Hades
       MemoryMgr const& MyMemory) 
     {
       // Grab a new snapshot of the process
-      EnsureCloseHandle const Snap(CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, 
-        MyMemory.GetProcessID()));
+      Util::EnsureCloseHandle const Snap(CreateToolhelp32Snapshot(
+        TH32CS_SNAPMODULE, MyMemory.GetProcessID()));
       if (Snap == INVALID_HANDLE_VALUE)
       {
         DWORD LastError = GetLastError();
@@ -89,7 +89,7 @@ namespace Hades
       // Container to hold module list
       std::vector<std::shared_ptr<Module>> ModList;
 
-      // Search for process
+      // Get all modules
       MODULEENTRY32 ModEntry = { sizeof(ModEntry) };
       for (BOOL MoreMods = Module32First(Snap, &ModEntry); MoreMods; 
         MoreMods = Module32Next(Snap, &ModEntry)) 
@@ -122,8 +122,8 @@ namespace Hades
       m_Found(false) 
     {
       // Grab a new snapshot of the process
-      EnsureCloseHandle const Snap(CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, 
-        MyMemory.GetProcessID()));
+      Util::EnsureCloseHandle const Snap(CreateToolhelp32Snapshot(
+        TH32CS_SNAPMODULE, MyMemory.GetProcessID()));
       if (Snap == INVALID_HANDLE_VALUE)
       {
         DWORD LastError = GetLastError();
@@ -133,14 +133,18 @@ namespace Hades
           ErrorCodeWin(LastError));
       }
 
+      // Convert module name to lowercase
+      std::wstring const ModuleNameLower(Util::ToLower<wchar_t>(ModuleName));
+
       // Search for process
       MODULEENTRY32 ModEntry = { sizeof(ModEntry) };
       bool Found = false;
       for (BOOL MoreMods = Module32First(Snap, &ModEntry); MoreMods; 
         MoreMods = Module32Next(Snap, &ModEntry)) 
       {
-        Found = (I18n::ToLower<wchar_t>(ModEntry.szModule) == 
-          I18n::ToLower<wchar_t>(ModuleName));
+        Found = (Util::ToLower<wchar_t>(ModEntry.szModule) == 
+          ModuleNameLower) || (Util::ToLower<wchar_t>(ModEntry.szExePath) == 
+          ModuleNameLower);
         if (Found)
         {
           break;
@@ -170,8 +174,8 @@ namespace Hades
       m_Found(false)
     {
       // Grab a new snapshot of the process
-      EnsureCloseHandle const Snap(CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, 
-        MyMemory.GetProcessID()));
+      Util::EnsureCloseHandle const Snap(CreateToolhelp32Snapshot(
+        TH32CS_SNAPMODULE, MyMemory.GetProcessID()));
       if (Snap == INVALID_HANDLE_VALUE)
       {
         DWORD LastError = GetLastError();

@@ -57,7 +57,7 @@ namespace Hades
       };
 
       // Call remote function
-      DWORD Call(PVOID Address, std::vector<PVOID> const& Args, 
+      inline DWORD Call(PVOID Address, std::vector<PVOID> const& Args, 
         CallConv MyCallConv = CallConv_Default) const;
 
       // Read memory (POD types)
@@ -321,20 +321,20 @@ namespace Hades
       }
 
       // Get stub size
-      DWORD_PTR StubSize = MyJitFunc.codeSize();
+      DWORD_PTR const StubSize = MyJitFunc.codeSize();
 
       // Allocate memory for stub buffer
-      AllocAndFree EpCallerMem(*this, StubSize);
+      AllocAndFree const StubMemRemote(*this, StubSize);
       // Copy loader stub to stub buffer
-      std::vector<BYTE> EpCallerBuf(reinterpret_cast<PBYTE>(LoaderStub.Get()), 
+      std::vector<BYTE> const EpCallerBuf(reinterpret_cast<PBYTE>(LoaderStub.Get()), 
         reinterpret_cast<PBYTE>(LoaderStub.Get()) + StubSize);
       // Write stub buffer to process
-      Write(EpCallerMem.GetAddress(), EpCallerBuf);
+      Write(StubMemRemote.GetAddress(), EpCallerBuf);
 
       // Call stub via creating a remote thread in the target.
-      EnsureCloseHandle MyThread = CreateRemoteThread(m_Process.GetHandle(), 
-        nullptr, 0, reinterpret_cast<LPTHREAD_START_ROUTINE>(Address), 
-        EpCallerMem.GetAddress(), 0, nullptr);
+      Util::EnsureCloseHandle const MyThread = CreateRemoteThread(m_Process.
+        GetHandle(), nullptr, 0, reinterpret_cast<LPTHREAD_START_ROUTINE>(
+        StubMemRemote.GetAddress()), nullptr, 0, nullptr);
       if (!MyThread)
       {
         DWORD LastError = GetLastError();

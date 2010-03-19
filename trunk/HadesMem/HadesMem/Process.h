@@ -14,8 +14,8 @@
 #pragma warning(pop)
 
 // HadesMem
-#include "I18n.h"
 #include "Error.h"
+#include "I18n.h"
 #include "EnsureCleanup.h"
 
 namespace Hades
@@ -54,7 +54,7 @@ namespace Hades
       inline void GetSeDebugPrivilege();
 
       // Process handle
-      EnsureCloseHandle m_Handle;
+      Util::EnsureCloseHandle m_Handle;
 
       // Process ID
       DWORD m_ID;
@@ -63,13 +63,13 @@ namespace Hades
     // Open process from process id
     Process::Process(DWORD ProcID) 
       : m_Handle(nullptr), 
-      m_ID(0) 
+      m_ID(ProcID) 
     {
       // Get SeDebugPrivilege
       GetSeDebugPrivilege();
 
       // Open process
-      Open(ProcID);
+      Open(m_ID);
     }
 
     // Open process from process name
@@ -81,8 +81,8 @@ namespace Hades
       GetSeDebugPrivilege();
 
       // Grab a new snapshot of the process
-      EnsureCloseHandle const Snap(CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 
-        0));
+      Util::EnsureCloseHandle const Snap(CreateToolhelp32Snapshot(
+        TH32CS_SNAPPROCESS, 0));
       if (Snap == INVALID_HANDLE_VALUE)
       {
         DWORD LastError = GetLastError();
@@ -98,8 +98,8 @@ namespace Hades
       for (BOOL MoreMods = Process32First(Snap, &ProcEntry); MoreMods; 
         MoreMods = Process32Next(Snap, &ProcEntry)) 
       {
-        Found = (I18n::ToLower<wchar_t>(ProcEntry.szExeFile) == 
-          I18n::ToLower<wchar_t>(ProcName));
+        Found = (Util::ToLower<wchar_t>(ProcEntry.szExeFile) == 
+          Util::ToLower<wchar_t>(ProcName));
         if (Found)
         {
           break;
@@ -228,7 +228,7 @@ namespace Hades
           ErrorString("Could not open process token.") << 
           ErrorCodeWin(LastError));
       }
-      EnsureCloseHandle const Token(TempToken);
+      Util::EnsureCloseHandle const Token(TempToken);
 
       // Get the LUID for SE_DEBUG_NAME 
       LUID Luid = { 0 }; // Locally unique identifier

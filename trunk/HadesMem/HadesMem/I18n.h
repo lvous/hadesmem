@@ -49,7 +49,7 @@ inline std::wstring boost::lexical_cast<std::wstring, std::string>(
 
 namespace Hades
 {
-  namespace I18n
+  namespace Util
   {
     // Convert a wide string to a narrow string
     inline std::string ConvertStr(std::wstring const& Source)

@@ -710,11 +710,22 @@ inline void HandleInjectDLL(Detail::Task /*Task*/,
 
   // Create DLL injector
   Hades::Memory::Injector MyInjector(*MyMemory);
-  DWORD ReturnValue = 0;
-  HMODULE ModBase = MyInjector.InjectDll(LibPath, Export, ReturnValue);
+
+  // Inject DLL
+  HMODULE ModBase = MyInjector.InjectDll(LibPath);
 
   // Output
   std::wcout << "Module Base: " << ModBase << "." << std::endl;
+
+  // If export has been specified
+  if (!Export.empty())
+  {
+    // Call remote export
+    DWORD ExportRet = MyInjector.CallExport(LibPath, ModBase, Export);
+
+    // Debug output
+    std::wcout << "Export Returned: " << ExportRet << "." << std::endl;
+  }
 }
 
 // Handle 'Manually map DLL' task
