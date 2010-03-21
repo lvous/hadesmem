@@ -1,5 +1,7 @@
 /*
 This file is part of HadesMem.
+Copyright © 2010 Cypherjb (aka Chazwazza, aka Cypher). 
+<http://www.cypherjb.com/> <cypher.jb@gmail.com>
 
 HadesMem is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
