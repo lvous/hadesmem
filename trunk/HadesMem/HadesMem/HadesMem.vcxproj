@@ -34,7 +34,6 @@
     <ClInclude Include="Process.h" />
     <ClInclude Include="Region.h" />
     <ClInclude Include="Scripting.h" />
-    <ClInclude Include="Toolhelper.h" />
     <ClInclude Include="Types.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

@@ -41,9 +41,6 @@
     <ClInclude Include="Process.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Toolhelper.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Injector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
