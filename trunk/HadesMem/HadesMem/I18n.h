@@ -110,8 +110,11 @@ namespace Hades
       auto const& MyCType(std::use_facet<std::ctype<CharT>>(Loc));
 
       std::basic_string<CharT> Dest(Str);
-      std::transform(Dest.begin(), Dest.end(), Dest.begin(), std::bind(
-        &std::ctype<CharT>::tolower, &MyCType, std::placeholders::_1));
+      std::transform(Dest.begin(), Dest.end(), Dest.begin(), 
+        [&MyCType] (CharT x) 
+      {
+        return MyCType.tolower(x);
+      });
 
       return Dest;
     }
@@ -124,8 +127,11 @@ namespace Hades
       auto const& MyCType(std::use_facet<std::ctype<CharT>>(Loc));
 
       std::basic_string<CharT> Dest(Str);
-      std::transform(Dest.begin(), Dest.end(), Dest.begin(), std::bind(
-        &std::ctype<CharT>::toupper, &MyCType, std::placeholders::_1));
+      std::transform(Dest.begin(), Dest.end(), Dest.begin(), 
+        [&MyCType] (CharT x) 
+      {
+        return MyCType.toupper(x);
+      });
 
       return Dest;
     }
