@@ -30,38 +30,71 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include <boost/thread.hpp>
 #pragma warning(pop)
 
+// Hades
+#include "HadesMem/IatHook.h"
+
+std::shared_ptr<Hades::Memory::MemoryMgr> MyMemory;
+std::shared_ptr<Hades::Memory::IatHook> GetCurProcIdHook;
+
+DWORD WINAPI GetCurrentProcessId_Hook()
+{
+  MessageBox(NULL, L"Hook called!", L"GetCurrentProcessId", MB_OK);
+  return GetCurProcIdHook->GetOrig<DWORD (WINAPI*)()>()();
+}
+
 extern "C" __declspec(dllexport) DWORD __stdcall Initialize(HMODULE Module)
 {
-  // Break to debugger if present
-  if (IsDebuggerPresent())
-  {
-    DebugBreak();
-  }
-
-  // Test IAT
-  MessageBox(NULL, L"Initialize called.", L"HadesMemHackDll", MB_OK);
-
-  // Test parameter
-  if (!Module)
-  {
-    MessageBox(NULL, L"Invalid parameter.", L"HadesMemHackDll", MB_OK);
-  }
-
-  // Test TLS callbacks
-  boost::thread_specific_ptr<std::wstring> MyString;
-  if (!MyString.get())
-  {
-    MyString.reset(new std::wstring());
-  }
-  *MyString = L"asdf";
-
-  // Test C++ EH
   try
   {
-    throw std::runtime_error("Testing C++ EH.");
+    // Break to debugger if present
+    if (IsDebuggerPresent())
+    {
+      DebugBreak();
+    }
+
+    // Test IAT
+    MessageBox(NULL, L"Initialize called.", L"HadesMemHackDll", MB_OK);
+
+    // Test parameter
+    if (!Module)
+    {
+      MessageBox(NULL, L"Invalid parameter.", L"HadesMemHackDll", MB_OK);
+    }
+
+    // Test TLS callbacks
+    boost::thread_specific_ptr<std::wstring> MyString;
+    if (!MyString.get())
+    {
+      MyString.reset(new std::wstring());
+    }
+    *MyString = L"asdf";
+
+    // Test C++ EH
+    try
+    {
+      throw std::runtime_error("Testing C++ EH.");
+    }
+    catch (std::exception const& e)
+    {
+      MessageBoxA(NULL, e.what(), "HadesMemHackDll", MB_OK);
+    }
+
+    // Test IAT hook class
+    MyMemory.reset(new Hades::Memory::MemoryMgr(GetCurrentProcessId()));
+    GetCurProcIdHook.reset(new Hades::Memory::IatHook(*MyMemory, 
+      L"kernel32.dll", L"GetCurrentProcessId", &GetCurrentProcessId_Hook, 
+      Module));
+    GetCurrentProcessId();
+  }
+  catch (boost::exception const& e)
+  {
+    // Dump error information
+    MessageBoxA(NULL, boost::diagnostic_information(e).c_str(), 
+      "HadesMemHackDll", MB_OK);
   }
   catch (std::exception const& e)
   {
+    // Dump error information
     MessageBoxA(NULL, e.what(), "HadesMemHackDll", MB_OK);
   }
 

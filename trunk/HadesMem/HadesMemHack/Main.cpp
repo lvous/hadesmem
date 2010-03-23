@@ -29,6 +29,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include "Types.h"
 #include "Tasks.h"
 #include "HadesMem/Memory.h"
+#include "HadesMem/IatHook.h"
 
 // Windows API
 #include <Windows.h>

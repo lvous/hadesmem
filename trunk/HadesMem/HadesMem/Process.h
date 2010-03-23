@@ -88,7 +88,14 @@ namespace Hades
       GetSeDebugPrivilege();
 
       // Open process
-      Open(m_ID);
+      if (GetCurrentProcessId() == ProcID)
+      {
+        m_Handle = GetCurrentProcess();
+      }
+      else
+      {
+        Open(m_ID);
+      }
     }
 
     // Open process from process name

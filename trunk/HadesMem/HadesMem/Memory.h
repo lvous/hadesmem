@@ -131,6 +131,11 @@ namespace Hades
       // Get process handle of target
       inline HANDLE GetProcessHandle() const;
 
+      // Get address of export in remote process
+      inline FARPROC GetRemoteProcAddress(HMODULE RemoteMod, 
+        std::wstring const& Module, LPCSTR Function, bool ByOrdinal = false) 
+        const;
+
     private:
       // Target process
       Process m_Process;
@@ -456,24 +461,24 @@ namespace Hades
       // Character type
       typedef typename T::value_type CharT;
 
-      // Create string and character pointers
+      // Create buffer to store results
       std::basic_string<CharT> Buffer;
-      CharT* AddressReal = static_cast<CharT*>(Address);
 
       // Loop until a null terminator is found
-      for (;;)
+      for (CharT* AddressReal = static_cast<CharT*>(Address);; ++AddressReal)
       {
-        // Read current character and add to buffer
-        CharT Current = Read<CharT>(AddressReal++);
-        Buffer += Current;
+        // Read current character
+        CharT Current = Read<CharT>(AddressReal);
 
-        // Break on null terminator
+        // Return generated string on null terminator
         if (Current == 0)
-          break;
-      }
+        {
+          return Buffer;
+        }
 
-      // Return generated string
-      return Buffer;
+        // Add character to buffer
+        Buffer += Current;
+      }
     }
 
     // Read memory (vector types)
@@ -716,6 +721,43 @@ namespace Hades
     HANDLE MemoryMgr::GetProcessHandle() const
     {
       return m_Process.GetHandle();
+    }
+
+    // Get address of export in remote process
+    FARPROC MemoryMgr::GetRemoteProcAddress(HMODULE RemoteMod, 
+      std::wstring const& ModulePath, LPCSTR Function, bool ByOrdinal) const
+    {
+      // Load module as data so we can read the EAT locally
+      Util::EnsureFreeLibrary const LocalMod(LoadLibraryExW(ModulePath.c_str(), 
+        NULL, DONT_RESOLVE_DLL_REFERENCES));
+      if (!LocalMod)
+      {
+        DWORD LastError = GetLastError();
+        BOOST_THROW_EXCEPTION(MemoryError() << 
+          ErrorFunction("MemoryMgr::GetRemoteProcAddress") << 
+          ErrorString("Could not load module locally.") << 
+          ErrorCodeWin(LastError));
+      }
+
+      // Find target function in module
+      FARPROC const LocalFunc = GetProcAddress(LocalMod, ByOrdinal ? 
+        reinterpret_cast<LPCSTR>(IMAGE_ORDINAL(reinterpret_cast<DWORD_PTR>(
+        Function))) : Function);
+      if (!LocalFunc)
+      {
+        return nullptr;
+      }
+
+      // Calculate function delta
+      DWORD_PTR const FuncDelta = reinterpret_cast<DWORD_PTR>(LocalFunc) - 
+        reinterpret_cast<DWORD_PTR>(static_cast<HMODULE>(LocalMod));
+
+      // Calculate function location in remote process
+      auto const RemoteFunc = reinterpret_cast<FARPROC>(
+        reinterpret_cast<DWORD_PTR>(RemoteMod) + FuncDelta);
+
+      // Return remote function location
+      return RemoteFunc;
     }
   }
 }

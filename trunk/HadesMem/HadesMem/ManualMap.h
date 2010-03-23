@@ -73,10 +73,6 @@ namespace Hades
         PIMAGE_NT_HEADERS pNtHeaders, PIMAGE_BASE_RELOCATION pRelocDesc, 
         DWORD RelocDirSize, PVOID RemoteBase);
 
-      // Get address of export in remote process
-      inline FARPROC GetRemoteProcAddress(HMODULE RemoteMod, 
-        std::wstring const& Module, LPCSTR Function, bool ByOrdinal = false);
-
       // Disable assignment
       ManualMap& operator= (ManualMap const&);
 
@@ -212,8 +208,8 @@ namespace Hades
       std::wcout << "Entry Point: " << EntryPoint << "." << std::endl;
       
       // Get address of export in remote process
-      PVOID const ExportAddr = GetRemoteProcAddress(reinterpret_cast<HMODULE>(
-        RemoteBase), Path, Export.c_str());
+      PVOID const ExportAddr = m_Memory.GetRemoteProcAddress(
+        reinterpret_cast<HMODULE>(RemoteBase), Path, Export.c_str());
       std::wcout << "Export Address: " << ExportAddr << "." << std::endl;
 
       // Inject helper module
@@ -413,8 +409,8 @@ namespace Hades
           bool const ByOrdinal = IMAGE_SNAP_BY_ORDINAL(pNameImport->Hint);
           LPCSTR Function = ByOrdinal ? reinterpret_cast<LPCSTR>(IMAGE_ORDINAL(
             pNameImport->Hint)) : reinterpret_cast<LPCSTR>(pNameImport->Name);
-          FARPROC FuncAddr = GetRemoteProcAddress(CurModBase, CurModName, 
-            Function, ByOrdinal);
+          FARPROC FuncAddr = m_Memory.GetRemoteProcAddress(CurModBase, 
+            CurModName, Function, ByOrdinal);
 
           // Set function address
           pThunkData->u1.Function = reinterpret_cast<DWORD_PTR>(FuncAddr);
@@ -423,43 +419,6 @@ namespace Hades
           pThunkData++;
         }
       } 
-    }
-
-    // Get address of export in remote process
-    FARPROC ManualMap::GetRemoteProcAddress(HMODULE RemoteMod, 
-      std::wstring const& ModulePath, LPCSTR Function, bool ByOrdinal)
-    {
-      // Load module as data so we can read the EAT locally
-      Util::EnsureFreeLibrary const LocalMod(LoadLibraryExW(ModulePath.c_str(), 
-        NULL, DONT_RESOLVE_DLL_REFERENCES));
-      if (!LocalMod)
-      {
-        DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(ManualMapError() << 
-          ErrorFunction("ManualMap::GetRemoteProcAddress") << 
-          ErrorString("Could not load module locally.") << 
-          ErrorCodeWin(LastError));
-      }
-
-      // Find target function in module
-      FARPROC const LocalFunc = GetProcAddress(LocalMod, ByOrdinal ? 
-        reinterpret_cast<LPCSTR>(IMAGE_ORDINAL(reinterpret_cast<DWORD_PTR>(
-        Function))) : Function);
-      if (!LocalFunc)
-      {
-        return nullptr;
-      }
-      
-      // Calculate function delta
-      DWORD_PTR const FuncDelta = reinterpret_cast<DWORD_PTR>(LocalFunc) - 
-        reinterpret_cast<DWORD_PTR>(static_cast<HMODULE>(LocalMod));
-
-      // Calculate function location in remote process
-      auto const RemoteFunc = reinterpret_cast<FARPROC>(
-        reinterpret_cast<DWORD_PTR>(RemoteMod) + FuncDelta);
-
-      // Return remote function location
-      return RemoteFunc;
     }
 
     // Fix relocations

@@ -59,5 +59,8 @@
     <ClInclude Include="Scripting.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="IatHook.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
