@@ -25,6 +25,9 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 // C++ Standard Library
 #include <vector>
 #include <string>
+#include <utility>
+#include <iterator>
+#include <algorithm>
 
 // BeaEngine
 #include "BeaEngine/BeaEngine.h"
@@ -41,6 +44,13 @@ namespace Hades
     class DisassemblerError : public virtual HadesMemError 
     { };
 
+    struct DisasmData
+    {
+      DISASM Disasm;
+      int Len;
+      std::vector<BYTE> Raw;
+    };
+
     // Disassembler managing class
     class Disassembler
     {
@@ -48,8 +58,12 @@ namespace Hades
       // Constructor
       inline explicit Disassembler(MemoryMgr const& MyMemory);
 
-      // Test disassembler
-      inline std::vector<std::string> Disassemble(PVOID Address, 
+      // Disassemble target and get results as strings
+      inline std::vector<std::string> DisassembleToStr(PVOID Address, 
+        DWORD_PTR NumInstructions);
+
+      // Disassemble target and get full disasm data back
+      inline std::vector<DisasmData> Disassemble(PVOID Address, 
         DWORD_PTR NumInstructions);
 
     private:
@@ -66,8 +80,27 @@ namespace Hades
     { }
 
     // Test disassembler
-    std::vector<std::string> Disassembler::Disassemble(PVOID Address, 
+    std::vector<std::string> Disassembler::DisassembleToStr(PVOID Address, 
       DWORD_PTR NumInstructions) 
+    {
+      // Disassemble target
+      auto MyDisasmData(Disassemble(Address, NumInstructions));
+
+      // Container to hold disassembled code as a string
+      std::vector<std::string> Results;
+      std::transform(MyDisasmData.begin(), MyDisasmData.end(), 
+        std::back_inserter(Results), 
+        [] (DisasmData const& MyDisasm) 
+      {
+        return MyDisasm.Disasm.CompleteInstr;
+      });
+
+      // Return disassembled data
+      return Results;
+    }
+
+    std::vector<DisasmData> Disassembler::Disassemble(PVOID Address, 
+      DWORD_PTR NumInstructions)
     {
       // Read data into buffer
       int MaxInstructionSize = 15;
@@ -79,20 +112,20 @@ namespace Hades
       MyDisasm.EIP = reinterpret_cast<long long>(&Buffer[0]);
       MyDisasm.VirtualAddr = reinterpret_cast<long long>(Address);
       #if defined(_M_AMD64) 
-        MyDisasm.Archi = 64;
+          MyDisasm.Archi = 64;
       #elif defined(_M_IX86) 
-        MyDisasm.Archi = 32;
+          MyDisasm.Archi = 32;
       #else 
-        #error "Unsupported architecture."
+      #error "Unsupported architecture."
       #endif
 
       // Container to hold disassembled code as a string
-      std::vector<std::string> Results;
+      std::vector<DisasmData> Results;
 
-      // Disassemble instructions
+      // DisassembleToStr instructions
       for (DWORD_PTR i = 0; i < NumInstructions; ++i)
       {
-        // Disassemble current instruction
+        // DisassembleToStr current instruction
         int Len = Disasm(&MyDisasm);
         // Ensure disassembly succeeded
         if (Len == UNKNOWN_OPCODE)
@@ -100,8 +133,14 @@ namespace Hades
           break;
         }
 
+        DisasmData CurData;
+        CurData.Disasm = MyDisasm;
+        CurData.Len = Len;
+        CurData.Raw = m_Memory.Read<std::vector<BYTE>>(reinterpret_cast<PVOID>(
+          MyDisasm.EIP), Len);
+
         // Add current instruction to list
-        Results.push_back(MyDisasm.CompleteInstr);
+        Results.push_back(CurData);
 
         // Advance to next instruction
         MyDisasm.EIP += Len;

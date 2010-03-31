@@ -25,7 +25,7 @@
     <ClInclude Include="Disassemble.h" />
     <ClInclude Include="EnsureCleanup.h" />
     <ClInclude Include="Error.h" />
-    <ClInclude Include="IatHook.h" />
+    <ClInclude Include="Patcher.h" />
     <ClInclude Include="Scanner.h" />
     <ClInclude Include="I18n.h" />
     <ClInclude Include="Injector.h" />

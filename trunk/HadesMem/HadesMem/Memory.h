@@ -136,6 +136,9 @@ namespace Hades
         std::wstring const& Module, LPCSTR Function, bool ByOrdinal = false) 
         const;
 
+      // Flush instruction cache
+      inline void FlushCache(LPCVOID Address, SIZE_T Size) const;
+
     private:
       // Target process
       Process m_Process;
@@ -758,6 +761,19 @@ namespace Hades
 
       // Return remote function location
       return RemoteFunc;
+    }
+
+    // Flush instruction cache
+    void MemoryMgr::FlushCache(LPCVOID Address, SIZE_T Size) const
+    {
+      if (!FlushInstructionCache(m_Process.GetHandle(), Address, Size))
+      {
+        DWORD LastError = GetLastError();
+        BOOST_THROW_EXCEPTION(MemoryError() << 
+          ErrorFunction("MemoryMgr::FlushInstructionCache") << 
+          ErrorString("Could not flush instruction cache.") << 
+          ErrorCodeWin(LastError));
+      }
     }
   }
 }

@@ -31,15 +31,17 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #pragma warning(pop)
 
 // Hades
-#include "HadesMem/IatHook.h"
+#include "HadesMem/Patcher.h"
 
 std::shared_ptr<Hades::Memory::MemoryMgr> MyMemory;
-std::shared_ptr<Hades::Memory::IatHook> GetCurProcIdHook;
+std::shared_ptr<Hades::Memory::PatchDetour> MyPatch;
 
-DWORD WINAPI GetCurrentProcessId_Hook()
+BOOL WINAPI IsWow64Process_Hook(HANDLE hProcess, PBOOL Wow64Process)
 {
-  MessageBox(NULL, L"Hook called!", L"GetCurrentProcessId", MB_OK);
-  return GetCurProcIdHook->GetOrig<DWORD (WINAPI*)()>()();
+  MessageBox(NULL, L"IsWow64Process_Hook", L"HadesMemHackDll", MB_OK);
+  typedef BOOL (WINAPI* tIsWow64Proc)(HANDLE, PBOOL);
+  return reinterpret_cast<tIsWow64Proc>(MyPatch->GetTrampoline())(hProcess, 
+    Wow64Process);
 }
 
 extern "C" __declspec(dllexport) DWORD __stdcall Initialize(HMODULE Module)
@@ -79,12 +81,15 @@ extern "C" __declspec(dllexport) DWORD __stdcall Initialize(HMODULE Module)
       MessageBoxA(NULL, e.what(), "HadesMemHackDll", MB_OK);
     }
 
-    // Test IAT hook class
     MyMemory.reset(new Hades::Memory::MemoryMgr(GetCurrentProcessId()));
-    GetCurProcIdHook.reset(new Hades::Memory::IatHook(*MyMemory, 
-      L"kernel32.dll", L"GetCurrentProcessId", &GetCurrentProcessId_Hook, 
-      Module));
-    GetCurrentProcessId();
+    HMODULE HookMod = GetModuleHandle(L"kernelbase.dll") ? GetModuleHandle(
+      L"kernelbase.dll") : GetModuleHandle(L"kernel32.dll");
+    MyPatch.reset(new Hades::Memory::PatchDetour(*MyMemory, GetProcAddress(
+      HookMod, "IsWow64Process"), &IsWow64Process_Hook));
+    MyPatch->Apply();
+    BOOL IsWoW64 = FALSE;
+    IsWow64Process(GetCurrentProcess(), &IsWoW64);
+    MyPatch->Remove();
   }
   catch (boost::exception const& e)
   {

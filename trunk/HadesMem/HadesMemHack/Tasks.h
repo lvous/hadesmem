@@ -551,7 +551,7 @@ inline void HandleDisassemble(Detail::Task /*Task*/,
   // Create disassembler instance
   Hades::Memory::Disassembler MyDisassembler(*MyMemory);
   // Test disassembler
-  auto DisasmResults(MyDisassembler.Disassemble(Offset, 
+  auto DisasmResults(MyDisassembler.DisassembleToStr(Offset, 
     NumInstructions));
 
   // Print results
