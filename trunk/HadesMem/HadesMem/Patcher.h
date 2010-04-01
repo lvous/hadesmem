@@ -179,6 +179,8 @@ namespace Hades
       PVOID m_Detour;
       // Trampoline address
       PVOID m_Trampoline;
+      // Backup code
+      std::vector<BYTE> m_Orig;
     };
 
     // Constructor
@@ -250,8 +252,17 @@ namespace Hades
       WriteJump(TrampCur, static_cast<PBYTE>(m_Target) + InstrSize);
       TrampCur += GetJumpSize();
 
+      // Flush instruction cache
+      m_Memory.FlushCache(m_Trampoline, InstrSize + GetJumpSize());
+
+      // Backup original code
+      m_Orig = m_Memory.Read<std::vector<BYTE>>(m_Target, GetJumpSize());
+
       // Write jump to detour
       WriteJump(m_Target, m_Detour);
+
+      // Flush instruction cache
+      m_Memory.FlushCache(m_Target, m_Orig.size());
 
       // Patch is applied
       m_Applied = true;
@@ -259,7 +270,22 @@ namespace Hades
 
     // Remove patch
     void PatchDetour::Remove()
-    { }
+    {
+      // If patch hasn't been applied there's nothing left to do
+      if (!m_Applied)
+      {
+        return;
+      }
+
+      // Remove detour
+      m_Memory.Write(m_Target, m_Orig);
+
+      // Free trampoline
+      m_Memory.Free(m_Trampoline);
+
+      // Patch has been removed
+      m_Applied = false;
+    }
 
     // Get pointer to trampoline
     PVOID PatchDetour::GetTrampoline() const

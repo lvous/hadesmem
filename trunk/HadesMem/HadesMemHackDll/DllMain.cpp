@@ -90,6 +90,7 @@ extern "C" __declspec(dllexport) DWORD __stdcall Initialize(HMODULE Module)
     BOOL IsWoW64 = FALSE;
     IsWow64Process(GetCurrentProcess(), &IsWoW64);
     MyPatch->Remove();
+    IsWow64Process(GetCurrentProcess(), &IsWoW64);
   }
   catch (boost::exception const& e)
   {
