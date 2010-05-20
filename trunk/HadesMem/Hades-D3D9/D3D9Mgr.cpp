@@ -198,7 +198,7 @@ namespace Hades
       // Debug output
       std::wcout << boost::wformat(L"D3D9Mgr::CreateDevice_Hook: pThis = %p, "
         L"Adapter = %u, DeviceType = %u, hFocusWindow = %p, BehaviorFlags = "
-        "%u, pPresentationParameters = %p, ppReturnedDeviceInterface = %p. "
+        L"%u, pPresentationParameters = %p, ppReturnedDeviceInterface = %p. "
         L"Return = %u.") %pThis %Adapter %DeviceType %hFocusWindow 
         %BehaviorFlags %pPresentationParameters %ppReturnedDeviceInterface 
         %Result << std::endl;
