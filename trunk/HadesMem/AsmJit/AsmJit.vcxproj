@@ -54,6 +54,14 @@
     <ClCompile Include="Util.cpp" />
     <ClCompile Include="VirtualMemory.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="CHANGELOG.txt" />
+    <None Include="CMakeLists.txt" />
+    <None Include="COPYING.txt" />
+    <None Include="README.txt" />
+    <None Include="TODO.txt" />
+    <None Include="VERSION.txt" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{53EC524C-5019-45AF-990E-A27A2FC0C14A}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>

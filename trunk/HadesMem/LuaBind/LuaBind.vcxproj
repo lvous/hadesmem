@@ -120,6 +120,10 @@
     <ClInclude Include="wrapper_base.hpp" />
     <ClInclude Include="yield_policy.hpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="INSTALL" />
+    <None Include="LICENSE" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{EBA1A67B-2C15-41A3-9891-5D8F59B5FBA8}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>

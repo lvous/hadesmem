@@ -177,4 +177,10 @@
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="HISTORY" />
+    <None Include="INSTALL" />
+    <None Include="README" />
+    <None Include="COPYRIGHT" />
+  </ItemGroup>
 </Project>

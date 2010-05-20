@@ -48,6 +48,12 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RapidXML", "RapidXML\RapidXML.vcxproj", "{20D696C4-9FDC-47BA-8E09-76F746F215E2}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{103C65B2-84CC-4BE6-A4FF-39177884F281}"
+	ProjectSection(SolutionItems) = preProject
+		COPYRIGHT.txt = COPYRIGHT.txt
+		GPL-3.0.txt = GPL-3.0.txt
+		LICENSE.txt = LICENSE.txt
+		README.txt = README.txt
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Hades-D3D9", "Hades-D3D9\Hades-D3D9.vcxproj", "{D0D32FA8-98D7-431F-B5AF-1EBD0C2C35B1}"
 	ProjectSection(ProjectDependencies) = postProject

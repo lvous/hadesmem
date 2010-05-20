@@ -55,6 +55,12 @@
   <ItemGroup>
     <ClCompile Include="BeaEngine.c" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="CMakeLists.txt" />
+    <None Include="COPYING.LESSER.txt" />
+    <None Include="COPYING.txt" />
+    <None Include="README.txt" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{483A6227-B963-4AF1-AED6-6C00B9C270D0}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>

@@ -117,4 +117,10 @@
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="COPYING.txt" />
+    <None Include="COPYING.LESSER.txt" />
+    <None Include="README.txt" />
+    <None Include="CMakeLists.txt" />
+  </ItemGroup>
 </Project>

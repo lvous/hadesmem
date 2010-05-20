@@ -33,4 +33,8 @@
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="manual.html" />
+    <None Include="license.txt" />
+  </ItemGroup>
 </Project>

@@ -312,4 +312,8 @@
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="INSTALL" />
+    <None Include="LICENSE" />
+  </ItemGroup>
 </Project>

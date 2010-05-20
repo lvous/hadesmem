@@ -75,6 +75,12 @@
     <ClCompile Include="lzio.c" />
     <ClCompile Include="print.c" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="COPYRIGHT" />
+    <None Include="HISTORY" />
+    <None Include="INSTALL" />
+    <None Include="README" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{C2622B08-7011-4C5B-AF13-F5757447A58D}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
