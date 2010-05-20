@@ -78,6 +78,7 @@ namespace Hades
     Loader::AddExe(L"hl2.exe", L"Hades-Kernel_IA32.dll");
     Loader::AddExe(L"BFBC2Game.exe", L"Hades-Kernel_IA32.dll");
     Loader::AddExe(L"NCLauncher.exe", L"Hades-Kernel_IA32.dll");
+    Loader::AddExe(L"NCWLauncherSetup.exe", L"Hades-Kernel_IA32.dll");
     Loader::AddExe(L"AvP.exe", L"Hades-Kernel_IA32.dll");
     Loader::AddExe(L"AvP_DX11.exe", L"Hades-Kernel_IA32.dll");
     Loader::AddExe(L"SR2_pc.exe", L"Hades-Kernel_IA32.dll");
