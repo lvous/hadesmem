@@ -33,10 +33,11 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 namespace Hades
 {
   // D3D9 hooks
-  std::shared_ptr<Memory::PatchDetour> D3D9Mgr::m_pDirect3DCreate9Hk;
-  std::shared_ptr<Memory::PatchDetour> D3D9Mgr::m_pCreateDeviceHk;
-  std::shared_ptr<Memory::PatchDetour> D3D9Mgr::m_pEndSceneHk;
   std::shared_ptr<Memory::PatchDetour> D3D9Mgr::m_pResetHk;
+  std::shared_ptr<Memory::PatchDetour> D3D9Mgr::m_pReleaseHk;
+  std::shared_ptr<Memory::PatchDetour> D3D9Mgr::m_pEndSceneHk;
+  std::shared_ptr<Memory::PatchDetour> D3D9Mgr::m_pCreateDeviceHk;
+  std::shared_ptr<Memory::PatchDetour> D3D9Mgr::m_pDirect3DCreate9Hk;
 
   // Current device
   IDirect3DDevice9* D3D9Mgr::m_pDevice;
@@ -49,9 +50,10 @@ namespace Hades
 
   // Callback managers
   D3D9Mgr::Callbacks D3D9Mgr::m_CallsOnFrame;
+  D3D9Mgr::Callbacks D3D9Mgr::m_CallsOnRelease;
   D3D9Mgr::Callbacks D3D9Mgr::m_CallsOnLostDevice;
-  D3D9Mgr::Callbacks D3D9Mgr::m_CallsOnResetDevice;
   D3D9Mgr::Callbacks D3D9Mgr::m_CallsOnInitialize;
+  D3D9Mgr::Callbacks D3D9Mgr::m_CallsOnResetDevice;
 
   // Hades manager
   Kernel* D3D9Mgr::m_pKernel = nullptr;
@@ -232,7 +234,7 @@ namespace Hades
           m_pEndSceneHk->Apply();
 
           // Target and detour pointer
-          PBYTE pRest = pDeviceVMT[16];
+          PBYTE pReset = pDeviceVMT[16];
           PBYTE pResetHk = reinterpret_cast<PBYTE>(&Reset_Hook);
 
           // Debug output
@@ -241,8 +243,21 @@ namespace Hades
 
           // Hook Reset
           m_pResetHk.reset(new Hades::Memory::PatchDetour(*m_pKernel->
-            GetMemoryMgr(), pRest, pResetHk));
+            GetMemoryMgr(), pReset, pResetHk));
           m_pResetHk->Apply();
+
+          // Target and detour pointer
+          PBYTE pRelease = pDeviceVMT[2];
+          PBYTE pReleaseHk = reinterpret_cast<PBYTE>(&Release_Hook);
+
+          // Debug output
+          std::wcout << "D3D9Mgr::CreateDevice_Hook: Hooking "
+            "IDirect3DDevice9::Release." << std::endl;
+
+          // Hook Release
+          m_pReleaseHk.reset(new Hades::Memory::PatchDetour(*m_pKernel->
+            GetMemoryMgr(), pRelease, pReleaseHk));
+          m_pReleaseHk->Apply();
         }
 
         // Set device pointer and initialize
@@ -340,6 +355,38 @@ namespace Hades
     return E_FAIL;
   }
 
+  // IDrect3DDevice9::Release hook implementation
+  HRESULT WINAPI D3D9Mgr::Release_Hook(IDirect3DDevice9* pThis)
+  {
+    try
+    {
+      // Get trampoline
+      typedef HRESULT (WINAPI* tRelease)(IDirect3DDevice9* pThis);
+      auto pRelease = reinterpret_cast<tRelease>(m_pReleaseHk->
+        GetTrampoline());
+
+      // Perform release duties
+      Release();
+
+      // Return result from trampoline
+      return pRelease(pThis);
+    }
+    catch (boost::exception const& e)
+    {
+      // Debug output
+      std::cout << boost::format("D3D9Mgr::Release_Hook: Error! %s.") 
+        %boost::diagnostic_information(e) << std::endl;
+    }
+    catch (std::exception const& e)
+    {
+      // Debug output
+      std::cout << boost::format("D3D9Mgr::Release_Hook: Error! %s.") 
+        %e.what() << std::endl;
+    }
+
+    return E_FAIL;
+  }
+
   // Initialize resources such as textures (managed and unmanaged), vertex 
   // buffers, and other D3D resources
   void D3D9Mgr::Initialize()
@@ -400,9 +447,15 @@ namespace Hades
     m_pStateBlock->Apply();
   }
 
+  void D3D9Mgr::Release()
+  {
+    // Call registered callbacks
+    m_CallsOnRelease(m_pDevice, m_pD3D9Helper);
+  }
+
   // Register callback for OnFrame event
   boost::signals2::connection D3D9Mgr::RegisterOnFrame(
-    const Callbacks::slot_type& Subscriber )
+    Callbacks::slot_type const& Subscriber )
   {
     // Register callback and return connection
     return m_CallsOnFrame.connect(Subscriber);
@@ -410,7 +463,7 @@ namespace Hades
 
   // Register callback for OnLostDevice event
   boost::signals2::connection D3D9Mgr::RegisterOnLostDevice(
-    const Callbacks::slot_type& Subscriber )
+    Callbacks::slot_type const& Subscriber )
   {
     // Register callback and return connection
     return m_CallsOnLostDevice.connect(Subscriber);
@@ -418,7 +471,7 @@ namespace Hades
 
   // Register callback for OnResetDevice event
   boost::signals2::connection D3D9Mgr::RegisterOnResetDevice(
-    const Callbacks::slot_type& Subscriber )
+    Callbacks::slot_type const& Subscriber )
   {
     // Register callback and return connection
     return m_CallsOnResetDevice.connect(Subscriber);
@@ -426,9 +479,18 @@ namespace Hades
 
   // Register callback for OnInitialize event
   boost::signals2::connection D3D9Mgr::RegisterOnInitialize(
-    const Callbacks::slot_type& Subscriber )
+    Callbacks::slot_type const& Subscriber )
   {
     // Register callback and return connection
     return m_CallsOnInitialize.connect(Subscriber);
   }
+
+  // Register callback for OnRelease event
+  boost::signals2::connection D3D9Mgr::RegisterOnRelease(
+    Callbacks::slot_type const& Subscriber)
+  {
+    // Register callback and return connection
+    return m_CallsOnRelease.connect(Subscriber);
+  }
+
 }

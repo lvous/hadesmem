@@ -19,19 +19,6 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-// Windows
-#include <Windows.h>
-
-// C++ Standard Library
-#include <string>
-#include <stdexcept>
-
-// Boost
-#pragma warning(push, 1)
-#pragma warning(disable: 4706)
-#include <boost/exception/all.hpp>
-#pragma warning(pop)
-
 // Hades
 #include "Hades-Common/Error.h"
 

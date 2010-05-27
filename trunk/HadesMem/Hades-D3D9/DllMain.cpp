@@ -37,7 +37,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include "Hades-Kernel/Kernel.h"
 #include "Hades-Common/Logger.h"
 
-void DrawOutline(IDirect3DDevice9* pDevice, Hades::D3D9HelperPtr pHelper)
+void DrawTest(IDirect3DDevice9* pDevice, Hades::D3D9HelperPtr pHelper)
 {
   // Get viewport
   D3DVIEWPORT9 Viewport;
@@ -86,8 +86,8 @@ extern "C" __declspec(dllexport) DWORD __stdcall Initialize(HMODULE Module,
     // Initialize D3D9 manager
     Hades::D3D9Mgr::Startup(pKernel);
 
-    // Register test callback
-    Hades::D3D9Mgr::RegisterOnFrame(&DrawOutline);
+    // Register test callbacks
+    Hades::D3D9Mgr::RegisterOnFrame(&DrawTest);
   }
   catch (boost::exception const& e)
   {

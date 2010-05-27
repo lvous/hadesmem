@@ -21,9 +21,6 @@
   <ItemGroup>
     <ClCompile Include="Placeholder.cpp" />
   </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="Renderer.h" />
-  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{D7C5A627-539F-441F-A503-9CBBAE38937D}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>

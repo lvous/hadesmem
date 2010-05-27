@@ -62,6 +62,8 @@ namespace Hades
       const Callbacks::slot_type& Subscriber);
     static boost::signals2::connection RegisterOnInitialize(
       const Callbacks::slot_type& Subscriber);
+    static boost::signals2::connection RegisterOnRelease(
+      const Callbacks::slot_type& Subscriber);
 
   protected:
     // Direct3DCreate9 hook implementation
@@ -83,6 +85,9 @@ namespace Hades
     static HRESULT WINAPI Reset_Hook(IDirect3DDevice9* pThis, 
       D3DPRESENT_PARAMETERS* pPresentationParameters);
 
+    // IDrect3DDevice9::Release hook implementation
+    static HRESULT WINAPI Release_Hook(IDirect3DDevice9* pThis);
+
     // Do rendering
     static void Render();
 
@@ -96,12 +101,16 @@ namespace Hades
     // Re-initialize all unmanaged resources
     static void PostReset();
 
+    // Release resources
+    static void Release();
+
   private:
     // D3D9 hooks
-    static std::shared_ptr<Memory::PatchDetour> m_pDirect3DCreate9Hk;
-    static std::shared_ptr<Memory::PatchDetour> m_pCreateDeviceHk;
-    static std::shared_ptr<Memory::PatchDetour> m_pEndSceneHk;
     static std::shared_ptr<Memory::PatchDetour> m_pResetHk;
+    static std::shared_ptr<Memory::PatchDetour> m_pReleaseHk;
+    static std::shared_ptr<Memory::PatchDetour> m_pEndSceneHk;
+    static std::shared_ptr<Memory::PatchDetour> m_pCreateDeviceHk;
+    static std::shared_ptr<Memory::PatchDetour> m_pDirect3DCreate9Hk;
 
     // Current device
     static IDirect3DDevice9* m_pDevice;
@@ -114,9 +123,10 @@ namespace Hades
 
     // Callback managers
     static Callbacks m_CallsOnFrame;
+    static Callbacks m_CallsOnRelease;
     static Callbacks m_CallsOnLostDevice;
-    static Callbacks m_CallsOnResetDevice;
     static Callbacks m_CallsOnInitialize;
+    static Callbacks m_CallsOnResetDevice;
 
     // Hades manager
     static class Kernel* m_pKernel;
