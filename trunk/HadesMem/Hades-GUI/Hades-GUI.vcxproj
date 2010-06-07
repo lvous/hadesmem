@@ -74,6 +74,9 @@
     <ClInclude Include="TinyXML\tinystr.h" />
     <ClInclude Include="TinyXML\tinyxml.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="License.txt" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{D7C5A627-539F-441F-A503-9CBBAE38937D}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
