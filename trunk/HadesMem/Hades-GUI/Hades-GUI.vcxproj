@@ -19,7 +19,60 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="CButton.cpp" />
+    <ClCompile Include="CCheckBox.cpp" />
+    <ClCompile Include="CColor.cpp" />
+    <ClCompile Include="CD3DRender.cpp" />
+    <ClCompile Include="CDropDown.cpp" />
+    <ClCompile Include="CEditBox.cpp" />
+    <ClCompile Include="CElement.cpp" />
+    <ClCompile Include="CFont.cpp" />
+    <ClCompile Include="CGUI.cpp" />
+    <ClCompile Include="CHelperSlider.cpp" />
+    <ClCompile Include="CHorizontalSliderBar.cpp" />
+    <ClCompile Include="CKeyboard.cpp" />
+    <ClCompile Include="CListBox.cpp" />
+    <ClCompile Include="CMouse.cpp" />
+    <ClCompile Include="CPos.cpp" />
+    <ClCompile Include="CProgressBar.cpp" />
+    <ClCompile Include="CText.cpp" />
+    <ClCompile Include="CTextBox.cpp" />
+    <ClCompile Include="CTexture.cpp" />
+    <ClCompile Include="CTimer.cpp" />
+    <ClCompile Include="CVerticalSliderBar.cpp" />
+    <ClCompile Include="CWindow.cpp" />
     <ClCompile Include="Placeholder.cpp" />
+    <ClCompile Include="TinyXML\tinystr.cpp" />
+    <ClCompile Include="TinyXML\tinyxml.cpp" />
+    <ClCompile Include="TinyXML\tinyxmlerror.cpp" />
+    <ClCompile Include="TinyXML\tinyxmlparser.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="CButton.h" />
+    <ClInclude Include="CCheckBox.h" />
+    <ClInclude Include="CColor.h" />
+    <ClInclude Include="CD3DRender.h" />
+    <ClInclude Include="CDropDown.h" />
+    <ClInclude Include="CEditBox.h" />
+    <ClInclude Include="CElement.h" />
+    <ClInclude Include="CFont.h" />
+    <ClInclude Include="CGUI.h" />
+    <ClInclude Include="CHelperSlider.h" />
+    <ClInclude Include="CHorizontalSliderBar.h" />
+    <ClInclude Include="CKeyboard.h" />
+    <ClInclude Include="CListBox.h" />
+    <ClInclude Include="CMouse.h" />
+    <ClInclude Include="CPos.h" />
+    <ClInclude Include="CProgressBar.h" />
+    <ClInclude Include="CText.h" />
+    <ClInclude Include="CTextBox.h" />
+    <ClInclude Include="CTexture.h" />
+    <ClInclude Include="CTimer.h" />
+    <ClInclude Include="CVerticalSliderBar.h" />
+    <ClInclude Include="CWindow.h" />
+    <ClInclude Include="D3D9.h" />
+    <ClInclude Include="TinyXML\tinystr.h" />
+    <ClInclude Include="TinyXML\tinyxml.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{D7C5A627-539F-441F-A503-9CBBAE38937D}</ProjectGuid>
@@ -89,7 +142,7 @@
     <ClCompile>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <WarningLevel>Level4</WarningLevel>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>"../";</AdditionalIncludeDirectories>
@@ -106,7 +159,7 @@
     <ClCompile>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <WarningLevel>Level4</WarningLevel>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>"../";</AdditionalIncludeDirectories>
@@ -121,7 +174,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <WarningLevel>Level4</WarningLevel>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
       <PrecompiledHeader>
       </PrecompiledHeader>
       <Optimization>MaxSpeed</Optimization>
@@ -142,7 +195,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <WarningLevel>Level4</WarningLevel>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
       <PrecompiledHeader>
       </PrecompiledHeader>
       <Optimization>MaxSpeed</Optimization>

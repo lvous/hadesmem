@@ -106,7 +106,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>AsmJit.lib;BeaEngine.lib;Lua.lib;LuaBind.lib;d3d9.lib;d3dx9.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Hades-GUI.lib;AsmJit.lib;BeaEngine.lib;Lua.lib;LuaBind.lib;d3d9.lib;d3dx9.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)Binaries\$(Configuration)-$(Platform)\</AdditionalLibraryDirectories>
     </Link>
     <ProjectReference>
@@ -132,7 +132,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>AsmJit.lib;BeaEngine.lib;Lua.lib;LuaBind.lib;d3d9.lib;d3dx9.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Hades-GUI.lib;AsmJit.lib;BeaEngine.lib;Lua.lib;LuaBind.lib;d3d9.lib;d3dx9.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)Binaries\$(Configuration)-$(Platform)\</AdditionalLibraryDirectories>
     </Link>
     <ProjectReference>
@@ -162,7 +162,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>AsmJit.lib;BeaEngine.lib;Lua.lib;LuaBind.lib;d3d9.lib;d3dx9.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Hades-GUI.lib;AsmJit.lib;BeaEngine.lib;Lua.lib;LuaBind.lib;d3d9.lib;d3dx9.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)Binaries\$(Configuration)-$(Platform)\</AdditionalLibraryDirectories>
     </Link>
     <ProjectReference>
@@ -192,7 +192,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>AsmJit.lib;BeaEngine.lib;Lua.lib;LuaBind.lib;d3d9.lib;d3dx9.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Hades-GUI.lib;AsmJit.lib;BeaEngine.lib;Lua.lib;LuaBind.lib;d3d9.lib;d3dx9.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)Binaries\$(Configuration)-$(Platform)\</AdditionalLibraryDirectories>
     </Link>
     <ProjectReference>
@@ -206,10 +206,12 @@
     <ClCompile Include="D3D9Helper.cpp" />
     <ClCompile Include="D3D9Mgr.cpp" />
     <ClCompile Include="DllMain.cpp" />
+    <ClCompile Include="GuiMgr.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="D3D9Helper.h" />
     <ClInclude Include="D3D9Mgr.h" />
+    <ClInclude Include="GuiMgr.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

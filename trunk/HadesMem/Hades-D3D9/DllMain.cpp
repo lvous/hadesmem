@@ -33,6 +33,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #pragma warning(pop)
 
 // Hades
+#include "GuiMgr.h"
 #include "D3D9Mgr.h"
 #include "Hades-Kernel/Kernel.h"
 #include "Hades-Common/Logger.h"
@@ -47,7 +48,7 @@ void DrawTest(IDirect3DDevice9* pDevice, Hades::D3D9HelperPtr pHelper)
   Hades::Math::Vec2f const BottomLeft(0,0);
   Hades::Math::Vec2f const TopRight(static_cast<float>(Viewport.Width), 
     static_cast<float>(Viewport.Height));
-  pHelper->DrawBox(BottomLeft, TopRight, 5, D3DCOLOR_ARGB(100, 255, 0, 0));
+  pHelper->DrawBox(BottomLeft, TopRight, 5, D3DCOLOR_ARGB(100, 0, 255, 0));
 }
 
 extern "C" __declspec(dllexport) DWORD __stdcall Initialize(HMODULE Module, 
@@ -88,6 +89,9 @@ extern "C" __declspec(dllexport) DWORD __stdcall Initialize(HMODULE Module,
 
     // Register test callbacks
     Hades::D3D9Mgr::RegisterOnFrame(&DrawTest);
+
+    // Initialize GUI manager
+    static Hades::GuiMgr MyGuiMgr;
   }
   catch (boost::exception const& e)
   {

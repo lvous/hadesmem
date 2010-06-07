@@ -24,12 +24,18 @@
     <ClCompile Include="D3D9Helper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="GuiMgr.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="D3D9Mgr.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="D3D9Helper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GuiMgr.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
