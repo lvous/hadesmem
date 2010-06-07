@@ -103,9 +103,10 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;HADESKERNEL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>"../";</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalOptions>/D _WIN32_WINNT=0x0502 /D _SCL_SECURE_NO_WARNINGS /D BEA_ENGINE_STATIC %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/D _WIN32_WINNT=0x0502 /D _SCL_SECURE_NO_WARNINGS /D BEA_ENGINE_STATIC /D HADES_KERNEL_EXPORT %(AdditionalOptions)</AdditionalOptions>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <DisableSpecificWarnings>4251</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -129,9 +130,10 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;HADESKERNEL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>"../";</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalOptions>/D _WIN32_WINNT=0x0502 /D _SCL_SECURE_NO_WARNINGS /D BEA_ENGINE_STATIC %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/D _WIN32_WINNT=0x0502 /D _SCL_SECURE_NO_WARNINGS /D BEA_ENGINE_STATIC /D HADES_KERNEL_EXPORT %(AdditionalOptions)</AdditionalOptions>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <DisableSpecificWarnings>4251</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -157,9 +159,10 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;HADESKERNEL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>"../";</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalOptions>/D _WIN32_WINNT=0x0502 /D _SCL_SECURE_NO_WARNINGS /D BEA_ENGINE_STATIC %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/D _WIN32_WINNT=0x0502 /D _SCL_SECURE_NO_WARNINGS /D BEA_ENGINE_STATIC /D HADES_KERNEL_EXPORT %(AdditionalOptions)</AdditionalOptions>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <DisableSpecificWarnings>4251</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -187,9 +190,10 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;HADESKERNEL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>"../";</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalOptions>/D _WIN32_WINNT=0x0502 /D _SCL_SECURE_NO_WARNINGS /D BEA_ENGINE_STATIC %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/D _WIN32_WINNT=0x0502 /D _SCL_SECURE_NO_WARNINGS /D BEA_ENGINE_STATIC /D HADES_KERNEL_EXPORT %(AdditionalOptions)</AdditionalOptions>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <DisableSpecificWarnings>4251</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -212,6 +216,7 @@
     <ClCompile Include="Loader.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Export.h" />
     <ClInclude Include="Kernel.h" />
     <ClInclude Include="Loader.h" />
   </ItemGroup>

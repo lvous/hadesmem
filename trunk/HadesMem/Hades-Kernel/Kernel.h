@@ -27,6 +27,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include <boost/noncopyable.hpp>
 
 // Hades
+#include "Export.h"
 #include "Hades-Memory/Memory.h"
 
 namespace Hades
@@ -36,20 +37,25 @@ namespace Hades
   { };
 
   // Hades kernel
-  class Kernel : private boost::noncopyable
+  class HADES_KERNEL_EXPORT_INTERNAL Kernel
   {
   public:
     // Constructor
     Kernel();
 
     // Initialize kernel
-    virtual void Initialize();
+    void Initialize();
 
     // Get memory manager
-    virtual std::shared_ptr<Memory::MemoryMgr> GetMemoryMgr();
+    std::shared_ptr<Memory::MemoryMgr> GetMemoryMgr();
 
     // Load and initialize a Hades helper module
-    virtual void LoadModule(std::wstring const& Module);
+    void LoadModule(std::wstring const& Module);
+
+  protected:
+    // Disable copying
+    Kernel(Kernel const&);
+    Kernel& operator= (Kernel const&);
 
   private:
     // Memory manager
