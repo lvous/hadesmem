@@ -24,8 +24,7 @@ namespace Hades
 {
   // Constructor
   D3D9Helper::D3D9Helper() 
-    : m_pLine(nullptr), 
-    m_pFont(nullptr)
+    : m_pLine(nullptr) 
   { }
 
   // OnLostDevice callback
@@ -33,7 +32,6 @@ namespace Hades
     D3D9HelperPtr /*pHelper*/)
   {
     m_pLine->OnLostDevice();
-    m_pFont->OnLostDevice();
   }
 
   // OnResetDevice callback
@@ -41,7 +39,6 @@ namespace Hades
     D3D9HelperPtr /*pHelper*/)
   {
     m_pLine->OnResetDevice();
-    m_pFont->OnResetDevice();
   }
 
   // OnInitialize callback
@@ -49,9 +46,6 @@ namespace Hades
     D3D9HelperPtr /*pHelper*/)
   {
     D3DXCreateLine(pDevice, &m_pLine);
-    D3DXCreateFontW(pDevice, 15, 0, FW_LIGHT, 1, false, DEFAULT_CHARSET, 
-      OUT_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH | FF_DONTCARE, 
-      L"Arial", &m_pFont);
   }
 
   // Draw box
@@ -99,11 +93,5 @@ namespace Hades
   ID3DXLine* D3D9Helper::GetLine()
   {
     return m_pLine;
-  }
-
-  // Get D3D font
-  ID3DXFont* D3D9Helper::GetFont()
-  {
-    return m_pFont;
   }
 }

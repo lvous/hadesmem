@@ -31,6 +31,8 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include "Kernel.h"
 #include "Loader.h"
 #include "Hades-Common/I18n.h"
+#include "Hades-D3D9/DllMain.h"
+#include "Hades-Input/DllMain.h"
 #include "Hades-Common/Filesystem.h"
 
 namespace Hades
@@ -57,18 +59,20 @@ namespace Hades
     }
 
     // Debug output
-    std::wcout << boost::wformat(L"Path to current binary = \"%ls\".") 
-      %BinPath << std::endl;
+    std::wcout << boost::wformat(L"Kernel::Initialize: Path to current binary "
+      L"= \"%ls\".") %BinPath << std::endl;
 
     // Path to self
     auto const PathToSelf(Hades::Windows::GetSelfPath().file_string());
     auto const PathToSelfDir(Hades::Windows::GetSelfDirPath().file_string());
 
     // Debug output
-    std::wcout << boost::wformat(L"Path to Self (Full): = \"%ls\", Path To "
-      L"Self (Dir): = \"%ls\".") %PathToSelf %PathToSelfDir << std::endl;
+    std::wcout << boost::wformat(L"Kernel::Initialize: Path to Self (Full): = "
+      L"\"%ls\", Path To Self (Dir): = \"%ls\".") %PathToSelf %PathToSelfDir 
+      << std::endl;
 
     // Initialize Loader
+    // Todo: Move this data to external file (XML?)
     Loader::Initialize(this);
     Loader::AddExe(L"WoW.exe", L"Hades-Kernel_IA32.dll");
     Loader::AddExe(L"Launcher.exe", L"Hades-Kernel_IA32.dll");
@@ -88,15 +92,18 @@ namespace Hades
     // Start aux modules
 #if defined(_M_X64)
     std::wstring const D3D9ModName(L"Hades-D3D9_AMD64.dll");
+    std::wstring const InputModName(L"Hades-Input_AMD64.dll");
 #elif defined(_M_IX86)
     std::wstring const D3D9ModName(L"Hades-D3D9_IA32.dll");
+    std::wstring const InputModName(L"Hades-Input_IA32.dll");
 #else
 #error Unsupported platform!
 #endif
-    LoadModule(PathToSelfDir + L"\\" + D3D9ModName);
+    Hades::Modules::Input::Initialize(this);
+    Hades::Modules::D3D9::Initialize(this);
 
     // Debug output
-    std::wcout << "Hades-Kernel initialized." << std::endl;
+    std::wcout << "Kernel::Initialize: Hades-Kernel initialized." << std::endl;
   }
 
   // Get memory manager

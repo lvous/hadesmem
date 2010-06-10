@@ -25,17 +25,19 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Windows API
 #include <d3d9.h>
 #include <d3dx9.h>
+#include <atlbase.h>
 
 // Hades
+#include "Export.h"
 #include "Hades-Common/VecN.h"
 
 namespace Hades
 {
   // D3D9Helper pointer type
-  typedef std::tr1::shared_ptr<class D3D9Helper> D3D9HelperPtr;
+  HADES_D3D9_EXPORT_INTERNAL typedef std::tr1::shared_ptr<class D3D9Helper> D3D9HelperPtr;
 
   // D3D9 helper class
-  class D3D9Helper
+  class HADES_D3D9_EXPORT_INTERNAL D3D9Helper
   {
   public:
     // Constructor
@@ -58,11 +60,9 @@ namespace Hades
 
     // Get D3D line
     ID3DXLine* GetLine();
-    // Get D3D font
-    ID3DXFont* GetFont();
 
   private:
+    // D3D line
     ID3DXLine* m_pLine;
-    ID3DXFont* m_pFont;
   };
 }

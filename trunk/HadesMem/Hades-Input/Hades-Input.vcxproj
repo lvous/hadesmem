@@ -19,9 +19,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{D0D32FA8-98D7-431F-B5AF-1EBD0C2C35B1}</ProjectGuid>
+    <ProjectGuid>{76919973-05DA-4629-81F8-519CD5E36804}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>HadesD3D9</RootNamespace>
+    <RootNamespace>HadesInput</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -96,18 +96,17 @@
       </PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;HADESD3D9_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;HADESINPUT_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>"../";</AdditionalIncludeDirectories>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalOptions>/D _WIN32_WINNT=0x0502 /D _SCL_SECURE_NO_WARNINGS /D BEA_ENGINE_STATIC /D HADES_KERNEL_IMPORT /D HADES_D3D9_EXPORT %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/D _WIN32_WINNT=0x0502 /D _SCL_SECURE_NO_WARNINGS /D BEA_ENGINE_STATIC /D HADES_KERNEL_IMPORT /D HADES_INPUT_EXPORT %(AdditionalOptions)</AdditionalOptions>
       <DisableSpecificWarnings>4503;4251;</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>Hades-Kernel_IA32.lib;Hades-GUI.lib;AsmJit.lib;BeaEngine.lib;Lua.lib;LuaBind.lib;d3d9.lib;d3dx9.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)Binaries\$(Configuration)-$(Platform)\</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Hades-Kernel_IA32.lib;AsmJit.lib;BeaEngine.lib;Lua.lib;LuaBind.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ProjectReference>
       <LinkLibraryDependencies>false</LinkLibraryDependencies>
@@ -122,18 +121,17 @@
       </PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;HADESD3D9_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;HADESINPUT_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>"../";</AdditionalIncludeDirectories>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalOptions>/D _WIN32_WINNT=0x0502 /D _SCL_SECURE_NO_WARNINGS /D BEA_ENGINE_STATIC /D HADES_KERNEL_IMPORT /D HADES_D3D9_EXPORT %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/D _WIN32_WINNT=0x0502 /D _SCL_SECURE_NO_WARNINGS /D BEA_ENGINE_STATIC /D HADES_KERNEL_IMPORT /D HADES_INPUT_EXPORT %(AdditionalOptions)</AdditionalOptions>
       <DisableSpecificWarnings>4503;4251;</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>Hades-Kernel_AMD64.lib;Hades-GUI.lib;AsmJit.lib;BeaEngine.lib;Lua.lib;LuaBind.lib;d3d9.lib;d3dx9.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)Binaries\$(Configuration)-$(Platform)\</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Hades-Kernel_AMD64.lib;AsmJit.lib;BeaEngine.lib;Lua.lib;LuaBind.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ProjectReference>
       <LinkLibraryDependencies>false</LinkLibraryDependencies>
@@ -150,11 +148,10 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;HADESD3D9_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;HADESINPUT_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>"../";</AdditionalIncludeDirectories>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalOptions>/D _WIN32_WINNT=0x0502 /D _SCL_SECURE_NO_WARNINGS /D BEA_ENGINE_STATIC /D HADES_KERNEL_IMPORT /D HADES_D3D9_EXPORT %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/D _WIN32_WINNT=0x0502 /D _SCL_SECURE_NO_WARNINGS /D BEA_ENGINE_STATIC /D HADES_KERNEL_IMPORT /D HADES_INPUT_EXPORT %(AdditionalOptions)</AdditionalOptions>
       <DisableSpecificWarnings>4503;4251;</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -162,8 +159,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>Hades-Kernel_IA32.lib;Hades-GUI.lib;AsmJit.lib;BeaEngine.lib;Lua.lib;LuaBind.lib;d3d9.lib;d3dx9.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)Binaries\$(Configuration)-$(Platform)\</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Hades-Kernel_IA32.lib;AsmJit.lib;BeaEngine.lib;Lua.lib;LuaBind.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ProjectReference>
       <LinkLibraryDependencies>false</LinkLibraryDependencies>
@@ -180,11 +177,10 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;HADESD3D9_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;HADESINPUT_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>"../";</AdditionalIncludeDirectories>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalOptions>/D _WIN32_WINNT=0x0502 /D _SCL_SECURE_NO_WARNINGS /D BEA_ENGINE_STATIC /D HADES_KERNEL_IMPORT /D HADES_D3D9_EXPORT %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/D _WIN32_WINNT=0x0502 /D _SCL_SECURE_NO_WARNINGS /D BEA_ENGINE_STATIC /D HADES_KERNEL_IMPORT /D HADES_INPUT_EXPORT %(AdditionalOptions)</AdditionalOptions>
       <DisableSpecificWarnings>4503;4251;</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -192,8 +188,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>Hades-Kernel_AMD64.lib;Hades-GUI.lib;AsmJit.lib;BeaEngine.lib;Lua.lib;LuaBind.lib;d3d9.lib;d3dx9.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)Binaries\$(Configuration)-$(Platform)\</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Hades-Kernel_AMD64.lib;AsmJit.lib;BeaEngine.lib;Lua.lib;LuaBind.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ProjectReference>
       <LinkLibraryDependencies>false</LinkLibraryDependencies>
@@ -203,17 +199,13 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="D3D9Helper.cpp" />
-    <ClCompile Include="D3D9Mgr.cpp" />
     <ClCompile Include="DllMain.cpp" />
-    <ClCompile Include="GuiMgr.cpp" />
+    <ClCompile Include="InputMgr.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="D3D9Helper.h" />
-    <ClInclude Include="D3D9Mgr.h" />
     <ClInclude Include="DllMain.h" />
     <ClInclude Include="Export.h" />
-    <ClInclude Include="GuiMgr.h" />
+    <ClInclude Include="InputMgr.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

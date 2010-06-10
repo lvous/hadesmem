@@ -43,7 +43,7 @@ namespace Hades
   { };
 
   // D3D9 managing class
-  class D3D9Mgr
+  class HADES_D3D9_EXPORT_INTERNAL D3D9Mgr
   {
   public:
     // Hook D3D9

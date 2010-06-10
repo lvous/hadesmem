@@ -89,7 +89,15 @@ namespace Hades
   void GuiMgr::OnFrame(IDirect3DDevice9* /*pDevice*/, 
     D3D9HelperPtr /*pHelper*/)
   {
+    if (GetAsyncKeyState(VK_F12) & 0x1)
+    {
+      gpGui->SetVisible(!gpGui->IsVisible());
+    }
+
     gpGui->Draw();
+
+    CColor MyColor(255, 0, 0, 255);
+    gpGui->GetFont()->DrawString(10, 10, 0, &MyColor, "Hades");
   }
 
   void GuiMgr::OnLostDevice(IDirect3DDevice9* /*pDevice*/, 

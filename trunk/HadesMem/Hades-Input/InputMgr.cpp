@@ -17,32 +17,5 @@ You should have received a copy of the GNU General Public License
 along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#pragma once
-
 // Hades
-#include "D3D9Helper.h"
-#include "Hades-GUI/CGUI.h"
-#include "Hades-Common/Error.h"
-
-namespace Hades
-{
-  // GuiMgr exception type
-  class GuiMgrError : public virtual HadesError 
-  { };
-
-  // GUI managing class
-  class HADES_D3D9_EXPORT_INTERNAL GuiMgr
-  {
-  public:
-    // Constructor
-    GuiMgr();
-
-  private:
-    // D3D9Mgr callbacks
-    void OnInitialize(IDirect3DDevice9* pDevice, D3D9HelperPtr pHelper);
-    void OnFrame(IDirect3DDevice9* pDevice, D3D9HelperPtr pHelper);
-    void OnLostDevice(IDirect3DDevice9* pDevice, D3D9HelperPtr pHelper);
-    void OnResetDevice(IDirect3DDevice9* pDevice, D3D9HelperPtr pHelper);
-    void OnRelease(IDirect3DDevice9* pDevice, D3D9HelperPtr pHelper);
-  };
-}
+#include "InputMgr.h"

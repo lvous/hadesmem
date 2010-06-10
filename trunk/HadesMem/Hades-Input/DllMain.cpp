@@ -33,28 +33,12 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #pragma warning(pop)
 
 // Hades
-#include "GuiMgr.h"
-#include "D3D9Mgr.h"
 #include "DllMain.h"
 #include "Hades-Kernel/Kernel.h"
 #include "Hades-Common/Logger.h"
 
-// Test D3D callbacks
-void DrawTest(IDirect3DDevice9* pDevice, Hades::D3D9HelperPtr pHelper)
-{
-  // Get viewport
-  D3DVIEWPORT9 Viewport;
-  pDevice->GetViewport(&Viewport);
-
-  // Draw box on viewport border
-  Hades::Math::Vec2f const TopLeft(0,0);
-  Hades::Math::Vec2f const BottomRight(static_cast<float>(Viewport.Width), 
-    static_cast<float>(Viewport.Height));
-  pHelper->DrawBox(TopLeft, BottomRight, 2, D3DCOLOR_ARGB(255, 0, 255, 0));
-}
-
-// Initialize Hades-D3D9
-HADES_D3D9_EXPORT_INTERNAL DWORD Hades::Modules::D3D9::Initialize(
+// Initialize Hades-Input
+HADES_INPUT_EXPORT_INTERNAL DWORD Hades::Modules::Input::Initialize(
   Hades::Kernel* pKernel)
 {
   try
@@ -70,9 +54,9 @@ HADES_D3D9_EXPORT_INTERNAL DWORD Hades::Modules::D3D9::Initialize(
 
     // Version and copyright output
 #if defined(_M_X64)
-    std::wcout << "Hades-D3D9 AMD64 [Version " << VerNum << "]" << std::endl;
+    std::wcout << "Hades-Input AMD64 [Version " << VerNum << "]" << std::endl;
 #elif defined(_M_IX86)
-    std::wcout << "Hades-D3D9 IA32 [Version " << VerNum << "]" << std::endl;
+    std::wcout << "Hades-Input IA32 [Version " << VerNum << "]" << std::endl;
 #else
 #error Unsupported platform!
 #endif
@@ -86,26 +70,17 @@ HADES_D3D9_EXPORT_INTERNAL DWORD Hades::Modules::D3D9::Initialize(
     // Debug output
     std::wcout << boost::wformat(L"Initialize: Kernel = %p.") %pKernel 
       << std::endl;
-
-    // Initialize D3D9 manager
-    Hades::D3D9Mgr::Startup(pKernel);
-
-    // Register test callbacks
-    Hades::D3D9Mgr::RegisterOnFrame(&DrawTest);
-
-    // Initialize GUI manager
-    static Hades::GuiMgr MyGuiMgr;
   }
   catch (boost::exception const& e)
   {
     // Dump error information
     MessageBoxA(NULL, boost::diagnostic_information(e).c_str(), 
-      "Hades-D3D9", MB_OK);
+      "Hades-Input", MB_OK);
   }
   catch (std::exception const& e)
   {
     // Dump error information
-    MessageBoxA(NULL, e.what(), "Hades-D3D9", MB_OK);
+    MessageBoxA(NULL, e.what(), "Hades-Input", MB_OK);
   }
 
   // Success
