@@ -170,6 +170,9 @@ namespace Hades
       uMsg == WM_LBUTTONUP || 
       uMsg == WM_RBUTTONUP || 
       uMsg == WM_MBUTTONUP || 
+      uMsg == WM_RBUTTONDBLCLK || 
+      uMsg == WM_LBUTTONDBLCLK || 
+      uMsg == WM_MBUTTONDBLCLK || 
       uMsg == WM_MOUSEWHEEL));
   }
 }
