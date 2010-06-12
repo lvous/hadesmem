@@ -53,7 +53,7 @@ namespace Hades
     LPARAM lParam)
   {
     // Call registered callbacks and block input if requested
-    return m_CallsOnMsg(hwnd, uMsg, wParam, lParam) ? CallWindowProc(
+    return *m_CallsOnMsg(hwnd, uMsg, wParam, lParam) ? CallWindowProc(
       m_OrigProc, hwnd, uMsg, wParam, lParam) : 0;
   }
 

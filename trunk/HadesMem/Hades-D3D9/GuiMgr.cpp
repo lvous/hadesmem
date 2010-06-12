@@ -27,8 +27,10 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace Hades
 {
+  // Constructor
   GuiMgr::GuiMgr(Kernel* pKernel) 
   {
+    // Register for D3D events
     D3D9Mgr::RegisterOnInitialize(std::bind(&GuiMgr::OnInitialize, this, 
       std::placeholders::_1, std::placeholders::_2));
     D3D9Mgr::RegisterOnFrame(std::bind(&GuiMgr::OnFrame, this, 
@@ -40,22 +42,27 @@ namespace Hades
     D3D9Mgr::RegisterOnRelease(std::bind(&GuiMgr::OnRelease, this, 
       std::placeholders::_1, std::placeholders::_2));
 
+    // Register for input events
     pKernel->GetInputMgr()->RegisterOnMessage(std::bind(&GuiMgr::OnInputMsg, 
       this, std::placeholders::_1, std::placeholders::_2, 
       std::placeholders::_3, std::placeholders::_4));
   }
 
+  // Initialize GUI from device
   void GuiMgr::OnInitialize(IDirect3DDevice9* pDevice, 
     D3D9HelperPtr /*pHelper*/)
   {
+    // Delete GUI instance if it already exists
     if (gpGui)
     {
       delete gpGui;
       gpGui = nullptr;
     }
 
+    // Create new GUI instance
     gpGui = new CGUI(pDevice);
 
+    // Get current working directory
     std::wstring CurDir;
     if (!GetCurrentDirectory(MAX_PATH, Util::MakeStringBuffer(CurDir, 
       MAX_PATH)))
@@ -67,6 +74,7 @@ namespace Hades
         ErrorCodeWin(LastError));
     }
 
+    // Set new working directory to GUI library folder
     std::wstring GuiPath((Windows::GetSelfDirPath() / L"/Gui/").file_string());
     if (!SetCurrentDirectory(GuiPath.c_str()))
     {
@@ -77,11 +85,14 @@ namespace Hades
         ErrorCodeWin(LastError));
     }
 
+    // Load GUI
     gpGui->LoadInterfaceFromFile("ColorThemes.xml");
     gpGui->LoadInterfaceFromFile("GuiTest_UI.xml");
 
+    // Show GUI
     gpGui->SetVisible(true);
 
+    // Restore old working directory
     if (!SetCurrentDirectory(CurDir.c_str()))
     {
       DWORD LastError = GetLastError();
@@ -106,6 +117,7 @@ namespace Hades
       static_cast<float>(Viewport.Height));
     pHelper->DrawBox(TopLeft, BottomRight, 2, D3DCOLOR_ARGB(255, 0, 255, 0));
 
+    // Draw test string
     CColor MyColor(255, 0, 0, 255);
     gpGui->GetFont()->DrawString(10, 10, 0, &MyColor, "Hades");
   }
@@ -130,15 +142,34 @@ namespace Hades
   bool GuiMgr::OnInputMsg(HWND /*hwnd*/, UINT uMsg, WPARAM wParam, 
     LPARAM lParam)
   {
+    // Nothing to do if there is no current GUI instance
+    if (!gpGui)
+    {
+      return true;
+    }
+
+    // Toggle GUI on F12
     if (uMsg == WM_KEYDOWN && wParam == VK_F12)
     {
       gpGui->SetVisible(!gpGui->IsVisible());
     }
 
+    // Notify GUI of input events
     gpGui->GetMouse().HandleMessage(uMsg, wParam, lParam);
     gpGui->GetKeyboard()->HandleMessage(uMsg, wParam, lParam);
 
-    return false;
-//     return !gpGui->IsVisible();
+    // Block input when GUI is visible
+    return (gpGui->IsVisible() && 
+      (uMsg == WM_CHAR || 
+      uMsg == WM_KEYDOWN || 
+      uMsg == WM_KEYUP || 
+      uMsg == WM_MOUSEMOVE || 
+      uMsg == WM_LBUTTONDOWN || 
+      uMsg == WM_RBUTTONDOWN || 
+      uMsg == WM_MBUTTONDOWN || 
+      uMsg == WM_LBUTTONUP || 
+      uMsg == WM_RBUTTONUP || 
+      uMsg == WM_MBUTTONUP || 
+      uMsg == WM_MOUSEWHEEL));
   }
 }
