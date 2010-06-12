@@ -56,7 +56,7 @@ class CKeyboard
 
 public:
 
-	bool HandleMessage( unsigned int uMsg, __w64 unsigned int wParam, _w64 long lParam );
+	bool HandleMessage( unsigned int uMsg, WPARAM wParam, LPARAM lParam );
 
 	void SetKey( SKey sKey );
 	SKey GetKey();
