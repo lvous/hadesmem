@@ -35,26 +35,11 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Hades
 #include "GuiMgr.h"
 #include "D3D9Mgr.h"
-#include "DllMain.h"
 #include "Hades-Kernel/Kernel.h"
 #include "Hades-Common/Logger.h"
 
-// Test D3D callbacks
-void DrawTest(IDirect3DDevice9* pDevice, Hades::D3D9HelperPtr pHelper)
-{
-  // Get viewport
-  D3DVIEWPORT9 Viewport;
-  pDevice->GetViewport(&Viewport);
-
-  // Draw box on viewport border
-  Hades::Math::Vec2f const TopLeft(0,0);
-  Hades::Math::Vec2f const BottomRight(static_cast<float>(Viewport.Width), 
-    static_cast<float>(Viewport.Height));
-  pHelper->DrawBox(TopLeft, BottomRight, 2, D3DCOLOR_ARGB(255, 0, 255, 0));
-}
-
 // Initialize Hades-D3D9
-HADES_D3D9_EXPORT_INTERNAL DWORD Hades::Modules::D3D9::Initialize(
+extern "C" __declspec(dllexport) DWORD __stdcall Initialize(
   Hades::Kernel* pKernel)
 {
   try
@@ -87,14 +72,15 @@ HADES_D3D9_EXPORT_INTERNAL DWORD Hades::Modules::D3D9::Initialize(
     std::wcout << boost::wformat(L"Initialize: Kernel = %p.") %pKernel 
       << std::endl;
 
+    // Initialize D3D9 manager wrapper
+    static Hades::D3D9MgrWrapper MyD3D9MgrWrapper;
+    pKernel->SetD3D9Mgr(&MyD3D9MgrWrapper);
+
     // Initialize D3D9 manager
     Hades::D3D9Mgr::Startup(pKernel);
 
-    // Register test callbacks
-    Hades::D3D9Mgr::RegisterOnFrame(&DrawTest);
-
     // Initialize GUI manager
-    static Hades::GuiMgr MyGuiMgr;
+    static Hades::GuiMgr MyGuiMgr(pKernel);
   }
   catch (boost::exception const& e)
   {

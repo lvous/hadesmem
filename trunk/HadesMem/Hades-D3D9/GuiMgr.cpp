@@ -20,12 +20,14 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Hades
 #include "GuiMgr.h"
 #include "D3D9Mgr.h"
+#include "Hades-Kernel/Kernel.h"
+#include "Hades-Input/InputMgr.h"
 #include "Hades-Common/Filesystem.h"
 #include "Hades-Common/StringBuffer.h"
 
 namespace Hades
 {
-  GuiMgr::GuiMgr() 
+  GuiMgr::GuiMgr(Kernel* pKernel) 
   {
     D3D9Mgr::RegisterOnInitialize(std::bind(&GuiMgr::OnInitialize, this, 
       std::placeholders::_1, std::placeholders::_2));
@@ -37,6 +39,10 @@ namespace Hades
       std::placeholders::_1, std::placeholders::_2));
     D3D9Mgr::RegisterOnRelease(std::bind(&GuiMgr::OnRelease, this, 
       std::placeholders::_1, std::placeholders::_2));
+
+    pKernel->GetInputMgr()->RegisterOnMessage(std::bind(&GuiMgr::OnInputMsg, 
+      this, std::placeholders::_1, std::placeholders::_2, 
+      std::placeholders::_3, std::placeholders::_4));
   }
 
   void GuiMgr::OnInitialize(IDirect3DDevice9* pDevice, 
@@ -86,15 +92,19 @@ namespace Hades
     }
   }
 
-  void GuiMgr::OnFrame(IDirect3DDevice9* /*pDevice*/, 
-    D3D9HelperPtr /*pHelper*/)
+  void GuiMgr::OnFrame(IDirect3DDevice9* pDevice, D3D9HelperPtr pHelper)
   {
-    if (GetAsyncKeyState(VK_F12) & 0x1)
-    {
-      gpGui->SetVisible(!gpGui->IsVisible());
-    }
-
     gpGui->Draw();
+
+    // Get viewport
+    D3DVIEWPORT9 Viewport;
+    pDevice->GetViewport(&Viewport);
+
+    // Draw box on viewport border
+    Hades::Math::Vec2f const TopLeft(0,0);
+    Hades::Math::Vec2f const BottomRight(static_cast<float>(Viewport.Width), 
+      static_cast<float>(Viewport.Height));
+    pHelper->DrawBox(TopLeft, BottomRight, 2, D3DCOLOR_ARGB(255, 0, 255, 0));
 
     CColor MyColor(255, 0, 0, 255);
     gpGui->GetFont()->DrawString(10, 10, 0, &MyColor, "Hades");
@@ -115,5 +125,20 @@ namespace Hades
   void GuiMgr::OnRelease(IDirect3DDevice9* /*pDevice*/, 
     D3D9HelperPtr /*pHelper*/)
   {
+  }
+
+  bool GuiMgr::OnInputMsg(HWND /*hwnd*/, UINT uMsg, WPARAM wParam, 
+    LPARAM lParam)
+  {
+    if (uMsg == WM_KEYDOWN && wParam == VK_F12)
+    {
+      gpGui->SetVisible(!gpGui->IsVisible());
+    }
+
+    gpGui->GetMouse().HandleMessage(uMsg, wParam, lParam);
+    gpGui->GetKeyboard()->HandleMessage(uMsg, wParam, lParam);
+
+    return false;
+//     return !gpGui->IsVisible();
   }
 }

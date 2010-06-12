@@ -29,7 +29,6 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include <Windows.h>
 
 // Hades
-#include "Export.h"
 #include "Hades-Memory/Memory.h"
 #include "Hades-Memory/Patcher.h"
 
@@ -42,7 +41,7 @@ namespace Hades
   // Loader class. Used to hook games that can only be run via loaders.
   // Todo: Support all loaders via generic method.
   // Todo: Add ShellExecuteEx support.
-  class HADES_KERNEL_EXPORT_INTERNAL Loader
+  class Loader
   {
   public:
     // Initialize loader

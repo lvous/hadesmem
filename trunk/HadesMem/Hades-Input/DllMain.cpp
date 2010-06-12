@@ -33,12 +33,12 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #pragma warning(pop)
 
 // Hades
-#include "DllMain.h"
+#include "InputMgr.h"
 #include "Hades-Kernel/Kernel.h"
 #include "Hades-Common/Logger.h"
 
 // Initialize Hades-Input
-HADES_INPUT_EXPORT_INTERNAL DWORD Hades::Modules::Input::Initialize(
+extern "C" __declspec(dllexport) DWORD __stdcall Initialize(
   Hades::Kernel* pKernel)
 {
   try
@@ -70,6 +70,13 @@ HADES_INPUT_EXPORT_INTERNAL DWORD Hades::Modules::Input::Initialize(
     // Debug output
     std::wcout << boost::wformat(L"Initialize: Kernel = %p.") %pKernel 
       << std::endl;
+
+    // Initialize input manager wrapper
+    static Hades::InputMgrWrapper MyInputMgrWrapper;
+    pKernel->SetInputMgr(&MyInputMgrWrapper);
+
+    // Initialize input manager
+    Hades::InputMgr::Startup(pKernel);
   }
   catch (boost::exception const& e)
   {

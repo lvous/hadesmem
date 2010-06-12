@@ -19,9 +19,20 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+// Windows API
+#include <Windows.h>
+#include <atlbase.h>
+#include <atlwin.h>
+
+// Boost
+#pragma warning(push, 1)
+#pragma warning(disable: 4267)
+#include <boost/signals2.hpp>
+#pragma warning(pop)
+
 // Hades
-#include "Export.h"
 #include "Hades-Common/Error.h"
+#include "Hades-Memory/Patcher.h"
 
 namespace Hades
 {
@@ -30,14 +41,65 @@ namespace Hades
   { };
 
   // Input managing class
-  class HADES_INPUT_EXPORT_INTERNAL InputMgr
+  class InputMgr
   {
   public:
     // Initialize input subsystem
-    static void Startup(class Kernel* pHades);
+    static void Startup(class Kernel* pKernel);
+
+    // Hook window for input
+    static void HookWindow(HWND Window);
+
+    // Callback type
+    typedef boost::signals2::signal<bool (HWND hwnd, UINT uMsg, WPARAM 
+      wParam, LPARAM lParam)> OnMessageCallbacks;
+
+    // Register callback for OnMsg event
+    static boost::signals2::connection RegisterOnMessage(
+      OnMessageCallbacks::slot_type const& Subscriber);
 
   private:
+    // Window hook procedure
+    static LRESULT CALLBACK MyWindowProc(
+      HWND hwnd,
+      UINT uMsg,
+      WPARAM wParam,
+      LPARAM lParam);
+
     // Hades manager
     static class Kernel* m_pKernel;
+
+    // GetMessageW hook
+    static std::shared_ptr<Memory::PatchDetour> m_pGetMessageWHk;
+
+    // Target window
+    static HWND m_TargetWindow;
+    
+    // Previous window procedure
+    static WNDPROC m_OrigProc;
+
+    // Callback managers
+    static OnMessageCallbacks m_CallsOnMsg;
+  };
+
+  // Input managing class wrapper
+  class InputMgrWrapper
+  {
+  public:
+    virtual void Startup(class Kernel* pHades)
+    {
+      return InputMgr::Startup(pHades);
+    }
+
+    virtual void HookWindow(HWND Window)
+    {
+      return InputMgr::HookWindow(Window);
+    }
+
+    virtual boost::signals2::connection RegisterOnMessage(
+      const InputMgr::OnMessageCallbacks::slot_type& Subscriber)
+    {
+      return InputMgr::RegisterOnMessage(Subscriber);
+    }
   };
 }

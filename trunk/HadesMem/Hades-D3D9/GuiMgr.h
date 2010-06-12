@@ -31,13 +31,16 @@ namespace Hades
   { };
 
   // GUI managing class
-  class HADES_D3D9_EXPORT_INTERNAL GuiMgr
+  class GuiMgr
   {
   public:
     // Constructor
-    GuiMgr();
+    GuiMgr(class Kernel* pKernel);
 
   private:
+    // Input callback
+    bool OnInputMsg(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
     // D3D9Mgr callbacks
     void OnInitialize(IDirect3DDevice9* pDevice, D3D9HelperPtr pHelper);
     void OnFrame(IDirect3DDevice9* pDevice, D3D9HelperPtr pHelper);

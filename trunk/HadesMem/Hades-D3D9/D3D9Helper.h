@@ -28,16 +28,15 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include <atlbase.h>
 
 // Hades
-#include "Export.h"
 #include "Hades-Common/VecN.h"
 
 namespace Hades
 {
   // D3D9Helper pointer type
-  HADES_D3D9_EXPORT_INTERNAL typedef std::tr1::shared_ptr<class D3D9Helper> D3D9HelperPtr;
+  typedef std::tr1::shared_ptr<class D3D9Helper> D3D9HelperPtr;
 
   // D3D9 helper class
-  class HADES_D3D9_EXPORT_INTERNAL D3D9Helper
+  class D3D9Helper
   {
   public:
     // Constructor

@@ -29,6 +29,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include "D3D9Mgr.h"
 #include "Hades-Kernel/Kernel.h"
 #include "Hades-Memory/Patcher.h"
+#include "Hades-Input/InputMgr.h"
 
 namespace Hades
 {
@@ -194,6 +195,9 @@ namespace Hades
       // Debug output
       std::wcout << "D3D9Mgr::CreateDevice_Hook: Called." << std::endl;
 
+      // Hook window
+      m_pKernel->GetInputMgr()->HookWindow(hFocusWindow);
+
       // Call trampoline
       HRESULT Result = pCreateDevice(pThis, Adapter, DeviceType, hFocusWindow, 
         BehaviorFlags, pPresentationParameters, ppReturnedDeviceInterface);
@@ -260,8 +264,10 @@ namespace Hades
           m_pReleaseHk->Apply();
         }
 
-        // Set device pointer and initialize
+        // Set device pointer
         m_pDevice = *ppReturnedDeviceInterface;
+        
+        // Initialize
         Initialize();
       }
 

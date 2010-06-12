@@ -17,5 +17,80 @@ You should have received a copy of the GNU General Public License
 along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+// C++ Standard Library
+#include <iostream>
+
 // Hades
 #include "InputMgr.h"
+#include "Hades-Kernel/Kernel.h"
+
+namespace Hades
+{
+  // Hades manager
+  Kernel* InputMgr::m_pKernel = nullptr;
+
+  // GetMessageW hook
+  std::shared_ptr<Memory::PatchDetour> InputMgr::m_pGetMessageWHk;
+
+  // Target window
+  HWND InputMgr::m_TargetWindow = nullptr;
+  
+  // Previous window procedure
+  WNDPROC InputMgr::m_OrigProc = nullptr;
+
+  // Callback managers
+  InputMgr::OnMessageCallbacks InputMgr::m_CallsOnMsg;
+
+  // Initialize input subsystem
+  void InputMgr::Startup(Kernel* pKernel)
+  {
+    // Set HadesMgr pointer
+    m_pKernel = pKernel;
+  }
+
+  // Window hook procedure
+  LRESULT CALLBACK InputMgr::MyWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, 
+    LPARAM lParam)
+  {
+    // Call registered callbacks and block input if requested
+    return m_CallsOnMsg(hwnd, uMsg, wParam, lParam) ? CallWindowProc(
+      m_OrigProc, hwnd, uMsg, wParam, lParam) : 0;
+  }
+
+  // Hook target window
+  void InputMgr::HookWindow(HWND Window)
+  {
+    try
+    {
+      m_OrigProc = reinterpret_cast<WNDPROC>(SetWindowLongPtr(Window, 
+        GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(&MyWindowProc)));
+      if (!m_OrigProc)
+      {
+        DWORD LastError = GetLastError();
+        BOOST_THROW_EXCEPTION(InputMgrError() << 
+          ErrorFunction("InputMgr::HookWindow") << 
+          ErrorString("Could not set new window procedure.") << 
+          ErrorCodeWin(LastError));
+      }
+    }
+    catch (boost::exception const& e)
+    {
+      // Debug output
+      std::cout << boost::format("InputMgr::HookWindow: Error! %s.") 
+        %boost::diagnostic_information(e) << std::endl;
+    }
+    catch (std::exception const& e)
+    {
+      // Debug output
+      std::cout << boost::format("InputMgr::HookWindow: Error! %s.") 
+        %e.what() << std::endl;
+    }
+  }
+
+  boost::signals2::connection InputMgr::RegisterOnMessage(
+    OnMessageCallbacks::slot_type const& Subscriber)
+  {
+    // Register callback and return connection
+    return m_CallsOnMsg.connect(Subscriber);
+  }
+}

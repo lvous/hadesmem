@@ -38,11 +38,5 @@
     <ClInclude Include="GuiMgr.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="DllMain.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Export.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
 </Project>

@@ -31,15 +31,15 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include "Kernel.h"
 #include "Loader.h"
 #include "Hades-Common/I18n.h"
-#include "Hades-D3D9/DllMain.h"
-#include "Hades-Input/DllMain.h"
 #include "Hades-Common/Filesystem.h"
 
 namespace Hades
 {
   // Constructor
   Kernel::Kernel() 
-    : m_Memory(new Hades::Memory::MemoryMgr(GetCurrentProcessId()))
+    : m_Memory(new Hades::Memory::MemoryMgr(GetCurrentProcessId())), 
+    m_pD3D9Mgr(nullptr), 
+    m_pInputMgr(nullptr)
   { }
 
   // Initialize kernel
@@ -99,8 +99,8 @@ namespace Hades
 #else
 #error Unsupported platform!
 #endif
-    Hades::Modules::Input::Initialize(this);
-    Hades::Modules::D3D9::Initialize(this);
+    LoadModule(PathToSelfDir + L"\\" + InputModName);
+    LoadModule(PathToSelfDir + L"\\" + D3D9ModName);
 
     // Debug output
     std::wcout << "Kernel::Initialize: Hades-Kernel initialized." << std::endl;
@@ -129,21 +129,40 @@ namespace Hades
 
     // Get address of Initialize export. Should be exported by all Hades 
     // extensions and modules.
-    typedef void (__stdcall* tInitialize)(HMODULE Module, 
-      Kernel* pKernel);
+    typedef void (__stdcall* tInitialize)(Kernel* pKernel);
     auto const pInitialize = reinterpret_cast<tInitialize>(GetProcAddress(
-      MyModule, "_Initialize@8"));
+      MyModule, "_Initialize@4"));
     if (!pInitialize)
     {
       DWORD LastError = GetLastError();
       BOOST_THROW_EXCEPTION(KernelError() << 
         ErrorFunction("Kernel::LoadModule") << 
-        ErrorString("Could not find '_Initialize@8' in module \"" + 
+        ErrorString("Could not find '_Initialize@4' in module \"" + 
         boost::lexical_cast<std::string>(Module) + "\".") << 
         ErrorCodeWin(LastError));
     }
 
     // Call initialization routine
-    pInitialize(MyModule, this);
+    pInitialize(this);
+  }
+
+  D3D9MgrWrapper* Kernel::GetD3D9Mgr()
+  {
+    return m_pD3D9Mgr;
+  }
+
+  void Kernel::SetD3D9Mgr(D3D9MgrWrapper* pD3D9Mgr)
+  {
+    m_pD3D9Mgr = pD3D9Mgr;
+  }
+
+  InputMgrWrapper* Kernel::GetInputMgr()
+  {
+    return m_pInputMgr;
+  }
+
+  void Kernel::SetInputMgr(InputMgrWrapper* pInputMgr)
+  {
+    m_pInputMgr = pInputMgr;
   }
 }

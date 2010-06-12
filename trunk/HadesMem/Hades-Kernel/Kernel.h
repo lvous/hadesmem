@@ -27,8 +27,9 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include <boost/noncopyable.hpp>
 
 // Hades
-#include "Export.h"
+#include "Hades-D3D9/D3D9Mgr.h"
 #include "Hades-Memory/Memory.h"
+#include "Hades-Input/InputMgr.h"
 
 namespace Hades
 {
@@ -37,20 +38,32 @@ namespace Hades
   { };
 
   // Hades kernel
-  class HADES_KERNEL_EXPORT_INTERNAL Kernel
+  class Kernel
   {
   public:
     // Constructor
     Kernel();
 
     // Initialize kernel
-    void Initialize();
+    virtual void Initialize();
 
     // Get memory manager
-    std::shared_ptr<Memory::MemoryMgr> GetMemoryMgr();
+    virtual std::shared_ptr<Memory::MemoryMgr> GetMemoryMgr();
 
     // Load and initialize a Hades helper module
-    void LoadModule(std::wstring const& Module);
+    virtual void LoadModule(std::wstring const& Module);
+
+    // Get D3D9 manager wrapper
+    virtual D3D9MgrWrapper* GetD3D9Mgr();
+
+    // Set D3D9 manager wrapper
+    virtual void SetD3D9Mgr(D3D9MgrWrapper* pD3D9Mgr);
+
+    // Get input manager wrapper
+    virtual InputMgrWrapper* GetInputMgr();
+
+    // Set input manager wrapper
+    virtual void SetInputMgr(InputMgrWrapper* pD3D9Mgr);
 
   protected:
     // Disable copying
@@ -60,5 +73,11 @@ namespace Hades
   private:
     // Memory manager
     std::shared_ptr<Memory::MemoryMgr> m_Memory;
+
+    // D3D9 manager wrapper
+    D3D9MgrWrapper* m_pD3D9Mgr;
+
+    // Input manager wrapper
+    InputMgrWrapper* m_pInputMgr;
   };
 }

@@ -43,7 +43,7 @@ namespace Hades
   { };
 
   // D3D9 managing class
-  class HADES_D3D9_EXPORT_INTERNAL D3D9Mgr
+  class D3D9Mgr
   {
   public:
     // Hook D3D9
@@ -65,7 +65,7 @@ namespace Hades
     static boost::signals2::connection RegisterOnRelease(
       const Callbacks::slot_type& Subscriber);
 
-  protected:
+  private:
     // Direct3DCreate9 hook implementation
     static IDirect3D9* WINAPI Direct3DCreate9_Hook(UINT SDKVersion);
 
@@ -104,7 +104,6 @@ namespace Hades
     // Release resources
     static void Release();
 
-  private:
     // D3D9 hooks
     static std::shared_ptr<Memory::PatchDetour> m_pResetHk;
     static std::shared_ptr<Memory::PatchDetour> m_pReleaseHk;
@@ -130,5 +129,43 @@ namespace Hades
 
     // Hades manager
     static class Kernel* m_pKernel;
+  };
+
+  // D3D9 managing class wrapper
+  class D3D9MgrWrapper
+  {
+  public:
+    // Hook D3D9
+    virtual void Startup(class Kernel* pHades)
+    {
+      return D3D9Mgr::Startup(pHades);
+    }
+
+    // Register callbacks for rendering events
+    virtual boost::signals2::connection RegisterOnFrame(
+      const D3D9Mgr::Callbacks::slot_type& Subscriber)
+    {
+      return D3D9Mgr::RegisterOnFrame(Subscriber);
+    }
+    virtual boost::signals2::connection RegisterOnLostDevice(
+      const D3D9Mgr::Callbacks::slot_type& Subscriber)
+    {
+      return D3D9Mgr::RegisterOnLostDevice(Subscriber);
+    }
+    virtual boost::signals2::connection RegisterOnResetDevice(
+      const D3D9Mgr::Callbacks::slot_type& Subscriber)
+    {
+      return D3D9Mgr::RegisterOnResetDevice(Subscriber);
+    }
+    virtual boost::signals2::connection RegisterOnInitialize(
+      const D3D9Mgr::Callbacks::slot_type& Subscriber)
+    {
+      return D3D9Mgr::RegisterOnInitialize(Subscriber);
+    }
+    virtual boost::signals2::connection RegisterOnRelease(
+      const D3D9Mgr::Callbacks::slot_type& Subscriber)
+    {
+      return D3D9Mgr::RegisterOnRelease(Subscriber);
+    }
   };
 }
