@@ -159,7 +159,7 @@ namespace Hades
     gpGui->GetKeyboard()->HandleMessage(uMsg, wParam, lParam);
 
     // Block input when GUI is visible
-    return (gpGui->IsVisible() && 
+    return !(gpGui->IsVisible() && 
       (uMsg == WM_CHAR || 
       uMsg == WM_KEYDOWN || 
       uMsg == WM_KEYUP || 
