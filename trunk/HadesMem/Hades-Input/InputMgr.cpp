@@ -29,9 +29,6 @@ namespace Hades
   // Hades manager
   Kernel* InputMgr::m_pKernel = nullptr;
 
-  // GetMessageW hook
-  std::shared_ptr<Memory::PatchDetour> InputMgr::m_pGetMessageWHk;
-
   // Target window
   HWND InputMgr::m_TargetWindow = nullptr;
   
@@ -39,7 +36,7 @@ namespace Hades
   WNDPROC InputMgr::m_OrigProc = nullptr;
 
   // Callback managers
-  InputMgr::OnMessageCallbacks InputMgr::m_CallsOnMsg;
+  InputMgr::OnWindowMessageCallbacks InputMgr::m_CallsOnWndMsg;
 
   // Initialize input subsystem
   void InputMgr::Startup(Kernel* pKernel)
@@ -53,7 +50,7 @@ namespace Hades
     LPARAM lParam)
   {
     // Call registered callbacks and block input if requested
-    return *m_CallsOnMsg(hwnd, uMsg, wParam, lParam) ? CallWindowProc(
+    return *m_CallsOnWndMsg(hwnd, uMsg, wParam, lParam) ? CallWindowProc(
       m_OrigProc, hwnd, uMsg, wParam, lParam) : 0;
   }
 
@@ -62,6 +59,7 @@ namespace Hades
   {
     try
     {
+      m_TargetWindow = Window;
       m_OrigProc = reinterpret_cast<WNDPROC>(SetWindowLongPtr(Window, 
         GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(&MyWindowProc)));
       if (!m_OrigProc)
@@ -87,10 +85,15 @@ namespace Hades
     }
   }
 
-  boost::signals2::connection InputMgr::RegisterOnMessage(
-    OnMessageCallbacks::slot_type const& Subscriber)
+  boost::signals2::connection InputMgr::RegisterOnWindowMessage(
+    OnWindowMessageCallbacks::slot_type const& Subscriber)
   {
     // Register callback and return connection
-    return m_CallsOnMsg.connect(Subscriber);
+    return m_CallsOnWndMsg.connect(Subscriber);
+  }
+
+  HWND InputMgr::GetTargetWindow()
+  {
+    return m_TargetWindow;
   }
 }

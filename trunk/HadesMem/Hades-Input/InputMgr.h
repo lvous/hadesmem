@@ -50,13 +50,16 @@ namespace Hades
     // Hook window for input
     static void HookWindow(HWND Window);
 
-    // Callback type
+    // Callback types
     typedef boost::signals2::signal<bool (HWND hwnd, UINT uMsg, WPARAM 
-      wParam, LPARAM lParam)> OnMessageCallbacks;
+      wParam, LPARAM lParam)> OnWindowMessageCallbacks;
 
-    // Register callback for OnMsg event
-    static boost::signals2::connection RegisterOnMessage(
-      OnMessageCallbacks::slot_type const& Subscriber);
+    // Register callback for OnWindowMsg event
+    static boost::signals2::connection RegisterOnWindowMessage(
+      OnWindowMessageCallbacks::slot_type const& Subscriber);
+
+    // Get target window
+    static HWND GetTargetWindow();
 
   private:
     // Window hook procedure
@@ -69,9 +72,6 @@ namespace Hades
     // Hades manager
     static class Kernel* m_pKernel;
 
-    // GetMessageW hook
-    static std::shared_ptr<Memory::PatchDetour> m_pGetMessageWHk;
-
     // Target window
     static HWND m_TargetWindow;
     
@@ -79,7 +79,7 @@ namespace Hades
     static WNDPROC m_OrigProc;
 
     // Callback managers
-    static OnMessageCallbacks m_CallsOnMsg;
+    static OnWindowMessageCallbacks m_CallsOnWndMsg;
   };
 
   // Input managing class wrapper
@@ -96,10 +96,15 @@ namespace Hades
       return InputMgr::HookWindow(Window);
     }
 
-    virtual boost::signals2::connection RegisterOnMessage(
-      const InputMgr::OnMessageCallbacks::slot_type& Subscriber)
+    virtual boost::signals2::connection RegisterOnWindowMessage(
+      const InputMgr::OnWindowMessageCallbacks::slot_type& Subscriber)
     {
-      return InputMgr::RegisterOnMessage(Subscriber);
+      return InputMgr::RegisterOnWindowMessage(Subscriber);
+    }
+
+    virtual HWND GetTargetWindow()
+    {
+      return InputMgr::GetTargetWindow();
     }
   };
 }

@@ -17,6 +17,9 @@ You should have received a copy of the GNU General Public License
 along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+// C++ Standard Library
+#include <iostream>
+
 // Hades
 #include "GuiMgr.h"
 #include "D3D9Mgr.h"
@@ -29,6 +32,8 @@ namespace Hades
 {
   // Constructor
   GuiMgr::GuiMgr(Kernel* pKernel) 
+    : m_pKernel(pKernel), 
+    m_pDevice(nullptr)
   {
     // Register for D3D events
     D3D9Mgr::RegisterOnInitialize(std::bind(&GuiMgr::OnInitialize, this, 
@@ -43,8 +48,8 @@ namespace Hades
       std::placeholders::_1, std::placeholders::_2));
 
     // Register for input events
-    pKernel->GetInputMgr()->RegisterOnMessage(std::bind(&GuiMgr::OnInputMsg, 
-      this, std::placeholders::_1, std::placeholders::_2, 
+    pKernel->GetInputMgr()->RegisterOnWindowMessage(std::bind(
+      &GuiMgr::OnInputMsg, this, std::placeholders::_1, std::placeholders::_2, 
       std::placeholders::_3, std::placeholders::_4));
   }
 
@@ -58,6 +63,9 @@ namespace Hades
       delete gpGui;
       gpGui = nullptr;
     }
+
+    // Set device pointer
+    m_pDevice = pDevice;
 
     // Create new GUI instance
     gpGui = new CGUI(pDevice);
@@ -105,6 +113,13 @@ namespace Hades
 
   void GuiMgr::OnFrame(IDirect3DDevice9* pDevice, D3D9HelperPtr pHelper)
   {
+    // Ensure GUI is valid
+    if (!gpGui)
+    {
+      return;
+    }
+
+    // Draw GUI
     gpGui->Draw();
 
     // Get viewport
@@ -120,17 +135,53 @@ namespace Hades
     // Draw test string
     CColor MyColor(255, 0, 0, 255);
     gpGui->GetFont()->DrawString(10, 10, 0, &MyColor, "Hades");
+
+    // Draw dummy cursor if GUI is visible
+    if (gpGui->IsVisible())
+    {
+      POINT CursorPos;
+      if (!GetCursorPos(&CursorPos))
+      {
+        std::wcout << "GuiMgr::OnFrame: Could not get cursor pos." << std::endl;
+      }
+      else
+      {
+        if (!ScreenToClient(m_pKernel->GetInputMgr()->GetTargetWindow(), 
+          &CursorPos))
+        {
+          std::wcout << "GuiMgr::OnFrame: Could not convert screen pos to "
+            "client pos." << std::endl;
+        }
+        else
+        {
+          gpGui->DrawLine(CursorPos.x - 10, CursorPos.y, CursorPos.x + 10, 
+            CursorPos.y, 2, D3DCOLOR_ARGB(255, 0, 255, 0));
+          gpGui->DrawLine(CursorPos.x, CursorPos.y - 10, CursorPos.x, 
+            CursorPos.y + 10, 2, D3DCOLOR_ARGB(255, 0, 255, 0));
+        }
+      }
+    }
   }
 
   void GuiMgr::OnLostDevice(IDirect3DDevice9* /*pDevice*/, 
     D3D9HelperPtr /*pHelper*/)
   {
+    if (!gpGui)
+    {
+      return;
+    }
+
     gpGui->OnLostDevice();
   }
 
   void GuiMgr::OnResetDevice(IDirect3DDevice9* pDevice, 
     D3D9HelperPtr /*pHelper*/)
   {
+    if (!gpGui)
+    {
+      return;
+    }
+
     gpGui->OnResetDevice(pDevice);
   }
 
@@ -152,6 +203,42 @@ namespace Hades
     if (uMsg == WM_KEYDOWN && wParam == VK_F12)
     {
       gpGui->SetVisible(!gpGui->IsVisible());
+    }
+
+    // Hide or restore game cursor if necessary
+    static bool D3DCursorShown = false;
+    static bool CursorShown = false;
+    if (gpGui->IsVisible())
+    {
+      D3DCursorShown = m_pDevice->ShowCursor(FALSE) != 0;
+
+      CURSORINFO CursorInfo = { sizeof(CursorInfo) };
+      if (!GetCursorInfo(&CursorInfo))
+      {
+        std::wcout << "GuiMgr::OnInputMsg: Could not get cursor info." << 
+          std::endl;
+      }
+      else
+      {
+        if (!CursorShown)
+        {
+          CursorShown = (CursorInfo.flags == CURSOR_SHOWING);
+        }
+        while (ShowCursor(FALSE) >= 0)
+          ;
+      }
+    }
+    else
+    {
+      while (CursorShown && ShowCursor(TRUE) < 0)
+        ;
+      CursorShown = false;
+
+      if (D3DCursorShown)
+      {
+        m_pDevice->ShowCursor(TRUE);
+      }
+      D3DCursorShown = false;
     }
 
     // Notify GUI of input events
