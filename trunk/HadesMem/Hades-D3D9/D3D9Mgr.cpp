@@ -94,6 +94,8 @@ namespace Hades
     PBYTE Detour = reinterpret_cast<PBYTE>(&Direct3DCreate9_Hook);
 
     // Debug output
+    std::wcout << "D3D9Mgr::Startup: Hooking d3d9.dll!Direct3DCreate9." << 
+      std::endl;
     std::wcout << boost::wformat(L"D3D9Mgr::Startup: Target = %p, "
       L"Detour = %p.") %Target %Detour << std::endl;
 

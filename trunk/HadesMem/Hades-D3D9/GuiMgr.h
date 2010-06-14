@@ -43,6 +43,7 @@ namespace Hades
   private:
     // Input callbacks
     bool OnInputMsg(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    bool OnSetCursor(HCURSOR hCursor);
 
     // D3D9Mgr callbacks
     void OnInitialize(IDirect3DDevice9* pDevice, D3D9HelperPtr pHelper);
@@ -50,6 +51,9 @@ namespace Hades
     void OnLostDevice(IDirect3DDevice9* pDevice, D3D9HelperPtr pHelper);
     void OnResetDevice(IDirect3DDevice9* pDevice, D3D9HelperPtr pHelper);
     void OnRelease(IDirect3DDevice9* pDevice, D3D9HelperPtr pHelper);
+
+    // Toggle visibility
+    void ToggleVisible();
 
     // Kernel instance
     class Kernel* m_pKernel;

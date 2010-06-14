@@ -37,12 +37,55 @@ namespace Hades
 
   // Callback managers
   InputMgr::OnWindowMessageCallbacks InputMgr::m_CallsOnWndMsg;
+  InputMgr::OnSetCursorCallbacks InputMgr::m_CallsOnSetCursor;
+
+  // SetCursor hook
+  std::shared_ptr<Memory::PatchDetour> InputMgr::m_pSetCursorHk;
 
   // Initialize input subsystem
   void InputMgr::Startup(Kernel* pKernel)
   {
     // Set HadesMgr pointer
     m_pKernel = pKernel;
+
+    // Load User32
+    // Todo: Defer hooking until game loads User32 (e.g. via LoadLibrary 
+    // hook).
+    HMODULE User32Mod = LoadLibrary(L"User32.dll");
+    if (!User32Mod)
+    {
+      DWORD LastError = GetLastError();
+      BOOST_THROW_EXCEPTION(InputMgrError() << 
+        ErrorFunction("InputMgr::Startup") << 
+        ErrorString("Could not load User32.") << 
+        ErrorCodeWin(LastError));
+    }
+
+    // Get address of SetCursor
+    FARPROC pSetCursor = GetProcAddress(User32Mod, "SetCursor");
+    if (!pSetCursor)
+    {
+      DWORD LastError = GetLastError();
+      BOOST_THROW_EXCEPTION(InputMgrError() << 
+        ErrorFunction("InputMgr::Startup") << 
+        ErrorString("Could not get address of SetCursor.") << 
+        ErrorCodeWin(LastError));
+    }
+
+    // Target and detour pointer
+    PBYTE Target = reinterpret_cast<PBYTE>(pSetCursor);
+    PBYTE Detour = reinterpret_cast<PBYTE>(&SetCursor_Hook);
+
+    // Debug output
+    std::wcout << "InputMgr::Startup: Hooking user32.dll!SetCursor." << 
+      std::endl;
+    std::wcout << boost::wformat(L"InputMgr::Startup: Target = %p, "
+      L"Detour = %p.") %Target %Detour << std::endl;
+
+    // Hook user32.dll!SetCursor
+    m_pSetCursorHk.reset(new Hades::Memory::PatchDetour(*pKernel->
+      GetMemoryMgr(), Target, Detour));
+    m_pSetCursorHk->Apply();
   }
 
   // Window hook procedure
@@ -92,8 +135,25 @@ namespace Hades
     return m_CallsOnWndMsg.connect(Subscriber);
   }
 
+  boost::signals2::connection InputMgr::RegisterOnSetCursor(
+    OnSetCursorCallbacks::slot_type const& Subscriber)
+  {
+    // Register callback and return connection
+    return m_CallsOnSetCursor.connect(Subscriber);
+  }
+
   HWND InputMgr::GetTargetWindow()
   {
     return m_TargetWindow;
+  }
+
+  HCURSOR WINAPI InputMgr::SetCursor_Hook(HCURSOR Cursor)
+  {
+    // Get trampoline6
+    typedef HCURSOR (WINAPI* tSetCursor)(HCURSOR Cursor);
+    auto pSetCursor = reinterpret_cast<tSetCursor>(m_pSetCursorHk->
+      GetTrampoline());
+
+    return *m_CallsOnSetCursor(Cursor) ? pSetCursor(Cursor) : nullptr;
   }
 }

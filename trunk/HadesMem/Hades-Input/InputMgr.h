@@ -53,13 +53,22 @@ namespace Hades
     // Callback types
     typedef boost::signals2::signal<bool (HWND hwnd, UINT uMsg, WPARAM 
       wParam, LPARAM lParam)> OnWindowMessageCallbacks;
+    typedef boost::signals2::signal<bool (HCURSOR hCursor)> 
+      OnSetCursorCallbacks;
 
     // Register callback for OnWindowMsg event
     static boost::signals2::connection RegisterOnWindowMessage(
       OnWindowMessageCallbacks::slot_type const& Subscriber);
 
+    // Register callback for OnSetCursor event
+    static boost::signals2::connection RegisterOnSetCursor(
+      OnSetCursorCallbacks::slot_type const& Subscriber);
+
     // Get target window
     static HWND GetTargetWindow();
+
+    // SetCursor hook
+    static HCURSOR WINAPI SetCursor_Hook(HCURSOR Cursor);
 
   private:
     // Window hook procedure
@@ -80,6 +89,10 @@ namespace Hades
 
     // Callback managers
     static OnWindowMessageCallbacks m_CallsOnWndMsg;
+    static OnSetCursorCallbacks m_CallsOnSetCursor;
+
+    // SetCursor hook
+    static std::shared_ptr<Memory::PatchDetour> m_pSetCursorHk;
   };
 
   // Input managing class wrapper
@@ -100,6 +113,12 @@ namespace Hades
       const InputMgr::OnWindowMessageCallbacks::slot_type& Subscriber)
     {
       return InputMgr::RegisterOnWindowMessage(Subscriber);
+    }
+
+    virtual boost::signals2::connection RegisterOnSetCursor(
+      InputMgr::OnSetCursorCallbacks::slot_type const& Subscriber)
+    {
+      return InputMgr::RegisterOnSetCursor(Subscriber);
     }
 
     virtual HWND GetTargetWindow()

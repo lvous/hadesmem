@@ -51,6 +51,8 @@ namespace Hades
     pKernel->GetInputMgr()->RegisterOnWindowMessage(std::bind(
       &GuiMgr::OnInputMsg, this, std::placeholders::_1, std::placeholders::_2, 
       std::placeholders::_3, std::placeholders::_4));
+    pKernel->GetInputMgr()->RegisterOnSetCursor(std::bind(&GuiMgr::OnSetCursor, 
+      this, std::placeholders::_1));
   }
 
   // Initialize GUI from device
@@ -135,32 +137,6 @@ namespace Hades
     // Draw test string
     CColor MyColor(255, 0, 0, 255);
     gpGui->GetFont()->DrawString(10, 10, 0, &MyColor, "Hades");
-
-    // Draw dummy cursor if GUI is visible
-    if (gpGui->IsVisible())
-    {
-      POINT CursorPos;
-      if (!GetCursorPos(&CursorPos))
-      {
-        std::wcout << "GuiMgr::OnFrame: Could not get cursor pos." << std::endl;
-      }
-      else
-      {
-        if (!ScreenToClient(m_pKernel->GetInputMgr()->GetTargetWindow(), 
-          &CursorPos))
-        {
-          std::wcout << "GuiMgr::OnFrame: Could not convert screen pos to "
-            "client pos." << std::endl;
-        }
-        else
-        {
-          gpGui->DrawLine(CursorPos.x - 10, CursorPos.y, CursorPos.x + 10, 
-            CursorPos.y, 2, D3DCOLOR_ARGB(255, 0, 255, 0));
-          gpGui->DrawLine(CursorPos.x, CursorPos.y - 10, CursorPos.x, 
-            CursorPos.y + 10, 2, D3DCOLOR_ARGB(255, 0, 255, 0));
-        }
-      }
-    }
   }
 
   void GuiMgr::OnLostDevice(IDirect3DDevice9* /*pDevice*/, 
@@ -202,43 +178,7 @@ namespace Hades
     // Toggle GUI on F12
     if (uMsg == WM_KEYDOWN && wParam == VK_F12)
     {
-      gpGui->SetVisible(!gpGui->IsVisible());
-    }
-
-    // Hide or restore game cursor if necessary
-    static bool D3DCursorShown = false;
-    static bool CursorShown = false;
-    if (gpGui->IsVisible())
-    {
-      D3DCursorShown = m_pDevice->ShowCursor(FALSE) != 0;
-
-      CURSORINFO CursorInfo = { sizeof(CursorInfo) };
-      if (!GetCursorInfo(&CursorInfo))
-      {
-        std::wcout << "GuiMgr::OnInputMsg: Could not get cursor info." << 
-          std::endl;
-      }
-      else
-      {
-        if (!CursorShown)
-        {
-          CursorShown = (CursorInfo.flags == CURSOR_SHOWING);
-        }
-        while (ShowCursor(FALSE) >= 0)
-          ;
-      }
-    }
-    else
-    {
-      while (CursorShown && ShowCursor(TRUE) < 0)
-        ;
-      CursorShown = false;
-
-      if (D3DCursorShown)
-      {
-        m_pDevice->ShowCursor(TRUE);
-      }
-      D3DCursorShown = false;
+      ToggleVisible();
     }
 
     // Notify GUI of input events
@@ -262,4 +202,36 @@ namespace Hades
       uMsg == WM_MBUTTONDBLCLK || 
       uMsg == WM_MOUSEWHEEL));
   }
+
+  bool GuiMgr::OnSetCursor(HCURSOR hCursor)
+  {
+    return !(hCursor == NULL && gpGui && gpGui->IsVisible());
+  }
+
+  void GuiMgr::ToggleVisible()
+  {
+    // Previous cursor state
+    static HCURSOR PrevCursor = NULL;
+
+    // If GUI is visible
+    if (gpGui->IsVisible()) 
+    {
+      // Hide GUI 
+      gpGui->SetVisible(false);
+
+      // Restore previous cursor
+      PrevCursor = SetCursor(PrevCursor);
+    }
+    else
+    {
+      // Hide GUI 
+      gpGui->SetVisible(true);
+
+      // Load default cursor
+      HCURSOR DefArrow = LoadCursor(NULL, IDC_ARROW);
+      // Set cursor
+      PrevCursor = SetCursor(DefArrow);
+    }
+  }
+
 }

@@ -58,6 +58,12 @@ namespace Hades
       PBYTE Target = reinterpret_cast<PBYTE>(pCreateProcessInternalW);
       PBYTE Detour = reinterpret_cast<PBYTE>(CreateProcessInternalW_Hook);
 
+      // Debug output
+      std::wcout << "Loader::Initialize: Hooking kernel32.dll!"
+        "CreateProcessInternalW." << std::endl;
+      std::wcout << boost::wformat(L"Loader::Initialize: Target = %p, "
+        L"Detour = %p.") %Target %Detour << std::endl;
+
       // Hook CreateProcessInternalW
       m_pCreateProcessInternalWHk.reset(new Memory::PatchDetour(*m_Memory, 
         Target, Detour));
