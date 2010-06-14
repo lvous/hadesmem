@@ -55,6 +55,10 @@ namespace Hades
       wParam, LPARAM lParam)> OnWindowMessageCallbacks;
     typedef boost::signals2::signal<bool (HCURSOR hCursor)> 
       OnSetCursorCallbacks;
+    typedef boost::signals2::signal<bool (LPPOINT lpPoint)> 
+      OnGetCursorPosCallbacks;
+    typedef boost::signals2::signal<bool (int X, int Y)> 
+      OnSetCursorPosCallbacks;
 
     // Register callback for OnWindowMsg event
     static boost::signals2::connection RegisterOnWindowMessage(
@@ -64,11 +68,25 @@ namespace Hades
     static boost::signals2::connection RegisterOnSetCursor(
       OnSetCursorCallbacks::slot_type const& Subscriber);
 
+    // Register callback for OnGetCursorPos event
+    static boost::signals2::connection RegisterOnGetCursorPos(
+      OnGetCursorPosCallbacks::slot_type const& Subscriber);
+
+    // Register callback for OnSetCursorPos event
+    static boost::signals2::connection RegisterOnSetCursorPos(
+      OnSetCursorPosCallbacks::slot_type const& Subscriber);
+
     // Get target window
     static HWND GetTargetWindow();
 
     // SetCursor hook
     static HCURSOR WINAPI SetCursor_Hook(HCURSOR Cursor);
+
+    // GetCursorPos hook
+    static BOOL WINAPI GetCursorPos_Hook(LPPOINT lpPoint);
+
+    // SetCursorPos hook
+    static BOOL WINAPI SetCursorPos_Hook(int X, int Y);
 
   private:
     // Window hook procedure
@@ -90,9 +108,17 @@ namespace Hades
     // Callback managers
     static OnWindowMessageCallbacks m_CallsOnWndMsg;
     static OnSetCursorCallbacks m_CallsOnSetCursor;
+    static OnGetCursorPosCallbacks m_CallsOnGetCursorPos;
+    static OnSetCursorPosCallbacks m_CallsOnSetCursorPos;
 
     // SetCursor hook
     static std::shared_ptr<Memory::PatchDetour> m_pSetCursorHk;
+
+    // GetCursorPos hook
+    static std::shared_ptr<Memory::PatchDetour> m_pGetCursorPosHk;
+
+    // SetCursorPos hook
+    static std::shared_ptr<Memory::PatchDetour> m_pSetCursorPosHk;
   };
 
   // Input managing class wrapper
@@ -119,6 +145,18 @@ namespace Hades
       InputMgr::OnSetCursorCallbacks::slot_type const& Subscriber)
     {
       return InputMgr::RegisterOnSetCursor(Subscriber);
+    }
+
+    virtual boost::signals2::connection RegisterOnGetCursorPos(
+      InputMgr::OnGetCursorPosCallbacks::slot_type const& Subscriber)
+    {
+      return InputMgr::RegisterOnGetCursorPos(Subscriber);
+    }
+
+    virtual boost::signals2::connection RegisterOnSetCursorPos(
+      InputMgr::OnSetCursorPosCallbacks::slot_type const& Subscriber)
+    {
+      return InputMgr::RegisterOnSetCursorPos(Subscriber);
     }
 
     virtual HWND GetTargetWindow()

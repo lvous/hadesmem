@@ -44,6 +44,8 @@ namespace Hades
     // Input callbacks
     bool OnInputMsg(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     bool OnSetCursor(HCURSOR hCursor);
+    bool OnGetCursorPos(LPPOINT lpPoint);
+    bool OnSetCursorPos(int X, int Y);
 
     // D3D9Mgr callbacks
     void OnInitialize(IDirect3DDevice9* pDevice, D3D9HelperPtr pHelper);
@@ -60,5 +62,9 @@ namespace Hades
 
     // D3D9 device
     IDirect3DDevice9* m_pDevice;
+
+    // Saved cursor position
+    int m_CursorX;
+    int m_CursorY;
   };
 }

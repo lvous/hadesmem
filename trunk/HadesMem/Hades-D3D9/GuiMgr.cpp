@@ -33,7 +33,9 @@ namespace Hades
   // Constructor
   GuiMgr::GuiMgr(Kernel* pKernel) 
     : m_pKernel(pKernel), 
-    m_pDevice(nullptr)
+    m_pDevice(nullptr), 
+    m_CursorX(0), 
+    m_CursorY(0)
   {
     // Register for D3D events
     D3D9Mgr::RegisterOnInitialize(std::bind(&GuiMgr::OnInitialize, this, 
@@ -53,6 +55,11 @@ namespace Hades
       std::placeholders::_3, std::placeholders::_4));
     pKernel->GetInputMgr()->RegisterOnSetCursor(std::bind(&GuiMgr::OnSetCursor, 
       this, std::placeholders::_1));
+    pKernel->GetInputMgr()->RegisterOnGetCursorPos(std::bind(
+      &GuiMgr::OnGetCursorPos, this, std::placeholders::_1));
+    pKernel->GetInputMgr()->RegisterOnSetCursorPos(std::bind(
+      &GuiMgr::OnSetCursorPos, this, std::placeholders::_1, 
+      std::placeholders::_2));
   }
 
   // Initialize GUI from device
@@ -234,4 +241,29 @@ namespace Hades
     }
   }
 
+  bool GuiMgr::OnGetCursorPos(LPPOINT lpPoint)
+  {
+    if (gpGui && gpGui->IsVisible() && (m_CursorX != 0 || m_CursorY != 0))
+    {
+      lpPoint->x = m_CursorX;
+      lpPoint->y = m_CursorY;
+
+      return false;
+    }
+
+    return true;
+  }
+
+  bool GuiMgr::OnSetCursorPos(int X, int Y)
+  {
+    if (gpGui && gpGui->IsVisible())
+    {
+      m_CursorX = X;
+      m_CursorY = Y;
+
+      return false;
+    }
+
+    return true;
+  }
 }
