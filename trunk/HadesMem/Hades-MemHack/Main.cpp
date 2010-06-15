@@ -31,6 +31,40 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Hades
 #include "Hades-Memory/Scripting.h"
 
+bool GetInput(Hades::Memory::ScriptMgr& MyScriptMgr) 
+{
+  // Prompt for input
+  std::wcout << ">";
+
+  // Get command from user
+  std::string Input;
+  while (!std::getline(std::cin, Input) || Input.empty())
+  {
+    std::wcout << "Invalid command." << std::endl;
+    std::wcout << ">";
+  }
+
+  // Check for quit request
+  if (Input == "quit")
+  {
+    return false;
+  }
+
+  // Check for runfile request
+  if (Input.find(' ') != std::string::npos && Input.substr(0, 
+    Input.find(' ')) == "runfile")
+  {
+    MyScriptMgr.RunFile(Input.substr(Input.find(' ') + 1, 
+      std::string::npos));
+    return true;
+  }
+
+  // Run script
+  MyScriptMgr.RunString(Input);
+
+  return true;
+}
+
 // Program entry-point.
 int wmain(int argc, wchar_t* argv[], wchar_t* /*envp*/[])
 {
@@ -92,34 +126,10 @@ int wmain(int argc, wchar_t* argv[], wchar_t* /*envp*/[])
       {
         try
         {
-          // Prompt for input
-          std::wcout << ">";
-
-          // Get command from user
-          std::string Input;
-          while (!std::getline(std::cin, Input) || Input.empty())
-          {
-            std::wcout << "Invalid command." << std::endl;
-            std::wcout << ">";
-          }
-
-          // Check for quit request
-          if (Input == "quit")
+          if (!GetInput(MyScriptMgr))
           {
             break;
           }
-
-          // Check for runfile request
-           if (Input.find(' ') != std::string::npos && Input.substr(0, 
-             Input.find(' ')) == "runfile")
-           {
-             MyScriptMgr.RunFile(Input.substr(Input.find(' ') + 1, 
-               std::string::npos));
-             continue;
-           }
-
-          // Run script
-          MyScriptMgr.RunString(Input);
         }
         catch (boost::exception const& e)
         {
