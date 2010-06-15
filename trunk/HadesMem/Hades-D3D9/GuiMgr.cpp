@@ -209,9 +209,11 @@ namespace Hades
     }
 
     // Toggle GUI on F12
+    bool GuiToggled = false;
     if (uMsg == WM_KEYDOWN && wParam == VK_F12)
     {
       ToggleVisible();
+      GuiToggled = true;
     }
 
     // Notify GUI of input events
@@ -219,7 +221,7 @@ namespace Hades
     gpGui->GetKeyboard()->HandleMessage(uMsg, wParam, lParam);
 
     // Block input when GUI is visible
-    return !(gpGui->IsVisible() && 
+    return !((gpGui->IsVisible() || GuiToggled) && 
       (uMsg == WM_CHAR || 
       uMsg == WM_KEYDOWN || 
       uMsg == WM_KEYUP || 
