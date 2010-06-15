@@ -117,13 +117,13 @@ namespace Hades
       }
       else
       {
-        std::wcout << "GuiMgr::OnInitialize: Error! Could not find console "
+        std::wcout << "GuiMgr::OnInitialize: Warning! Could not find console "
           "input box." << std::endl;
       }
     }
     else
     {
-      std::wcout << "GuiMgr::OnInitialize: Error! Could not find console "
+      std::wcout << "GuiMgr::OnInitialize: Warning! Could not find console "
         "window." << std::endl;
     }
 
