@@ -165,7 +165,8 @@ namespace Hades
 
     // Draw test string
     CColor MyColor(255, 0, 0, 255);
-    gpGui->GetFont()->DrawString(10, 10, 0, &MyColor, "Hades");
+    gpGui->GetFont()->DrawString(Viewport.X + 10, Viewport.Y + 10, 0, 
+      &MyColor, "Hades");
   }
 
   // D3D9Mgr OnLostDevice callback
