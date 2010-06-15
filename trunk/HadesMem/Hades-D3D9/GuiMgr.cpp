@@ -104,7 +104,28 @@ namespace Hades
 
     // Load GUI
     gpGui->LoadInterfaceFromFile("ColorThemes.xml");
-    gpGui->LoadInterfaceFromFile("GuiTest_UI.xml");
+    gpGui->LoadInterfaceFromFile("Console.xml");
+
+    // Set callbacks
+    auto pConsole = gpGui->GetWindowByString("HADES_CONSOLE_WINDOW", 1);
+    if (pConsole)
+    {
+      auto pInBox = pConsole->GetElementByString("HADES_CONSOLE_INPUT", 1);
+      if (pInBox)
+      {
+        pInBox->SetCallback(&GuiMgr::OnConsoleInput);
+      }
+      else
+      {
+        std::wcout << "GuiMgr::OnInitialize: Error! Could not find console "
+          "input box." << std::endl;
+      }
+    }
+    else
+    {
+      std::wcout << "GuiMgr::OnInitialize: Error! Could not find console "
+        "window." << std::endl;
+    }
 
     // Show GUI
     gpGui->SetVisible(true);
@@ -120,6 +141,7 @@ namespace Hades
     }
   }
 
+  // D3D9Mgr OnFrame callback
   void GuiMgr::OnFrame(IDirect3DDevice9* pDevice, D3D9HelperPtr pHelper)
   {
     // Ensure GUI is valid
@@ -146,6 +168,7 @@ namespace Hades
     gpGui->GetFont()->DrawString(10, 10, 0, &MyColor, "Hades");
   }
 
+  // D3D9Mgr OnLostDevice callback
   void GuiMgr::OnLostDevice(IDirect3DDevice9* /*pDevice*/, 
     D3D9HelperPtr /*pHelper*/)
   {
@@ -157,6 +180,7 @@ namespace Hades
     gpGui->OnLostDevice();
   }
 
+  // D3D9Mgr OnResetDevice callback
   void GuiMgr::OnResetDevice(IDirect3DDevice9* pDevice, 
     D3D9HelperPtr /*pHelper*/)
   {
@@ -168,11 +192,13 @@ namespace Hades
     gpGui->OnResetDevice(pDevice);
   }
 
+  // D3D9Mgr OnRelease callback
   void GuiMgr::OnRelease(IDirect3DDevice9* /*pDevice*/, 
     D3D9HelperPtr /*pHelper*/)
   {
   }
 
+  // InputMgr OnInputMsg callback
   bool GuiMgr::OnInputMsg(HWND /*hwnd*/, UINT uMsg, WPARAM wParam, 
     LPARAM lParam)
   {
@@ -210,11 +236,15 @@ namespace Hades
       uMsg == WM_MOUSEWHEEL));
   }
 
+  // InputMgr OnSetCursor callback
   bool GuiMgr::OnSetCursor(HCURSOR hCursor)
   {
+    // Only allow cursor to be modified when it's not being removed entirely 
+    // and the GUI is not visible
     return !(hCursor == NULL && gpGui && gpGui->IsVisible());
   }
 
+  // Toggle GUI's visibility
   void GuiMgr::ToggleVisible()
   {
     // Previous cursor state
@@ -241,8 +271,10 @@ namespace Hades
     }
   }
 
+  // InputMgr OnGetCursorPos callback
   bool GuiMgr::OnGetCursorPos(LPPOINT lpPoint)
   {
+    // Use cached values and block call if GUI is currently visible
     if (gpGui && gpGui->IsVisible() && (m_CursorX != 0 || m_CursorY != 0))
     {
       lpPoint->x = m_CursorX;
@@ -254,8 +286,10 @@ namespace Hades
     return true;
   }
 
+  // InputMgr OnSetCursorPos callback
   bool GuiMgr::OnSetCursorPos(int X, int Y)
   {
+    // Backup current values and block call if GUI is currently visible
     if (gpGui && gpGui->IsVisible())
     {
       m_CursorX = X;
@@ -265,5 +299,49 @@ namespace Hades
     }
 
     return true;
+  }
+
+  // GUI library callback for console input
+  std::string __cdecl GuiMgr::OnConsoleInput(char const* pszArgs, 
+    CElement* pElement)
+  {
+    // Print input to console
+    Print(pszArgs);
+
+    // Clear input box and refocus
+    auto pEditBox = dynamic_cast<CEditBox*>(pElement);
+    pEditBox->SetString("");
+    pEditBox->SetStart(0);
+    pEditBox->SetIndex(0);
+    pEditBox->GetParent()->SetFocussedElement(pElement);
+
+    // Forced return value
+    return std::string();
+  }
+
+  // Print output to console
+  void GuiMgr::Print( std::string const& Output )
+  {
+    // Get console window
+    auto pConsole = gpGui->GetWindowByString("HADES_CONSOLE_WINDOW", 1);
+    if (!pConsole)
+    {
+      std::wcout << "GuiMgr::Print: Warning! Could not find console window." << 
+        std::endl;
+      return;
+    }
+
+    // Get input box
+    auto pOutBox = pConsole->GetElementByString("HADES_CONSOLE_OUTPUT", 1);
+    if (!pOutBox)
+    {
+      std::wcout << "GuiMgr::Print: Warning! Could not find console output "
+        "box." << std::endl;
+      return;
+    }
+
+    // Add output
+    auto pOutBoxReal = dynamic_cast<CTextBox*>(pOutBox);
+    pOutBoxReal->AddString(Output);
   }
 }

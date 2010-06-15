@@ -40,6 +40,13 @@ namespace Hades
     // Constructor
     GuiMgr(class Kernel* pKernel);
 
+    // Print output
+    static void Print(std::string const& Output);
+
+    // Callback on input
+    static std::string __cdecl OnConsoleInput(char const* pszArgs, 
+      CElement* pElement);
+
   private:
     // Input callbacks
     bool OnInputMsg(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
