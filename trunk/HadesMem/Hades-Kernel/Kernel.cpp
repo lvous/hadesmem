@@ -72,23 +72,8 @@ namespace Hades
       << std::endl;
 
     // Initialize Loader
-    // Todo: Move this data to external file (XML?)
     Loader::Initialize(this);
-    Loader::AddExe(L"WoW.exe", L"Hades-Kernel_IA32.dll");
-    Loader::AddExe(L"Launcher.exe", L"Hades-Kernel_IA32.dll");
-    Loader::AddExe(L"UT3.exe", L"Hades-Kernel_IA32.dll");
-    Loader::AddExe(L"IW4MP.exe", L"Hades-Kernel_IA32.dll");
-    Loader::AddExe(L"Aion.bin", L"Hades-Kernel_IA32.dll");
-    Loader::AddExe(L"HL2.exe", L"Hades-Kernel_IA32.dll");
-    Loader::AddExe(L"BFBC2Game.exe", L"Hades-Kernel_IA32.dll");
-    Loader::AddExe(L"NCLauncher.exe", L"Hades-Kernel_IA32.dll");
-    Loader::AddExe(L"NCWLauncherSetup.exe", L"Hades-Kernel_IA32.dll");
-    Loader::AddExe(L"AvP.exe", L"Hades-Kernel_IA32.dll");
-    Loader::AddExe(L"AvP_DX11.exe", L"Hades-Kernel_IA32.dll");
-    Loader::AddExe(L"SR2_pc.exe", L"Hades-Kernel_IA32.dll");
-    Loader::AddExe(L"FEAR2.exe", L"Hades-Kernel_IA32.dll");
-    Loader::AddExe(L"Left4Dead.exe", L"Hades-Kernel_IA32.dll");
-    Loader::AddExe(L"Left4Dead2.exe", L"Hades-Kernel_IA32.dll");
+    Loader::LoadConfig(PathToSelfDir + L"/Config/Loader.xml");
 
     // Start aux modules
 #if defined(_M_X64)

@@ -47,6 +47,9 @@ namespace Hades
     // Initialize loader
     static void Initialize(class Kernel* pKernel);
 
+    // Load configuration data from XML file
+    static void LoadConfig(std::wstring const& Path);
+
     // Initialize settings and hook APIs
     static void AddExe(std::wstring const& ProcessName, 
       std::wstring const& ModuleName);

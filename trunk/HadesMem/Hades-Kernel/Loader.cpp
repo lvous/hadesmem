@@ -1,8 +1,12 @@
 // C++ Standard Library
+#include <fstream>
 #include <iostream>
 
 // Boost
 #include <boost/format.hpp>
+
+// RapidXML
+#include <RapidXML/rapidxml.hpp>
 
 // Hades
 #include "Loader.h"
@@ -309,5 +313,59 @@ namespace Hades
     // Return module if process is injection target, or an empty string 
     // otherwise.
     return Iter != m_ProcsAndMods.end() ? Iter->second : std::wstring();
+  }
+
+  // Load configuration data from XML file
+  void Loader::LoadConfig(std::wstring const& Path)
+  {
+    // Open current file
+    std::wifstream PatternFile(Path.c_str());
+    if (!PatternFile)
+    {
+      BOOST_THROW_EXCEPTION(LoaderError() << 
+        ErrorFunction("Loader::LoadConfig") << 
+        ErrorString("Could not open config file."));
+    }
+
+    // Copy file to buffer
+    std::istreambuf_iterator<wchar_t> PatFileBeg(PatternFile);
+    std::istreambuf_iterator<wchar_t> PatFileEnd;
+    std::vector<wchar_t> PatFileBuf(PatFileBeg, PatFileEnd);
+    PatFileBuf.push_back(L'\0');
+
+    // Open XML document
+    rapidxml::xml_document<wchar_t> AccountsDoc;
+    AccountsDoc.parse<0>(&PatFileBuf[0]);
+
+    // Ensure loader tag is found
+    auto TargetsTag = AccountsDoc.first_node(L"Targets");
+    if (!TargetsTag)
+    {
+      BOOST_THROW_EXCEPTION(LoaderError() << 
+        ErrorFunction("Loader::LoadConfig") << 
+        ErrorString("Invalid config file format."));
+    }
+
+    // Loop over all targets
+    for (auto Pattern = TargetsTag->first_node(L"Target"); Pattern; 
+      Pattern = Pattern->next_sibling(L"Target"))
+    {
+      // Get target attributes
+      auto NameNode = Pattern->first_attribute(L"Name");
+      auto ModuleNode = Pattern->first_attribute(L"Module");
+      std::wstring Name(NameNode ? NameNode->value() : L"");
+      std::wstring Module(ModuleNode ? ModuleNode->value() : L"");
+
+      // Ensure data is valid
+      if (Name.empty() || Module.empty())
+      {
+        BOOST_THROW_EXCEPTION(LoaderError() << 
+          ErrorFunction("Loader::LoadConfig") << 
+          ErrorString("Invalid target attributes."));
+      }
+
+      // Add current game
+      Loader::AddExe(Name, Module);
+    }
   }
 }
