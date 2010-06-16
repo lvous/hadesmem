@@ -168,6 +168,24 @@ namespace Hades
   {
     try
     {
+      // Block multiple hook attempts
+      // Todo: Fix this to allow support for multiple windows
+      if (m_TargetWindow != nullptr)
+      {
+        if (m_TargetWindow == Window)
+        {
+          std::wcout << "InputMgr::HookWindow: Warning! Attempt to rehook "
+            "current target. Currently unsupported." << std::endl;
+        }
+        else
+        {
+          std::wcout << "InputMgr::HookWindow: Warning! Attempt to hook new "
+            "target. Currently unsupported." << std::endl;
+        }
+        return;
+      }
+
+      // Set target window and hook
       m_TargetWindow = Window;
       m_OrigProc = reinterpret_cast<WNDPROC>(SetWindowLongPtr(Window, 
         GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(&MyWindowProc)));

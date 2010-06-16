@@ -143,8 +143,8 @@ namespace Hades
           PBYTE pCreateDeviceHk = reinterpret_cast<PBYTE>(&CreateDevice_Hook);
 
           // Debug output
-          std::wcout << L"D3D9Mgr::Direct3DCreate9_Hook: Hooking IDirect3D9::"
-            L"CreateDevice." << std::endl;
+          std::wcout << "D3D9Mgr::Direct3DCreate9_Hook: Hooking "
+            "d3d9.dll!IDirect3D9::CreateDevice." << std::endl;
 
           // Hook CreateDevice
           m_pCreateDeviceHk.reset(new Hades::Memory::PatchDetour(*m_pKernel->
@@ -232,7 +232,7 @@ namespace Hades
 
           // Debug output
           std::wcout << "D3D9Mgr::CreateDevice_Hook: Hooking "
-            "IDirect3DDevice9::EndScene." << std::endl;
+            "d3d9.dll!IDirect3DDevice9::EndScene." << std::endl;
 
           // Hook EndScene
           m_pEndSceneHk.reset(new Hades::Memory::PatchDetour(*m_pKernel->
@@ -245,7 +245,7 @@ namespace Hades
 
           // Debug output
           std::wcout << "D3D9Mgr::CreateDevice_Hook: Hooking "
-            "IDirect3DDevice9::Reset." << std::endl;
+            "d3d9.dll!IDirect3DDevice9::Reset." << std::endl;
 
           // Hook Reset
           m_pResetHk.reset(new Hades::Memory::PatchDetour(*m_pKernel->
@@ -258,7 +258,7 @@ namespace Hades
 
           // Debug output
           std::wcout << "D3D9Mgr::CreateDevice_Hook: Hooking "
-            "IDirect3DDevice9::Release." << std::endl;
+            "d3d9.dll!IDirect3DDevice9::Release." << std::endl;
 
           // Hook Release
           m_pReleaseHk.reset(new Hades::Memory::PatchDetour(*m_pKernel->
