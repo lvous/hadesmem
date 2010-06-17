@@ -19,6 +19,9 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+// C++ Standard Library
+#include <map>
+
 // Windows API
 #include <Windows.h>
 #include <atlbase.h>
@@ -76,9 +79,6 @@ namespace Hades
     static boost::signals2::connection RegisterOnSetCursorPos(
       OnSetCursorPosCallbacks::slot_type const& Subscriber);
 
-    // Get target window
-    static HWND GetTargetWindow();
-
     // SetCursor hook
     static HCURSOR WINAPI SetCursor_Hook(HCURSOR Cursor);
 
@@ -99,11 +99,8 @@ namespace Hades
     // Hades manager
     static class Kernel* m_pKernel;
 
-    // Target window
-    static HWND m_TargetWindow;
-    
-    // Previous window procedure
-    static WNDPROC m_OrigProc;
+    // Target windows and previous window procedures
+    static std::map<HWND, WNDPROC> m_TargetWindows;
 
     // Callback managers
     static OnWindowMessageCallbacks m_CallsOnWndMsg;
@@ -157,11 +154,6 @@ namespace Hades
       InputMgr::OnSetCursorPosCallbacks::slot_type const& Subscriber)
     {
       return InputMgr::RegisterOnSetCursorPos(Subscriber);
-    }
-
-    virtual HWND GetTargetWindow()
-    {
-      return InputMgr::GetTargetWindow();
     }
   };
 }

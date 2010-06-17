@@ -29,11 +29,8 @@ namespace Hades
   // Hades manager
   Kernel* InputMgr::m_pKernel = nullptr;
 
-  // Target window
-  HWND InputMgr::m_TargetWindow = nullptr;
-  
-  // Previous window procedure
-  WNDPROC InputMgr::m_OrigProc = nullptr;
+  // Target windows
+  std::map<HWND, WNDPROC> InputMgr::m_TargetWindows;
 
   // Callback managers
   InputMgr::OnWindowMessageCallbacks InputMgr::m_CallsOnWndMsg;
@@ -160,7 +157,7 @@ namespace Hades
   {
     // Call registered callbacks and block input if requested
     return *m_CallsOnWndMsg(hwnd, uMsg, wParam, lParam) ? CallWindowProc(
-      m_OrigProc, hwnd, uMsg, wParam, lParam) : 0;
+      m_TargetWindows[hwnd], hwnd, uMsg, wParam, lParam) : 0;
   }
 
   // Hook target window
@@ -168,21 +165,20 @@ namespace Hades
   {
     try
     {
-      // Block multiple hook attempts
-      // Todo: Fix this to allow safe and complete support for multiple 
-      // windows and rehooks.
-      if (m_TargetWindow == Window)
+      // Get target window procedure
+      auto CurProc = reinterpret_cast<WNDPROC>(GetWindowLongPtr(Window, 
+        GWLP_WNDPROC));
+      if (CurProc == &MyWindowProc)
       {
-        std::wcout << "InputMgr::HookWindow: Warning! Attempt to rehook "
-          "current target. Currently unsupported." << std::endl;
+        std::wcout << "InputMgr::HookWindow: Warning! Attempting to hook an "
+          "already hooked window." << std::endl;
         return;
       }
 
       // Set target window and hook
-      m_TargetWindow = Window;
-      m_OrigProc = reinterpret_cast<WNDPROC>(SetWindowLongPtr(Window, 
-        GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(&MyWindowProc)));
-      if (!m_OrigProc)
+      auto OrigProc = reinterpret_cast<WNDPROC>(SetWindowLongPtr(
+        Window, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(&MyWindowProc)));
+      if (!OrigProc)
       {
         DWORD LastError = GetLastError();
         BOOST_THROW_EXCEPTION(InputMgrError() << 
@@ -190,6 +186,9 @@ namespace Hades
           ErrorString("Could not set new window procedure.") << 
           ErrorCodeWin(LastError));
       }
+
+      // Store window procedure
+      m_TargetWindows[Window] = OrigProc;
     }
     catch (boost::exception const& e)
     {
@@ -231,11 +230,6 @@ namespace Hades
   {
     // Register callback and return connection
     return m_CallsOnSetCursorPos.connect(Subscriber);
-  }
-
-  HWND InputMgr::GetTargetWindow()
-  {
-    return m_TargetWindow;
   }
 
   HCURSOR WINAPI InputMgr::SetCursor_Hook(HCURSOR Cursor)
