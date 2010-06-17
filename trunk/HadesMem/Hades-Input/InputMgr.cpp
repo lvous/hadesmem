@@ -169,19 +169,12 @@ namespace Hades
     try
     {
       // Block multiple hook attempts
-      // Todo: Fix this to allow support for multiple windows
-      if (m_TargetWindow != nullptr)
+      // Todo: Fix this to allow safe and complete support for multiple 
+      // windows and rehooks.
+      if (m_TargetWindow == Window)
       {
-        if (m_TargetWindow == Window)
-        {
-          std::wcout << "InputMgr::HookWindow: Warning! Attempt to rehook "
-            "current target. Currently unsupported." << std::endl;
-        }
-        else
-        {
-          std::wcout << "InputMgr::HookWindow: Warning! Attempt to hook new "
-            "target. Currently unsupported." << std::endl;
-        }
+        std::wcout << "InputMgr::HookWindow: Warning! Attempt to rehook "
+          "current target. Currently unsupported." << std::endl;
         return;
       }
 
