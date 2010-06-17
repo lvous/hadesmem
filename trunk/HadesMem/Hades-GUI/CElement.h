@@ -49,6 +49,7 @@ protected:
 
 public:
   CElement(class CGUI& Gui);
+  virtual ~CElement() { }
 
 	void SetElement( TiXmlElement * pElement );
 
