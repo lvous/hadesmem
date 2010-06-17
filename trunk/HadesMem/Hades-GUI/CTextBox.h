@@ -37,7 +37,7 @@ class CTextBox : public CElement
 
 	CColor * pString, * pInner, * pBorder;
 public:
-	CTextBox( TiXmlElement * pElement );
+	CTextBox(class CGUI& Gui, TiXmlElement* pElement);
 
 	void Draw();
 	void PreDraw();

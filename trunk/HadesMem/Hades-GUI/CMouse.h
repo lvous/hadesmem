@@ -35,8 +35,11 @@ class CMouse
 
 	int m_iLeftButton, m_iRightButton, m_iMiddleButton, m_iWheel;
 	CTimer m_tLeftButton, m_tRightButton, m_tMiddleButton;
+
+  class CGUI& m_Gui;
+
 public:
-	CMouse( IDirect3DDevice9 * pDevice );
+	CMouse(class CGUI& Gui, IDirect3DDevice9 * pDevice);
 	~CMouse();
 
 	bool HandleMessage( unsigned int uMsg, WPARAM wParam, LPARAM lParam );

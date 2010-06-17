@@ -32,7 +32,7 @@ class CProgressBar : public CElement
 	CColor * pInner, * pBorder, * pString;
 	CTexture * pProgressBar;
 public:
-	CProgressBar( TiXmlElement * pElement );
+	CProgressBar(class CGUI& Gui, TiXmlElement* pElement);
 
 	void Draw();
 

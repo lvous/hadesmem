@@ -53,6 +53,7 @@ class CListBox;
 #include <iomanip>
 #include <sstream>
 #include <vector>
+#include <functional>
 
 #include "D3D9.h"
 #include "CD3DRender.h"
@@ -83,7 +84,8 @@ class CListBox;
 #include "CTextBox.h"
 #include "CListBox.h"
 
-typedef std::string ( __cdecl * tCallback )( const char * pszArgs, CElement * pElement );
+typedef std::function<std::string (const char* pszArgs, CElement* pElement)> tCallback;
+// typedef std::string ( __cdecl * tCallback )( const char * pszArgs, CElement * pElement );
 
 class CGUI
 {
@@ -165,5 +167,3 @@ public:
 		return m_mCallbacks;
 	}
 };
-
-extern CGUI * gpGui;

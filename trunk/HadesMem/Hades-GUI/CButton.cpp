@@ -22,12 +22,13 @@ THE SOFTWARE.
 
 #include "CGUI.h"
 
-CButton::CButton( TiXmlElement * pElement )
+CButton::CButton(CGUI& Gui, TiXmlElement* pElement) 
+  : CElement(Gui)
 {
 	SetElement( pElement );
 	SetHeight( BUTTON_HEIGHT );
 
-	SetThemeElement( gpGui->GetThemeElement( "Button" ) );
+	SetThemeElement( m_Gui.GetThemeElement( "Button" ) );
 
 	if( !GetThemeElement() )
 		MessageBoxA( 0, "Theme element invalid.", "Button", 0 );
@@ -40,7 +41,7 @@ void CButton::Draw()
 	const CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
 
 	pButton->Draw( Pos, GetWidth(), GetHeight() );
-	gpGui->GetFont()->DrawString( Pos.GetX() + GetWidth() / 2, Pos.GetY() + GetHeight() / 2, FT_CENTER|FT_VCENTER, pString, GetString().c_str() );
+	m_Gui.GetFont()->DrawString( Pos.GetX() + GetWidth() / 2, Pos.GetY() + GetHeight() / 2, FT_CENTER|FT_VCENTER, pString, GetString().c_str() );
 }
 
 void CButton::PreDraw()
@@ -60,7 +61,7 @@ bool CButton::KeyEvent( SKey sKey )
 {
 	if( !sKey.m_vKey )
 	{
-		if( GetMouseOver() && gpGui->GetMouse().GetLeftButton( 0 ) )
+		if( GetMouseOver() && m_Gui.GetMouse().GetLeftButton( 0 ) )
 		{
 			SetElementState( "Pressed" );
 

@@ -32,7 +32,8 @@ namespace Hades
 {
   // Constructor
   GuiMgr::GuiMgr(Kernel* pKernel) 
-    : m_pKernel(pKernel), 
+    : m_pGui(nullptr), 
+    m_pKernel(pKernel), 
     m_pDevice(nullptr), 
     m_CursorX(0), 
     m_CursorY(0)
@@ -67,17 +68,17 @@ namespace Hades
     D3D9HelperPtr /*pHelper*/)
   {
     // Delete GUI instance if it already exists
-    if (gpGui)
+    if (m_pGui)
     {
-      delete gpGui;
-      gpGui = nullptr;
+      delete m_pGui;
+      m_pGui = nullptr;
     }
 
     // Set device pointer
     m_pDevice = pDevice;
 
     // Create new GUI instance
-    gpGui = new CGUI(pDevice);
+    m_pGui = new CGUI(pDevice);
 
     // Get current working directory
     std::wstring CurDir;
@@ -103,17 +104,18 @@ namespace Hades
     }
 
     // Load GUI
-    gpGui->LoadInterfaceFromFile("ColorThemes.xml");
-    gpGui->LoadInterfaceFromFile("Console.xml");
+    m_pGui->LoadInterfaceFromFile("ColorThemes.xml");
+    m_pGui->LoadInterfaceFromFile("Console.xml");
 
     // Set callbacks
-    auto pConsole = gpGui->GetWindowByString("HADES_CONSOLE_WINDOW", 1);
+    auto pConsole = m_pGui->GetWindowByString("HADES_CONSOLE_WINDOW", 1);
     if (pConsole)
     {
       auto pInBox = pConsole->GetElementByString("HADES_CONSOLE_INPUT", 1);
       if (pInBox)
       {
-        pInBox->SetCallback(&GuiMgr::OnConsoleInput);
+        pInBox->SetCallback(std::bind(&GuiMgr::OnConsoleInput, this, 
+          std::placeholders::_1, std::placeholders::_2));
       }
       else
       {
@@ -128,7 +130,7 @@ namespace Hades
     }
 
     // Show GUI
-    gpGui->SetVisible(true);
+    m_pGui->SetVisible(true);
 
     // Restore old working directory
     if (!SetCurrentDirectory(CurDir.c_str()))
@@ -145,13 +147,13 @@ namespace Hades
   void GuiMgr::OnFrame(IDirect3DDevice9* pDevice, D3D9HelperPtr pHelper)
   {
     // Ensure GUI is valid
-    if (!gpGui)
+    if (!m_pGui)
     {
       return;
     }
 
     // Draw GUI
-    gpGui->Draw();
+    m_pGui->Draw();
 
     // Get viewport
     D3DVIEWPORT9 Viewport;
@@ -165,7 +167,7 @@ namespace Hades
 
     // Draw test string
     CColor MyColor(255, 0, 0, 255);
-    gpGui->GetFont()->DrawString(Viewport.X + 10, Viewport.Y + 10, 0, 
+    m_pGui->GetFont()->DrawString(Viewport.X + 10, Viewport.Y + 10, 0, 
       &MyColor, "Hades");
   }
 
@@ -173,24 +175,24 @@ namespace Hades
   void GuiMgr::OnLostDevice(IDirect3DDevice9* /*pDevice*/, 
     D3D9HelperPtr /*pHelper*/)
   {
-    if (!gpGui)
+    if (!m_pGui)
     {
       return;
     }
 
-    gpGui->OnLostDevice();
+    m_pGui->OnLostDevice();
   }
 
   // D3D9Mgr OnResetDevice callback
   void GuiMgr::OnResetDevice(IDirect3DDevice9* pDevice, 
     D3D9HelperPtr /*pHelper*/)
   {
-    if (!gpGui)
+    if (!m_pGui)
     {
       return;
     }
 
-    gpGui->OnResetDevice(pDevice);
+    m_pGui->OnResetDevice(pDevice);
   }
 
   // D3D9Mgr OnRelease callback
@@ -204,7 +206,7 @@ namespace Hades
     LPARAM lParam)
   {
     // Nothing to do if there is no current GUI instance
-    if (!gpGui)
+    if (!m_pGui)
     {
       return true;
     }
@@ -218,11 +220,11 @@ namespace Hades
     }
 
     // Notify GUI of input events
-    gpGui->GetMouse().HandleMessage(uMsg, wParam, lParam);
-    gpGui->GetKeyboard()->HandleMessage(uMsg, wParam, lParam);
+    m_pGui->GetMouse().HandleMessage(uMsg, wParam, lParam);
+    m_pGui->GetKeyboard()->HandleMessage(uMsg, wParam, lParam);
 
     // Block input when GUI is visible
-    return !((gpGui->IsVisible() || GuiToggled) && 
+    return !((m_pGui->IsVisible() || GuiToggled) && 
       (uMsg == WM_CHAR || 
       uMsg == WM_KEYDOWN || 
       uMsg == WM_KEYUP || 
@@ -244,7 +246,7 @@ namespace Hades
   {
     // Only allow cursor to be modified when it's not being removed entirely 
     // and the GUI is not visible
-    return !(hCursor == NULL && gpGui && gpGui->IsVisible());
+    return !(hCursor == NULL && m_pGui && m_pGui->IsVisible());
   }
 
   // Toggle GUI's visibility
@@ -254,10 +256,10 @@ namespace Hades
     static HCURSOR PrevCursor = NULL;
 
     // If GUI is visible
-    if (gpGui->IsVisible()) 
+    if (m_pGui->IsVisible()) 
     {
       // Hide GUI 
-      gpGui->SetVisible(false);
+      m_pGui->SetVisible(false);
 
       // Restore previous cursor
       PrevCursor = SetCursor(PrevCursor);
@@ -265,7 +267,7 @@ namespace Hades
     else
     {
       // Hide GUI 
-      gpGui->SetVisible(true);
+      m_pGui->SetVisible(true);
 
       // Load default cursor
       HCURSOR DefArrow = LoadCursor(NULL, IDC_ARROW);
@@ -278,7 +280,7 @@ namespace Hades
   bool GuiMgr::OnGetCursorPos(LPPOINT lpPoint)
   {
     // Use cached values and block call if GUI is currently visible
-    if (gpGui && gpGui->IsVisible() && (m_CursorX != 0 || m_CursorY != 0))
+    if (m_pGui && m_pGui->IsVisible() && (m_CursorX != 0 || m_CursorY != 0))
     {
       lpPoint->x = m_CursorX;
       lpPoint->y = m_CursorY;
@@ -293,7 +295,7 @@ namespace Hades
   bool GuiMgr::OnSetCursorPos(int X, int Y)
   {
     // Backup current values and block call if GUI is currently visible
-    if (gpGui && gpGui->IsVisible())
+    if (m_pGui && m_pGui->IsVisible())
     {
       m_CursorX = X;
       m_CursorY = Y;
@@ -305,8 +307,7 @@ namespace Hades
   }
 
   // GUI library callback for console input
-  std::string __cdecl GuiMgr::OnConsoleInput(char const* pszArgs, 
-    CElement* pElement)
+  std::string GuiMgr::OnConsoleInput(char const* pszArgs, CElement* pElement)
   {
     // Print input to console
     Print(pszArgs);
@@ -323,10 +324,10 @@ namespace Hades
   }
 
   // Print output to console
-  void GuiMgr::Print( std::string const& Output )
+  void GuiMgr::Print(std::string const& Output)
   {
     // Get console window
-    auto pConsole = gpGui->GetWindowByString("HADES_CONSOLE_WINDOW", 1);
+    auto pConsole = m_pGui->GetWindowByString("HADES_CONSOLE_WINDOW", 1);
     if (!pConsole)
     {
       std::wcout << "GuiMgr::Print: Warning! Could not find console window." << 

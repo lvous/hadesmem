@@ -31,15 +31,16 @@ class CHorizontalSliderBar : public CElement
 	int m_iMinValue, m_iMaxValue, m_iValue, m_iStep;
 	bool m_bDragged, m_bShowString;
 
-	typedef std::string ( __cdecl * tCallback )( const char * pszArgs, CElement * pElement );
+  typedef std::function<std::string (const char* pszArgs, CElement* pElement)> tCallback;
+// 	typedef std::string ( __cdecl * tCallback )( const char * pszArgs, CElement * pElement );
 	tCallback m_pUpdater;
 
 	CColor * pLines, * pString;
 	CTexture * pSlider;
 
 public:
-	CHorizontalSliderBar();
-	CHorizontalSliderBar( TiXmlElement * pElement );
+	CHorizontalSliderBar(class CGUI& Gui);
+	CHorizontalSliderBar(class CGUI& Gui, TiXmlElement* pElement);
 
 	void SetSliderElement( TiXmlElement * pElement );
 

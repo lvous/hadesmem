@@ -64,7 +64,7 @@ void CElement::SetElement( TiXmlElement * pElement )
 	const char * pszCallback = pElement->Attribute( "callback" );
 	if( pszCallback )
 	{
-		SetCallback( gpGui->GetCallback( pszCallback ) );
+		SetCallback( m_Gui.GetCallback( pszCallback ) );
 
 		if( !GetCallback() )
 			MessageBoxA( 0, "Callback invalid", pszCallback, 0 );
@@ -157,7 +157,7 @@ std::string CElement::GetString( bool bReplaceVars, int iIndex )
 		std::string::size_type sPos = 0;
 		while( ( sPos = sFormatted.find( "$", sPos ) ) != std::string::npos )
 		{
-			for( std::map<std::string,tCallback>::const_reverse_iterator iIter = gpGui->GetCallbackMap().rbegin(); iIter != gpGui->GetCallbackMap().rend(); iIter++ )
+			for( std::map<std::string,tCallback>::const_reverse_iterator iIter = m_Gui.GetCallbackMap().rbegin(); iIter != m_Gui.GetCallbackMap().rend(); iIter++ )
 			{
 				const std::string & sName = iIter->first;
 
@@ -235,4 +235,9 @@ void CElement::MouseMove( CMouse & )
 bool CElement::KeyEvent( SKey )
 {
 	return true;
+}
+
+CElement::CElement(CGUI& Gui) 
+  : m_Gui(Gui)
+{
 }

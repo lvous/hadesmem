@@ -22,7 +22,8 @@ THE SOFTWARE.
 
 #include "CGUI.h"
 
-CFont::CFont( IDirect3DDevice9 * pDevice, int iHeight, const char * pszFaceName )
+CFont::CFont(CGUI& Gui, IDirect3DDevice9 * pDevice, int iHeight, const char * pszFaceName)
+  : m_Gui(Gui)
 {
 #ifdef USE_D3DX
 	HRESULT hResult = D3DXCreateFontA( pDevice, -MulDiv( iHeight, GetDeviceCaps( GetDC( 0 ), LOGPIXELSY ), 72 ), 0, FW_NORMAL, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, pszFaceName, &m_pFont );
@@ -69,17 +70,17 @@ void CFont::OnResetDevice( IDirect3DDevice9 * pDevice )
 void CFont::DrawString( int iX, int iY, DWORD dwFlags, CColor * pColor, std::string sString, int /*iWidth*/ )
 {
 #ifdef USE_D3DX
-		gpGui->GetSprite()->Begin( D3DXSPRITE_ALPHABLEND | D3DXSPRITE_SORT_TEXTURE );
+		m_Gui.GetSprite()->Begin( D3DXSPRITE_ALPHABLEND | D3DXSPRITE_SORT_TEXTURE );
 		
 		D3DXMATRIX mat;
 		D3DXMatrixTranslation( &mat, static_cast<float>( iX ), static_cast<float>( iY ), 0 );
-		gpGui->GetSprite()->SetTransform( &mat );
+		m_Gui.GetSprite()->SetTransform( &mat );
 		
 		RECT drawRect = { 0 };
 		DWORD dwDrawFlags = DT_NOCLIP | ( ( dwFlags & FT_CENTER ) ? DT_CENTER : 0 ) | ( ( dwFlags & FT_VCENTER ) ? DT_VCENTER : 0 );
-		m_pFont->DrawTextA( gpGui->GetSprite(), sString.c_str(), -1, &drawRect, dwDrawFlags, pColor->GetD3DColor() );
+		m_pFont->DrawTextA( m_Gui.GetSprite(), sString.c_str(), -1, &drawRect, dwDrawFlags, pColor->GetD3DColor() );
 		
-		gpGui->GetSprite()->End();
+		m_Gui.GetSprite()->End();
 #else
 		if( iWidth )
 			CutString( iWidth, sString );
@@ -124,7 +125,7 @@ void CFont::CutString( int iMaxWidth, std::string & rString ) const
 	for( int iWidth = 0; iIndex < iLength && iWidth + 10 < iMaxWidth; )
 	{
 		char szCurrent[ 2 ] = { rString.c_str()[ iIndex ], 0 };
-		iWidth += gpGui->GetFont()->GetStringWidth( szCurrent );
+		iWidth += m_Gui.GetFont()->GetStringWidth( szCurrent );
 		iIndex++;
 	}
 

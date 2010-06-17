@@ -22,16 +22,17 @@ THE SOFTWARE.
 
 #include "CGUI.h"
 
-CTextBox::CTextBox( TiXmlElement * pElement )
+CTextBox::CTextBox(CGUI& Gui, TiXmlElement* pElement)
+  : CElement(Gui)
 {
 	SetElement( pElement );
 
-	pSlider = new CHelperSlider( CPos( GetWidth() - HELPERSLIDER_WIDTH, 0 ), GetHeight() );
+	pSlider = new CHelperSlider(Gui, CPos( GetWidth() - HELPERSLIDER_WIDTH, 0 ), GetHeight() );
 
 	for( TiXmlElement * pString = pElement->FirstChildElement( "Row" ); pString; pString = pString->NextSiblingElement( "Row" ) )
 		AddString( pString->GetText() );
 
-	SetThemeElement( gpGui->GetThemeElement( "TextBox" ) );
+	SetThemeElement( m_Gui.GetThemeElement( "TextBox" ) );
 
 	if( !GetThemeElement() )
 		MessageBoxA( 0, "Theme element invalid.", "TextBox", 0 );
@@ -43,13 +44,13 @@ void CTextBox::Draw()
 {
 	CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
 
-	gpGui->DrawOutlinedBox( Pos.GetX(), Pos.GetY(), GetWidth(), GetHeight(), pInner->GetD3DColor(), pBorder->GetD3DColor() );
+	m_Gui.DrawOutlinedBox( Pos.GetX(), Pos.GetY(), GetWidth(), GetHeight(), pInner->GetD3DColor(), pBorder->GetD3DColor() );
 
-	int iAddHeight = gpGui->GetFont()->GetStringHeight();
+	int iAddHeight = m_Gui.GetFont()->GetStringHeight();
 	if( m_vStrings.size() )
-		for( int i = pSlider->GetValue(), iHeight = 0; i <= pSlider->GetMaxValue() && iHeight < GetHeight() - gpGui->GetFont()->GetStringHeight(); i++ )
+		for( int i = pSlider->GetValue(), iHeight = 0; i <= pSlider->GetMaxValue() && iHeight < GetHeight() - m_Gui.GetFont()->GetStringHeight(); i++ )
 		{
-			gpGui->GetFont()->DrawString( Pos.GetX() + 3, Pos.GetY() + iHeight, 0, pString, m_vStrings[ i ], GetWidth() - HELPERSLIDER_WIDTH );
+			m_Gui.GetFont()->DrawString( Pos.GetX() + 3, Pos.GetY() + iHeight, 0, pString, m_vStrings[ i ], GetWidth() - HELPERSLIDER_WIDTH );
 			iHeight += iAddHeight;
 		}
 
@@ -74,7 +75,7 @@ bool CTextBox::KeyEvent( SKey sKey )
 {
 	CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
 
-	if( GetMouseOver() || ( !sKey.m_bDown && !gpGui->GetMouse().GetWheel() )  )
+	if( GetMouseOver() || ( !sKey.m_bDown && !m_Gui.GetMouse().GetWheel() )  )
 		return pSlider->KeyEvent( Pos, sKey );
 
 	return true;
@@ -112,13 +113,13 @@ void CTextBox::AddString( std::string sString )
 	int iHeight = 0;
 	for( int i = pSlider->GetValue(); i <= pSlider->GetMaxValue(); i++ )
 	{
-		float fWidth = static_cast<float>( gpGui->GetFont()->GetStringWidth( m_vStrings[ i ].c_str() ) );
+		float fWidth = static_cast<float>( m_Gui.GetFont()->GetStringWidth( m_vStrings[ i ].c_str() ) );
 		int iLines = static_cast<int>( ceilf( fWidth / ( GetWidth() - HELPERSLIDER_WIDTH ) ) );
 
-		int iTempHeight = iLines*gpGui->GetFont()->GetStringHeight();
+		int iTempHeight = iLines*m_Gui.GetFont()->GetStringHeight();
 		iHeight += iTempHeight;
 	
-		while( iHeight > GetHeight() - gpGui->GetFont()->GetStringHeight() )
+		while( iHeight > GetHeight() - m_Gui.GetFont()->GetStringHeight() )
 		{
 			pSlider->SetValue( pSlider->GetValue() + iLines );
 			iHeight -= iTempHeight;

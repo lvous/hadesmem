@@ -22,17 +22,18 @@ THE SOFTWARE.
 
 #include "CListBox.h"
 
-CListBox::CListBox( TiXmlElement * pElement )
+CListBox::CListBox(CGUI& Gui, TiXmlElement* pElement)
+  : CElement(Gui)
 {
 	SetElement( pElement );
 	m_iMouseOverIndex = -1;
 
-	pSlider = new CHelperSlider( CPos( GetWidth() - HELPERSLIDER_WIDTH, 0 ), GetHeight() );
+	pSlider = new CHelperSlider(Gui, CPos( GetWidth() - HELPERSLIDER_WIDTH, 0 ), GetHeight() );
 
 	for( TiXmlElement * pString = pElement->FirstChildElement( "Row" ); pString; pString = pString->NextSiblingElement( "Row" ) )
 		AddRow( pString->GetText() );
 
-	SetThemeElement( gpGui->GetThemeElement( "ListBox" ) );
+	SetThemeElement( m_Gui.GetThemeElement( "ListBox" ) );
 
 	if( !GetThemeElement() )
 		MessageBoxA( 0, "Theme element invalid.", "ListBox", 0 );
@@ -44,11 +45,11 @@ void CListBox::Draw()
 {
 	CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
 
-	gpGui->DrawOutlinedBox( Pos.GetX(), Pos.GetY(), GetWidth(), GetHeight(), pInner->GetD3DColor(), pBorder->GetD3DColor() );
+	m_Gui.DrawOutlinedBox( Pos.GetX(), Pos.GetY(), GetWidth(), GetHeight(), pInner->GetD3DColor(), pBorder->GetD3DColor() );
 
-	int iAddHeight = gpGui->GetFont()->GetStringHeight();
+	int iAddHeight = m_Gui.GetFont()->GetStringHeight();
 	if( m_vRows.size() )
-		for( int i = pSlider->GetValue(), iHeight = 0; i < static_cast<int>( m_vRows.size() ) && iHeight < GetHeight() - gpGui->GetFont()->GetStringHeight(); i++ )
+		for( int i = pSlider->GetValue(), iHeight = 0; i < static_cast<int>( m_vRows.size() ) && iHeight < GetHeight() - m_Gui.GetFont()->GetStringHeight(); i++ )
 		{
 			CColor * pColor = 0;
 
@@ -57,7 +58,7 @@ void CListBox::Draw()
 			else
 				pColor = pString;
 
-			gpGui->GetFont()->DrawString( Pos.GetX() + 3, Pos.GetY() + iHeight, 0, pColor, m_vRows[ i ].c_str(), GetWidth() - HELPERSLIDER_WIDTH );
+			m_Gui.GetFont()->DrawString( Pos.GetX() + 3, Pos.GetY() + iHeight, 0, pColor, m_vRows[ i ].c_str(), GetWidth() - HELPERSLIDER_WIDTH );
 			iHeight += iAddHeight;
 		}
 
@@ -76,7 +77,7 @@ void CListBox::MouseMove( CMouse & pMouse )
 	SetMouseOver( pMouse.InArea( Pos.GetX(), Pos.GetY(), GetWidth(), GetHeight() ) );
 
 	m_iMouseOverIndex = -1;
-	for( int i = pSlider->GetValue(), iHeight = 0, iStringHeight = gpGui->GetFont()->GetStringHeight(); i < static_cast<int>( m_vRows.size() ) || iHeight < GetHeight(); i++ )
+	for( int i = pSlider->GetValue(), iHeight = 0, iStringHeight = m_Gui.GetFont()->GetStringHeight(); i < static_cast<int>( m_vRows.size() ) || iHeight < GetHeight(); i++ )
 	{
 		if( pMouse.InArea( Pos.GetX(), Pos.GetY() + iHeight, GetWidth() - BUTTON_HEIGHT, iStringHeight ) )
 			m_iMouseOverIndex = i;
@@ -95,17 +96,17 @@ bool CListBox::KeyEvent( SKey sKey )
 	{
 		if( GetMouseOver() )
 		{
-			if( m_iMouseOverIndex >= 0 && GetCallback() && gpGui->GetMouse().GetLeftButton() )
+			if( m_iMouseOverIndex >= 0 && GetCallback() && m_Gui.GetMouse().GetLeftButton() )
 				GetCallback()( reinterpret_cast<char*>( m_iMouseOverIndex ), this );
 		}
 	}
 
 	bool bRet = true;
 
-	if( GetMouseOver() || ( !sKey.m_bDown && !gpGui->GetMouse().GetWheel() )  )
+	if( GetMouseOver() || ( !sKey.m_bDown && !m_Gui.GetMouse().GetWheel() )  )
 	{
 		bRet = pSlider->KeyEvent( Pos, sKey );
-		//MouseMove( gpGui->GetMouse() );
+		//MouseMove( m_Gui.GetMouse() );
 	}
 
 	return bRet;

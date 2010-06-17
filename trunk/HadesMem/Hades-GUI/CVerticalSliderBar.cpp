@@ -22,7 +22,8 @@ THE SOFTWARE.
 
 #include "CGUI.h"
 
-CVerticalSliderBar::CVerticalSliderBar( TiXmlElement * pElement )
+CVerticalSliderBar::CVerticalSliderBar(CGUI& Gui, TiXmlElement * pElement)
+  : CHorizontalSliderBar(Gui)
 {
 	SetDragged( false );
 	SetCallback( 0 );
@@ -30,7 +31,7 @@ CVerticalSliderBar::CVerticalSliderBar( TiXmlElement * pElement )
 
 	SetSliderElement( pElement );
 
-	SetThemeElement( gpGui->GetThemeElement( "VerticalSliderBar" ) );
+	SetThemeElement( m_Gui.GetThemeElement( "VerticalSliderBar" ) );
 
 	if( !GetThemeElement() )
 		MessageBoxA( 0, "Theme element invalid.", "VerticalSliderBar", 0 );
@@ -44,14 +45,14 @@ void CVerticalSliderBar::Draw()
 
 	D3DCOLOR d3dLineColor = pLines->GetD3DColor();
 	
-	gpGui->DrawLine( Pos.GetX() + TITLEBAR_HEIGHT / 2, Pos.GetY(),					Pos.GetX() + TITLEBAR_HEIGHT / 2,		Pos.GetY() + GetHeight(), 1,		d3dLineColor );
-	gpGui->DrawLine( Pos.GetX() + TITLEBAR_HEIGHT / 4, Pos.GetY(),					Pos.GetX() + TITLEBAR_HEIGHT / 4 * 3,	Pos.GetY(), 1,						d3dLineColor );
-	gpGui->DrawLine( Pos.GetX() + TITLEBAR_HEIGHT / 4, Pos.GetY() + GetHeight(),		Pos.GetX() + TITLEBAR_HEIGHT / 4 * 3,	Pos.GetY() + GetHeight(), 1,		d3dLineColor );
-	gpGui->DrawLine( Pos.GetX() + TITLEBAR_HEIGHT / 4, Pos.GetY() + GetHeight() / 2,	Pos.GetX() + TITLEBAR_HEIGHT / 4 * 3,	Pos.GetY() + GetHeight() / 2, 1,	d3dLineColor );
+	m_Gui.DrawLine( Pos.GetX() + TITLEBAR_HEIGHT / 2, Pos.GetY(),					Pos.GetX() + TITLEBAR_HEIGHT / 2,		Pos.GetY() + GetHeight(), 1,		d3dLineColor );
+	m_Gui.DrawLine( Pos.GetX() + TITLEBAR_HEIGHT / 4, Pos.GetY(),					Pos.GetX() + TITLEBAR_HEIGHT / 4 * 3,	Pos.GetY(), 1,						d3dLineColor );
+	m_Gui.DrawLine( Pos.GetX() + TITLEBAR_HEIGHT / 4, Pos.GetY() + GetHeight(),		Pos.GetX() + TITLEBAR_HEIGHT / 4 * 3,	Pos.GetY() + GetHeight(), 1,		d3dLineColor );
+	m_Gui.DrawLine( Pos.GetX() + TITLEBAR_HEIGHT / 4, Pos.GetY() + GetHeight() / 2,	Pos.GetX() + TITLEBAR_HEIGHT / 4 * 3,	Pos.GetY() + GetHeight() / 2, 1,	d3dLineColor );
 
 	pSlider->Draw( CPos( Pos.GetX() + 2, Pos.GetY() + GetHeight() - static_cast<int>( floor( static_cast<float>( GetHeight() ) / GetMaxValue() * GetValue() ) ) - 5 ), BUTTON_HEIGHT, 10 );
 
-	gpGui->GetFont()->DrawString( Pos.GetX() - TITLEBAR_HEIGHT + ( TITLEBAR_HEIGHT * 3 ) / 2, Pos.GetY() + GetHeight() + 5, FT_CENTER, pString, GetFormatted() );
+	m_Gui.GetFont()->DrawString( Pos.GetX() - TITLEBAR_HEIGHT + ( TITLEBAR_HEIGHT * 3 ) / 2, Pos.GetY() + GetHeight() + 5, FT_CENTER, pString, GetFormatted() );
 }
 
 void CVerticalSliderBar::MouseMove( CMouse & pMouse )
@@ -83,7 +84,7 @@ void CVerticalSliderBar::MouseMove( CMouse & pMouse )
 				GetCallback()( reinterpret_cast<const char*>( GetValue() ), this );
 	}
 	else
-		SetElementState( SetMouseOver( gpGui->GetMouse().InArea( Pos.GetX(), Pos.GetY(), TITLEBAR_HEIGHT, GetHeight() ) )?"MouseOver":"Norm" );
+		SetElementState( SetMouseOver( m_Gui.GetMouse().InArea( Pos.GetX(), Pos.GetY(), TITLEBAR_HEIGHT, GetHeight() ) )?"MouseOver":"Norm" );
 }
 
 void CVerticalSliderBar::UpdateTheme( int iIndex )

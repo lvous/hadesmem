@@ -22,11 +22,12 @@ THE SOFTWARE.
 
 #include "CGUI.h"
 
-CText::CText( TiXmlElement * pElement )
+CText::CText(CGUI& Gui, TiXmlElement* pElement)
+  : CElement(Gui)
 {
 	SetElement( pElement );
 
-	SetThemeElement( gpGui->GetThemeElement( "Text" ) );
+	SetThemeElement( m_Gui.GetThemeElement( "Text" ) );
 
 	if( !GetThemeElement() )
 		MessageBoxA( 0, "Theme element invalid.", "Text", 0 );
@@ -38,7 +39,7 @@ void CText::Draw()
 {
 	CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
 	
-	gpGui->GetFont()->DrawString( Pos.GetX(), Pos.GetY(), 0, pString, GetFormatted(), GetWidth() );
+	m_Gui.GetFont()->DrawString( Pos.GetX(), Pos.GetY(), 0, pString, GetFormatted(), GetWidth() );
 }
 
 void CText::PreDraw()
@@ -50,7 +51,7 @@ void CText::MouseMove( CMouse & pMouse )
 {
 	CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
 
-	SetElementState( SetMouseOver( pMouse.InArea( Pos.GetX(), Pos.GetY(), gpGui->GetFont()->GetStringWidth( GetFormatted().c_str() ), gpGui->GetFont()->GetStringHeight() ) )?"MouseOver":"Norm" );
+	SetElementState( SetMouseOver( pMouse.InArea( Pos.GetX(), Pos.GetY(), m_Gui.GetFont()->GetStringWidth( GetFormatted().c_str() ), m_Gui.GetFont()->GetStringHeight() ) )?"MouseOver":"Norm" );
 }
 
 void CText::UpdateTheme( int iIndex )

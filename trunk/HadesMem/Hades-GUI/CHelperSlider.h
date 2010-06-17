@@ -39,7 +39,7 @@ class CHelperSlider : public CHorizontalSliderBar
 	CTexture * pSlider, * pUpArrow, * pDownArrow;
 
 public:
-	CHelperSlider( CPos relPos, int iHeight );
+	CHelperSlider(class CGUI& Gui, CPos relPos, int iHeight);
 
 	void Draw( CPos basePos );
 	void PreDraw();

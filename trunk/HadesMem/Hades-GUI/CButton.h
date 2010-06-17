@@ -32,7 +32,7 @@ class CButton : public CElement
 	CColor * pString;
 
 public:
-	CButton( TiXmlElement * pElement );
+	CButton(class CGUI& Gui, TiXmlElement * pElement );
 
 	void Draw();
 	void PreDraw();

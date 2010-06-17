@@ -24,7 +24,10 @@ THE SOFTWARE.
 
 #include "CPos.h"
 
-typedef std::string ( __cdecl * tCallback )( const char * pszArgs, CElement * pElement );
+#include <functional>
+
+typedef std::function<std::string (const char* pszArgs, CElement* pElement)> tCallback;
+// typedef std::string ( __cdecl * tCallback )( const char * pszArgs, CElement * pElement );
 
 class CElement
 {
@@ -40,7 +43,12 @@ class CElement
 
 	SElement * m_pThemeElement[ 3 ];
 	SElementState * m_pElementState[ 3 ];
+
+protected:
+  class CGUI& m_Gui;
+
 public:
+  CElement(class CGUI& Gui);
 
 	void SetElement( TiXmlElement * pElement );
 

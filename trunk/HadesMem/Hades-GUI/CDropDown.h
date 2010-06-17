@@ -45,7 +45,7 @@ class CDropDown : public CElement
 	CTexture * pButton;
 
 public:
-	CDropDown( TiXmlElement * pElement );
+	CDropDown(class CGUI& Gui, TiXmlElement* pElement);
 
 	void Draw();
 	void MouseMove( CMouse & pMouse );

@@ -24,7 +24,8 @@ THE SOFTWARE.
 
 #define DBLCLICK_TIME 0.3f
 
-CMouse::CMouse( IDirect3DDevice9 * pDevice )
+CMouse::CMouse(CGUI& Gui, IDirect3DDevice9 * pDevice)
+  : m_Gui(Gui)
 {
 	m_pDevice = pDevice;
 
@@ -45,7 +46,7 @@ CMouse::~CMouse()
 
 bool CMouse::HandleMessage( unsigned int uMsg, WPARAM wParam, LPARAM lParam )
 {
-	if( !gpGui->IsVisible() || uMsg < WM_MOUSEFIRST || uMsg > WM_MOUSELAST )
+	if( !m_Gui.IsVisible() || uMsg < WM_MOUSEFIRST || uMsg > WM_MOUSELAST )
 		return false;
 
 	bool bDown = false;
@@ -55,7 +56,7 @@ bool CMouse::HandleMessage( unsigned int uMsg, WPARAM wParam, LPARAM lParam )
 	case WM_MOUSEMOVE:
 		{
 			SetPos( GET_X_LPARAM( lParam ), GET_Y_LPARAM( lParam ) );
-			gpGui->MouseMove( *this );
+			m_Gui.MouseMove( *this );
 			return false;
 		}
 
@@ -95,7 +96,7 @@ bool CMouse::HandleMessage( unsigned int uMsg, WPARAM wParam, LPARAM lParam )
 		break;
 	}
 
-	return gpGui->KeyEvent( SKey( 0, bDown ) );
+	return m_Gui.KeyEvent( SKey( 0, bDown ) );
 }
 
 void CMouse::SetPos( CPos cPos )

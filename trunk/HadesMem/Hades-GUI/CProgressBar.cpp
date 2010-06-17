@@ -22,7 +22,8 @@ THE SOFTWARE.
 
 #include "CGUI.h"
 
-CProgressBar::CProgressBar( TiXmlElement * pElement )
+CProgressBar::CProgressBar(CGUI& Gui, TiXmlElement * pElement)
+  : CElement(Gui)
 {
 	SetElement( pElement );
 
@@ -30,7 +31,7 @@ CProgressBar::CProgressBar( TiXmlElement * pElement )
 	pElement->QueryIntAttribute( "value", &iProgress );
 	SetProgress( iProgress );
 
-	SetThemeElement( gpGui->GetThemeElement( "ProgressBar" ) );
+	SetThemeElement( m_Gui.GetThemeElement( "ProgressBar" ) );
 
 	if( !GetThemeElement() )
 		MessageBoxA( 0, "Theme element invalid.", "ProgressBar", 0 );
@@ -42,12 +43,12 @@ void CProgressBar::Draw()
 {
 	CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
 
-	gpGui->DrawOutlinedBox( Pos.GetX(), Pos.GetY(), GetWidth(), GetHeight(), pInner->GetD3DColor(), pBorder->GetD3DColor() );
+	m_Gui.DrawOutlinedBox( Pos.GetX(), Pos.GetY(), GetWidth(), GetHeight(), pInner->GetD3DColor(), pBorder->GetD3DColor() );
 
 	if( GetProgress() )
 		pProgressBar->Draw( CPos( Pos.GetX() + 2, Pos.GetY() + 2 ), static_cast<int>( ( static_cast<float>( GetWidth() ) - 4 ) / 100 * GetProgress() ), GetHeight() - 4 );
 
-	gpGui->GetFont()->DrawString( Pos.GetX() + GetWidth() / 2, Pos.GetY() + GetHeight() / 2, FT_CENTER|FT_VCENTER, pString, m_sBuf );
+	m_Gui.GetFont()->DrawString( Pos.GetX() + GetWidth() / 2, Pos.GetY() + GetHeight() / 2, FT_CENTER|FT_VCENTER, pString, m_sBuf );
 }
 
 int CProgressBar::GetProgress() const
@@ -68,8 +69,8 @@ void CProgressBar::SetProgress( int iProgress )
 	sStream << GetProgress() << static_cast<char>( 37 );
 	m_sBuf = sStream.str();
 
-	m_iStrWidth = gpGui->GetFont()->GetStringWidth( m_sBuf.c_str() ) / 2;
-	m_iStrHeight = gpGui->GetFont()->GetStringHeight() / 2;
+	m_iStrWidth = m_Gui.GetFont()->GetStringWidth( m_sBuf.c_str() ) / 2;
+	m_iStrHeight = m_Gui.GetFont()->GetStringHeight() / 2;
 }
 
 void CProgressBar::UpdateTheme( int iIndex )

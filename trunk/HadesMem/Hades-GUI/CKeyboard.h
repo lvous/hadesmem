@@ -54,7 +54,10 @@ class CKeyboard
 {
 	SKey m_sKey;
 
+  class CGUI& m_Gui;
+
 public:
+  CKeyboard(class CGUI& Gui);
 
 	bool HandleMessage( unsigned int uMsg, WPARAM wParam, LPARAM lParam );
 

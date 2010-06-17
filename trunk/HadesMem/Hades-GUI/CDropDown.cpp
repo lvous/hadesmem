@@ -22,7 +22,8 @@ THE SOFTWARE.
 
 #include "CGUI.h"
 
-CDropDown::CDropDown( TiXmlElement * pElement )
+CDropDown::CDropDown(CGUI& Gui, TiXmlElement* pElement)
+  : CElement(Gui)
 {
 	SetElement( pElement );
 	SetHeight( BUTTON_HEIGHT );
@@ -33,7 +34,7 @@ CDropDown::CDropDown( TiXmlElement * pElement )
 	for( TiXmlElement * pEntryElement = pElement->FirstChildElement( "Entry" ); pEntryElement; pEntryElement = pEntryElement->NextSiblingElement( "Entry" ) )
 		AddElement( pEntryElement->Attribute( "string" ), pEntryElement->Attribute( "value" ) );
 
-	SetThemeElement( gpGui->GetThemeElement( "DropDown" ) );
+	SetThemeElement( m_Gui.GetThemeElement( "DropDown" ) );
 
 	if( !GetThemeElement() )
 		MessageBoxA( 0, "Theme element invalid.", "DropDown", 0 );
@@ -49,24 +50,24 @@ void CDropDown::Draw()
 
 	if( pState )
 	{
-		gpGui->DrawOutlinedBox( Pos.GetX(), Pos.GetY(), GetWidth(), GetHeight(), pInner->GetD3DColor(), pBorder->GetD3DColor() );
-		gpGui->DrawLine( Pos.GetX() + GetWidth() - 20, Pos.GetY() + 1, Pos.GetX() + GetWidth() - 20, Pos.GetY() + GetHeight() - 1, 1, pBorder->GetD3DColor() );
+		m_Gui.DrawOutlinedBox( Pos.GetX(), Pos.GetY(), GetWidth(), GetHeight(), pInner->GetD3DColor(), pBorder->GetD3DColor() );
+		m_Gui.DrawLine( Pos.GetX() + GetWidth() - 20, Pos.GetY() + 1, Pos.GetX() + GetWidth() - 20, Pos.GetY() + GetHeight() - 1, 1, pBorder->GetD3DColor() );
 		
-		gpGui->GetFont()->DrawString( Pos.GetX() + 3, Pos.GetY() + GetHeight() / 2, FT_VCENTER, pString, m_vEntrys[ m_iSelected ].m_sString.c_str() );
+		m_Gui.GetFont()->DrawString( Pos.GetX() + 3, Pos.GetY() + GetHeight() / 2, FT_VCENTER, pString, m_vEntrys[ m_iSelected ].m_sString.c_str() );
 		
 		if( m_bDropped && m_vEntrys.size() )
 		{
-			gpGui->DrawOutlinedBox( Pos.GetX(), Pos.GetY() + GetHeight(), GetWidth(), GetHeight() * m_vEntrys.size(), pInner->GetD3DColor(), pBorder->GetD3DColor() );
+			m_Gui.DrawOutlinedBox( Pos.GetX(), Pos.GetY() + GetHeight(), GetWidth(), GetHeight() * m_vEntrys.size(), pInner->GetD3DColor(), pBorder->GetD3DColor() );
 
 			for( int iIndex = 0; iIndex < static_cast<int>( m_vEntrys.size() ); iIndex++ )
 			{
 				if( iIndex == m_iMouseOverIndex )
 				{
-					gpGui->FillArea( Pos.GetX() + 1, Pos.GetY() + GetHeight() * ( iIndex + 1 ), GetWidth() - 2, GetHeight(),pSelectedInner->GetD3DColor() );
-					gpGui->GetFont()->DrawString( Pos.GetX() + 3, Pos.GetY() + GetHeight() * ( iIndex + 1 ) + GetHeight() / 2, FT_VCENTER, pSelectedString, m_vEntrys[ iIndex ].m_sString.c_str() );
+					m_Gui.FillArea( Pos.GetX() + 1, Pos.GetY() + GetHeight() * ( iIndex + 1 ), GetWidth() - 2, GetHeight(),pSelectedInner->GetD3DColor() );
+					m_Gui.GetFont()->DrawString( Pos.GetX() + 3, Pos.GetY() + GetHeight() * ( iIndex + 1 ) + GetHeight() / 2, FT_VCENTER, pSelectedString, m_vEntrys[ iIndex ].m_sString.c_str() );
 				}
 				else
-					gpGui->GetFont()->DrawString( Pos.GetX() + 3, Pos.GetY() + GetHeight() * ( iIndex + 1 ) + GetHeight() / 2, FT_VCENTER, pString, m_vEntrys[ iIndex ].m_sString.c_str() );
+					m_Gui.GetFont()->DrawString( Pos.GetX() + 3, Pos.GetY() + GetHeight() * ( iIndex + 1 ) + GetHeight() / 2, FT_VCENTER, pString, m_vEntrys[ iIndex ].m_sString.c_str() );
 			}
 		}
 
@@ -76,7 +77,7 @@ void CDropDown::Draw()
 
 void CDropDown::MouseMove( CMouse & pMouse )
 {
-	CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos(), mPos = gpGui->GetMouse().GetPos();
+	CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos(), mPos = m_Gui.GetMouse().GetPos();
 
 	int iHeight = 0;
 	if( m_bDropped )
@@ -93,7 +94,7 @@ void CDropDown::MouseMove( CMouse & pMouse )
 
 	if( GetMouseOver() )
 		for( int iIndex = 0; iIndex < static_cast<int>( m_vEntrys.size() ); iIndex++ )
-			if( gpGui->GetMouse().InArea( Pos.GetX(), Pos.GetY() + GetHeight() * ( iIndex + 1 ), GetWidth(), GetHeight() ) )
+			if( m_Gui.GetMouse().InArea( Pos.GetX(), Pos.GetY() + GetHeight() * ( iIndex + 1 ), GetWidth(), GetHeight() ) )
 			{
 				m_iMouseOverIndex = iIndex;
 				break;
@@ -106,7 +107,7 @@ bool CDropDown::KeyEvent( SKey sKey )
 {
 	if( !sKey.m_vKey )
 	{
-		if( gpGui->GetMouse().GetLeftButton() )
+		if( m_Gui.GetMouse().GetLeftButton() )
 		{
 			if( GetMouseOver() )
 			{
@@ -127,7 +128,7 @@ bool CDropDown::KeyEvent( SKey sKey )
 					SetElementState( "Pressed" );
 				}
 
-				gpGui->GetMouse().SetLeftButton( 0 );
+				m_Gui.GetMouse().SetLeftButton( 0 );
 			}
 			else
 				m_bDropped = false;

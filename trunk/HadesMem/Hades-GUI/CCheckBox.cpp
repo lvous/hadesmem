@@ -22,7 +22,8 @@ THE SOFTWARE.
 
 #include "CGUI.h"
 
-CCheckBox::CCheckBox( TiXmlElement * pElement )
+CCheckBox::CCheckBox(CGUI& Gui, TiXmlElement * pElement)
+  : CElement(Gui)
 {
 	SetElement( pElement );
 
@@ -31,7 +32,7 @@ CCheckBox::CCheckBox( TiXmlElement * pElement )
 
 	SetChecked( iChecked == 1 );
 
-	SetThemeElement( gpGui->GetThemeElement( "CheckBox" ) );
+	SetThemeElement( m_Gui.GetThemeElement( "CheckBox" ) );
 
 	if( !GetThemeElement() )
 		MessageBoxA( 0, "No color scheme element found.", "CheckBox", 0 );
@@ -52,15 +53,15 @@ void CCheckBox::Draw()
 {
 	CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
 
-	gpGui->DrawOutlinedBox( Pos.GetX(), Pos.GetY(), 15, 15, pInner->GetD3DColor(), pBorder->GetD3DColor() );
-	gpGui->GetFont()->DrawString( Pos.GetX() + 20, Pos.GetY(), 0, pString, GetFormatted() );
+	m_Gui.DrawOutlinedBox( Pos.GetX(), Pos.GetY(), 15, 15, pInner->GetD3DColor(), pBorder->GetD3DColor() );
+	m_Gui.GetFont()->DrawString( Pos.GetX() + 20, Pos.GetY(), 0, pString, GetFormatted() );
 
 	if( GetChecked() )
 	{
 		D3DCOLOR d3dCrossColor = pCross->GetD3DColor();
 
-		gpGui->DrawLine( Pos.GetX() + 1, Pos.GetY() + 1, Pos.GetX() + 14, Pos.GetY() + 14, 1, d3dCrossColor );
-		gpGui->DrawLine( Pos.GetX() + 1, Pos.GetY() + 13, Pos.GetX() + 14, Pos.GetY(), 1, d3dCrossColor );
+		m_Gui.DrawLine( Pos.GetX() + 1, Pos.GetY() + 1, Pos.GetX() + 14, Pos.GetY() + 14, 1, d3dCrossColor );
+		m_Gui.DrawLine( Pos.GetX() + 1, Pos.GetY() + 13, Pos.GetX() + 14, Pos.GetY(), 1, d3dCrossColor );
 	}
 }
 
@@ -73,14 +74,14 @@ void CCheckBox::MouseMove( CMouse & pMouse )
 {
 	CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
 
-	SetElementState( SetMouseOver( pMouse.InArea( Pos.GetX(), Pos.GetY(), gpGui->GetFont()->GetStringWidth( GetFormatted().c_str() ) + 20, gpGui->GetFont()->GetStringHeight() ) )?"MouseOver":"Norm" );
+	SetElementState( SetMouseOver( pMouse.InArea( Pos.GetX(), Pos.GetY(), m_Gui.GetFont()->GetStringWidth( GetFormatted().c_str() ) + 20, m_Gui.GetFont()->GetStringHeight() ) )?"MouseOver":"Norm" );
 }
 
 bool CCheckBox::KeyEvent( SKey sKey )
 {
 	if( !sKey.m_vKey )
 	{
-		if( GetMouseOver() && gpGui->GetMouse().GetLeftButton( 0 ) )
+		if( GetMouseOver() && m_Gui.GetMouse().GetLeftButton( 0 ) )
 		{
 			m_bChecked = !m_bChecked;
 			

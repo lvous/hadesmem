@@ -41,11 +41,10 @@ namespace Hades
     GuiMgr(class Kernel* pKernel);
 
     // Print output
-    static void Print(std::string const& Output);
+    void Print(std::string const& Output);
 
     // Callback on input
-    static std::string __cdecl OnConsoleInput(char const* pszArgs, 
-      CElement* pElement);
+    std::string OnConsoleInput(char const* pszArgs, CElement* pElement);
 
   private:
     // Input callbacks
@@ -63,6 +62,9 @@ namespace Hades
 
     // Toggle visibility
     void ToggleVisible();
+
+    // GUI instance
+    class CGUI* m_pGui;
 
     // Kernel instance
     class Kernel* m_pKernel;

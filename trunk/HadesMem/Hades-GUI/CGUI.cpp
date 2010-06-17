@@ -23,8 +23,6 @@ THE SOFTWARE.
 #include "CGUI.h"
 #include "CD3DRender.h"
 
-CGUI * gpGui = 0;
-
 CGUI::CGUI( IDirect3DDevice9 * pDevice )
 {
 	if( !pDevice )
@@ -41,8 +39,8 @@ CGUI::CGUI( IDirect3DDevice9 * pDevice )
 	m_pRender->Initialize( pDevice );
 #endif
 
-	m_pMouse = new CMouse( pDevice );
-	m_pKeyboard = new CKeyboard();
+	m_pMouse = new CMouse(*this, pDevice);
+	m_pKeyboard = new CKeyboard(*this);
 	m_pFont = 0;
 
 	AddCallback( "Value", SliderValue );
@@ -94,7 +92,7 @@ void CGUI::LoadInterfaceFromFile( const char * pszFilePath )
 			int iSize = 0;
 			pFontElement->QueryIntAttribute( "size", &iSize );
 
-			m_pFont = new CFont( gpGui->GetDevice(), iSize, pFontElement->Attribute( "face" ) );
+			m_pFont = new CFont(*this, GetDevice(), iSize, pFontElement->Attribute( "face" ) );
 		}
 
 		TiXmlElement * pColorThemes = pGUI->FirstChildElement( "ColorThemes" );
@@ -154,7 +152,7 @@ void CGUI::LoadInterfaceFromFile( const char * pszFilePath )
 		TiXmlElement * pWindows = pGUI->FirstChildElement( "Windows" );
 		if( pWindows )
 			for( TiXmlElement * pWindowElement = pWindows->FirstChildElement(); pWindowElement; pWindowElement = pWindowElement->NextSiblingElement() )
-				gpGui->AddWindow( new CWindow( pWindowElement ) );
+				AddWindow( new CWindow(*this, pWindowElement ) );
 	}
 }
 
@@ -217,7 +215,7 @@ void CGUI::BringToTop( CWindow * pWindow )
 
 void CGUI::Draw()
 {
-	if( !gpGui->IsVisible() )
+	if( !IsVisible() )
 		return;
 
 	PreDraw();
@@ -266,7 +264,7 @@ void CGUI::MouseMove( CMouse & pMouse )
 			if( !m_vWindows[ iIndex ]->GetMaximized() )
 				iHeight = TITLEBAR_HEIGHT;
 
-			if( !bGotWindow && gpGui->GetMouse().InArea( m_vWindows[ iIndex ], iHeight ) )
+			if( !bGotWindow && GetMouse().InArea( m_vWindows[ iIndex ], iHeight ) )
 			{
 				m_vWindows[ iIndex ]->MouseMove( pMouse );
 				bGotWindow = true;
@@ -290,7 +288,7 @@ bool CGUI::KeyEvent( SKey sKey )
 
 	if( !sKey.m_vKey && ( sKey.m_bDown || ( GetMouse().GetWheel() && !sKey.m_bDown ) ) )
 	{
-		CMouse & pMouse = gpGui->GetMouse();
+		CMouse & pMouse = GetMouse();
 
 		std::vector<CWindow*> vRepeat;
 

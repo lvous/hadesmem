@@ -37,7 +37,7 @@ class CWindow : public CElement
 	CColor * pTitle, * pBodyInner, * pBodyBorder;
 	CTexture * pTitlebar, * pButton;
 public:
-	CWindow( TiXmlElement * pElement );
+	CWindow(class CGUI& Gui, TiXmlElement* pElement);
 	~CWindow();
 
 	void AddElement( CElement * pElement );

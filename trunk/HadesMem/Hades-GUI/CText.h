@@ -28,7 +28,7 @@ class CText : public CElement
 {
 	CColor * pString;
 public:
-	CText( TiXmlElement * pElement );
+	CText(class CGUI& Gui, TiXmlElement* pElement);
 
 	void Draw();
 	void PreDraw();

@@ -28,7 +28,7 @@ class CVerticalSliderBar : public CHorizontalSliderBar
 	CColor * pLines, * pString;
 	CTexture * pSlider;
 public:
-	CVerticalSliderBar( TiXmlElement * pElement );
+	CVerticalSliderBar(class CGUI& Gui, TiXmlElement* pElement);
 
 	void Draw();
 	void MouseMove( CMouse & pMouse );

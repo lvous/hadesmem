@@ -22,14 +22,16 @@ THE SOFTWARE.
 
 #include "CGUI.h"
 
-CHorizontalSliderBar::CHorizontalSliderBar()
+CHorizontalSliderBar::CHorizontalSliderBar(CGUI& Gui) 
+  : CElement(Gui)
 {
 	SetDragged( false );
 	SetCallback( 0 );
 	m_iMinValue = 0, m_iMaxValue = 0, m_iValue = 0;
 }
 
-CHorizontalSliderBar::CHorizontalSliderBar( TiXmlElement * pElement )
+CHorizontalSliderBar::CHorizontalSliderBar(CGUI& Gui, TiXmlElement* pElement)
+  : CElement(Gui)
 {
 	SetDragged( false );
 	SetCallback( 0 );
@@ -37,7 +39,7 @@ CHorizontalSliderBar::CHorizontalSliderBar( TiXmlElement * pElement )
 
 	SetSliderElement( pElement );
 
-	SetThemeElement( gpGui->GetThemeElement( "HorizontalSliderBar" ) );
+	SetThemeElement( m_Gui.GetThemeElement( "HorizontalSliderBar" ) );
 
 	if( !GetThemeElement() )
 		MessageBoxA( 0, "Theme element invalid.", "HorizontalSliderBar", 0 );
@@ -82,7 +84,7 @@ void CHorizontalSliderBar::SetSliderElement( TiXmlElement * pElement )
 		const char * pszCallback = pUpdater->GetText();
 		if( pszCallback )
 		{
-			m_pUpdater = gpGui->GetCallback( pszCallback );
+			m_pUpdater = m_Gui.GetCallback( pszCallback );
 			
 			if( !m_pUpdater )
 				MessageBoxA( 0, "Callback invalid", pszCallback, 0 );
@@ -101,14 +103,14 @@ void CHorizontalSliderBar::Draw()
 	{
 		D3DCOLOR d3dLineColor = pLines->GetD3DColor();
 
-		gpGui->DrawLine( Pos.GetX(),					Pos.GetY() + TITLEBAR_HEIGHT / 2,Pos.GetX() + GetWidth(),		Pos.GetY() + TITLEBAR_HEIGHT / 2,		1, d3dLineColor );
-		gpGui->DrawLine( Pos.GetX(),					Pos.GetY() + TITLEBAR_HEIGHT / 4, Pos.GetX(),					Pos.GetY() + TITLEBAR_HEIGHT / 4 * 3,	1, d3dLineColor );
-		gpGui->DrawLine( Pos.GetX() + GetWidth(),		Pos.GetY() + TITLEBAR_HEIGHT / 4, Pos.GetX() + GetWidth(),		Pos.GetY() + TITLEBAR_HEIGHT / 4 * 3,	1, d3dLineColor );
-		gpGui->DrawLine( Pos.GetX() + GetWidth() / 2,	Pos.GetY() + TITLEBAR_HEIGHT / 4, Pos.GetX() + GetWidth() / 2,	Pos.GetY() + TITLEBAR_HEIGHT / 4 * 3,	1, d3dLineColor );
+		m_Gui.DrawLine( Pos.GetX(),					Pos.GetY() + TITLEBAR_HEIGHT / 2,Pos.GetX() + GetWidth(),		Pos.GetY() + TITLEBAR_HEIGHT / 2,		1, d3dLineColor );
+		m_Gui.DrawLine( Pos.GetX(),					Pos.GetY() + TITLEBAR_HEIGHT / 4, Pos.GetX(),					Pos.GetY() + TITLEBAR_HEIGHT / 4 * 3,	1, d3dLineColor );
+		m_Gui.DrawLine( Pos.GetX() + GetWidth(),		Pos.GetY() + TITLEBAR_HEIGHT / 4, Pos.GetX() + GetWidth(),		Pos.GetY() + TITLEBAR_HEIGHT / 4 * 3,	1, d3dLineColor );
+		m_Gui.DrawLine( Pos.GetX() + GetWidth() / 2,	Pos.GetY() + TITLEBAR_HEIGHT / 4, Pos.GetX() + GetWidth() / 2,	Pos.GetY() + TITLEBAR_HEIGHT / 4 * 3,	1, d3dLineColor );
 
 		pSlider->Draw( CPos( Pos.GetX() + static_cast<int>( floor( static_cast<float>( GetWidth() ) / ( GetMaxValue() - GetMinValue() ) * ( GetValue() - GetMinValue() ) ) ) - 5, Pos.GetY() + 2 ), 10, TITLEBAR_HEIGHT - 4 );
 
-		gpGui->GetFont()->DrawString( Pos.GetX() + GetWidth() / 2, Pos.GetY() - 15, FT_CENTER, pString, GetFormatted() );
+		m_Gui.GetFont()->DrawString( Pos.GetX() + GetWidth() / 2, Pos.GetY() - 15, FT_CENTER, pString, GetFormatted() );
 	}
 }
 
@@ -150,19 +152,19 @@ void CHorizontalSliderBar::MouseMove( CMouse & pMouse )
 				GetCallback()( reinterpret_cast<const char*>( GetValue() ), this );
 	}
 	else
-		SetElementState( SetMouseOver( gpGui->GetMouse().InArea( Pos.GetX(), Pos.GetY(), GetWidth(), TITLEBAR_HEIGHT ) )?"MouseOver":"Norm" );
+		SetElementState( SetMouseOver( m_Gui.GetMouse().InArea( Pos.GetX(), Pos.GetY(), GetWidth(), TITLEBAR_HEIGHT ) )?"MouseOver":"Norm" );
 }
 
 bool CHorizontalSliderBar::KeyEvent( SKey sKey )
 {
 	if( !sKey.m_vKey )
 	{
-		SetDragged( GetMouseOver() && gpGui->GetMouse().GetLeftButton() );
+		SetDragged( GetMouseOver() && m_Gui.GetMouse().GetLeftButton() );
 
 		SetElementState( GetDragged()?"Pressed":( GetMouseOver()?"MouseOver":"Norm" ) );
 
 		if( GetDragged() )
-			MouseMove( gpGui->GetMouse() );
+			MouseMove( m_Gui.GetMouse() );
 	}
 
 	return true;

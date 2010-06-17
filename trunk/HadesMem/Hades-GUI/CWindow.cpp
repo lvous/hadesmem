@@ -22,7 +22,8 @@ THE SOFTWARE.
 
 #include "CGUI.h"
 
-CWindow::CWindow( TiXmlElement * pElement )
+CWindow::CWindow(CGUI& Gui, TiXmlElement* pElement)
+  : CElement(Gui)
 {
 	SetMaximized( true );
 	SetFocussedElement( 0 );
@@ -39,7 +40,7 @@ CWindow::CWindow( TiXmlElement * pElement )
 
 	#define LOAD_ELEMENTS( Class, String ) \
 	for( TiXmlElement * pElementElement = pElement->FirstChildElement( String ); pElementElement; pElementElement = pElementElement->NextSiblingElement( String ) ) \
-		AddElement( new Class( pElementElement ) );
+		AddElement( new Class( Gui, pElementElement ) );
 
 	LOAD_ELEMENTS( CButton, "Button" )
 	LOAD_ELEMENTS( CText, "Text" )
@@ -52,14 +53,14 @@ CWindow::CWindow( TiXmlElement * pElement )
 	LOAD_ELEMENTS( CListBox, "ListBox" )
 	LOAD_ELEMENTS( CDropDown, "DropDown" )
 
-	SetThemeElement( gpGui->GetThemeElement( "Window" ) );
+	SetThemeElement( m_Gui.GetThemeElement( "Window" ) );
 
 	if( !GetThemeElement() )
 		MessageBoxA( 0, "Theme element invalid.", "Window", 0 );
 	else
 		SetElementState( "Norm" );
 
-	SetThemeElement( gpGui->GetThemeElement( "CloseButton" ), 1 );
+	SetThemeElement( m_Gui.GetThemeElement( "CloseButton" ), 1 );
 
 	if( !GetThemeElement( 1 ) )
 		MessageBoxA( 0, "Theme element invalid.", "CloseButton", 0 );
@@ -73,7 +74,7 @@ CWindow::CWindow( TiXmlElement * pElement )
 		else
 			SetCloseButton( true );
 
-		MouseMove( gpGui->GetMouse() );
+		MouseMove( m_Gui.GetMouse() );
 	}
 }
 
@@ -95,12 +96,12 @@ void CWindow::AddElement( CElement * pElement )
 void CWindow::Draw()
 {	
 	pTitlebar->Draw( *GetAbsPos(), GetWidth(), TITLEBAR_HEIGHT );
-	gpGui->GetFont()->DrawString( GetAbsPos()->GetX() + 5, GetAbsPos()->GetY() + 5, 0, pTitle, GetFormatted() );
+	m_Gui.GetFont()->DrawString( GetAbsPos()->GetX() + 5, GetAbsPos()->GetY() + 5, 0, pTitle, GetFormatted() );
 	pButton->Draw( CPos( GetAbsPos()->GetX() + GetWidth() - BUTTON_HEIGHT - 2, GetAbsPos()->GetY() + 2 ), BUTTON_HEIGHT, BUTTON_HEIGHT );
 
 	if( GetMaximized() )
 	{
-		gpGui->DrawOutlinedBox( GetAbsPos()->GetX(), GetAbsPos()->GetY() + TITLEBAR_HEIGHT, GetWidth(), GetHeight() - TITLEBAR_HEIGHT + 1,  pBodyInner->GetD3DColor(), pBodyBorder->GetD3DColor() );
+		m_Gui.DrawOutlinedBox( GetAbsPos()->GetX(), GetAbsPos()->GetY() + TITLEBAR_HEIGHT, GetWidth(), GetHeight() - TITLEBAR_HEIGHT + 1,  pBodyInner->GetD3DColor(), pBodyBorder->GetD3DColor() );
 
 		for each( CElement * pElement in m_vElements )
 			pElement->Draw();
@@ -143,7 +144,7 @@ void CWindow::MouseMove( CMouse & pMouse )
 
 bool CWindow::KeyEvent( SKey sKey )
 {
-	CMouse & Mouse = gpGui->GetMouse();
+	CMouse & Mouse = m_Gui.GetMouse();
 
 	if( Mouse.GetLeftButton() )
 	{
@@ -157,7 +158,7 @@ bool CWindow::KeyEvent( SKey sKey )
 			{
 				if( Mouse.GetLeftButton() == 1 )
 				{
-					gpGui->BringToTop( this );
+					m_Gui.BringToTop( this );
 
 					SetDragging( true );
 					Mouse.SetDragging( this );
@@ -170,12 +171,12 @@ bool CWindow::KeyEvent( SKey sKey )
 
 					SetElementState( GetMaximized()?"Norm":"Minimized" );
 
-					gpGui->BringToTop( this );
+					m_Gui.BringToTop( this );
 				}
 			}
 		}
 		else if(  Mouse.InArea( GetAbsPos()->GetX(), GetAbsPos()->GetY(), GetWidth(), GetHeight() ) )
-			gpGui->BringToTop( this );
+			m_Gui.BringToTop( this );
 	}
 	else
 	{

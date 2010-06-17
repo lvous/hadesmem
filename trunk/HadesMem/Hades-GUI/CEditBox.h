@@ -34,7 +34,7 @@ class CEditBox : public CElement
 	CColor * pInner, * pBorder, * pString, * pCursor;
 
 public:
-	CEditBox( TiXmlElement * pElement );
+	CEditBox(class CGUI& Gui, TiXmlElement* pElement);
 
 	void Draw();
 

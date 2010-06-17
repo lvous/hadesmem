@@ -34,7 +34,7 @@ class CListBox : public CElement
 
 	CColor * pInner, * pBorder, * pString, * pMouseOverString;
 public:
-	CListBox( TiXmlElement * pElement );
+	CListBox(class CGUI& Gui, TiXmlElement* pElement);
 
 	void Draw();
 	void PreDraw();

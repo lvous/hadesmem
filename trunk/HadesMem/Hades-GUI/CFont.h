@@ -36,8 +36,10 @@ class CFont
 	CD3DFont * m_pFont;
 #endif
 
+  class CGUI& m_Gui;
+
 public:
-	CFont( IDirect3DDevice9 * pDevice, int iHeight, const char * pszFaceName );
+	CFont(class CGUI& Gui, IDirect3DDevice9 * pDevice, int iHeight, const char * pszFaceName );
 	~CFont();
 
 	void OnLostDevice();

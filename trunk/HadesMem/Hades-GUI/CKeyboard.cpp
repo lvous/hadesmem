@@ -24,7 +24,7 @@ THE SOFTWARE.
 
 bool CKeyboard::HandleMessage( unsigned int uMsg, WPARAM wParam, LPARAM lParam )
 {
-	if( !gpGui->IsVisible() || uMsg < WM_KEYFIRST || uMsg > WM_KEYLAST || gpGui->GetMouse().GetLeftButton() )
+	if( !m_Gui.IsVisible() || uMsg < WM_KEYFIRST || uMsg > WM_KEYLAST || m_Gui.GetMouse().GetLeftButton() )
 		return false;
 
 	switch( uMsg )
@@ -37,7 +37,7 @@ bool CKeyboard::HandleMessage( unsigned int uMsg, WPARAM wParam, LPARAM lParam )
 		break;
 	}
 
-	return gpGui->KeyEvent( GetKey() );
+	return m_Gui.KeyEvent( GetKey() );
 }
 
 void CKeyboard::SetKey( SKey sKey )
@@ -51,3 +51,7 @@ SKey CKeyboard::GetKey()
 	SetKey( SKey( 0, false ) );
 	return sRet;
 }
+
+CKeyboard::CKeyboard(CGUI& Gui) 
+  : m_Gui(Gui)
+{ }
