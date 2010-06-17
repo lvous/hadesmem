@@ -22,14 +22,29 @@ THE SOFTWARE.
 
 #pragma once
 
-#define USE_D3DX
+#define SAFE_DELETE( pData ) if( pData ){ delete pData; pData = 0; }
+
+#undef SAFE_RELEASE
+#define SAFE_RELEASE( pInterface ) if( pInterface ) { pInterface->Release(); pInterface = 0; }
 
 #define TITLEBAR_HEIGHT 24
 #define BUTTON_HEIGHT	20
 #define HELPERSLIDER_WIDTH 20
 
-#define SAFE_DELETE( pData ) if( pData ){ delete pData; pData = 0; }
+#define FCR_NONE	0x0
+#define FCR_BOLD 	0x1
+#define FCR_ITALICS 0x2
 
+#define FT_NONE		0x0
+#define FT_CENTER	0x1
+#define FT_BORDER	0x2
+#define FT_VCENTER	0x4
+#define FT_SINGLELINE 0x8
+
+#define D3DFVF_BITMAPFONT	(D3DFVF_XYZRHW|D3DFVF_DIFFUSE|D3DFVF_TEX1)
+#define D3DFVF_PRIMITIVES	(D3DFVF_XYZRHW|D3DFVF_DIFFUSE)
+
+// Forward declarations
 class CTexture;
 class CTimer;
 class CPos;
@@ -44,9 +59,13 @@ class CProgressBar;
 class CTextBox;
 class CListBox;
 
-#include <windowsx.h>
-#include <shlwapi.h>
+// Windows API
+#include <Windows.h>
+#include <Shlwapi.h>
+#include <WindowsX.h>
+#include <atlbase.h>
 
+// C++ Standard Library
 #include <map>
 #include <set>
 #include <limits>
@@ -54,22 +73,18 @@ class CListBox;
 #include <sstream>
 #include <vector>
 #include <functional>
+#include <memory>
 
+// Hades-GUI
 #include "D3D9.h"
-#include "CD3DRender.h"
 #include "TinyXML\tinyxml.h"
-
 #include "CTexture.h"
 #include "CFont.h"
-
 #include "CTimer.h"
-
 #include "CPos.h"
 #include "CColor.h"
-
 #include "CMouse.h"
 #include "CKeyboard.h"
-
 #include "CElement.h"
 #include "CWindow.h"
 #include "CHorizontalSliderBar.h"
@@ -85,36 +100,9 @@ class CListBox;
 #include "CListBox.h"
 
 typedef std::function<std::string (const char* pszArgs, CElement* pElement)> tCallback;
-// typedef std::string ( __cdecl * tCallback )( const char * pszArgs, CElement * pElement );
 
 class CGUI
 {
-	bool m_bVisible, m_bReload;
-
-	CMouse * m_pMouse;
-	CKeyboard * m_pKeyboard;
-	CFont * m_pFont;
-
-	IDirect3DDevice9 * m_pDevice;
-
-	ID3DXSprite * m_pSprite;
-
-#ifdef USE_D3DX
-	ID3DXLine * m_pLine;
-#else
-	CD3DRender * m_pRender;
-#endif
-	
-	CTimer m_tPreDrawTimer;
-
-	std::vector<CWindow*> m_vWindows;
-
-	std::string m_sCurTheme;
-
-	typedef std::map<std::string, SElement*> tTheme;
-	std::map<std::string, tTheme> m_mThemes;
-
-	std::map<std::string, tCallback> m_mCallbacks;
 public:
 
 	CGUI( IDirect3DDevice9 * pDevice );
@@ -166,4 +154,28 @@ public:
 	{
 		return m_mCallbacks;
 	}
+
+private:
+  bool m_bVisible, m_bReload;
+
+  std::shared_ptr<CMouse> m_pMouse;
+  std::shared_ptr<CKeyboard> m_pKeyboard;
+  std::shared_ptr<CFont> m_pFont;
+
+  IDirect3DDevice9 * m_pDevice;
+
+  CComPtr<ID3DXSprite> m_pSprite;
+
+  CComPtr<ID3DXLine> m_pLine;
+
+  CTimer m_tPreDrawTimer;
+
+  std::vector<CWindow*> m_vWindows;
+
+  std::string m_sCurTheme;
+
+  typedef std::map<std::string, SElement*> tTheme;
+  std::map<std::string, tTheme> m_mThemes;
+
+  std::map<std::string, tCallback> m_mCallbacks;
 };

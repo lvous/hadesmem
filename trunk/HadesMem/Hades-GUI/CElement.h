@@ -27,7 +27,6 @@ THE SOFTWARE.
 #include <functional>
 
 typedef std::function<std::string (const char* pszArgs, CElement* pElement)> tCallback;
-// typedef std::string ( __cdecl * tCallback )( const char * pszArgs, CElement * pElement );
 
 class CElement
 {

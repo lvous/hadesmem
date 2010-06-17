@@ -25,16 +25,11 @@ THE SOFTWARE.
 #include <stdio.h>
 #include <string>
 #include "D3D9.h"
-#include "CD3DRender.h"
 #include "CColor.h"
 
 class CFont
 {
-#ifdef USE_D3DX
 	ID3DXFont * m_pFont;
-#else
-	CD3DFont * m_pFont;
-#endif
 
   class CGUI& m_Gui;
 

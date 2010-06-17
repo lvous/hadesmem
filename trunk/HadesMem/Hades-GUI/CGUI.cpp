@@ -21,27 +21,33 @@ THE SOFTWARE.
 */
 
 #include "CGUI.h"
-#include "CD3DRender.h"
 
-CGUI::CGUI( IDirect3DDevice9 * pDevice )
+CGUI::CGUI(IDirect3DDevice9* pDevice) 
+  : m_bVisible(false), 
+  m_bReload(false), 
+  m_pMouse(), 
+  m_pKeyboard(), 
+  m_pFont(), 
+  m_pDevice(pDevice), 
+  m_pSprite(), 
+  m_pLine(), 
+  m_tPreDrawTimer(), 
+  m_vWindows(), 
+  m_sCurTheme(), 
+  m_mThemes(), 
+  m_mCallbacks()
 {
-	if( !pDevice )
-		MessageBoxA( 0, "pDevice invalid.", 0, 0 );
+	if(!m_pDevice)
+  {
+    MessageBoxA( 0, "pDevice invalid.", 0, 0 );
+  }
 
-	m_pDevice = pDevice;
+	D3DXCreateSprite(pDevice, &m_pSprite);
 
-	D3DXCreateSprite( pDevice, &m_pSprite );
+	D3DXCreateLine(pDevice, &m_pLine);
 
-#ifdef USE_D3DX
-	D3DXCreateLine( pDevice, &m_pLine );
-#else
-	m_pRender = new CD3DRender( 128 );
-	m_pRender->Initialize( pDevice );
-#endif
-
-	m_pMouse = new CMouse(*this, pDevice);
-	m_pKeyboard = new CKeyboard(*this);
-	m_pFont = 0;
+	m_pMouse.reset(new CMouse(*this, pDevice));
+	m_pKeyboard.reset(new CKeyboard(*this));
 
 	AddCallback( "Value", SliderValue );
 	AddCallback( "MaxValue", MaxValue );
@@ -53,18 +59,6 @@ CGUI::CGUI( IDirect3DDevice9 * pDevice )
 
 CGUI::~CGUI()
 {
-	SAFE_DELETE( m_pFont )
-	SAFE_DELETE( m_pMouse )
-	SAFE_DELETE( m_pKeyboard )
-
-	SAFE_RELEASE( m_pSprite )
-
-#ifdef USE_D3DX
-	SAFE_RELEASE( m_pLine )
-#else
-	SAFE_DELETE( m_pRender )
-#endif
-
 	for( int i = 0; i < static_cast<int>( m_vWindows.size() ); i++ )
 		SAFE_DELETE( m_vWindows[i] )
 }
@@ -92,7 +86,7 @@ void CGUI::LoadInterfaceFromFile( const char * pszFilePath )
 			int iSize = 0;
 			pFontElement->QueryIntAttribute( "size", &iSize );
 
-			m_pFont = new CFont(*this, GetDevice(), iSize, pFontElement->Attribute( "face" ) );
+			m_pFont.reset(new CFont(*this, GetDevice(), iSize, pFontElement->Attribute( "face" ) ));
 		}
 
 		TiXmlElement * pColorThemes = pGUI->FirstChildElement( "ColorThemes" );
@@ -158,16 +152,11 @@ void CGUI::LoadInterfaceFromFile( const char * pszFilePath )
 
 void CGUI::FillArea( int iX, int iY, int iWidth, int iHeight, D3DCOLOR d3dColor )
 {
-#ifdef USE_D3DX
 	DrawLine( iX + iWidth / 2, iY, iX + iWidth / 2, iY + iHeight, iWidth, d3dColor );
-#else
-	m_pRender->D3DAddQuad( iX, iY, iWidth, iHeight, d3dColor);
-#endif
 }
 
 void CGUI::DrawLine( int iStartX, int iStartY, int iEndX, int iEndY, int iWidth, D3DCOLOR d3dColor )
 {
-#ifdef USE_D3DX
 	m_pLine->SetWidth( static_cast<float>( iWidth ) );
 
 	D3DXVECTOR2 d3dxVector[2];
@@ -178,15 +167,6 @@ void CGUI::DrawLine( int iStartX, int iStartY, int iEndX, int iEndY, int iWidth,
 	m_pLine->Begin();
 	m_pLine->Draw( d3dxVector, 2, d3dColor );
 	m_pLine->End();
-#else
-	iWidth;
-
-	m_pRender->Begin( D3DPT_LINELIST );
-	m_pRender->D3DColour( d3dColor );
-	m_pRender->D3DVertex2f( static_cast<float>( iStartX ), static_cast<float>( iStartY ) );
-	m_pRender->D3DVertex2f( static_cast<float>( iEndX ), static_cast<float>( iEndY ) );
-	m_pRender->End();
-#endif
 }
 
 void CGUI::DrawOutlinedBox( int iX, int iY, int iWidth, int iHeight, D3DCOLOR d3dInnerColor, D3DCOLOR d3dBorderColor )
@@ -357,11 +337,7 @@ void CGUI::OnLostDevice()
 		GetFont()->OnLostDevice();
 	GetSprite()->OnLostDevice();
 	
-#ifdef USE_D3DX
 	m_pLine->OnLostDevice();
-#else
-	SAFE_DELETE( m_pRender )
-#endif
 }
 
 void CGUI::OnResetDevice( IDirect3DDevice9 * pDevice )
@@ -372,12 +348,7 @@ void CGUI::OnResetDevice( IDirect3DDevice9 * pDevice )
 		GetFont()->OnResetDevice( pDevice );
 	GetSprite()->OnResetDevice();
 	
-#ifdef USE_D3DX
 	m_pLine->OnResetDevice();
-#else
-	m_pRender = new CD3DRender( 128 );
-	m_pRender->Initialize( pDevice );
-#endif
 }
 
 CMouse & CGUI::GetMouse() const
@@ -387,7 +358,7 @@ CMouse & CGUI::GetMouse() const
 
 CKeyboard * CGUI::GetKeyboard() const
 {
-	return m_pKeyboard;
+	return &*m_pKeyboard;
 }
 
 IDirect3DDevice9 * CGUI::GetDevice() const
@@ -397,7 +368,7 @@ IDirect3DDevice9 * CGUI::GetDevice() const
 
 CFont * CGUI::GetFont() const
 {
-	return m_pFont;
+	return &*m_pFont;
 }
 
 ID3DXSprite * CGUI::GetSprite() const
