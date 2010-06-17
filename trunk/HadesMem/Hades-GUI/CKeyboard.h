@@ -24,43 +24,49 @@ THE SOFTWARE.
 
 #include "CGUI.h"
 
-struct SKey
+namespace Hades
 {
-	char m_vKey;
-	bool m_bDown;
-	LPARAM m_lParam;
+  namespace GUI
+  {
+    struct SKey
+    {
+      char m_vKey;
+      bool m_bDown;
+      LPARAM m_lParam;
 
-	SKey()
-	{
-		m_vKey = 0;
-		m_bDown = false;
-		m_lParam = 0;
-	}
-	SKey( char vKey, bool bDown )
-	{
-		m_vKey = vKey;
-		m_bDown = bDown;
-		m_lParam = 0;
-	}
-	SKey( char vKey, bool bDown, LPARAM lParam )
-	{
-		m_vKey = vKey;
-		m_bDown = bDown;
-		m_lParam = lParam;
-	}
-};
+      SKey()
+      {
+        m_vKey = 0;
+        m_bDown = false;
+        m_lParam = 0;
+      }
+      SKey( char vKey, bool bDown )
+      {
+        m_vKey = vKey;
+        m_bDown = bDown;
+        m_lParam = 0;
+      }
+      SKey( char vKey, bool bDown, LPARAM lParam )
+      {
+        m_vKey = vKey;
+        m_bDown = bDown;
+        m_lParam = lParam;
+      }
+    };
 
-class CKeyboard
-{
-	SKey m_sKey;
+    class CKeyboard
+    {
+      SKey m_sKey;
 
-  class CGUI& m_Gui;
+      class CGUI& m_Gui;
 
-public:
-  CKeyboard(class CGUI& Gui);
+    public:
+      CKeyboard(class CGUI& Gui);
 
-	bool HandleMessage( unsigned int uMsg, WPARAM wParam, LPARAM lParam );
+      bool HandleMessage( unsigned int uMsg, WPARAM wParam, LPARAM lParam );
 
-	void SetKey( SKey sKey );
-	SKey GetKey();
-};
+      void SetKey( SKey sKey );
+      SKey GetKey();
+    };
+  }
+}

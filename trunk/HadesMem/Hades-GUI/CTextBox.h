@@ -24,28 +24,34 @@ THE SOFTWARE.
 
 #include "CGUI.h"
 
-class CTextBox : public CElement
+namespace Hades
 {
-	int m_iStart;
+  namespace GUI
+  {
+    class CTextBox : public CElement
+    {
+      int m_iStart;
 
-	bool m_bUpArrow_MouseOver, m_bDownArrow_MouseOver, m_bSlider_MouseOver, m_bDragging;
-	CTimer m_tUpArrow, m_tDownArrow;
+      bool m_bUpArrow_MouseOver, m_bDownArrow_MouseOver, m_bSlider_MouseOver, m_bDragging;
+      CTimer m_tUpArrow, m_tDownArrow;
 
-	CHelperSlider * pSlider;
+      CHelperSlider * pSlider;
 
-	std::vector<std::string> m_vStrings;
+      std::vector<std::string> m_vStrings;
 
-	CColor * pString, * pInner, * pBorder;
-public:
-	CTextBox(class CGUI& Gui, TiXmlElement* pElement);
+      CColor * pString, * pInner, * pBorder;
+    public:
+      CTextBox(class CGUI& Gui, TiXmlElement* pElement);
 
-	void Draw();
-	void PreDraw();
-	void MouseMove( CMouse & pMouse );
-	bool KeyEvent( SKey sKey );
+      void Draw();
+      void PreDraw();
+      void MouseMove( CMouse & pMouse );
+      bool KeyEvent( SKey sKey );
 
-	void AddString( std::string sString );
-	void Clear();
+      void AddString( std::string sString );
+      void Clear();
 
-	void UpdateTheme( int iIndex );
-};
+      void UpdateTheme( int iIndex );
+    };
+  }
+}

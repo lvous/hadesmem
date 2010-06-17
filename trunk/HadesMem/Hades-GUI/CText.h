@@ -24,15 +24,21 @@ THE SOFTWARE.
 
 #include "CGUI.h"
 
-class CText : public CElement
+namespace Hades
 {
-	CColor * pString;
-public:
-	CText(class CGUI& Gui, TiXmlElement* pElement);
+  namespace GUI
+  {
+    class CText : public CElement
+    {
+      CColor * pString;
+    public:
+      CText(class CGUI& Gui, TiXmlElement* pElement);
 
-	void Draw();
-	void PreDraw();
-	void MouseMove( CMouse & pMouse );
+      void Draw();
+      void PreDraw();
+      void MouseMove( CMouse & pMouse );
 
-	void UpdateTheme( int iIndex );
-};
+      void UpdateTheme( int iIndex );
+    };
+  }
+}

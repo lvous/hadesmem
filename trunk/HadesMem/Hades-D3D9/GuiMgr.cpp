@@ -78,7 +78,7 @@ namespace Hades
     m_pDevice = pDevice;
 
     // Create new GUI instance
-    m_pGui = new CGUI(pDevice);
+    m_pGui = new GUI::CGUI(pDevice);
 
     // Get current working directory
     std::wstring CurDir;
@@ -166,7 +166,7 @@ namespace Hades
     pHelper->DrawBox(TopLeft, BottomRight, 2, D3DCOLOR_ARGB(255, 0, 255, 0));
 
     // Draw test string
-    CColor MyColor(255, 0, 0, 255);
+    GUI::CColor MyColor(255, 0, 0, 255);
     m_pGui->GetFont()->DrawString(Viewport.X + 10, Viewport.Y + 10, 0, 
       &MyColor, "Hades");
   }
@@ -307,13 +307,14 @@ namespace Hades
   }
 
   // GUI library callback for console input
-  std::string GuiMgr::OnConsoleInput(char const* pszArgs, CElement* pElement)
+  std::string GuiMgr::OnConsoleInput(char const* pszArgs, 
+    GUI::CElement* pElement)
   {
     // Print input to console
     Print(pszArgs);
 
     // Clear input box and refocus
-    auto pEditBox = dynamic_cast<CEditBox*>(pElement);
+    auto pEditBox = dynamic_cast<GUI::CEditBox*>(pElement);
     pEditBox->SetString("");
     pEditBox->SetStart(0);
     pEditBox->SetIndex(0);
@@ -345,7 +346,7 @@ namespace Hades
     }
 
     // Add output
-    auto pOutBoxReal = dynamic_cast<CTextBox*>(pOutBox);
+    auto pOutBoxReal = dynamic_cast<GUI::CTextBox*>(pOutBox);
     pOutBoxReal->AddString(Output);
   }
 }

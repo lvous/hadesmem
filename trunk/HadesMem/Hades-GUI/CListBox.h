@@ -24,27 +24,33 @@ THE SOFTWARE.
 
 #include "CGUI.h"
 
-class CListBox : public CElement
+namespace Hades
 {
-	int m_iMouseOverIndex;
+  namespace GUI
+  {
+    class CListBox : public CElement
+    {
+      int m_iMouseOverIndex;
 
-	CHelperSlider * pSlider;
+      CHelperSlider * pSlider;
 
-	std::vector<std::string> m_vRows;
+      std::vector<std::string> m_vRows;
 
-	CColor * pInner, * pBorder, * pString, * pMouseOverString;
-public:
-	CListBox(class CGUI& Gui, TiXmlElement* pElement);
+      CColor * pInner, * pBorder, * pString, * pMouseOverString;
+    public:
+      CListBox(class CGUI& Gui, TiXmlElement* pElement);
 
-	void Draw();
-	void PreDraw();
-	void MouseMove( CMouse & pMouse );
-	bool KeyEvent( SKey sKey );
+      void Draw();
+      void PreDraw();
+      void MouseMove( CMouse & pMouse );
+      bool KeyEvent( SKey sKey );
 
-	void AddRow( std::string sString );
-	std::string GetRow( int iIndex ) const;
+      void AddRow( std::string sString );
+      std::string GetRow( int iIndex ) const;
 
-	void Clear();
+      void Clear();
 
-	void UpdateTheme( int iIndex );
-};
+      void UpdateTheme( int iIndex );
+    };
+  }
+}

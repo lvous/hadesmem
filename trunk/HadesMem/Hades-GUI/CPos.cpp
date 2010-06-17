@@ -22,54 +22,60 @@ THE SOFTWARE.
 
 #include "CGUI.h"
 
-CPos::CPos( CPos * pPos )
+namespace Hades
 {
-	m_iX = pPos->GetX();
-	m_iY = pPos->GetY();
-}
+  namespace GUI
+  {
+    CPos::CPos( CPos * pPos )
+    {
+      m_iX = pPos->GetX();
+      m_iY = pPos->GetY();
+    }
 
-CPos::CPos( int iX, int iY )
-{
-	m_iX = iX;
-	m_iY = iY;
-}
+    CPos::CPos( int iX, int iY )
+    {
+      m_iX = iX;
+      m_iY = iY;
+    }
 
-CPos::CPos()
-{
-	m_iX = 0;
-	m_iY = 0;
-}
+    CPos::CPos()
+    {
+      m_iX = 0;
+      m_iY = 0;
+    }
 
-CPos::~CPos()
-{
-}
+    CPos::~CPos()
+    {
+    }
 
-int CPos::GetX() const
-{
-	return m_iX;
-}
+    int CPos::GetX() const
+    {
+      return m_iX;
+    }
 
-int CPos::GetY() const
-{
-	return m_iY;
-}
+    int CPos::GetY() const
+    {
+      return m_iY;
+    }
 
-void CPos::SetX( int iX )
-{
-	m_iX = iX;
-}
+    void CPos::SetX( int iX )
+    {
+      m_iX = iX;
+    }
 
-void CPos::SetY( int iY )
-{
-	m_iY = iY;
-}
+    void CPos::SetY( int iY )
+    {
+      m_iY = iY;
+    }
 
-const CPos CPos::operator + ( const CPos & otherPos ) const
-{
-	return CPos( GetX() + otherPos.GetX(), GetY() + otherPos.GetY() );
-}
+    const CPos CPos::operator + ( const CPos & otherPos ) const
+    {
+      return CPos( GetX() + otherPos.GetX(), GetY() + otherPos.GetY() );
+    }
 
-const CPos CPos::operator - ( const CPos & otherPos ) const
-{
-	return CPos( GetX() - otherPos.GetX(), GetY() - otherPos.GetY() );
+    const CPos CPos::operator - ( const CPos & otherPos ) const
+    {
+      return CPos( GetX() - otherPos.GetX(), GetY() - otherPos.GetY() );
+    }
+  }
 }

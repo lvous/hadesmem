@@ -24,25 +24,31 @@ THE SOFTWARE.
 
 #include "CGUI.h"
 
-class CTexture
+namespace Hades
 {
-	CComPtr<IDirect3DTexture9> m_pTexture;
-	D3DSURFACE_DESC m_TexDesc;
+  namespace GUI
+  {
+    class CTexture
+    {
+      CComPtr<IDirect3DTexture9> m_pTexture;
+      D3DSURFACE_DESC m_TexDesc;
 
-	ID3DXSprite * m_pSprite;
-	IDirect3DDevice9 * m_pDevice;
+      ID3DXSprite * m_pSprite;
+      IDirect3DDevice9 * m_pDevice;
 
-	BYTE m_bAlpha;
-public:
-	CTexture( ID3DXSprite * pSprite, const char * szPath );
+      BYTE m_bAlpha;
+    public:
+      CTexture( ID3DXSprite * pSprite, const char * szPath );
 
-	inline void SetSprite( ID3DXSprite * pSprite )
-	{
-		m_pSprite = pSprite;
-	}
+      inline void SetSprite( ID3DXSprite * pSprite )
+      {
+        m_pSprite = pSprite;
+      }
 
-	IDirect3DTexture9 * GetTexture() const;
-	void SetAlpha( BYTE bAlpha );
+      IDirect3DTexture9 * GetTexture() const;
+      void SetAlpha( BYTE bAlpha );
 
-	void Draw( CPos cpPos, int iWidth, int iHeight );
-};
+      void Draw( CPos cpPos, int iWidth, int iHeight );
+    };
+  }
+}

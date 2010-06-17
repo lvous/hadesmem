@@ -22,36 +22,42 @@ THE SOFTWARE.
 
 #include "CGUI.h"
 
-bool CKeyboard::HandleMessage( unsigned int uMsg, WPARAM wParam, LPARAM lParam )
+namespace Hades
 {
-	if( !m_Gui.IsVisible() || uMsg < WM_KEYFIRST || uMsg > WM_KEYLAST || m_Gui.GetMouse().GetLeftButton() )
-		return false;
+  namespace GUI
+  {
+    bool CKeyboard::HandleMessage( unsigned int uMsg, WPARAM wParam, LPARAM lParam )
+    {
+      if( !m_Gui.IsVisible() || uMsg < WM_KEYFIRST || uMsg > WM_KEYLAST || m_Gui.GetMouse().GetLeftButton() )
+        return false;
 
-	switch( uMsg )
-	{
-	case WM_KEYDOWN:
-		SetKey( SKey( static_cast<char>( wParam ), true, lParam ) );
-		break;
-	case WM_KEYUP:
-		SetKey( SKey( static_cast<char>( wParam ), false, lParam ) );
-		break;
-	}
+      switch( uMsg )
+      {
+      case WM_KEYDOWN:
+        SetKey( SKey( static_cast<char>( wParam ), true, lParam ) );
+        break;
+      case WM_KEYUP:
+        SetKey( SKey( static_cast<char>( wParam ), false, lParam ) );
+        break;
+      }
 
-	return m_Gui.KeyEvent( GetKey() );
+      return m_Gui.KeyEvent( GetKey() );
+    }
+
+    void CKeyboard::SetKey( SKey sKey )
+    {
+      m_sKey = sKey;
+    }
+
+    SKey CKeyboard::GetKey()
+    {
+      SKey sRet = m_sKey;
+      SetKey( SKey( 0, false ) );
+      return sRet;
+    }
+
+    CKeyboard::CKeyboard(CGUI& Gui) 
+      : m_Gui(Gui)
+    { }
+  }
 }
-
-void CKeyboard::SetKey( SKey sKey )
-{
-	m_sKey = sKey;
-}
-
-SKey CKeyboard::GetKey()
-{
-	SKey sRet = m_sKey;
-	SetKey( SKey( 0, false ) );
-	return sRet;
-}
-
-CKeyboard::CKeyboard(CGUI& Gui) 
-  : m_Gui(Gui)
-{ }

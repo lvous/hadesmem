@@ -22,267 +22,273 @@ THE SOFTWARE.
 
 #include "CGUI.h"
 
-CWindow::CWindow(CGUI& Gui, TiXmlElement* pElement)
-  : CElement(Gui)
+namespace Hades
 {
-	SetMaximized( true );
-	SetFocussedElement( 0 );
-	posDif = CPos();
-	m_bDragging = false;
-	SetMouseOver( false );
-	SetElement( pElement );
-
-	const char * pszVisible = pElement->Attribute( "hidden" );
-	if( pszVisible )
-		SetVisible( pszVisible[ 0 ] != '1' );
-	else
-		SetVisible( true );
-
-	#define LOAD_ELEMENTS( Class, String ) \
-	for( TiXmlElement * pElementElement = pElement->FirstChildElement( String ); pElementElement; pElementElement = pElementElement->NextSiblingElement( String ) ) \
-		AddElement( new Class( Gui, pElementElement ) );
-
-	LOAD_ELEMENTS( CButton, "Button" )
-	LOAD_ELEMENTS( CText, "Text" )
-	LOAD_ELEMENTS( CProgressBar, "ProgressBar" )
-	LOAD_ELEMENTS( CCheckBox, "CheckBox" )
-	LOAD_ELEMENTS( CEditBox, "EditBox" )
-	LOAD_ELEMENTS( CHorizontalSliderBar, "HorizontalSliderBar" )
-	LOAD_ELEMENTS( CVerticalSliderBar, "VerticalSliderBar" )
-	LOAD_ELEMENTS( CTextBox, "TextBox" )
-	LOAD_ELEMENTS( CListBox, "ListBox" )
-	LOAD_ELEMENTS( CDropDown, "DropDown" )
-
-	SetThemeElement( m_Gui.GetThemeElement( "Window" ) );
-
-	if( !GetThemeElement() )
-		MessageBoxA( 0, "Theme element invalid.", "Window", 0 );
-	else
-		SetElementState( "Norm" );
-
-	SetThemeElement( m_Gui.GetThemeElement( "CloseButton" ), 1 );
-
-	if( !GetThemeElement( 1 ) )
-		MessageBoxA( 0, "Theme element invalid.", "CloseButton", 0 );
-	else
-	{
-		SetElementState( "Norm", 1 );
-
-		pszVisible = pElement->Attribute( "closebutton" );
-		if( pszVisible )
-			SetCloseButton( pszVisible[ 0 ] == '1' );
-		else
-			SetCloseButton( true );
-
-		MouseMove( m_Gui.GetMouse() );
-	}
-}
-
-CWindow::~CWindow()
-{
-  std::for_each(m_vElements.begin(), m_vElements.end(), 
-    [] (CElement*& pElement) 
+  namespace GUI
   {
-    delete pElement;
-    pElement = 0;
-  });
+    CWindow::CWindow(CGUI& Gui, TiXmlElement* pElement)
+      : CElement(Gui)
+    {
+      SetMaximized( true );
+      SetFocussedElement( 0 );
+      posDif = CPos();
+      m_bDragging = false;
+      SetMouseOver( false );
+      SetElement( pElement );
 
-	m_vElements.clear();
-}
+      const char * pszVisible = pElement->Attribute( "hidden" );
+      if( pszVisible )
+        SetVisible( pszVisible[ 0 ] != '1' );
+      else
+        SetVisible( true );
 
-void CWindow::AddElement( CElement * pElement )
-{
-	pElement->SetRelPos( *pElement->GetRelPos() + CPos( 0, TITLEBAR_HEIGHT ) );
-	pElement->SetParent( this );
+#define LOAD_ELEMENTS( Class, String ) \
+  for( TiXmlElement * pElementElement = pElement->FirstChildElement( String ); pElementElement; pElementElement = pElementElement->NextSiblingElement( String ) ) \
+  AddElement( new Class( Gui, pElementElement ) );
 
-	m_vElements.push_back( pElement );
-}
+      LOAD_ELEMENTS( CButton, "Button" )
+        LOAD_ELEMENTS( CText, "Text" )
+        LOAD_ELEMENTS( CProgressBar, "ProgressBar" )
+        LOAD_ELEMENTS( CCheckBox, "CheckBox" )
+        LOAD_ELEMENTS( CEditBox, "EditBox" )
+        LOAD_ELEMENTS( CHorizontalSliderBar, "HorizontalSliderBar" )
+        LOAD_ELEMENTS( CVerticalSliderBar, "VerticalSliderBar" )
+        LOAD_ELEMENTS( CTextBox, "TextBox" )
+        LOAD_ELEMENTS( CListBox, "ListBox" )
+        LOAD_ELEMENTS( CDropDown, "DropDown" )
 
-void CWindow::Draw()
-{	
-	pTitlebar->Draw( *GetAbsPos(), GetWidth(), TITLEBAR_HEIGHT );
-	m_Gui.GetFont()->DrawString( GetAbsPos()->GetX() + 5, GetAbsPos()->GetY() + 5, 0, pTitle, GetFormatted() );
-	pButton->Draw( CPos( GetAbsPos()->GetX() + GetWidth() - BUTTON_HEIGHT - 2, GetAbsPos()->GetY() + 2 ), BUTTON_HEIGHT, BUTTON_HEIGHT );
+        SetThemeElement( m_Gui.GetThemeElement( "Window" ) );
 
-	if( GetMaximized() )
-	{
-		m_Gui.DrawOutlinedBox( GetAbsPos()->GetX(), GetAbsPos()->GetY() + TITLEBAR_HEIGHT, GetWidth(), GetHeight() - TITLEBAR_HEIGHT + 1,  pBodyInner->GetD3DColor(), pBodyBorder->GetD3DColor() );
+      if( !GetThemeElement() )
+        MessageBoxA( 0, "Theme element invalid.", "Window", 0 );
+      else
+        SetElementState( "Norm" );
 
-		for each( CElement * pElement in m_vElements )
-			pElement->Draw();
-	}
-}
+      SetThemeElement( m_Gui.GetThemeElement( "CloseButton" ), 1 );
 
-void CWindow::PreDraw()
-{
-	GetString( true );
+      if( !GetThemeElement( 1 ) )
+        MessageBoxA( 0, "Theme element invalid.", "CloseButton", 0 );
+      else
+      {
+        SetElementState( "Norm", 1 );
 
-	if( GetMaximized() )
-		for each( CElement * pElement in m_vElements )
-			pElement->PreDraw();
-}
+        pszVisible = pElement->Attribute( "closebutton" );
+        if( pszVisible )
+          SetCloseButton( pszVisible[ 0 ] == '1' );
+        else
+          SetCloseButton( true );
 
-void CWindow::MouseMove( CMouse & pMouse )
-{
-	if( GetDragging() )
-	{
-		if( !posDif.GetX() )
-			posDif = *GetAbsPos() - pMouse.GetPos();
-		else
-		{
-			CPos mPos = pMouse.GetPos();
+        MouseMove( m_Gui.GetMouse() );
+      }
+    }
 
-			if( mPos.GetX() == -1 && mPos.GetY() == -1 )
-				mPos = pMouse.GetSavedPos();
+    CWindow::~CWindow()
+    {
+      std::for_each(m_vElements.begin(), m_vElements.end(), 
+        [] (CElement*& pElement) 
+      {
+        delete pElement;
+        pElement = 0;
+      });
 
-			SetAbsPos( mPos + posDif );
-		}
-	}
+      m_vElements.clear();
+    }
 
-	if( GetCloseButton() )
-		SetElementState( SetMouseOver( pMouse.InArea( GetAbsPos()->GetX() + GetWidth() - BUTTON_HEIGHT - 2, GetAbsPos()->GetY() + 2, BUTTON_HEIGHT, BUTTON_HEIGHT ) )?"MouseOver":"Norm", 1 );
+    void CWindow::AddElement( CElement * pElement )
+    {
+      pElement->SetRelPos( *pElement->GetRelPos() + CPos( 0, TITLEBAR_HEIGHT ) );
+      pElement->SetParent( this );
 
-	if( GetMaximized() )
-		for each( CElement * pElement in m_vElements )
-			pElement->MouseMove( pMouse );
-}
+      m_vElements.push_back( pElement );
+    }
 
-bool CWindow::KeyEvent( SKey sKey )
-{
-	CMouse & Mouse = m_Gui.GetMouse();
+    void CWindow::Draw()
+    {	
+      pTitlebar->Draw( *GetAbsPos(), GetWidth(), TITLEBAR_HEIGHT );
+      m_Gui.GetFont()->DrawString( GetAbsPos()->GetX() + 5, GetAbsPos()->GetY() + 5, 0, pTitle, GetFormatted() );
+      pButton->Draw( CPos( GetAbsPos()->GetX() + GetWidth() - BUTTON_HEIGHT - 2, GetAbsPos()->GetY() + 2 ), BUTTON_HEIGHT, BUTTON_HEIGHT );
 
-	if( Mouse.GetLeftButton() )
-	{
-		SetFocussedElement( 0 );
+      if( GetMaximized() )
+      {
+        m_Gui.DrawOutlinedBox( GetAbsPos()->GetX(), GetAbsPos()->GetY() + TITLEBAR_HEIGHT, GetWidth(), GetHeight() - TITLEBAR_HEIGHT + 1,  pBodyInner->GetD3DColor(), pBodyBorder->GetD3DColor() );
 
-		if( GetMouseOver() && m_bCloseButtonEnabled )
-			this->SetVisible( false );
-		else if( Mouse.InArea( GetAbsPos()->GetX(), GetAbsPos()->GetY(), GetWidth(), TITLEBAR_HEIGHT ) )
-		{
-			if( !Mouse.GetDragging() )
-			{
-				if( Mouse.GetLeftButton() == 1 )
-				{
-					m_Gui.BringToTop( this );
+        for each( CElement * pElement in m_vElements )
+          pElement->Draw();
+      }
+    }
 
-					SetDragging( true );
-					Mouse.SetDragging( this );
+    void CWindow::PreDraw()
+    {
+      GetString( true );
 
-					SetElementState( "Dragging" );
-				}
-				else
-				{
-					SetMaximized( !GetMaximized() );
+      if( GetMaximized() )
+        for each( CElement * pElement in m_vElements )
+          pElement->PreDraw();
+    }
 
-					SetElementState( GetMaximized()?"Norm":"Minimized" );
+    void CWindow::MouseMove( CMouse & pMouse )
+    {
+      if( GetDragging() )
+      {
+        if( !posDif.GetX() )
+          posDif = *GetAbsPos() - pMouse.GetPos();
+        else
+        {
+          CPos mPos = pMouse.GetPos();
 
-					m_Gui.BringToTop( this );
-				}
-			}
-		}
-		else if(  Mouse.InArea( GetAbsPos()->GetX(), GetAbsPos()->GetY(), GetWidth(), GetHeight() ) )
-			m_Gui.BringToTop( this );
-	}
-	else
-	{
-		posDif.SetX( 0 );
+          if( mPos.GetX() == -1 && mPos.GetY() == -1 )
+            mPos = pMouse.GetSavedPos();
 
-		Mouse.SetDragging( 0 );
-		SetDragging( false );
+          SetAbsPos( mPos + posDif );
+        }
+      }
 
-		SetElementState( GetMaximized()?"Norm":"Minimized" );
-	}
+      if( GetCloseButton() )
+        SetElementState( SetMouseOver( pMouse.InArea( GetAbsPos()->GetX() + GetWidth() - BUTTON_HEIGHT - 2, GetAbsPos()->GetY() + 2, BUTTON_HEIGHT, BUTTON_HEIGHT ) )?"MouseOver":"Norm", 1 );
 
-	if( GetMaximized() )
-		for( int iIndex = static_cast<int>( m_vElements.size() ) - 1; iIndex >= 0; iIndex-- )
-			if( !m_vElements[ iIndex ]->KeyEvent( sKey ) )
-				return false;
-	return true;
-}
+      if( GetMaximized() )
+        for each( CElement * pElement in m_vElements )
+          pElement->MouseMove( pMouse );
+    }
 
-void CWindow::SetMaximized( bool bMaximized )
-{
-	m_bMaximized = bMaximized;
-}
+    bool CWindow::KeyEvent( SKey sKey )
+    {
+      CMouse & Mouse = m_Gui.GetMouse();
 
-bool CWindow::GetMaximized()
-{
-	return m_bMaximized;
-}
+      if( Mouse.GetLeftButton() )
+      {
+        SetFocussedElement( 0 );
 
-void CWindow::SetVisible( bool bVisible )
-{
-	m_bVisible = bVisible;
-}
+        if( GetMouseOver() && m_bCloseButtonEnabled )
+          this->SetVisible( false );
+        else if( Mouse.InArea( GetAbsPos()->GetX(), GetAbsPos()->GetY(), GetWidth(), TITLEBAR_HEIGHT ) )
+        {
+          if( !Mouse.GetDragging() )
+          {
+            if( Mouse.GetLeftButton() == 1 )
+            {
+              m_Gui.BringToTop( this );
 
-bool CWindow::IsVisible()
-{
-	return m_bVisible;
-}
+              SetDragging( true );
+              Mouse.SetDragging( this );
 
-void CWindow::SetDragging( bool bDragging )
-{
-	m_bDragging = bDragging;
-}
+              SetElementState( "Dragging" );
+            }
+            else
+            {
+              SetMaximized( !GetMaximized() );
 
-bool CWindow::GetDragging()
-{
-	return m_bDragging;
-}
+              SetElementState( GetMaximized()?"Norm":"Minimized" );
 
-void CWindow::SetCloseButton( bool bEnabled )
-{
-	m_bCloseButtonEnabled = bEnabled;
+              m_Gui.BringToTop( this );
+            }
+          }
+        }
+        else if(  Mouse.InArea( GetAbsPos()->GetX(), GetAbsPos()->GetY(), GetWidth(), GetHeight() ) )
+          m_Gui.BringToTop( this );
+      }
+      else
+      {
+        posDif.SetX( 0 );
 
-	if( GetCloseButton() )
-		SetElementState( "Disabled", 1 );
-}
+        Mouse.SetDragging( 0 );
+        SetDragging( false );
 
-bool CWindow::GetCloseButton()
-{
-	return m_bCloseButtonEnabled;
-}
+        SetElementState( GetMaximized()?"Norm":"Minimized" );
+      }
 
-void CWindow::SetFocussedElement( CElement * pElement )
-{
-	m_pFocussedElement = pElement;
+      if( GetMaximized() )
+        for( int iIndex = static_cast<int>( m_vElements.size() ) - 1; iIndex >= 0; iIndex-- )
+          if( !m_vElements[ iIndex ]->KeyEvent( sKey ) )
+            return false;
+      return true;
+    }
 
-	if( pElement )
-		BringToTop( pElement );
-}
+    void CWindow::SetMaximized( bool bMaximized )
+    {
+      m_bMaximized = bMaximized;
+    }
 
-CElement * CWindow::GetFocussedElement()
-{
-	return m_pFocussedElement;
-}
+    bool CWindow::GetMaximized()
+    {
+      return m_bMaximized;
+    }
 
-CElement * CWindow::GetElementByString( const char * pszString, int iIndex )
-{
-	for each( CElement * pElement in m_vElements )
-		if( pElement->GetString( false, iIndex ) == pszString )
-			return pElement;
-	return 0;
-}
+    void CWindow::SetVisible( bool bVisible )
+    {
+      m_bVisible = bVisible;
+    }
 
-void CWindow::BringToTop( CElement * pElement )
-{
-	for( int i = 0; i < static_cast<int>( m_vElements.size() ); i++ )
-		if( m_vElements[i] == pElement )
-			m_vElements.erase( m_vElements.begin() + i );
-	m_vElements.insert(  m_vElements.end(), pElement );
-}
+    bool CWindow::IsVisible()
+    {
+      return m_bVisible;
+    }
 
-void CWindow::UpdateTheme( int iIndex )
-{
-	SElementState * pState = GetElementState( iIndex );
-	if( !iIndex )
-	{
-		pTitle = pState->GetColor( "Title" );
-		pBodyInner = pState->GetColor( "BodyInner" );
-		pBodyBorder = pState->GetColor( "BodyBorder" );
+    void CWindow::SetDragging( bool bDragging )
+    {
+      m_bDragging = bDragging;
+    }
 
-		pTitlebar = pState->GetTexture( "Titlebar" );
-	}
-	else
-		pButton = pState->GetTexture( "Button" );
+    bool CWindow::GetDragging()
+    {
+      return m_bDragging;
+    }
+
+    void CWindow::SetCloseButton( bool bEnabled )
+    {
+      m_bCloseButtonEnabled = bEnabled;
+
+      if( GetCloseButton() )
+        SetElementState( "Disabled", 1 );
+    }
+
+    bool CWindow::GetCloseButton()
+    {
+      return m_bCloseButtonEnabled;
+    }
+
+    void CWindow::SetFocussedElement( CElement * pElement )
+    {
+      m_pFocussedElement = pElement;
+
+      if( pElement )
+        BringToTop( pElement );
+    }
+
+    CElement * CWindow::GetFocussedElement()
+    {
+      return m_pFocussedElement;
+    }
+
+    CElement * CWindow::GetElementByString( const char * pszString, int iIndex )
+    {
+      for each( CElement * pElement in m_vElements )
+        if( pElement->GetString( false, iIndex ) == pszString )
+          return pElement;
+      return 0;
+    }
+
+    void CWindow::BringToTop( CElement * pElement )
+    {
+      for( int i = 0; i < static_cast<int>( m_vElements.size() ); i++ )
+        if( m_vElements[i] == pElement )
+          m_vElements.erase( m_vElements.begin() + i );
+      m_vElements.insert(  m_vElements.end(), pElement );
+    }
+
+    void CWindow::UpdateTheme( int iIndex )
+    {
+      SElementState * pState = GetElementState( iIndex );
+      if( !iIndex )
+      {
+        pTitle = pState->GetColor( "Title" );
+        pBodyInner = pState->GetColor( "BodyInner" );
+        pBodyBorder = pState->GetColor( "BodyBorder" );
+
+        pTitlebar = pState->GetTexture( "Titlebar" );
+      }
+      else
+        pButton = pState->GetTexture( "Button" );
+    }
+  }
 }

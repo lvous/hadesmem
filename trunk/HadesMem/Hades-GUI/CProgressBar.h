@@ -24,20 +24,26 @@ THE SOFTWARE.
 
 #include "CGUI.h"
 
-class CProgressBar : public CElement
+namespace Hades
 {
-	int m_iProgress, m_iStrWidth, m_iStrHeight;
-	std::string m_sBuf;
+  namespace GUI
+  {
+    class CProgressBar : public CElement
+    {
+      int m_iProgress, m_iStrWidth, m_iStrHeight;
+      std::string m_sBuf;
 
-	CColor * pInner, * pBorder, * pString;
-	CTexture * pProgressBar;
-public:
-	CProgressBar(class CGUI& Gui, TiXmlElement* pElement);
+      CColor * pInner, * pBorder, * pString;
+      CTexture * pProgressBar;
+    public:
+      CProgressBar(class CGUI& Gui, TiXmlElement* pElement);
 
-	void Draw();
+      void Draw();
 
-	int GetProgress() const;
-	void SetProgress( int iProgress );
+      int GetProgress() const;
+      void SetProgress( int iProgress );
 
-	void UpdateTheme( int iIndex );
-};
+      void UpdateTheme( int iIndex );
+    };
+  }
+}

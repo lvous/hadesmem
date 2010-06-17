@@ -24,47 +24,53 @@ THE SOFTWARE.
 
 #include "CGUI.h"
 
-class CWindow : public CElement
+namespace Hades
 {
-	bool m_bMaximized, m_bDragging, m_bVisible;
-	CPos posDif;
-	std::vector<CElement*> m_vElements;
-	CElement * m_pFocussedElement;
+  namespace GUI
+  {
+    class CWindow : public CElement
+    {
+      bool m_bMaximized, m_bDragging, m_bVisible;
+      CPos posDif;
+      std::vector<CElement*> m_vElements;
+      CElement * m_pFocussedElement;
 
-	bool m_bCloseButtonEnabled;
-	CTimer m_tCloseButtonPressed;
+      bool m_bCloseButtonEnabled;
+      CTimer m_tCloseButtonPressed;
 
-	CColor * pTitle, * pBodyInner, * pBodyBorder;
-	CTexture * pTitlebar, * pButton;
-public:
-	CWindow(class CGUI& Gui, TiXmlElement* pElement);
-	~CWindow();
+      CColor * pTitle, * pBodyInner, * pBodyBorder;
+      CTexture * pTitlebar, * pButton;
+    public:
+      CWindow(class CGUI& Gui, TiXmlElement* pElement);
+      ~CWindow();
 
-	void AddElement( CElement * pElement );
+      void AddElement( CElement * pElement );
 
-	void Draw();
-	void PreDraw();
-	void MouseMove( CMouse & pMouse );
-	bool KeyEvent( SKey sKey );
+      void Draw();
+      void PreDraw();
+      void MouseMove( CMouse & pMouse );
+      bool KeyEvent( SKey sKey );
 
-	void SetMaximized( bool bMaximized );
-	bool GetMaximized();
+      void SetMaximized( bool bMaximized );
+      bool GetMaximized();
 
-	void SetVisible( bool bVisible );
-	bool IsVisible();
+      void SetVisible( bool bVisible );
+      bool IsVisible();
 
-	void SetDragging( bool bDragging );
-	bool GetDragging();
+      void SetDragging( bool bDragging );
+      bool GetDragging();
 
-	void SetCloseButton( bool bEnabled );
-	bool GetCloseButton();
+      void SetCloseButton( bool bEnabled );
+      bool GetCloseButton();
 
-	void SetFocussedElement( CElement * pElement );
-	CElement * GetFocussedElement();
+      void SetFocussedElement( CElement * pElement );
+      CElement * GetFocussedElement();
 
-	CElement * GetElementByString( const char * pszString, int iIndex = 0 );
-	
-	void BringToTop( CElement * pElement );
+      CElement * GetElementByString( const char * pszString, int iIndex = 0 );
 
-	void UpdateTheme( int iIndex );
-};
+      void BringToTop( CElement * pElement );
+
+      void UpdateTheme( int iIndex );
+    };
+  }
+}

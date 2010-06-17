@@ -22,64 +22,70 @@ THE SOFTWARE.
 
 #include "CGUI.h"
 
-CProgressBar::CProgressBar(CGUI& Gui, TiXmlElement * pElement)
-  : CElement(Gui)
+namespace Hades
 {
-	SetElement( pElement );
+  namespace GUI
+  {
+    CProgressBar::CProgressBar(CGUI& Gui, TiXmlElement * pElement)
+      : CElement(Gui)
+    {
+      SetElement( pElement );
 
-	int iProgress = 0;
-	pElement->QueryIntAttribute( "value", &iProgress );
-	SetProgress( iProgress );
+      int iProgress = 0;
+      pElement->QueryIntAttribute( "value", &iProgress );
+      SetProgress( iProgress );
 
-	SetThemeElement( m_Gui.GetThemeElement( "ProgressBar" ) );
+      SetThemeElement( m_Gui.GetThemeElement( "ProgressBar" ) );
 
-	if( !GetThemeElement() )
-		MessageBoxA( 0, "Theme element invalid.", "ProgressBar", 0 );
-	else
-		SetElementState( "Norm" );
-}
+      if( !GetThemeElement() )
+        MessageBoxA( 0, "Theme element invalid.", "ProgressBar", 0 );
+      else
+        SetElementState( "Norm" );
+    }
 
-void CProgressBar::Draw()
-{
-	CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
+    void CProgressBar::Draw()
+    {
+      CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
 
-	m_Gui.DrawOutlinedBox( Pos.GetX(), Pos.GetY(), GetWidth(), GetHeight(), pInner->GetD3DColor(), pBorder->GetD3DColor() );
+      m_Gui.DrawOutlinedBox( Pos.GetX(), Pos.GetY(), GetWidth(), GetHeight(), pInner->GetD3DColor(), pBorder->GetD3DColor() );
 
-	if( GetProgress() )
-		pProgressBar->Draw( CPos( Pos.GetX() + 2, Pos.GetY() + 2 ), static_cast<int>( ( static_cast<float>( GetWidth() ) - 4 ) / 100 * GetProgress() ), GetHeight() - 4 );
+      if( GetProgress() )
+        pProgressBar->Draw( CPos( Pos.GetX() + 2, Pos.GetY() + 2 ), static_cast<int>( ( static_cast<float>( GetWidth() ) - 4 ) / 100 * GetProgress() ), GetHeight() - 4 );
 
-	m_Gui.GetFont()->DrawString( Pos.GetX() + GetWidth() / 2, Pos.GetY() + GetHeight() / 2, FT_CENTER|FT_VCENTER, pString, m_sBuf );
-}
+      m_Gui.GetFont()->DrawString( Pos.GetX() + GetWidth() / 2, Pos.GetY() + GetHeight() / 2, FT_CENTER|FT_VCENTER, pString, m_sBuf );
+    }
 
-int CProgressBar::GetProgress() const
-{
-	return m_iProgress;
-}
+    int CProgressBar::GetProgress() const
+    {
+      return m_iProgress;
+    }
 
-void CProgressBar::SetProgress( int iProgress )
-{
-	if( iProgress > 100 )
-		iProgress = 100;
-	else if( iProgress < 0 )
-		iProgress = 0;
+    void CProgressBar::SetProgress( int iProgress )
+    {
+      if( iProgress > 100 )
+        iProgress = 100;
+      else if( iProgress < 0 )
+        iProgress = 0;
 
-	m_iProgress = iProgress;
+      m_iProgress = iProgress;
 
-	std::stringstream sStream;
-	sStream << GetProgress() << static_cast<char>( 37 );
-	m_sBuf = sStream.str();
+      std::stringstream sStream;
+      sStream << GetProgress() << static_cast<char>( 37 );
+      m_sBuf = sStream.str();
 
-	m_iStrWidth = m_Gui.GetFont()->GetStringWidth( m_sBuf.c_str() ) / 2;
-	m_iStrHeight = m_Gui.GetFont()->GetStringHeight() / 2;
-}
+      m_iStrWidth = m_Gui.GetFont()->GetStringWidth( m_sBuf.c_str() ) / 2;
+      m_iStrHeight = m_Gui.GetFont()->GetStringHeight() / 2;
+    }
 
-void CProgressBar::UpdateTheme( int iIndex )
-{
-	SElementState * pState = GetElementState( iIndex );
+    void CProgressBar::UpdateTheme( int iIndex )
+    {
+      SElementState * pState = GetElementState( iIndex );
 
-	pInner = pState->GetColor( "Inner" );
-	pBorder = pState->GetColor( "Border" );
-	pString = pState->GetColor( "String" );
+      pInner = pState->GetColor( "Inner" );
+      pBorder = pState->GetColor( "Border" );
+      pString = pState->GetColor( "String" );
 
-	pProgressBar = pState->GetTexture( "ProgressBar" );
+      pProgressBar = pState->GetTexture( "ProgressBar" );
+    }
+  }
 }

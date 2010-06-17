@@ -22,63 +22,69 @@ THE SOFTWARE.
 
 #include "CGUI.h"
 
-CButton::CButton(CGUI& Gui, TiXmlElement* pElement) 
-  : CElement(Gui)
+namespace Hades
 {
-	SetElement( pElement );
-	SetHeight( BUTTON_HEIGHT );
+  namespace GUI
+  {
+    CButton::CButton(CGUI& Gui, TiXmlElement* pElement) 
+      : CElement(Gui)
+    {
+      SetElement( pElement );
+      SetHeight( BUTTON_HEIGHT );
 
-	SetThemeElement( m_Gui.GetThemeElement( "Button" ) );
+      SetThemeElement( m_Gui.GetThemeElement( "Button" ) );
 
-	if( !GetThemeElement() )
-		MessageBoxA( 0, "Theme element invalid.", "Button", 0 );
-	else
-		SetElementState( "Norm" );
-}
+      if( !GetThemeElement() )
+        MessageBoxA( 0, "Theme element invalid.", "Button", 0 );
+      else
+        SetElementState( "Norm" );
+    }
 
-void CButton::Draw()
-{
-	const CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
+    void CButton::Draw()
+    {
+      const CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
 
-	pButton->Draw( Pos, GetWidth(), GetHeight() );
-	m_Gui.GetFont()->DrawString( Pos.GetX() + GetWidth() / 2, Pos.GetY() + GetHeight() / 2, FT_CENTER|FT_VCENTER, pString, GetString().c_str() );
-}
+      pButton->Draw( Pos, GetWidth(), GetHeight() );
+      m_Gui.GetFont()->DrawString( Pos.GetX() + GetWidth() / 2, Pos.GetY() + GetHeight() / 2, FT_CENTER|FT_VCENTER, pString, GetString().c_str() );
+    }
 
-void CButton::PreDraw()
-{
-	if( !m_tPressed.Running() )
-		SetElementState( GetMouseOver()?"MouseOver":"Norm" );
-}
+    void CButton::PreDraw()
+    {
+      if( !m_tPressed.Running() )
+        SetElementState( GetMouseOver()?"MouseOver":"Norm" );
+    }
 
-void CButton::MouseMove( CMouse & pMouse )
-{
-	CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
+    void CButton::MouseMove( CMouse & pMouse )
+    {
+      CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
 
-	SetElementState( SetMouseOver( pMouse.InArea( Pos.GetX(), Pos.GetY(), GetWidth(), GetHeight() ) )?"MouseOver":"Norm" );
-}
+      SetElementState( SetMouseOver( pMouse.InArea( Pos.GetX(), Pos.GetY(), GetWidth(), GetHeight() ) )?"MouseOver":"Norm" );
+    }
 
-bool CButton::KeyEvent( SKey sKey )
-{
-	if( !sKey.m_vKey )
-	{
-		if( GetMouseOver() && m_Gui.GetMouse().GetLeftButton( 0 ) )
-		{
-			SetElementState( "Pressed" );
+    bool CButton::KeyEvent( SKey sKey )
+    {
+      if( !sKey.m_vKey )
+      {
+        if( GetMouseOver() && m_Gui.GetMouse().GetLeftButton( 0 ) )
+        {
+          SetElementState( "Pressed" );
 
-			if( GetCallback() )
-				GetCallback()( 0, this );
+          if( GetCallback() )
+            GetCallback()( 0, this );
 
-			m_tPressed.Start( 0.1f );
-		}
-	}
+          m_tPressed.Start( 0.1f );
+        }
+      }
 
-	return true;
-}
+      return true;
+    }
 
-void CButton::UpdateTheme( int iIndex )
-{
-	SElementState * pState = GetElementState( iIndex );
+    void CButton::UpdateTheme( int iIndex )
+    {
+      SElementState * pState = GetElementState( iIndex );
 
-	pButton = pState->GetTexture( "Button" );
-	pString = pState->GetColor( "String" );
+      pButton = pState->GetTexture( "Button" );
+      pString = pState->GetColor( "String" );
+    }
+  }
 }

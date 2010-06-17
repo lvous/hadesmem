@@ -23,15 +23,21 @@ THE SOFTWARE.
 #pragma once
 #include "CGUI.h"
 
-class CVerticalSliderBar : public CHorizontalSliderBar
+namespace Hades
 {
-	CColor * pLines, * pString;
-	CTexture * pSlider;
-public:
-	CVerticalSliderBar(class CGUI& Gui, TiXmlElement* pElement);
+  namespace GUI
+  {
+    class CVerticalSliderBar : public CHorizontalSliderBar
+    {
+      CColor * pLines, * pString;
+      CTexture * pSlider;
+    public:
+      CVerticalSliderBar(class CGUI& Gui, TiXmlElement* pElement);
 
-	void Draw();
-	void MouseMove( CMouse & pMouse );
+      void Draw();
+      void MouseMove( CMouse & pMouse );
 
-	void UpdateTheme( int iIndex );
-};
+      void UpdateTheme( int iIndex );
+    };
+  }
+}

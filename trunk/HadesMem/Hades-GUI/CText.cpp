@@ -22,41 +22,47 @@ THE SOFTWARE.
 
 #include "CGUI.h"
 
-CText::CText(CGUI& Gui, TiXmlElement* pElement)
-  : CElement(Gui)
+namespace Hades
 {
-	SetElement( pElement );
+  namespace GUI
+  {
+    CText::CText(CGUI& Gui, TiXmlElement* pElement)
+      : CElement(Gui)
+    {
+      SetElement( pElement );
 
-	SetThemeElement( m_Gui.GetThemeElement( "Text" ) );
+      SetThemeElement( m_Gui.GetThemeElement( "Text" ) );
 
-	if( !GetThemeElement() )
-		MessageBoxA( 0, "Theme element invalid.", "Text", 0 );
-	else
-		SetElementState( "Norm" );
-}
+      if( !GetThemeElement() )
+        MessageBoxA( 0, "Theme element invalid.", "Text", 0 );
+      else
+        SetElementState( "Norm" );
+    }
 
-void CText::Draw()
-{
-	CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
-	
-	m_Gui.GetFont()->DrawString( Pos.GetX(), Pos.GetY(), 0, pString, GetFormatted(), GetWidth() );
-}
+    void CText::Draw()
+    {
+      CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
 
-void CText::PreDraw()
-{
-	GetString( true );
-}
+      m_Gui.GetFont()->DrawString( Pos.GetX(), Pos.GetY(), 0, pString, GetFormatted(), GetWidth() );
+    }
 
-void CText::MouseMove( CMouse & pMouse )
-{
-	CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
+    void CText::PreDraw()
+    {
+      GetString( true );
+    }
 
-	SetElementState( SetMouseOver( pMouse.InArea( Pos.GetX(), Pos.GetY(), m_Gui.GetFont()->GetStringWidth( GetFormatted().c_str() ), m_Gui.GetFont()->GetStringHeight() ) )?"MouseOver":"Norm" );
-}
+    void CText::MouseMove( CMouse & pMouse )
+    {
+      CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
 
-void CText::UpdateTheme( int iIndex )
-{
-	SElementState * pState = GetElementState( iIndex );
+      SetElementState( SetMouseOver( pMouse.InArea( Pos.GetX(), Pos.GetY(), m_Gui.GetFont()->GetStringWidth( GetFormatted().c_str() ), m_Gui.GetFont()->GetStringHeight() ) )?"MouseOver":"Norm" );
+    }
 
-	pString = pState->GetColor( "String" );
+    void CText::UpdateTheme( int iIndex )
+    {
+      SElementState * pState = GetElementState( iIndex );
+
+      pString = pState->GetColor( "String" );
+    }
+  }
 }

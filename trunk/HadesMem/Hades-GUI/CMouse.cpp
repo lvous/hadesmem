@@ -24,237 +24,243 @@ THE SOFTWARE.
 
 #define DBLCLICK_TIME 0.3f
 
-CMouse::CMouse(CGUI& Gui, IDirect3DDevice9 * pDevice)
-  : m_Gui(Gui)
+namespace Hades
 {
-	m_pDevice = pDevice;
+  namespace GUI
+  {
+    CMouse::CMouse(CGUI& Gui, IDirect3DDevice9 * pDevice)
+      : m_Gui(Gui)
+    {
+      m_pDevice = pDevice;
 
-	m_pInnerColor = new CColor( 255, 255, 255, 255 );
-	m_pBorderColor = new CColor( 0, 0, 0, 255 );
+      m_pInnerColor = new CColor( 255, 255, 255, 255 );
+      m_pBorderColor = new CColor( 0, 0, 0, 255 );
 
-	SetLeftButton( 0 );
-	SetRightButton( 0 );
-	SetMiddleButton( 0 );
-	SetWheel( 0 );
+      SetLeftButton( 0 );
+      SetRightButton( 0 );
+      SetMiddleButton( 0 );
+      SetWheel( 0 );
 
-	SetDragging( 0 );
-}
+      SetDragging( 0 );
+    }
 
-CMouse::~CMouse()
-{
-}
+    CMouse::~CMouse()
+    {
+    }
 
-bool CMouse::HandleMessage( unsigned int uMsg, WPARAM wParam, LPARAM lParam )
-{
-	if( !m_Gui.IsVisible() || uMsg < WM_MOUSEFIRST || uMsg > WM_MOUSELAST )
-		return false;
+    bool CMouse::HandleMessage( unsigned int uMsg, WPARAM wParam, LPARAM lParam )
+    {
+      if( !m_Gui.IsVisible() || uMsg < WM_MOUSEFIRST || uMsg > WM_MOUSELAST )
+        return false;
 
-	bool bDown = false;
+      bool bDown = false;
 
-	switch( uMsg )
-	{
-	case WM_MOUSEMOVE:
-		{
-			SetPos( GET_X_LPARAM( lParam ), GET_Y_LPARAM( lParam ) );
-			m_Gui.MouseMove( *this );
-			return false;
-		}
+      switch( uMsg )
+      {
+      case WM_MOUSEMOVE:
+        {
+          SetPos( GET_X_LPARAM( lParam ), GET_Y_LPARAM( lParam ) );
+          m_Gui.MouseMove( *this );
+          return false;
+        }
 
-	case WM_LBUTTONDOWN:
-		SetLeftButton( 1 );
-		bDown = true;
-		break;
-	case WM_RBUTTONDOWN:
-		SetRightButton( 1 );
-		bDown = true;
-		break;
-	case WM_MBUTTONDOWN:
-		SetMiddleButton( 1 );
-		bDown = true;
-		break;
+      case WM_LBUTTONDOWN:
+        SetLeftButton( 1 );
+        bDown = true;
+        break;
+      case WM_RBUTTONDOWN:
+        SetRightButton( 1 );
+        bDown = true;
+        break;
+      case WM_MBUTTONDOWN:
+        SetMiddleButton( 1 );
+        bDown = true;
+        break;
 
-	case WM_LBUTTONUP:
-		SetLeftButton( 0 );
-		break;
-	case WM_RBUTTONUP:
-		SetRightButton( 0 );
-		break;
-	case WM_MBUTTONUP:
-		SetMiddleButton( 0 );
-		break;
+      case WM_LBUTTONUP:
+        SetLeftButton( 0 );
+        break;
+      case WM_RBUTTONUP:
+        SetRightButton( 0 );
+        break;
+      case WM_MBUTTONUP:
+        SetMiddleButton( 0 );
+        break;
 
-	case WM_MOUSEWHEEL:
-		float fDelta = GET_WHEEL_DELTA_WPARAM( wParam );
-		
-		if( fDelta > 0.0f )
-			SetWheel( 1 );
-		else if( fDelta < 0.0f )
-			SetWheel( 2 );
-		else
-			SetWheel( 0 );
+      case WM_MOUSEWHEEL:
+        float fDelta = GET_WHEEL_DELTA_WPARAM( wParam );
 
-		break;
-	}
+        if( fDelta > 0.0f )
+          SetWheel( 1 );
+        else if( fDelta < 0.0f )
+          SetWheel( 2 );
+        else
+          SetWheel( 0 );
 
-	return m_Gui.KeyEvent( SKey( 0, bDown ) );
-}
+        break;
+      }
 
-void CMouse::SetPos( CPos cPos )
-{
-	m_pos = cPos;
-}
+      return m_Gui.KeyEvent( SKey( 0, bDown ) );
+    }
 
-void CMouse::SetPos( int iX, int iY )
-{
-	m_pos.SetX( iX );
-	m_pos.SetY( iY );
-}
+    void CMouse::SetPos( CPos cPos )
+    {
+      m_pos = cPos;
+    }
 
-CPos CMouse::GetPos() const
-{
-	return m_pos;
-}
+    void CMouse::SetPos( int iX, int iY )
+    {
+      m_pos.SetX( iX );
+      m_pos.SetY( iY );
+    }
 
-bool CMouse::InArea( int iX, int iY, int iWidth, int iHeight ) const
-{
-	return ( m_pos.GetX() >= iX && m_pos.GetX() <= iX + iWidth && m_pos.GetY() >= iY && m_pos.GetY() <= iY + iHeight );
-}
+    CPos CMouse::GetPos() const
+    {
+      return m_pos;
+    }
 
-bool CMouse::InArea( CElement * pElement, int iHeight ) const
-{
-	if( !iHeight )
-		iHeight = pElement->GetHeight();
+    bool CMouse::InArea( int iX, int iY, int iWidth, int iHeight ) const
+    {
+      return ( m_pos.GetX() >= iX && m_pos.GetX() <= iX + iWidth && m_pos.GetY() >= iY && m_pos.GetY() <= iY + iHeight );
+    }
 
-	return InArea( pElement->GetAbsPos()->GetX(), pElement->GetAbsPos()->GetY(), pElement->GetWidth(), iHeight );
-}
+    bool CMouse::InArea( CElement * pElement, int iHeight ) const
+    {
+      if( !iHeight )
+        iHeight = pElement->GetHeight();
 
-void CMouse::Draw()
-{
-}
+      return InArea( pElement->GetAbsPos()->GetX(), pElement->GetAbsPos()->GetY(), pElement->GetWidth(), iHeight );
+    }
 
-int CMouse::GetLeftButton( int iState )
-{
-	int iRet = m_iLeftButton;
+    void CMouse::Draw()
+    {
+    }
 
-	if( iState != -1 )
-		SetLeftButton( iState );
+    int CMouse::GetLeftButton( int iState )
+    {
+      int iRet = m_iLeftButton;
 
-	return iRet;
-}
+      if( iState != -1 )
+        SetLeftButton( iState );
 
-int CMouse::GetRightButton( int iState )
-{
-	int iRet = m_iRightButton;
+      return iRet;
+    }
 
-	if( iState != -1 )
-		SetRightButton( iState );
+    int CMouse::GetRightButton( int iState )
+    {
+      int iRet = m_iRightButton;
 
-	return iRet;
-}
+      if( iState != -1 )
+        SetRightButton( iState );
 
-int CMouse::GetMiddleButton( int iState )
-{
-	int iRet = m_iMiddleButton;
+      return iRet;
+    }
 
-	if( iState != -1 )
-		SetMiddleButton( iState );
+    int CMouse::GetMiddleButton( int iState )
+    {
+      int iRet = m_iMiddleButton;
 
-	return iRet;
-}
+      if( iState != -1 )
+        SetMiddleButton( iState );
 
-int CMouse::GetWheel( int iState )
-{
-	int iRet = m_iWheel;
+      return iRet;
+    }
 
-	if( iState != -1 )
-		SetWheel( iState );
+    int CMouse::GetWheel( int iState )
+    {
+      int iRet = m_iWheel;
 
-	return iRet;
-}
+      if( iState != -1 )
+        SetWheel( iState );
 
-void CMouse::SetLeftButton( int iState )
-{
-	if( iState == 1 )
-	{
-		if( m_tLeftButton.Running() )
-		{
-			m_iLeftButton = 2;
-			m_tLeftButton.Stop();
-		}
-		else
-		{
-			m_iLeftButton = 1;
-			m_tLeftButton.Start( DBLCLICK_TIME );
-		}
-	}
-	else
-		m_iLeftButton = iState;
-}
+      return iRet;
+    }
 
-void CMouse::SetRightButton( int iState )
-{
-	if( iState == 1 )
-	{
-		if( m_tRightButton.Running() )
-		{
-			m_iRightButton = 2;
-			m_tRightButton.Stop();
-		}
-		else
-		{
-			m_iRightButton = 1;
-			m_tRightButton.Start( DBLCLICK_TIME );
-		}
-	}
-	else
-		m_iRightButton = iState;
-}
+    void CMouse::SetLeftButton( int iState )
+    {
+      if( iState == 1 )
+      {
+        if( m_tLeftButton.Running() )
+        {
+          m_iLeftButton = 2;
+          m_tLeftButton.Stop();
+        }
+        else
+        {
+          m_iLeftButton = 1;
+          m_tLeftButton.Start( DBLCLICK_TIME );
+        }
+      }
+      else
+        m_iLeftButton = iState;
+    }
 
-void CMouse::SetMiddleButton( int iState )
-{
-	if( iState == 1 )
-	{
-		if( m_tMiddleButton.Running() )
-		{
-			m_iMiddleButton = 2;
-			m_tMiddleButton.Stop();
-		}
-		else
-		{
-			m_iMiddleButton = 1;
-			m_tMiddleButton.Start( DBLCLICK_TIME );
-		}
-	}
-	else
-		m_iMiddleButton = iState;
-}
+    void CMouse::SetRightButton( int iState )
+    {
+      if( iState == 1 )
+      {
+        if( m_tRightButton.Running() )
+        {
+          m_iRightButton = 2;
+          m_tRightButton.Stop();
+        }
+        else
+        {
+          m_iRightButton = 1;
+          m_tRightButton.Start( DBLCLICK_TIME );
+        }
+      }
+      else
+        m_iRightButton = iState;
+    }
 
-void CMouse::SetWheel( int iState )
-{
-	m_iWheel = iState;
-}
+    void CMouse::SetMiddleButton( int iState )
+    {
+      if( iState == 1 )
+      {
+        if( m_tMiddleButton.Running() )
+        {
+          m_iMiddleButton = 2;
+          m_tMiddleButton.Stop();
+        }
+        else
+        {
+          m_iMiddleButton = 1;
+          m_tMiddleButton.Start( DBLCLICK_TIME );
+        }
+      }
+      else
+        m_iMiddleButton = iState;
+    }
 
-void CMouse::SetDragging( CElement * pElement )
-{
-	m_pDraggingElement = pElement;
-}
+    void CMouse::SetWheel( int iState )
+    {
+      m_iWheel = iState;
+    }
 
-CElement * CMouse::GetDragging() const
-{
-	return m_pDraggingElement;
-}
+    void CMouse::SetDragging( CElement * pElement )
+    {
+      m_pDraggingElement = pElement;
+    }
 
-void CMouse::SavePos()
-{
-	m_bpos = m_pos;
-}
+    CElement * CMouse::GetDragging() const
+    {
+      return m_pDraggingElement;
+    }
 
-void CMouse::LoadPos()
-{
-	m_pos = m_bpos;
-}
+    void CMouse::SavePos()
+    {
+      m_bpos = m_pos;
+    }
 
-CPos CMouse::GetSavedPos() const
-{
-	return m_bpos;
+    void CMouse::LoadPos()
+    {
+      m_pos = m_bpos;
+    }
+
+    CPos CMouse::GetSavedPos() const
+    {
+      return m_bpos;
+    }
+  }
 }

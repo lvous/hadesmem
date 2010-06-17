@@ -22,124 +22,130 @@ THE SOFTWARE.
 
 #include "CGUI.h"
 
-CTextBox::CTextBox(CGUI& Gui, TiXmlElement* pElement)
-  : CElement(Gui)
+namespace Hades
 {
-	SetElement( pElement );
+  namespace GUI
+  {
+    CTextBox::CTextBox(CGUI& Gui, TiXmlElement* pElement)
+      : CElement(Gui)
+    {
+      SetElement( pElement );
 
-	pSlider = new CHelperSlider(Gui, CPos( GetWidth() - HELPERSLIDER_WIDTH, 0 ), GetHeight() );
+      pSlider = new CHelperSlider(Gui, CPos( GetWidth() - HELPERSLIDER_WIDTH, 0 ), GetHeight() );
 
-	for( TiXmlElement * pString = pElement->FirstChildElement( "Row" ); pString; pString = pString->NextSiblingElement( "Row" ) )
-		AddString( pString->GetText() );
+      for( TiXmlElement * pString = pElement->FirstChildElement( "Row" ); pString; pString = pString->NextSiblingElement( "Row" ) )
+        AddString( pString->GetText() );
 
-	SetThemeElement( m_Gui.GetThemeElement( "TextBox" ) );
+      SetThemeElement( m_Gui.GetThemeElement( "TextBox" ) );
 
-	if( !GetThemeElement() )
-		MessageBoxA( 0, "Theme element invalid.", "TextBox", 0 );
-	else
-		SetElementState( "Norm" );
-}
+      if( !GetThemeElement() )
+        MessageBoxA( 0, "Theme element invalid.", "TextBox", 0 );
+      else
+        SetElementState( "Norm" );
+    }
 
-void CTextBox::Draw()
-{
-	CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
+    void CTextBox::Draw()
+    {
+      CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
 
-	m_Gui.DrawOutlinedBox( Pos.GetX(), Pos.GetY(), GetWidth(), GetHeight(), pInner->GetD3DColor(), pBorder->GetD3DColor() );
+      m_Gui.DrawOutlinedBox( Pos.GetX(), Pos.GetY(), GetWidth(), GetHeight(), pInner->GetD3DColor(), pBorder->GetD3DColor() );
 
-	int iAddHeight = m_Gui.GetFont()->GetStringHeight();
-	if( m_vStrings.size() )
-		for( int i = pSlider->GetValue(), iHeight = 0; i <= pSlider->GetMaxValue() && iHeight < GetHeight() - m_Gui.GetFont()->GetStringHeight(); i++ )
-		{
-			m_Gui.GetFont()->DrawString( Pos.GetX() + 3, Pos.GetY() + iHeight, 0, pString, m_vStrings[ i ], GetWidth() - HELPERSLIDER_WIDTH );
-			iHeight += iAddHeight;
-		}
+      int iAddHeight = m_Gui.GetFont()->GetStringHeight();
+      if( m_vStrings.size() )
+        for( int i = pSlider->GetValue(), iHeight = 0; i <= pSlider->GetMaxValue() && iHeight < GetHeight() - m_Gui.GetFont()->GetStringHeight(); i++ )
+        {
+          m_Gui.GetFont()->DrawString( Pos.GetX() + 3, Pos.GetY() + iHeight, 0, pString, m_vStrings[ i ], GetWidth() - HELPERSLIDER_WIDTH );
+          iHeight += iAddHeight;
+        }
 
-	pSlider->Draw( Pos );
-}
+        pSlider->Draw( Pos );
+    }
 
-void CTextBox::PreDraw()
-{
-	pSlider->PreDraw();
-}
+    void CTextBox::PreDraw()
+    {
+      pSlider->PreDraw();
+    }
 
-void CTextBox::MouseMove( CMouse & pMouse )
-{
-	CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
+    void CTextBox::MouseMove( CMouse & pMouse )
+    {
+      CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
 
-	SetMouseOver( pMouse.InArea( Pos.GetX(), Pos.GetY(), GetWidth(), GetHeight() ) );
+      SetMouseOver( pMouse.InArea( Pos.GetX(), Pos.GetY(), GetWidth(), GetHeight() ) );
 
-	pSlider->MouseMove( Pos, pMouse );
-}
+      pSlider->MouseMove( Pos, pMouse );
+    }
 
-bool CTextBox::KeyEvent( SKey sKey )
-{
-	CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
+    bool CTextBox::KeyEvent( SKey sKey )
+    {
+      CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
 
-	if( GetMouseOver() || ( !sKey.m_bDown && !m_Gui.GetMouse().GetWheel() )  )
-		return pSlider->KeyEvent( Pos, sKey );
+      if( GetMouseOver() || ( !sKey.m_bDown && !m_Gui.GetMouse().GetWheel() )  )
+        return pSlider->KeyEvent( Pos, sKey );
 
-	return true;
-}
+      return true;
+    }
 
-void CTextBox::AddString( std::string sString )
-{
-	if( !sString.length() )
-		return;
+    void CTextBox::AddString( std::string sString )
+    {
+      if( !sString.length() )
+        return;
 
-	std::vector<std::string> vPending;
-	int iLength = static_cast<int>( sString.length() );
-	for( int i = iLength - 1; i > 0; i-- )
-	{
-		if( sString[ i ] == '\n' )
-		{
-			sString[ i ] = '\0';
-			
-			if( i + 1 < iLength )
-			{
-				if( sString[ i + 1 ] == '\r' )
-				{
-					if( i + 2 < iLength )
-						vPending.push_back( &sString.c_str()[ i + 2 ] );
-				}
-				else
-					vPending.push_back( &sString.c_str()[ i + 1 ] );
-			}
-		}
-	}
+      std::vector<std::string> vPending;
+      int iLength = static_cast<int>( sString.length() );
+      for( int i = iLength - 1; i > 0; i-- )
+      {
+        if( sString[ i ] == '\n' )
+        {
+          sString[ i ] = '\0';
 
-	pSlider->SetMaxValue( m_vStrings.size() );
-	m_vStrings.push_back( sString.c_str() );
+          if( i + 1 < iLength )
+          {
+            if( sString[ i + 1 ] == '\r' )
+            {
+              if( i + 2 < iLength )
+                vPending.push_back( &sString.c_str()[ i + 2 ] );
+            }
+            else
+              vPending.push_back( &sString.c_str()[ i + 1 ] );
+          }
+        }
+      }
 
-	int iHeight = 0;
-	for( int i = pSlider->GetValue(); i <= pSlider->GetMaxValue(); i++ )
-	{
-		float fWidth = static_cast<float>( m_Gui.GetFont()->GetStringWidth( m_vStrings[ i ].c_str() ) );
-		int iLines = static_cast<int>( ceilf( fWidth / ( GetWidth() - HELPERSLIDER_WIDTH ) ) );
+      pSlider->SetMaxValue( m_vStrings.size() );
+      m_vStrings.push_back( sString.c_str() );
 
-		int iTempHeight = iLines*m_Gui.GetFont()->GetStringHeight();
-		iHeight += iTempHeight;
-	
-		while( iHeight > GetHeight() - m_Gui.GetFont()->GetStringHeight() )
-		{
-			pSlider->SetValue( pSlider->GetValue() + iLines );
-			iHeight -= iTempHeight;
-		}
-	}
+      int iHeight = 0;
+      for( int i = pSlider->GetValue(); i <= pSlider->GetMaxValue(); i++ )
+      {
+        float fWidth = static_cast<float>( m_Gui.GetFont()->GetStringWidth( m_vStrings[ i ].c_str() ) );
+        int iLines = static_cast<int>( ceilf( fWidth / ( GetWidth() - HELPERSLIDER_WIDTH ) ) );
 
-	for( std::vector<std::string>::reverse_iterator iIter = vPending.rbegin(); iIter != vPending.rend(); iIter++ )
-		AddString( *iIter );
-}
+        int iTempHeight = iLines*m_Gui.GetFont()->GetStringHeight();
+        iHeight += iTempHeight;
 
-void CTextBox::Clear()
-{
-	m_vStrings.clear();
-}
+        while( iHeight > GetHeight() - m_Gui.GetFont()->GetStringHeight() )
+        {
+          pSlider->SetValue( pSlider->GetValue() + iLines );
+          iHeight -= iTempHeight;
+        }
+      }
 
-void CTextBox::UpdateTheme( int iIndex )
-{
-	SElementState * pState = GetElementState( iIndex );
+      for( std::vector<std::string>::reverse_iterator iIter = vPending.rbegin(); iIter != vPending.rend(); iIter++ )
+        AddString( *iIter );
+    }
 
-	pString = pState->GetColor( "String" );
-	pInner = pState->GetColor( "Inner" );
-	pBorder = pState->GetColor( "Border" );
+    void CTextBox::Clear()
+    {
+      m_vStrings.clear();
+    }
+
+    void CTextBox::UpdateTheme( int iIndex )
+    {
+      SElementState * pState = GetElementState( iIndex );
+
+      pString = pState->GetColor( "String" );
+      pInner = pState->GetColor( "Inner" );
+      pBorder = pState->GetColor( "Border" );
+    }
+  }
 }

@@ -26,69 +26,75 @@ THE SOFTWARE.
 
 #include <functional>
 
-typedef std::function<std::string (const char* pszArgs, CElement* pElement)> tCallback;
-
-class CElement
+namespace Hades
 {
-	bool m_bHasFocus, m_bMouseOver;
+  namespace GUI
+  {
+    typedef std::function<std::string (const char* pszArgs, CElement* pElement)> tCallback;
 
-	std::string m_sRaw[2], m_sFormatted[2];
-	int m_iWidth, m_iHeight;
+    class CElement
+    {
+      bool m_bHasFocus, m_bMouseOver;
 
-	CPos m_relPos, m_absPos;
-	CWindow * m_pParent;
-	
-	tCallback m_pCallback;
+      std::string m_sRaw[2], m_sFormatted[2];
+      int m_iWidth, m_iHeight;
 
-	SElement * m_pThemeElement[ 3 ];
-	SElementState * m_pElementState[ 3 ];
+      CPos m_relPos, m_absPos;
+      CWindow * m_pParent;
 
-protected:
-  class CGUI& m_Gui;
+      tCallback m_pCallback;
 
-public:
-  CElement(class CGUI& Gui);
-  virtual ~CElement() { }
+      SElement * m_pThemeElement[ 3 ];
+      SElementState * m_pElementState[ 3 ];
 
-	void SetElement( TiXmlElement * pElement );
+    protected:
+      class CGUI& m_Gui;
 
-	void SetParent( CWindow * pParent );
-	CWindow * GetParent() const;
+    public:
+      CElement(class CGUI& Gui);
+      virtual ~CElement() { }
 
-	void SetCallback( tCallback pCallback );
-	tCallback GetCallback() const;
+      void SetElement( TiXmlElement * pElement );
 
-	void SetRelPos( CPos relPos );
-	void SetAbsPos( CPos absPos );
+      void SetParent( CWindow * pParent );
+      CWindow * GetParent() const;
 
-	const CPos * GetRelPos() const;
-	const CPos * GetAbsPos() const;
+      void SetCallback( tCallback pCallback );
+      tCallback GetCallback() const;
 
-	void SetWidth( int iWidth );
-	void SetHeight( int iHeight );
+      void SetRelPos( CPos relPos );
+      void SetAbsPos( CPos absPos );
 
-	int GetWidth() const;
-	int GetHeight() const;
+      const CPos * GetRelPos() const;
+      const CPos * GetAbsPos() const;
 
-	bool HasFocus() const;
+      void SetWidth( int iWidth );
+      void SetHeight( int iHeight );
 
-	void SetString( std::string sString, int iIndex = 0 );
-	std::string GetString( bool bReplaceVars = false, int iIndex = 0 );
-	std::string GetFormatted( int iIndex = 0 ) const;
+      int GetWidth() const;
+      int GetHeight() const;
 
-	bool GetMouseOver() const;
-	bool SetMouseOver( bool bMouseOver );
+      bool HasFocus() const;
 
-	SElement * SetThemeElement( SElement * pThemeElement, int iIndex = 0 );
-	SElement * GetThemeElement( int iIndex = 0 ) const;
+      void SetString( std::string sString, int iIndex = 0 );
+      std::string GetString( bool bReplaceVars = false, int iIndex = 0 );
+      std::string GetFormatted( int iIndex = 0 ) const;
 
-	void SetElementState( std::string sState, int iIndex = 0 );
-	SElementState * GetElementState( int iIndex = 0 ) const;
+      bool GetMouseOver() const;
+      bool SetMouseOver( bool bMouseOver );
 
-	virtual void UpdateTheme( int iIndex );
+      SElement * SetThemeElement( SElement * pThemeElement, int iIndex = 0 );
+      SElement * GetThemeElement( int iIndex = 0 ) const;
 
-	virtual void Draw();
-	virtual void PreDraw();
-	virtual void MouseMove( CMouse & pMouse );
-	virtual bool KeyEvent( SKey sKey );
-};
+      void SetElementState( std::string sState, int iIndex = 0 );
+      SElementState * GetElementState( int iIndex = 0 ) const;
+
+      virtual void UpdateTheme( int iIndex );
+
+      virtual void Draw();
+      virtual void PreDraw();
+      virtual void MouseMove( CMouse & pMouse );
+      virtual bool KeyEvent( SKey sKey );
+    };
+  }
+}

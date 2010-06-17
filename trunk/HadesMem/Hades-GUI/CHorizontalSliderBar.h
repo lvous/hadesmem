@@ -24,50 +24,56 @@ THE SOFTWARE.
 
 #include "CGUI.h"
 
-class CHorizontalSliderBar : public CElement
+namespace Hades
 {
-	friend class CVerticalSliderBar;
+  namespace GUI
+  {
+    class CHorizontalSliderBar : public CElement
+    {
+      friend class CVerticalSliderBar;
 
-	int m_iMinValue, m_iMaxValue, m_iValue, m_iStep;
-	bool m_bDragged, m_bShowString;
+      int m_iMinValue, m_iMaxValue, m_iValue, m_iStep;
+      bool m_bDragged, m_bShowString;
 
-  typedef std::function<std::string (const char* pszArgs, CElement* pElement)> tCallback;
-// 	typedef std::string ( __cdecl * tCallback )( const char * pszArgs, CElement * pElement );
-	tCallback m_pUpdater;
+      typedef std::function<std::string (const char* pszArgs, CElement* pElement)> tCallback;
+      // 	typedef std::string ( __cdecl * tCallback )( const char * pszArgs, CElement * pElement );
+      tCallback m_pUpdater;
 
-	CColor * pLines, * pString;
-	CTexture * pSlider;
+      CColor * pLines, * pString;
+      CTexture * pSlider;
 
-public:
-	CHorizontalSliderBar(class CGUI& Gui);
-	CHorizontalSliderBar(class CGUI& Gui, TiXmlElement* pElement);
+    public:
+      CHorizontalSliderBar(class CGUI& Gui);
+      CHorizontalSliderBar(class CGUI& Gui, TiXmlElement* pElement);
 
-	void SetSliderElement( TiXmlElement * pElement );
+      void SetSliderElement( TiXmlElement * pElement );
 
-	void Draw();
-	void PreDraw();
-	void MouseMove( CMouse & pMouse );
-	bool KeyEvent( SKey sKey );
+      void Draw();
+      void PreDraw();
+      void MouseMove( CMouse & pMouse );
+      bool KeyEvent( SKey sKey );
 
-	int GetMinValue() const;
-	int GetMaxValue() const;
-	int GetValue() const;
-	int GetStep() const;
+      int GetMinValue() const;
+      int GetMaxValue() const;
+      int GetValue() const;
+      int GetStep() const;
 
-	void SetMinValue( int iMinValue );
-	void SetMaxValue( int iMaxValue );
-	void SetValue( int iValue );
-	void SetStep( int iStep );
+      void SetMinValue( int iMinValue );
+      void SetMaxValue( int iMaxValue );
+      void SetValue( int iValue );
+      void SetStep( int iStep );
 
-	bool GetDragged() const;
-	void SetDragged( bool bDragged );
+      bool GetDragged() const;
+      void SetDragged( bool bDragged );
 
-	void SetShowString( bool bShow );
-	bool GetShowString() const;
+      void SetShowString( bool bShow );
+      bool GetShowString() const;
 
-	void UpdateTheme( int iIndex );
-};
+      void UpdateTheme( int iIndex );
+    };
 
-std::string MinValue( const char *, CElement * pElement );
-std::string MaxValue( const char *, CElement * pElement );
-std::string SliderValue( const char *, CElement * pElement );
+    std::string MinValue( const char *, CElement * pElement );
+    std::string MaxValue( const char *, CElement * pElement );
+    std::string SliderValue( const char *, CElement * pElement );
+  }
+}

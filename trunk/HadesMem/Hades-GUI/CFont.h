@@ -27,22 +27,28 @@ THE SOFTWARE.
 #include "D3D9.h"
 #include "CColor.h"
 
-class CFont
+namespace Hades
 {
-	CComPtr<ID3DXFont> m_pFont;
+  namespace GUI
+  {
+    class CFont
+    {
+      CComPtr<ID3DXFont> m_pFont;
 
-  class CGUI& m_Gui;
+      class CGUI& m_Gui;
 
-public:
-	CFont(class CGUI& Gui, IDirect3DDevice9 * pDevice, int iHeight, const char * pszFaceName );
+    public:
+      CFont(class CGUI& Gui, IDirect3DDevice9 * pDevice, int iHeight, const char * pszFaceName );
 
-	void OnLostDevice();
-	void OnResetDevice( IDirect3DDevice9 * pDevice );
+      void OnLostDevice();
+      void OnResetDevice( IDirect3DDevice9 * pDevice );
 
-	void DrawString( int iX, int iY, DWORD dwFlags, CColor * pColor, std::string sString, int iWidth = 0 );
+      void DrawString( int iX, int iY, DWORD dwFlags, CColor * pColor, std::string sString, int iWidth = 0 );
 
-	int GetStringWidth( const char * pszString ) const;
-	int GetStringHeight() const;
+      int GetStringWidth( const char * pszString ) const;
+      int GetStringHeight() const;
 
-	void CutString( int iWidth, std::string & rString ) const;
-};
+      void CutString( int iWidth, std::string & rString ) const;
+    };
+  }
+}

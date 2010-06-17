@@ -22,24 +22,30 @@ THE SOFTWARE.
 
 #pragma once
 
-class CPos
+namespace Hades
 {
-	int m_iX, m_iY;
+  namespace GUI
+  {
+    class CPos
+    {
+      int m_iX, m_iY;
 
-public:
+    public:
 
-	CPos( CPos * pPos );
-	CPos( int iX, int iY );
-	CPos();
+      CPos( CPos * pPos );
+      CPos( int iX, int iY );
+      CPos();
 
-	~CPos();
+      ~CPos();
 
-	int GetX() const;
-	int GetY() const;
+      int GetX() const;
+      int GetY() const;
 
-	void SetX( int iX );
-	void SetY( int iY );
+      void SetX( int iX );
+      void SetY( int iY );
 
-	const CPos operator + ( const CPos & otherPos ) const;
-	const CPos operator - ( const CPos & otherPos ) const;
-};
+      const CPos operator + ( const CPos & otherPos ) const;
+      const CPos operator - ( const CPos & otherPos ) const;
+    };
+  }
+}

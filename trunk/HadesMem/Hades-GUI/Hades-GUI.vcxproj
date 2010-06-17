@@ -40,7 +40,6 @@
     <ClCompile Include="CTimer.cpp" />
     <ClCompile Include="CVerticalSliderBar.cpp" />
     <ClCompile Include="CWindow.cpp" />
-    <ClCompile Include="Placeholder.cpp" />
     <ClCompile Include="TinyXML\tinystr.cpp" />
     <ClCompile Include="TinyXML\tinyxml.cpp" />
     <ClCompile Include="TinyXML\tinyxmlerror.cpp" />

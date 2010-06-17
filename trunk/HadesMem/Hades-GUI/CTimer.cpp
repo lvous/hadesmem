@@ -22,33 +22,39 @@ THE SOFTWARE.
 
 #include "CGUI.h"
 
-CTimer::CTimer()
+namespace Hades
 {
-	dwStop = 0;
-}
+  namespace GUI
+  {
+    CTimer::CTimer()
+    {
+      dwStop = 0;
+    }
 
-CTimer::~CTimer()
-{
-}
+    CTimer::~CTimer()
+    {
+    }
 
-void CTimer::Start( float fSec )
-{
-	dwStop = (DWORD)( fSec * 1000 ) + timeGetTime();
-}
+    void CTimer::Start( float fSec )
+    {
+      dwStop = (DWORD)( fSec * 1000 ) + timeGetTime();
+    }
 
-void CTimer::Stop()
-{
-	dwStop = 0;
-}
+    void CTimer::Stop()
+    {
+      dwStop = 0;
+    }
 
-float CTimer::TimeLeft()
-{
-	if( Running() )
-		return ( ( (float)( dwStop - timeGetTime() ) / 1000 ) );
-	return 0; 
-}
+    float CTimer::TimeLeft()
+    {
+      if( Running() )
+        return ( ( (float)( dwStop - timeGetTime() ) / 1000 ) );
+      return 0; 
+    }
 
-bool CTimer::Running()
-{
-	return ( dwStop > timeGetTime() );
+    bool CTimer::Running()
+    {
+      return ( dwStop > timeGetTime() );
+    }
+  }
 }

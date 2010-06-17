@@ -44,7 +44,7 @@ namespace Hades
     void Print(std::string const& Output);
 
     // Callback on input
-    std::string OnConsoleInput(char const* pszArgs, CElement* pElement);
+    std::string OnConsoleInput(char const* pszArgs, GUI::CElement* pElement);
 
   private:
     // Input callbacks
@@ -64,7 +64,7 @@ namespace Hades
     void ToggleVisible();
 
     // GUI instance
-    class CGUI* m_pGui;
+    GUI::CGUI* m_pGui;
 
     // Kernel instance
     class Kernel* m_pKernel;

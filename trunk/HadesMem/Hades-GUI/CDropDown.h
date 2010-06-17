@@ -24,35 +24,41 @@ THE SOFTWARE.
 
 #include "CGUI.h"
 
-class CDropDown : public CElement
+namespace Hades
 {
-	bool m_bDropped;
-	int m_iMouseOverIndex, m_iSelected;
-	
-	struct SEntry
-	{
-		std::string m_sString, m_sValue;
+  namespace GUI
+  {
+    class CDropDown : public CElement
+    {
+      bool m_bDropped;
+      int m_iMouseOverIndex, m_iSelected;
 
-		SEntry( std::string sString, std::string sValue )
-		{
-			m_sString = sString;
-			m_sValue = sValue;
-		}
-	};
-	std::vector<SEntry> m_vEntrys;
+      struct SEntry
+      {
+        std::string m_sString, m_sValue;
 
-	CColor * pInner, * pBorder, * pString, * pSelectedInner, * pSelectedString;
-	CTexture * pButton;
+        SEntry( std::string sString, std::string sValue )
+        {
+          m_sString = sString;
+          m_sValue = sValue;
+        }
+      };
+      std::vector<SEntry> m_vEntrys;
 
-public:
-	CDropDown(class CGUI& Gui, TiXmlElement* pElement);
+      CColor * pInner, * pBorder, * pString, * pSelectedInner, * pSelectedString;
+      CTexture * pButton;
 
-	void Draw();
-	void MouseMove( CMouse & pMouse );
-	bool KeyEvent( SKey sKey );
+    public:
+      CDropDown(class CGUI& Gui, TiXmlElement* pElement);
 
-	void AddElement( std::string sElem, std::string sValue );
-	std::string GetValue() const;
+      void Draw();
+      void MouseMove( CMouse & pMouse );
+      bool KeyEvent( SKey sKey );
 
-	void UpdateTheme( int iIndex );
-};
+      void AddElement( std::string sElem, std::string sValue );
+      std::string GetValue() const;
+
+      void UpdateTheme( int iIndex );
+    };
+  }
+}

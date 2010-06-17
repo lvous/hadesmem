@@ -24,29 +24,35 @@ THE SOFTWARE.
 
 #include "CGUI.h"
 
-class CEditBox : public CElement
+namespace Hades
 {
-	int m_iStart, m_iIndex;
-	int m_iCursorX;
-	CTimer m_tCursorTimer;
-	bool m_bCursorState;
+  namespace GUI
+  {
+    class CEditBox : public CElement
+    {
+      int m_iStart, m_iIndex;
+      int m_iCursorX;
+      CTimer m_tCursorTimer;
+      bool m_bCursorState;
 
-	CColor * pInner, * pBorder, * pString, * pCursor;
+      CColor * pInner, * pBorder, * pString, * pCursor;
 
-public:
-	CEditBox(class CGUI& Gui, TiXmlElement* pElement);
+    public:
+      CEditBox(class CGUI& Gui, TiXmlElement* pElement);
 
-	void Draw();
+      void Draw();
 
-	void PreDraw();
-	void MouseMove( CMouse & pMouse );
-	bool KeyEvent( SKey sKey );
+      void PreDraw();
+      void MouseMove( CMouse & pMouse );
+      bool KeyEvent( SKey sKey );
 
-	int GetIndex() const;
-	void SetIndex( int iIndex );
+      int GetIndex() const;
+      void SetIndex( int iIndex );
 
-	int GetStart() const;
-	void SetStart( int iStart );
+      int GetStart() const;
+      void SetStart( int iStart );
 
-	void UpdateTheme( int iIndex );
-};
+      void UpdateTheme( int iIndex );
+    };
+  }
+}

@@ -22,83 +22,89 @@ THE SOFTWARE.
 
 #include "CGUI.h"
 
-CCheckBox::CCheckBox(CGUI& Gui, TiXmlElement * pElement)
-  : CElement(Gui)
+namespace Hades
 {
-	SetElement( pElement );
+  namespace GUI
+  {
+    CCheckBox::CCheckBox(CGUI& Gui, TiXmlElement * pElement)
+      : CElement(Gui)
+    {
+      SetElement( pElement );
 
-	int iChecked = 0;
-	pElement->QueryIntAttribute( "checked", &iChecked );
+      int iChecked = 0;
+      pElement->QueryIntAttribute( "checked", &iChecked );
 
-	SetChecked( iChecked == 1 );
+      SetChecked( iChecked == 1 );
 
-	SetThemeElement( m_Gui.GetThemeElement( "CheckBox" ) );
+      SetThemeElement( m_Gui.GetThemeElement( "CheckBox" ) );
 
-	if( !GetThemeElement() )
-		MessageBoxA( 0, "No color scheme element found.", "CheckBox", 0 );
-	else
-		SetElementState( "Norm" );
-}
+      if( !GetThemeElement() )
+        MessageBoxA( 0, "No color scheme element found.", "CheckBox", 0 );
+      else
+        SetElementState( "Norm" );
+    }
 
-bool CCheckBox::GetChecked() const
-{
-	return m_bChecked;
-}
-void CCheckBox::SetChecked( bool bChecked )
-{
-	m_bChecked = bChecked;
-}
+    bool CCheckBox::GetChecked() const
+    {
+      return m_bChecked;
+    }
+    void CCheckBox::SetChecked( bool bChecked )
+    {
+      m_bChecked = bChecked;
+    }
 
-void CCheckBox::Draw()
-{
-	CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
+    void CCheckBox::Draw()
+    {
+      CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
 
-	m_Gui.DrawOutlinedBox( Pos.GetX(), Pos.GetY(), 15, 15, pInner->GetD3DColor(), pBorder->GetD3DColor() );
-	m_Gui.GetFont()->DrawString( Pos.GetX() + 20, Pos.GetY(), 0, pString, GetFormatted() );
+      m_Gui.DrawOutlinedBox( Pos.GetX(), Pos.GetY(), 15, 15, pInner->GetD3DColor(), pBorder->GetD3DColor() );
+      m_Gui.GetFont()->DrawString( Pos.GetX() + 20, Pos.GetY(), 0, pString, GetFormatted() );
 
-	if( GetChecked() )
-	{
-		D3DCOLOR d3dCrossColor = pCross->GetD3DColor();
+      if( GetChecked() )
+      {
+        D3DCOLOR d3dCrossColor = pCross->GetD3DColor();
 
-		m_Gui.DrawLine( Pos.GetX() + 1, Pos.GetY() + 1, Pos.GetX() + 14, Pos.GetY() + 14, 1, d3dCrossColor );
-		m_Gui.DrawLine( Pos.GetX() + 1, Pos.GetY() + 13, Pos.GetX() + 14, Pos.GetY(), 1, d3dCrossColor );
-	}
-}
+        m_Gui.DrawLine( Pos.GetX() + 1, Pos.GetY() + 1, Pos.GetX() + 14, Pos.GetY() + 14, 1, d3dCrossColor );
+        m_Gui.DrawLine( Pos.GetX() + 1, Pos.GetY() + 13, Pos.GetX() + 14, Pos.GetY(), 1, d3dCrossColor );
+      }
+    }
 
-void CCheckBox::PreDraw()
-{
-	GetString( true );
-}
+    void CCheckBox::PreDraw()
+    {
+      GetString( true );
+    }
 
-void CCheckBox::MouseMove( CMouse & pMouse )
-{
-	CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
+    void CCheckBox::MouseMove( CMouse & pMouse )
+    {
+      CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
 
-	SetElementState( SetMouseOver( pMouse.InArea( Pos.GetX(), Pos.GetY(), m_Gui.GetFont()->GetStringWidth( GetFormatted().c_str() ) + 20, m_Gui.GetFont()->GetStringHeight() ) )?"MouseOver":"Norm" );
-}
+      SetElementState( SetMouseOver( pMouse.InArea( Pos.GetX(), Pos.GetY(), m_Gui.GetFont()->GetStringWidth( GetFormatted().c_str() ) + 20, m_Gui.GetFont()->GetStringHeight() ) )?"MouseOver":"Norm" );
+    }
 
-bool CCheckBox::KeyEvent( SKey sKey )
-{
-	if( !sKey.m_vKey )
-	{
-		if( GetMouseOver() && m_Gui.GetMouse().GetLeftButton( 0 ) )
-		{
-			m_bChecked = !m_bChecked;
-			
-			if( GetCallback() )
-				GetCallback()( (const char*)m_bChecked, this );
-		}
-	}
+    bool CCheckBox::KeyEvent( SKey sKey )
+    {
+      if( !sKey.m_vKey )
+      {
+        if( GetMouseOver() && m_Gui.GetMouse().GetLeftButton( 0 ) )
+        {
+          m_bChecked = !m_bChecked;
 
-	return true;
-}
+          if( GetCallback() )
+            GetCallback()( (const char*)m_bChecked, this );
+        }
+      }
 
-void CCheckBox::UpdateTheme( int iIndex )
-{
-	SElementState * pState = GetElementState( iIndex );
+      return true;
+    }
 
-	pInner = pState->GetColor( "Inner" );
-	pBorder = pState->GetColor( "Border" );
-	pString = pState->GetColor( "String" );
-	pCross = pState->GetColor( "Cross" );
+    void CCheckBox::UpdateTheme( int iIndex )
+    {
+      SElementState * pState = GetElementState( iIndex );
+
+      pInner = pState->GetColor( "Inner" );
+      pBorder = pState->GetColor( "Border" );
+      pString = pState->GetColor( "String" );
+      pCross = pState->GetColor( "Cross" );
+    }
+  }
 }

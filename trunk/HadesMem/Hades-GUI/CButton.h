@@ -24,20 +24,26 @@ THE SOFTWARE.
 
 #include "CGUI.h"
 
-class CButton : public CElement
+namespace Hades
 {
-	CTimer m_tPressed;
+  namespace GUI
+  {
+    class CButton : public CElement
+    {
+      CTimer m_tPressed;
 
-	CTexture * pButton;
-	CColor * pString;
+      CTexture * pButton;
+      CColor * pString;
 
-public:
-	CButton(class CGUI& Gui, TiXmlElement * pElement );
+    public:
+      CButton(class CGUI& Gui, TiXmlElement * pElement );
 
-	void Draw();
-	void PreDraw();
-	void MouseMove( CMouse & pMouse );
-	bool KeyEvent( SKey sKey );
+      void Draw();
+      void PreDraw();
+      void MouseMove( CMouse & pMouse );
+      bool KeyEvent( SKey sKey );
 
-	void UpdateTheme( int iIndex );
-};
+      void UpdateTheme( int iIndex );
+    };
+  }
+}

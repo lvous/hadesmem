@@ -24,22 +24,28 @@ THE SOFTWARE.
 
 #include "CGUI.h"
 
-class CCheckBox : public CElement
+namespace Hades
 {
-	bool m_bChecked;
+  namespace GUI
+  {
+    class CCheckBox : public CElement
+    {
+      bool m_bChecked;
 
-	CColor * pInner, * pBorder, * pString, * pCross;
+      CColor * pInner, * pBorder, * pString, * pCross;
 
-public:
-	CCheckBox(class CGUI& Gui, TiXmlElement* pElement);
+    public:
+      CCheckBox(class CGUI& Gui, TiXmlElement* pElement);
 
-	bool GetChecked() const;
-	void SetChecked( bool bChecked );
+      bool GetChecked() const;
+      void SetChecked( bool bChecked );
 
-	void Draw();
-	void PreDraw();
-	void MouseMove( CMouse & pMouse );
-	bool KeyEvent( SKey sKey );
+      void Draw();
+      void PreDraw();
+      void MouseMove( CMouse & pMouse );
+      bool KeyEvent( SKey sKey );
 
-	void UpdateTheme( int iIndex );
-};
+      void UpdateTheme( int iIndex );
+    };
+  }
+}

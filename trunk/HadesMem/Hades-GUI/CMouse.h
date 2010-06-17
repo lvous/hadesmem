@@ -24,49 +24,55 @@ THE SOFTWARE.
 
 #include "CGUI.h"
 
-class CMouse
+namespace Hades
 {
-	IDirect3DDevice9 * m_pDevice;
-	CPos m_pos, m_bpos;
+  namespace GUI
+  {
+    class CMouse
+    {
+      IDirect3DDevice9 * m_pDevice;
+      CPos m_pos, m_bpos;
 
-	CColor * m_pInnerColor, * m_pBorderColor;
+      CColor * m_pInnerColor, * m_pBorderColor;
 
-	CElement * m_pDraggingElement;
+      CElement * m_pDraggingElement;
 
-	int m_iLeftButton, m_iRightButton, m_iMiddleButton, m_iWheel;
-	CTimer m_tLeftButton, m_tRightButton, m_tMiddleButton;
+      int m_iLeftButton, m_iRightButton, m_iMiddleButton, m_iWheel;
+      CTimer m_tLeftButton, m_tRightButton, m_tMiddleButton;
 
-  class CGUI& m_Gui;
+      class CGUI& m_Gui;
 
-public:
-	CMouse(class CGUI& Gui, IDirect3DDevice9 * pDevice);
-	~CMouse();
+    public:
+      CMouse(class CGUI& Gui, IDirect3DDevice9 * pDevice);
+      ~CMouse();
 
-	bool HandleMessage( unsigned int uMsg, WPARAM wParam, LPARAM lParam );
+      bool HandleMessage( unsigned int uMsg, WPARAM wParam, LPARAM lParam );
 
-	void SetPos( int iX, int iY );
-	void SetPos( CPos cPos );
-	CPos GetPos() const;
+      void SetPos( int iX, int iY );
+      void SetPos( CPos cPos );
+      CPos GetPos() const;
 
-	bool InArea( int iX, int iY, int iWidth, int iHeight ) const;
-	bool InArea( CElement * pElement, int iHeight = 0 ) const;
+      bool InArea( int iX, int iY, int iWidth, int iHeight ) const;
+      bool InArea( CElement * pElement, int iHeight = 0 ) const;
 
-	void Draw();
+      void Draw();
 
-	int GetLeftButton( int iState = -1 );
-	int GetRightButton( int iState = -1 );
-	int GetMiddleButton( int iState = -1 );
-	int GetWheel( int iState = -1 );
+      int GetLeftButton( int iState = -1 );
+      int GetRightButton( int iState = -1 );
+      int GetMiddleButton( int iState = -1 );
+      int GetWheel( int iState = -1 );
 
-	void SetLeftButton( int iState );
-	void SetRightButton( int iState );
-	void SetMiddleButton( int iState );
-	void SetWheel( int iState );
+      void SetLeftButton( int iState );
+      void SetRightButton( int iState );
+      void SetMiddleButton( int iState );
+      void SetWheel( int iState );
 
-	void SetDragging( CElement * pElement );
-	CElement * GetDragging() const;
+      void SetDragging( CElement * pElement );
+      CElement * GetDragging() const;
 
-	void SavePos();
-	void LoadPos();
-	CPos GetSavedPos() const;
-};
+      void SavePos();
+      void LoadPos();
+      CPos GetSavedPos() const;
+    };
+  }
+}

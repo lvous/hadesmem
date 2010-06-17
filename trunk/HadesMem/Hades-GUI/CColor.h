@@ -25,50 +25,56 @@ THE SOFTWARE.
 #include <map>
 #include "TinyXML\TinyXML.h"
 
-class CColor
+namespace Hades
 {
-	D3DCOLOR m_d3dColor;
-public:
-	CColor();
-	CColor( int iRed, int iGreen, int iBlue, int iAlpha );
-	CColor( D3DCOLOR d3dColor );
-	CColor( TiXmlElement * pElement );
-	~CColor();
+  namespace GUI
+  {
+    class CColor
+    {
+      D3DCOLOR m_d3dColor;
+    public:
+      CColor();
+      CColor( int iRed, int iGreen, int iBlue, int iAlpha );
+      CColor( D3DCOLOR d3dColor );
+      CColor( TiXmlElement * pElement );
+      ~CColor();
 
-	void SetD3DColor( D3DCOLOR d3dColor );
-	void SetRed( int iRed );
-	void SetGreen( int iGreen );
-	void SetBlue( int iBlue );
-	void SetAlpha( int iAlpha );
+      void SetD3DColor( D3DCOLOR d3dColor );
+      void SetRed( int iRed );
+      void SetGreen( int iGreen );
+      void SetBlue( int iBlue );
+      void SetAlpha( int iAlpha );
 
-	D3DCOLOR GetD3DColor() const;
-	int GetRed() const;
-	int GetGreen() const;
-	int GetBlue() const;
-	int GetAlpha() const;
+      D3DCOLOR GetD3DColor() const;
+      int GetRed() const;
+      int GetGreen() const;
+      int GetBlue() const;
+      int GetAlpha() const;
 
-	const CColor operator / ( const int iDivisor ) const;
-	const CColor operator * ( const int iMultiplicator ) const;
+      const CColor operator / ( const int iDivisor ) const;
+      const CColor operator * ( const int iMultiplicator ) const;
 
-	const CColor operator - ( const CColor & cSubColor ) const;
-	const CColor operator + ( const CColor & cAddColor ) const;
-};
+      const CColor operator - ( const CColor & cSubColor ) const;
+      const CColor operator + ( const CColor & cAddColor ) const;
+    };
 
-struct SElement;
+    struct SElement;
 
-struct SElementState
-{
-	SElement * pParent;
+    struct SElementState
+    {
+      SElement * pParent;
 
-	CColor * GetColor( std::string sString ) const;
-	CTexture * GetTexture( std::string sString ) const;
+      CColor * GetColor( std::string sString ) const;
+      CTexture * GetTexture( std::string sString ) const;
 
-	std::map<std::string, CColor*> mColors;
-	std::map<std::string, CTexture*> mTextures;
-};
+      std::map<std::string, CColor*> mColors;
+      std::map<std::string, CTexture*> mTextures;
+    };
 
-struct SElement
-{
-	std::string sDefaultState;
-	std::map<std::string, SElementState*> m_mStates;
-};
+    struct SElement
+    {
+      std::string sDefaultState;
+      std::map<std::string, SElementState*> m_mStates;
+    };
+  }
+}

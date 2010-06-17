@@ -25,19 +25,25 @@ THE SOFTWARE.
 #pragma comment (lib,"winmm.lib")
 #include <windows.h>
 
-class CTimer
+namespace Hades
 {
-public:
+  namespace GUI
+  {
+    class CTimer
+    {
+    public:
 
-	CTimer();
-	~CTimer();
+      CTimer();
+      ~CTimer();
 
-	void Start( float fSec );
-	void Stop();
+      void Start( float fSec );
+      void Stop();
 
-	float TimeLeft();
-	bool Running();
+      float TimeLeft();
+      bool Running();
 
-protected:
-	DWORD dwStop;
-};
+    protected:
+      DWORD dwStop;
+    };
+  }
+}
