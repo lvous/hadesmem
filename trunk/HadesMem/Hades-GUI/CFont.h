@@ -29,13 +29,12 @@ THE SOFTWARE.
 
 class CFont
 {
-	ID3DXFont * m_pFont;
+	CComPtr<ID3DXFont> m_pFont;
 
   class CGUI& m_Gui;
 
 public:
 	CFont(class CGUI& Gui, IDirect3DDevice9 * pDevice, int iHeight, const char * pszFaceName );
-	~CFont();
 
 	void OnLostDevice();
 	void OnResetDevice( IDirect3DDevice9 * pDevice );

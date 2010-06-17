@@ -22,7 +22,6 @@
     <ClCompile Include="CButton.cpp" />
     <ClCompile Include="CCheckBox.cpp" />
     <ClCompile Include="CColor.cpp" />
-    <ClCompile Include="CD3DRender.cpp" />
     <ClCompile Include="CDropDown.cpp" />
     <ClCompile Include="CEditBox.cpp" />
     <ClCompile Include="CElement.cpp" />
@@ -51,7 +50,6 @@
     <ClInclude Include="CButton.h" />
     <ClInclude Include="CCheckBox.h" />
     <ClInclude Include="CColor.h" />
-    <ClInclude Include="CD3DRender.h" />
     <ClInclude Include="CDropDown.h" />
     <ClInclude Include="CEditBox.h" />
     <ClInclude Include="CElement.h" />

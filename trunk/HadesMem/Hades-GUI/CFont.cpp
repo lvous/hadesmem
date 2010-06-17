@@ -33,11 +33,6 @@ CFont::CFont(CGUI& Gui, IDirect3DDevice9 * pDevice, int iHeight, const char * ps
 	m_pFont->PreloadCharacters( 0, 255 );
 }
 
-CFont::~CFont()
-{
-	SAFE_RELEASE( m_pFont );
-}
-
 void CFont::OnLostDevice()
 {
 	m_pFont->OnLostDevice();

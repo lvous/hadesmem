@@ -80,8 +80,13 @@ CWindow::CWindow(CGUI& Gui, TiXmlElement* pElement)
 
 CWindow::~CWindow()
 {
-	for each( CElement * pElement in m_vElements )
-		SAFE_DELETE( pElement )
+  std::for_each(m_vElements.begin(), m_vElements.end(), 
+    [] (CElement*& pElement) 
+  {
+    delete pElement;
+    pElement = 0;
+  });
+
 	m_vElements.clear();
 }
 

@@ -27,9 +27,6 @@
     <ClCompile Include="CColor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="CD3DRender.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="CDropDown.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -147,9 +144,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CColor.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CD3DRender.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CDropDown.h">

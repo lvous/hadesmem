@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 class CTexture
 {
-	IDirect3DTexture9 * m_pTexture;
+	CComPtr<IDirect3DTexture9> m_pTexture;
 	D3DSURFACE_DESC m_TexDesc;
 
 	ID3DXSprite * m_pSprite;
@@ -34,7 +34,6 @@ class CTexture
 
 	BYTE m_bAlpha;
 public:
-	~CTexture();
 	CTexture( ID3DXSprite * pSprite, const char * szPath );
 
 	inline void SetSprite( ID3DXSprite * pSprite )

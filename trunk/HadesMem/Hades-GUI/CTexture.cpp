@@ -22,11 +22,6 @@ THE SOFTWARE.
 
 #include "CGUI.h"
 
-CTexture::~CTexture()
-{
-	SAFE_RELEASE( m_pTexture );
-}
-
 CTexture::CTexture( ID3DXSprite * pSprite, const char * szPath ) : m_bAlpha( 255 )
 {
 	pSprite->GetDevice( &m_pDevice );

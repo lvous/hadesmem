@@ -22,11 +22,6 @@ THE SOFTWARE.
 
 #pragma once
 
-#define SAFE_DELETE( pData ) if( pData ){ delete pData; pData = 0; }
-
-#undef SAFE_RELEASE
-#define SAFE_RELEASE( pInterface ) if( pInterface ) { pInterface->Release(); pInterface = 0; }
-
 #define TITLEBAR_HEIGHT 24
 #define BUTTON_HEIGHT	20
 #define HELPERSLIDER_WIDTH 20
@@ -62,18 +57,19 @@ class CListBox;
 // Windows API
 #include <Windows.h>
 #include <Shlwapi.h>
-#include <WindowsX.h>
 #include <atlbase.h>
+#include <WindowsX.h>
 
 // C++ Standard Library
 #include <map>
 #include <set>
 #include <limits>
-#include <iomanip>
-#include <sstream>
 #include <vector>
-#include <functional>
 #include <memory>
+#include <sstream>
+#include <iomanip>
+#include <algorithm>
+#include <functional>
 
 // Hades-GUI
 #include "D3D9.h"
@@ -104,53 +100,54 @@ typedef std::function<std::string (const char* pszArgs, CElement* pElement)> tCa
 class CGUI
 {
 public:
-
 	CGUI( IDirect3DDevice9 * pDevice );
 	~CGUI();
 
-	void LoadInterfaceFromFile( const char * pszFilePath );
+	void LoadInterfaceFromFile(std::string const& Path);
 
-	void FillArea( int iX, int iY, int iWidth, int iHeight, D3DCOLOR d3dColor );
-	void DrawLine( int iStartX, int iStartY, int iEndX, int iEndY, int iWidth, D3DCOLOR d3dColor );
-	void DrawOutlinedBox( int iX, int iY, int iWidth, int iHeight, D3DCOLOR d3dInnerColor, D3DCOLOR d3dBorderColor );
+	void FillArea(int iX, int iY, int iWidth, int iHeight, D3DCOLOR d3dColor);
+	void DrawLine(int iStartX, int iStartY, int iEndX, int iEndY, int iWidth, D3DCOLOR d3dColor);
+	void DrawOutlinedBox(int iX, int iY, int iWidth, int iHeight, D3DCOLOR d3dInnerColor, D3DCOLOR d3dBorderColor);
 
-	CWindow * AddWindow( CWindow * pWindow );
-	void BringToTop( CWindow * pWindow );
+	CWindow* AddWindow(CWindow* pWindow);
+	void BringToTop(CWindow* pWindow);
 
 	void Draw();
 	void PreDraw();
-	void MouseMove( CMouse & pMouse );
-	bool KeyEvent( SKey sKey );
+	void MouseMove(CMouse& pMouse);
+	bool KeyEvent(SKey sKey);
 
 	void OnLostDevice();
-	void OnResetDevice( IDirect3DDevice9 * pDevice );
+	void OnResetDevice(IDirect3DDevice9* pDevice);
 
-	CMouse & GetMouse() const;
-	CKeyboard * GetKeyboard() const;
+	CMouse& GetMouse() const;
+	CKeyboard* GetKeyboard() const;
 
-	IDirect3DDevice9 * GetDevice() const;
-	CFont * GetFont() const;
-	ID3DXSprite * GetSprite() const;
+	IDirect3DDevice9* GetDevice() const;
+	CFont* GetFont() const;
+	ID3DXSprite* GetSprite() const;
 
-	CWindow * GetWindowByString( std::string sString, int iIndex = 0 );
+	CWindow* GetWindowByString(std::string const& sString, int iIndex = 0);
 
-	SElement * GetThemeElement( std::string sElement ) const;
+	SElement* GetThemeElement(std::string const& sElement) const;
 
-	void SetVisible( bool bVisible );
+	void SetVisible(bool bVisible);
 	bool IsVisible() const;
 
 	bool ShouldReload() const;
 	void Reload();
 
-	tCallback const & GetCallback( std::string sString ) const
+	tCallback const & GetCallback(std::string const& Name) const
 	{
-		return m_mCallbacks.find( sString )->second;
+		return m_mCallbacks.find(Name)->second;
 	}
-	void AddCallback( std::string sString, tCallback pCallback )
+
+	void AddCallback(std::string const& Name, tCallback pCallback)
 	{
-		m_mCallbacks[ sString ] = pCallback;
+		m_mCallbacks[Name] = pCallback;
 	}
-	std::map<std::string,tCallback> const & GetCallbackMap() const
+
+	std::map<std::string, tCallback> const& GetCallbackMap() const
 	{
 		return m_mCallbacks;
 	}

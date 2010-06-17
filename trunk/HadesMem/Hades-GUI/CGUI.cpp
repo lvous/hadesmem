@@ -59,18 +59,22 @@ CGUI::CGUI(IDirect3DDevice9* pDevice)
 
 CGUI::~CGUI()
 {
-	for( int i = 0; i < static_cast<int>( m_vWindows.size() ); i++ )
-		SAFE_DELETE( m_vWindows[i] )
+  std::for_each(m_vWindows.begin(), m_vWindows.end(), 
+    [] (CWindow*& pWindow)
+  {
+    delete pWindow;
+    pWindow = 0;
+  });
 }
 
-void CGUI::LoadInterfaceFromFile( const char * pszFilePath )
+void CGUI::LoadInterfaceFromFile(std::string const& Path)
 {
 	TiXmlDocument Document;
 
-	if( !Document.LoadFile( pszFilePath ) )
+	if(!Document.LoadFile(Path.c_str()))
 	{
 		std::stringstream sErrorStream;
-		sErrorStream << "Caught XML error \"" << Document.ErrorDesc() << "\" while opening file \"" << pszFilePath << "\"";
+		sErrorStream << "Caught XML error \"" << Document.ErrorDesc() << "\" while opening file \"" << Path << "\"";
 		MessageBoxA( 0, sErrorStream.str().c_str(), "XML Error", 0 );
 		return;
 	}
@@ -376,7 +380,7 @@ ID3DXSprite * CGUI::GetSprite() const
 	return m_pSprite;
 }
 
-CWindow * CGUI::GetWindowByString( std::string sString, int iIndex )
+CWindow * CGUI::GetWindowByString(std::string const& sString, int iIndex)
 {
 	for( int i = 0; i < static_cast<int>( m_vWindows.size() ); i++ )
 		if( m_vWindows[ i ]->GetString( false, iIndex ) == sString )
@@ -384,7 +388,7 @@ CWindow * CGUI::GetWindowByString( std::string sString, int iIndex )
 	return 0;
 }
 
-SElement * CGUI::GetThemeElement( std::string sElement ) const
+SElement * CGUI::GetThemeElement(std::string const& sElement) const
 {
 	std::map<std::string, tTheme>::const_iterator iIter = m_mThemes.find( m_sCurTheme );
 
