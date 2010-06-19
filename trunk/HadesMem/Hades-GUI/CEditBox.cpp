@@ -63,10 +63,16 @@ namespace Hades
       {
         m_Gui.DrawOutlinedBox( Pos.GetX(), Pos.GetY(), GetWidth(), GetHeight(), pInner->GetD3DColor(), pBorder->GetD3DColor() );
 
-        std::string sTemp = &GetString()[ GetStart() ];
-        m_Gui.GetFont()->CutString( GetWidth(), sTemp );
+        std::string const Current(GetString());
+        std::string CutStr(&Current[GetStart()]);
+        m_Gui.GetFont()->CutString( GetWidth(), CutStr );
 
-        m_Gui.GetFont()->DrawString( Pos.GetX() + 4, Pos.GetY() + GetHeight() / 2, FT_VCENTER, pString, sTemp );
+        m_Gui.GetFont()->DrawString(
+          Pos.GetX() + 4, 
+          Pos.GetY() + GetHeight() / 2, 
+          FT_VCENTER, 
+          pString, 
+          CutStr);
 
         if( m_bCursorState )
           m_Gui.FillArea( Pos.GetX() + 2 + m_iCursorX, Pos.GetY() + 2, 2, GetHeight() - 4, pCursor->GetD3DColor() );
@@ -100,13 +106,15 @@ namespace Hades
             int iX = m_Gui.GetMouse().GetPos().GetX();
             int iAbsX = ( *GetParent()->GetAbsPos() + *GetRelPos() ).GetX();
 
-            std::string sString( &GetString()[ GetStart() ] );
+            std::string sString( GetString().empty() ? "" : &GetString()[ GetStart() ] );
 
             if( iX >= iAbsX + m_Gui.GetFont()->GetStringWidth( sString.c_str() ) )
+            {
               SetIndex( sString.length() );
+            }
             else
             {
-              for( int i = 0; i <= static_cast<int>( sString.length() ); i++ )
+              for( int i = 0; i < static_cast<int>( sString.length() ); ++i )
               {
                 if( iX <= iAbsX + m_Gui.GetFont()->GetStringWidth( sString.c_str() ) )
                 {
@@ -269,18 +277,27 @@ namespace Hades
       return m_iIndex;
     }
 
-    void CEditBox::SetIndex( int iIndex )
+    void CEditBox::SetIndex(int Index)
     {
-      std::string sString( &GetString()[ GetStart() ] );
-
-      if( iIndex > static_cast<int>( sString.length() ) || iIndex < 0 )
+      std::string const Current(GetString());
+      if (!Current.empty() && GetStart() >= Current.size())
+      {
         return;
+      }
 
-      sString[ iIndex ] = 0;
+      std::string CutString( Current.empty() ? "" : &Current[ GetStart() ] );
+      if( Index < 0 || static_cast<std::size_t>(Index) > CutString.length() )
+      {
+        return;
+      }
 
-      m_iCursorX = m_Gui.GetFont()->GetStringWidth( sString.c_str() );
+      if (Index && Index < CutString.length())
+      {
+        CutString[Index] = 0;
+      }
 
-      m_iIndex = iIndex;
+      m_iCursorX = m_Gui.GetFont()->GetStringWidth(CutString.c_str());
+      m_iIndex = Index;
     }
 
     int CEditBox::GetStart() const
