@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\TinyXML">
+      <UniqueIdentifier>{74d436e3-ef54-4676-9d53-511ca236a574}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\TinyXML">
+      <UniqueIdentifier>{52a09c38-4110-48d0-b636-a7522a1eef77}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CButton.cpp">
@@ -78,17 +84,17 @@
     <ClCompile Include="CWindow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TinyXML\tinyxmlparser.cpp">
+      <Filter>Source Files\TinyXML</Filter>
+    </ClCompile>
     <ClCompile Include="TinyXML\tinystr.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\TinyXML</Filter>
     </ClCompile>
     <ClCompile Include="TinyXML\tinyxml.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\TinyXML</Filter>
     </ClCompile>
     <ClCompile Include="TinyXML\tinyxmlerror.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="TinyXML\tinyxmlparser.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\TinyXML</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -128,12 +134,6 @@
     <ClInclude Include="D3D9.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="TinyXML\tinystr.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="TinyXML\tinyxml.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="CButton.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -163,6 +163,12 @@
     </ClInclude>
     <ClInclude Include="CHorizontalSliderBar.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TinyXML\tinyxml.h">
+      <Filter>Header Files\TinyXML</Filter>
+    </ClInclude>
+    <ClInclude Include="TinyXML\tinystr.h">
+      <Filter>Header Files\TinyXML</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
