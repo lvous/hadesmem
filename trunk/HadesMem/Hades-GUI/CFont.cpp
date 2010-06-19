@@ -67,7 +67,7 @@ namespace Hades
       std::string sString( pszString );
       RECT rRect = { 0 };
 
-      for( int i = 0; i < static_cast<int>( sString.size() ); ++i )
+      for( int i = 0; i <= static_cast<int>( sString.size() ); i++ )
         if( sString[i] == ' ' )
           sString[i] = '.';
 
