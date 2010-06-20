@@ -65,6 +65,7 @@ namespace Hades
     int CFont::GetStringWidth(std::string const& MyString) const
     {
       std::string NewString;
+      NewString.reserve(MyString.size());
       std::transform(MyString.begin(), MyString.end(), 
         std::back_inserter(NewString), 
         [] (char Current)
@@ -73,7 +74,7 @@ namespace Hades
       });
 
       RECT MyRect = { 0 };
-      m_pFont->DrawTextA(0, MyString.c_str(), -1, &MyRect, DT_CALCRECT, 0);
+      m_pFont->DrawTextA(0, NewString.c_str(), -1, &MyRect, DT_CALCRECT, 0);
 
       return MyRect.right - MyRect.left;
     }

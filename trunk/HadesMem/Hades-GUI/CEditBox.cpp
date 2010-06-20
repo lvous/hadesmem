@@ -71,7 +71,9 @@ namespace Hades
         m_Gui.GetFont()->DrawString(Pos.GetX() + 4, Pos.GetY() + GetHeight() / 2, FT_VCENTER, pString, sTemp);
 
         if (m_bCursorState)
+        {
           m_Gui.FillArea(Pos.GetX() + 2 + m_iCursorX, Pos.GetY() + 2, 2, GetHeight() - 4, pCursor->GetD3DColor());
+        }
       }
     }
 
@@ -102,10 +104,13 @@ namespace Hades
             int iX = m_Gui.GetMouse().GetPos().GetX();
             int iAbsX = (*GetParent()->GetAbsPos() + *GetRelPos()).GetX();
 
-            std::string sString(&GetString()[ GetStart() ]);
+            std::string sString(GetStart() < GetString().size() ? 
+              &GetString()[ GetStart() ] : "");
 
             if (iX >= iAbsX + m_Gui.GetFont()->GetStringWidth(sString.c_str()))
+            {
               SetIndex(sString.length());
+            }
             else
             {
               for(int i = 0; i <= static_cast<int>(sString.length()); i++)
@@ -117,8 +122,11 @@ namespace Hades
                     sString[ i ] = 0;
                   }
                   if (iX > iAbsX + m_Gui.GetFont()->GetStringWidth(sString.c_str()))
+                  {
                     SetIndex(i);
+                  }
                 }
+
                 sString = &GetString()[ GetStart() ];
               }
             }
@@ -226,34 +234,44 @@ namespace Hades
             GetKeyboardState(bKeys);
 
             WORD wKey = 0;
-            ToAscii(sKey.m_vKey, HIWORD(sKey.m_lParam)&0xFF, bKeys, &wKey, 0);
+            ToAscii(sKey.m_vKey, HIWORD(sKey.m_lParam) & 0xFF, bKeys, &wKey, 0);
 
             char szKey[2] = { static_cast<char>(wKey), 0 };
             if (GetStart() + m_iIndex >= 0 && GetStart() + m_iIndex <= static_cast<int>(sString.length()))
             {
               if (wKey != 22)
+              {
                 sString.insert(GetStart() + m_iIndex, szKey);
+              }
               else
               {
                 if (!OpenClipboard(0))
+                {
                   break;
+                }
 
                 HANDLE hData = GetClipboardData(CF_TEXT);
                 char * pszBuffer = static_cast<char*>(GlobalLock(hData));
 
                 if (pszBuffer)
+                {
                   sString.insert(GetStart() + m_iIndex, pszBuffer);
+                }
 
                 GlobalUnlock(hData);
                 CloseClipboard();
               }
             }
 
-            SetString(const_cast<char*>(sString.c_str()));
+            SetString(sString.c_str());
             if (sKey.m_vKey == ' ')
+            {
               SetIndex(GetIndex() + 1);
+            }
             else
+            {
               SetIndex(GetIndex() + sString.length() - iPrevLen);
+            }
 
             while(m_Gui.GetFont()->GetStringWidth(&GetString().c_str()[ GetStart() ]) > GetWidth() - 5)
             {
@@ -280,7 +298,9 @@ namespace Hades
         &GetString()[ GetStart() ] : "");
 
       if (iIndex > static_cast<int>(sString.length()) || iIndex < 0)
+      {
         return;
+      }
 
       if (iIndex < sString.size())
       {
