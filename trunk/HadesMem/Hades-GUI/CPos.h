@@ -32,8 +32,8 @@ namespace Hades
 
     public:
 
-      CPos( CPos * pPos );
-      CPos( int iX, int iY );
+      CPos(CPos * pPos);
+      CPos(int iX, int iY);
       CPos();
 
       ~CPos();
@@ -41,11 +41,11 @@ namespace Hades
       int GetX() const;
       int GetY() const;
 
-      void SetX( int iX );
-      void SetY( int iY );
+      void SetX(int iX);
+      void SetY(int iY);
 
-      const CPos operator + ( const CPos & otherPos ) const;
-      const CPos operator - ( const CPos & otherPos ) const;
+      const CPos operator + (const CPos & otherPos) const;
+      const CPos operator - (const CPos & otherPos) const;
     };
   }
 }

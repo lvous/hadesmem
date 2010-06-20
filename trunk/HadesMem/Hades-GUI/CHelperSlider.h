@@ -36,7 +36,7 @@ namespace Hades
       SElement * m_pThemeElement[ 3 ];
       SElementState * m_pElementState[ 3 ];
 
-      void SetDragged( bool bDragged );
+      void SetDragged(bool bDragged);
       bool GetDragged();
 
       CColor * pInner, * pBorder;
@@ -45,12 +45,12 @@ namespace Hades
     public:
       CHelperSlider(class CGUI& Gui, CPos relPos, int iHeight);
 
-      void Draw( CPos basePos );
+      void Draw(CPos basePos);
       void PreDraw();
-      void MouseMove( CPos basePos, CMouse & pMouse );
-      bool KeyEvent( CPos basePos, SKey sKey );
+      void MouseMove(CPos basePos, CMouse & pMouse);
+      bool KeyEvent(CPos basePos, SKey sKey);
 
-      void UpdateTheme( int iIndex );
+      void UpdateTheme(int iIndex);
     };
   }
 }

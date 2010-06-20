@@ -36,9 +36,9 @@ namespace Hades
 
       void Draw();
       void PreDraw();
-      void MouseMove( CMouse & pMouse );
+      void MouseMove(CMouse & pMouse);
 
-      void UpdateTheme( int iIndex );
+      void UpdateTheme(int iIndex);
     };
   }
 }

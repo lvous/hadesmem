@@ -44,33 +44,33 @@ namespace Hades
       CWindow(class CGUI& Gui, TiXmlElement* pElement);
       ~CWindow();
 
-      void AddElement( CElement * pElement );
+      void AddElement(CElement * pElement);
 
       void Draw();
       void PreDraw();
-      void MouseMove( CMouse & pMouse );
-      bool KeyEvent( SKey sKey );
+      void MouseMove(CMouse & pMouse);
+      bool KeyEvent(SKey sKey);
 
-      void SetMaximized( bool bMaximized );
+      void SetMaximized(bool bMaximized);
       bool GetMaximized();
 
-      void SetVisible( bool bVisible );
+      void SetVisible(bool bVisible);
       bool IsVisible();
 
-      void SetDragging( bool bDragging );
+      void SetDragging(bool bDragging);
       bool GetDragging();
 
-      void SetCloseButton( bool bEnabled );
+      void SetCloseButton(bool bEnabled);
       bool GetCloseButton();
 
-      void SetFocussedElement( CElement * pElement );
+      void SetFocussedElement(CElement * pElement);
       CElement * GetFocussedElement();
 
-      CElement * GetElementByString( const char * pszString, int iIndex = 0 );
+      CElement * GetElementByString(const char * pszString, int iIndex = 0);
 
-      void BringToTop( CElement * pElement );
+      void BringToTop(CElement * pElement);
 
-      void UpdateTheme( int iIndex );
+      void UpdateTheme(int iIndex);
     };
   }
 }

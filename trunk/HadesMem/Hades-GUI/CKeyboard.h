@@ -40,13 +40,13 @@ namespace Hades
         m_bDown = false;
         m_lParam = 0;
       }
-      SKey( char vKey, bool bDown )
+      SKey(char vKey, bool bDown)
       {
         m_vKey = vKey;
         m_bDown = bDown;
         m_lParam = 0;
       }
-      SKey( char vKey, bool bDown, LPARAM lParam )
+      SKey(char vKey, bool bDown, LPARAM lParam)
       {
         m_vKey = vKey;
         m_bDown = bDown;
@@ -63,9 +63,9 @@ namespace Hades
     public:
       CKeyboard(class CGUI& Gui);
 
-      bool HandleMessage( unsigned int uMsg, WPARAM wParam, LPARAM lParam );
+      bool HandleMessage(unsigned int uMsg, WPARAM wParam, LPARAM lParam);
 
-      void SetKey( SKey sKey );
+      void SetKey(SKey sKey);
       SKey GetKey();
     };
   }

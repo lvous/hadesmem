@@ -36,14 +36,14 @@ namespace Hades
       CColor * pString;
 
     public:
-      CButton(class CGUI& Gui, TiXmlElement * pElement );
+      CButton(class CGUI& Gui, TiXmlElement * pElement);
 
       void Draw();
       void PreDraw();
-      void MouseMove( CMouse & pMouse );
-      bool KeyEvent( SKey sKey );
+      void MouseMove(CMouse & pMouse);
+      bool KeyEvent(SKey sKey);
 
-      void UpdateTheme( int iIndex );
+      void UpdateTheme(int iIndex);
     };
   }
 }

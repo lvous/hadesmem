@@ -29,40 +29,40 @@ namespace Hades
     CText::CText(CGUI& Gui, TiXmlElement* pElement)
       : CElement(Gui)
     {
-      SetElement( pElement );
+      SetElement(pElement);
 
-      SetThemeElement( m_Gui.GetThemeElement( "Text" ) );
+      SetThemeElement(m_Gui.GetThemeElement("Text"));
 
-      if( !GetThemeElement() )
-        MessageBoxA( 0, "Theme element invalid.", "Text", 0 );
+      if (!GetThemeElement())
+        MessageBoxA(0, "Theme element invalid.", "Text", 0);
       else
-        SetElementState( "Norm" );
+        SetElementState("Norm");
     }
 
     void CText::Draw()
     {
       CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
 
-      m_Gui.GetFont()->DrawString( Pos.GetX(), Pos.GetY(), 0, pString, GetFormatted(), GetWidth() );
+      m_Gui.GetFont()->DrawString(Pos.GetX(), Pos.GetY(), 0, pString, GetFormatted(), GetWidth());
     }
 
     void CText::PreDraw()
     {
-      GetString( true );
+      GetString(true);
     }
 
-    void CText::MouseMove( CMouse & pMouse )
+    void CText::MouseMove(CMouse & pMouse)
     {
       CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
 
-      SetElementState( SetMouseOver( pMouse.InArea( Pos.GetX(), Pos.GetY(), m_Gui.GetFont()->GetStringWidth( GetFormatted().c_str() ), m_Gui.GetFont()->GetStringHeight() ) )?"MouseOver":"Norm" );
+      SetElementState(SetMouseOver(pMouse.InArea(Pos.GetX(), Pos.GetY(), m_Gui.GetFont()->GetStringWidth(GetFormatted().c_str()), m_Gui.GetFont()->GetStringHeight()))?"MouseOver":"Norm");
     }
 
-    void CText::UpdateTheme( int iIndex )
+    void CText::UpdateTheme(int iIndex)
     {
-      SElementState * pState = GetElementState( iIndex );
+      SElementState * pState = GetElementState(iIndex);
 
-      pString = pState->GetColor( "String" );
+      pString = pState->GetColor("String");
     }
   }
 }

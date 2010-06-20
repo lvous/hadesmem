@@ -45,13 +45,13 @@ namespace Hades
 
       void Draw();
       void PreDraw();
-      void MouseMove( CMouse & pMouse );
-      bool KeyEvent( SKey sKey );
+      void MouseMove(CMouse & pMouse);
+      bool KeyEvent(SKey sKey);
 
-      void AddString( std::string sString );
+      void AddString(std::string sString);
       void Clear();
 
-      void UpdateTheme( int iIndex );
+      void UpdateTheme(int iIndex);
     };
   }
 }

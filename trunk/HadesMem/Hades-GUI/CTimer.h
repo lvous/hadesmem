@@ -36,7 +36,7 @@ namespace Hades
       CTimer();
       ~CTimer();
 
-      void Start( float fSec );
+      void Start(float fSec);
       void Stop();
 
       float TimeLeft();

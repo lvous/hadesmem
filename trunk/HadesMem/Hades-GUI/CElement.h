@@ -54,47 +54,47 @@ namespace Hades
       CElement(class CGUI& Gui);
       virtual ~CElement() { }
 
-      void SetElement( TiXmlElement * pElement );
+      void SetElement(TiXmlElement * pElement);
 
-      void SetParent( CWindow * pParent );
+      void SetParent(CWindow * pParent);
       CWindow * GetParent() const;
 
-      void SetCallback( tCallback pCallback );
+      void SetCallback(tCallback pCallback);
       tCallback GetCallback() const;
 
-      void SetRelPos( CPos relPos );
-      void SetAbsPos( CPos absPos );
+      void SetRelPos(CPos relPos);
+      void SetAbsPos(CPos absPos);
 
       const CPos * GetRelPos() const;
       const CPos * GetAbsPos() const;
 
-      void SetWidth( int iWidth );
-      void SetHeight( int iHeight );
+      void SetWidth(int iWidth);
+      void SetHeight(int iHeight);
 
       int GetWidth() const;
       int GetHeight() const;
 
       bool HasFocus() const;
 
-      void SetString( std::string sString, int iIndex = 0 );
-      std::string GetString( bool bReplaceVars = false, int iIndex = 0 );
-      std::string GetFormatted( int iIndex = 0 ) const;
+      void SetString(std::string sString, int iIndex = 0);
+      std::string GetString(bool bReplaceVars = false, int iIndex = 0);
+      std::string GetFormatted(int iIndex = 0) const;
 
       bool GetMouseOver() const;
-      bool SetMouseOver( bool bMouseOver );
+      bool SetMouseOver(bool bMouseOver);
 
-      SElement * SetThemeElement( SElement * pThemeElement, int iIndex = 0 );
-      SElement * GetThemeElement( int iIndex = 0 ) const;
+      SElement * SetThemeElement(SElement * pThemeElement, int iIndex = 0);
+      SElement * GetThemeElement(int iIndex = 0) const;
 
-      void SetElementState( std::string sState, int iIndex = 0 );
-      SElementState * GetElementState( int iIndex = 0 ) const;
+      void SetElementState(std::string sState, int iIndex = 0);
+      SElementState * GetElementState(int iIndex = 0) const;
 
-      virtual void UpdateTheme( int iIndex );
+      virtual void UpdateTheme(int iIndex);
 
       virtual void Draw();
       virtual void PreDraw();
-      virtual void MouseMove( CMouse & pMouse );
-      virtual bool KeyEvent( SKey sKey );
+      virtual void MouseMove(CMouse & pMouse);
+      virtual bool KeyEvent(SKey sKey);
     };
   }
 }

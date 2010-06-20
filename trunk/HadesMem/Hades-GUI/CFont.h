@@ -38,17 +38,17 @@ namespace Hades
       class CGUI& m_Gui;
 
     public:
-      CFont(class CGUI& Gui, IDirect3DDevice9 * pDevice, int iHeight, const char * pszFaceName );
+      CFont(class CGUI& Gui, IDirect3DDevice9 * pDevice, int iHeight, const char * pszFaceName);
 
       void OnLostDevice();
-      void OnResetDevice( IDirect3DDevice9 * pDevice );
+      void OnResetDevice(IDirect3DDevice9 * pDevice);
 
-      void DrawString( int iX, int iY, DWORD dwFlags, CColor * pColor, std::string sString, int iWidth = 0 );
+      void DrawString(int iX, int iY, DWORD dwFlags, CColor * pColor, std::string sString, int iWidth = 0);
 
       int GetStringWidth(std::string const& MyString) const;
       int GetStringHeight() const;
 
-      void CutString( int iWidth, std::string & rString ) const;
+      void CutString(int iWidth, std::string & rString) const;
     };
   }
 }

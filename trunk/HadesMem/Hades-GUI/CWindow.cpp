@@ -29,56 +29,56 @@ namespace Hades
     CWindow::CWindow(CGUI& Gui, TiXmlElement* pElement)
       : CElement(Gui)
     {
-      SetMaximized( true );
-      SetFocussedElement( 0 );
+      SetMaximized(true);
+      SetFocussedElement(0);
       posDif = CPos();
       m_bDragging = false;
-      SetMouseOver( false );
-      SetElement( pElement );
+      SetMouseOver(false);
+      SetElement(pElement);
 
-      const char * pszVisible = pElement->Attribute( "hidden" );
-      if( pszVisible )
-        SetVisible( pszVisible[ 0 ] != '1' );
+      const char * pszVisible = pElement->Attribute("hidden");
+      if (pszVisible)
+        SetVisible(pszVisible[ 0 ] != '1');
       else
-        SetVisible( true );
+        SetVisible(true);
 
-#define LOAD_ELEMENTS( Class, String ) \
-  for( TiXmlElement * pElementElement = pElement->FirstChildElement( String ); pElementElement; pElementElement = pElementElement->NextSiblingElement( String ) ) \
-  AddElement( new Class( Gui, pElementElement ) );
+#define LOAD_ELEMENTS(Class, String) \
+  for(TiXmlElement * pElementElement = pElement->FirstChildElement(String); pElementElement; pElementElement = pElementElement->NextSiblingElement(String)) \
+  AddElement(new Class(Gui, pElementElement));
 
-      LOAD_ELEMENTS( CButton, "Button" )
-        LOAD_ELEMENTS( CText, "Text" )
-        LOAD_ELEMENTS( CProgressBar, "ProgressBar" )
-        LOAD_ELEMENTS( CCheckBox, "CheckBox" )
-        LOAD_ELEMENTS( CEditBox, "EditBox" )
-        LOAD_ELEMENTS( CHorizontalSliderBar, "HorizontalSliderBar" )
-        LOAD_ELEMENTS( CVerticalSliderBar, "VerticalSliderBar" )
-        LOAD_ELEMENTS( CTextBox, "TextBox" )
-        LOAD_ELEMENTS( CListBox, "ListBox" )
-        LOAD_ELEMENTS( CDropDown, "DropDown" )
+      LOAD_ELEMENTS(CButton, "Button")
+        LOAD_ELEMENTS(CText, "Text")
+        LOAD_ELEMENTS(CProgressBar, "ProgressBar")
+        LOAD_ELEMENTS(CCheckBox, "CheckBox")
+        LOAD_ELEMENTS(CEditBox, "EditBox")
+        LOAD_ELEMENTS(CHorizontalSliderBar, "HorizontalSliderBar")
+        LOAD_ELEMENTS(CVerticalSliderBar, "VerticalSliderBar")
+        LOAD_ELEMENTS(CTextBox, "TextBox")
+        LOAD_ELEMENTS(CListBox, "ListBox")
+        LOAD_ELEMENTS(CDropDown, "DropDown")
 
-        SetThemeElement( m_Gui.GetThemeElement( "Window" ) );
+        SetThemeElement(m_Gui.GetThemeElement("Window"));
 
-      if( !GetThemeElement() )
-        MessageBoxA( 0, "Theme element invalid.", "Window", 0 );
+      if (!GetThemeElement())
+        MessageBoxA(0, "Theme element invalid.", "Window", 0);
       else
-        SetElementState( "Norm" );
+        SetElementState("Norm");
 
-      SetThemeElement( m_Gui.GetThemeElement( "CloseButton" ), 1 );
+      SetThemeElement(m_Gui.GetThemeElement("CloseButton"), 1);
 
-      if( !GetThemeElement( 1 ) )
-        MessageBoxA( 0, "Theme element invalid.", "CloseButton", 0 );
+      if (!GetThemeElement(1))
+        MessageBoxA(0, "Theme element invalid.", "CloseButton", 0);
       else
       {
-        SetElementState( "Norm", 1 );
+        SetElementState("Norm", 1);
 
-        pszVisible = pElement->Attribute( "closebutton" );
-        if( pszVisible )
-          SetCloseButton( pszVisible[ 0 ] == '1' );
+        pszVisible = pElement->Attribute("closebutton");
+        if (pszVisible)
+          SetCloseButton(pszVisible[ 0 ] == '1');
         else
-          SetCloseButton( true );
+          SetCloseButton(true);
 
-        MouseMove( m_Gui.GetMouse() );
+        MouseMove(m_Gui.GetMouse());
       }
     }
 
@@ -91,117 +91,117 @@ namespace Hades
       });
     }
 
-    void CWindow::AddElement( CElement * pElement )
+    void CWindow::AddElement(CElement * pElement)
     {
-      pElement->SetRelPos( *pElement->GetRelPos() + CPos( 0, TITLEBAR_HEIGHT ) );
-      pElement->SetParent( this );
+      pElement->SetRelPos(*pElement->GetRelPos() + CPos(0, TITLEBAR_HEIGHT));
+      pElement->SetParent(this);
 
-      m_vElements.push_back( pElement );
+      m_vElements.push_back(pElement);
     }
 
     void CWindow::Draw()
     {	
-      pTitlebar->Draw( *GetAbsPos(), GetWidth(), TITLEBAR_HEIGHT );
-      m_Gui.GetFont()->DrawString( GetAbsPos()->GetX() + 5, GetAbsPos()->GetY() + 5, 0, pTitle, GetFormatted() );
-      pButton->Draw( CPos( GetAbsPos()->GetX() + GetWidth() - BUTTON_HEIGHT - 2, GetAbsPos()->GetY() + 2 ), BUTTON_HEIGHT, BUTTON_HEIGHT );
+      pTitlebar->Draw(*GetAbsPos(), GetWidth(), TITLEBAR_HEIGHT);
+      m_Gui.GetFont()->DrawString(GetAbsPos()->GetX() + 5, GetAbsPos()->GetY() + 5, 0, pTitle, GetFormatted());
+      pButton->Draw(CPos(GetAbsPos()->GetX() + GetWidth() - BUTTON_HEIGHT - 2, GetAbsPos()->GetY() + 2), BUTTON_HEIGHT, BUTTON_HEIGHT);
 
-      if( GetMaximized() )
+      if (GetMaximized())
       {
-        m_Gui.DrawOutlinedBox( GetAbsPos()->GetX(), GetAbsPos()->GetY() + TITLEBAR_HEIGHT, GetWidth(), GetHeight() - TITLEBAR_HEIGHT + 1,  pBodyInner->GetD3DColor(), pBodyBorder->GetD3DColor() );
+        m_Gui.DrawOutlinedBox(GetAbsPos()->GetX(), GetAbsPos()->GetY() + TITLEBAR_HEIGHT, GetWidth(), GetHeight() - TITLEBAR_HEIGHT + 1,  pBodyInner->GetD3DColor(), pBodyBorder->GetD3DColor());
 
-        for each( CElement * pElement in m_vElements )
+        for each(CElement * pElement in m_vElements)
           pElement->Draw();
       }
     }
 
     void CWindow::PreDraw()
     {
-      GetString( true );
+      GetString(true);
 
-      if( GetMaximized() )
-        for each( CElement * pElement in m_vElements )
+      if (GetMaximized())
+        for each(CElement * pElement in m_vElements)
           pElement->PreDraw();
     }
 
-    void CWindow::MouseMove( CMouse & pMouse )
+    void CWindow::MouseMove(CMouse & pMouse)
     {
-      if( GetDragging() )
+      if (GetDragging())
       {
-        if( !posDif.GetX() )
+        if (!posDif.GetX())
           posDif = *GetAbsPos() - pMouse.GetPos();
         else
         {
           CPos mPos = pMouse.GetPos();
 
-          if( mPos.GetX() == -1 && mPos.GetY() == -1 )
+          if (mPos.GetX() == -1 && mPos.GetY() == -1)
             mPos = pMouse.GetSavedPos();
 
-          SetAbsPos( mPos + posDif );
+          SetAbsPos(mPos + posDif);
         }
       }
 
-      if( GetCloseButton() )
-        SetElementState( SetMouseOver( pMouse.InArea( GetAbsPos()->GetX() + GetWidth() - BUTTON_HEIGHT - 2, GetAbsPos()->GetY() + 2, BUTTON_HEIGHT, BUTTON_HEIGHT ) )?"MouseOver":"Norm", 1 );
+      if (GetCloseButton())
+        SetElementState(SetMouseOver(pMouse.InArea(GetAbsPos()->GetX() + GetWidth() - BUTTON_HEIGHT - 2, GetAbsPos()->GetY() + 2, BUTTON_HEIGHT, BUTTON_HEIGHT))?"MouseOver":"Norm", 1);
 
-      if( GetMaximized() )
-        for each( CElement * pElement in m_vElements )
-          pElement->MouseMove( pMouse );
+      if (GetMaximized())
+        for each(CElement * pElement in m_vElements)
+          pElement->MouseMove(pMouse);
     }
 
-    bool CWindow::KeyEvent( SKey sKey )
+    bool CWindow::KeyEvent(SKey sKey)
     {
       CMouse & Mouse = m_Gui.GetMouse();
 
-      if( Mouse.GetLeftButton() )
+      if (Mouse.GetLeftButton())
       {
-        SetFocussedElement( 0 );
+        SetFocussedElement(0);
 
-        if( GetMouseOver() && m_bCloseButtonEnabled )
-          this->SetVisible( false );
-        else if( Mouse.InArea( GetAbsPos()->GetX(), GetAbsPos()->GetY(), GetWidth(), TITLEBAR_HEIGHT ) )
+        if (GetMouseOver() && m_bCloseButtonEnabled)
+          this->SetVisible(false);
+        else if (Mouse.InArea(GetAbsPos()->GetX(), GetAbsPos()->GetY(), GetWidth(), TITLEBAR_HEIGHT))
         {
-          if( !Mouse.GetDragging() )
+          if (!Mouse.GetDragging())
           {
-            if( Mouse.GetLeftButton() == 1 )
+            if (Mouse.GetLeftButton() == 1)
             {
-              m_Gui.BringToTop( this );
+              m_Gui.BringToTop(this);
 
-              SetDragging( true );
-              Mouse.SetDragging( this );
+              SetDragging(true);
+              Mouse.SetDragging(this);
 
-              SetElementState( "Dragging" );
+              SetElementState("Dragging");
             }
             else
             {
-              SetMaximized( !GetMaximized() );
+              SetMaximized(!GetMaximized());
 
-              SetElementState( GetMaximized()?"Norm":"Minimized" );
+              SetElementState(GetMaximized()?"Norm":"Minimized");
 
-              m_Gui.BringToTop( this );
+              m_Gui.BringToTop(this);
             }
           }
         }
-        else if(  Mouse.InArea( GetAbsPos()->GetX(), GetAbsPos()->GetY(), GetWidth(), GetHeight() ) )
-          m_Gui.BringToTop( this );
+        else if (Mouse.InArea(GetAbsPos()->GetX(), GetAbsPos()->GetY(), GetWidth(), GetHeight()))
+          m_Gui.BringToTop(this);
       }
       else
       {
-        posDif.SetX( 0 );
+        posDif.SetX(0);
 
-        Mouse.SetDragging( 0 );
-        SetDragging( false );
+        Mouse.SetDragging(0);
+        SetDragging(false);
 
-        SetElementState( GetMaximized()?"Norm":"Minimized" );
+        SetElementState(GetMaximized()?"Norm":"Minimized");
       }
 
-      if( GetMaximized() )
-        for( int iIndex = static_cast<int>( m_vElements.size() ) - 1; iIndex >= 0; iIndex-- )
-          if( !m_vElements[ iIndex ]->KeyEvent( sKey ) )
+      if (GetMaximized())
+        for(int iIndex = static_cast<int>(m_vElements.size()) - 1; iIndex >= 0; iIndex--)
+          if (!m_vElements[ iIndex ]->KeyEvent(sKey))
             return false;
       return true;
     }
 
-    void CWindow::SetMaximized( bool bMaximized )
+    void CWindow::SetMaximized(bool bMaximized)
     {
       m_bMaximized = bMaximized;
     }
@@ -211,7 +211,7 @@ namespace Hades
       return m_bMaximized;
     }
 
-    void CWindow::SetVisible( bool bVisible )
+    void CWindow::SetVisible(bool bVisible)
     {
       m_bVisible = bVisible;
     }
@@ -221,7 +221,7 @@ namespace Hades
       return m_bVisible;
     }
 
-    void CWindow::SetDragging( bool bDragging )
+    void CWindow::SetDragging(bool bDragging)
     {
       m_bDragging = bDragging;
     }
@@ -231,12 +231,12 @@ namespace Hades
       return m_bDragging;
     }
 
-    void CWindow::SetCloseButton( bool bEnabled )
+    void CWindow::SetCloseButton(bool bEnabled)
     {
       m_bCloseButtonEnabled = bEnabled;
 
-      if( GetCloseButton() )
-        SetElementState( "Disabled", 1 );
+      if (GetCloseButton())
+        SetElementState("Disabled", 1);
     }
 
     bool CWindow::GetCloseButton()
@@ -244,12 +244,12 @@ namespace Hades
       return m_bCloseButtonEnabled;
     }
 
-    void CWindow::SetFocussedElement( CElement * pElement )
+    void CWindow::SetFocussedElement(CElement * pElement)
     {
       m_pFocussedElement = pElement;
 
-      if( pElement )
-        BringToTop( pElement );
+      if (pElement)
+        BringToTop(pElement);
     }
 
     CElement * CWindow::GetFocussedElement()
@@ -257,35 +257,35 @@ namespace Hades
       return m_pFocussedElement;
     }
 
-    CElement * CWindow::GetElementByString( const char * pszString, int iIndex )
+    CElement * CWindow::GetElementByString(const char * pszString, int iIndex)
     {
-      for each( CElement * pElement in m_vElements )
-        if( pElement->GetString( false, iIndex ) == pszString )
+      for each(CElement * pElement in m_vElements)
+        if (pElement->GetString(false, iIndex) == pszString)
           return pElement;
       return 0;
     }
 
-    void CWindow::BringToTop( CElement * pElement )
+    void CWindow::BringToTop(CElement * pElement)
     {
-      for( int i = 0; i < static_cast<int>( m_vElements.size() ); i++ )
-        if( m_vElements[i] == pElement )
-          m_vElements.erase( m_vElements.begin() + i );
-      m_vElements.insert(  m_vElements.end(), pElement );
+      for(int i = 0; i < static_cast<int>(m_vElements.size()); i++)
+        if (m_vElements[i] == pElement)
+          m_vElements.erase(m_vElements.begin() + i);
+      m_vElements.insert( m_vElements.end(), pElement);
     }
 
-    void CWindow::UpdateTheme( int iIndex )
+    void CWindow::UpdateTheme(int iIndex)
     {
-      SElementState * pState = GetElementState( iIndex );
-      if( !iIndex )
+      SElementState * pState = GetElementState(iIndex);
+      if (!iIndex)
       {
-        pTitle = pState->GetColor( "Title" );
-        pBodyInner = pState->GetColor( "BodyInner" );
-        pBodyBorder = pState->GetColor( "BodyBorder" );
+        pTitle = pState->GetColor("Title");
+        pBodyInner = pState->GetColor("BodyInner");
+        pBodyBorder = pState->GetColor("BodyBorder");
 
-        pTitlebar = pState->GetTexture( "Titlebar" );
+        pTitlebar = pState->GetTexture("Titlebar");
       }
       else
-        pButton = pState->GetTexture( "Button" );
+        pButton = pState->GetTexture("Button");
     }
   }
 }

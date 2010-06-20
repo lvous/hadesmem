@@ -35,9 +35,9 @@ namespace Hades
     {
     }
 
-    void CTimer::Start( float fSec )
+    void CTimer::Start(float fSec)
     {
-      dwStop = (DWORD)( fSec * 1000 ) + timeGetTime();
+      dwStop = (DWORD)(fSec * 1000) + timeGetTime();
     }
 
     void CTimer::Stop()
@@ -47,14 +47,14 @@ namespace Hades
 
     float CTimer::TimeLeft()
     {
-      if( Running() )
-        return ( ( (float)( dwStop - timeGetTime() ) / 1000 ) );
+      if (Running())
+        return (((float)(dwStop - timeGetTime()) / 1000));
       return 0; 
     }
 
     bool CTimer::Running()
     {
-      return ( dwStop > timeGetTime() );
+      return (dwStop > timeGetTime());
     }
   }
 }

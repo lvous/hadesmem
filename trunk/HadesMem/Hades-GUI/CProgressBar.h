@@ -41,9 +41,9 @@ namespace Hades
       void Draw();
 
       int GetProgress() const;
-      void SetProgress( int iProgress );
+      void SetProgress(int iProgress);
 
-      void UpdateTheme( int iIndex );
+      void UpdateTheme(int iIndex);
     };
   }
 }

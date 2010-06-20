@@ -29,29 +29,29 @@ namespace Hades
     CEditBox::CEditBox(CGUI& Gui, TiXmlElement * pElement)
       : CElement(Gui)
     {
-      SetElement( pElement );
-      SetHeight( BUTTON_HEIGHT );
+      SetElement(pElement);
+      SetHeight(BUTTON_HEIGHT);
 
       m_iStart = 0;
-      SetIndex( 0 );
+      SetIndex(0);
       m_bCursorState = false;
-      SetCallback( 0 );
+      SetCallback(0);
 
-      const char * pszCallback = pElement->Attribute( "callback" );
-      if( pszCallback )
+      const char * pszCallback = pElement->Attribute("callback");
+      if (pszCallback)
       {
-        SetCallback( m_Gui.GetCallback( pszCallback ) );
+        SetCallback(m_Gui.GetCallback(pszCallback));
 
-        if( !GetCallback() )
-          MessageBoxA( 0, "Callback invalid", pszCallback, 0 );
+        if (!GetCallback())
+          MessageBoxA(0, "Callback invalid", pszCallback, 0);
       }
 
-      SetThemeElement( m_Gui.GetThemeElement( "EditBox" ) );
+      SetThemeElement(m_Gui.GetThemeElement("EditBox"));
 
-      if( !GetThemeElement() )
-        MessageBoxA( 0, "Theme element invalid.", "EditBox", 0 );
+      if (!GetThemeElement())
+        MessageBoxA(0, "Theme element invalid.", "EditBox", 0);
       else
-        SetElementState( "Norm" );
+        SetElementState("Norm");
     }
 
     void CEditBox::Draw()
@@ -59,111 +59,111 @@ namespace Hades
       CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
 
       SElementState * pState = GetElementState();
-      if( pState )
+      if (pState)
       {
-        m_Gui.DrawOutlinedBox( Pos.GetX(), Pos.GetY(), GetWidth(), GetHeight(), pInner->GetD3DColor(), pBorder->GetD3DColor() );
+        m_Gui.DrawOutlinedBox(Pos.GetX(), Pos.GetY(), GetWidth(), GetHeight(), pInner->GetD3DColor(), pBorder->GetD3DColor());
 
         std::string sTemp = &GetString()[ GetStart() ];
-        m_Gui.GetFont()->CutString( GetWidth(), sTemp );
+        m_Gui.GetFont()->CutString(GetWidth(), sTemp);
 
-        m_Gui.GetFont()->DrawString( Pos.GetX() + 4, Pos.GetY() + GetHeight() / 2, FT_VCENTER, pString, sTemp );
+        m_Gui.GetFont()->DrawString(Pos.GetX() + 4, Pos.GetY() + GetHeight() / 2, FT_VCENTER, pString, sTemp);
 
-        if( m_bCursorState )
-          m_Gui.FillArea( Pos.GetX() + 2 + m_iCursorX, Pos.GetY() + 2, 2, GetHeight() - 4, pCursor->GetD3DColor() );
+        if (m_bCursorState)
+          m_Gui.FillArea(Pos.GetX() + 2 + m_iCursorX, Pos.GetY() + 2, 2, GetHeight() - 4, pCursor->GetD3DColor());
       }
     }
 
     void CEditBox::PreDraw()
     {
-      if( !m_tCursorTimer.Running() && ( HasFocus() || m_bCursorState ) )
+      if (!m_tCursorTimer.Running() && (HasFocus() || m_bCursorState))
       {
         m_bCursorState = !m_bCursorState;
-        m_tCursorTimer.Start( 0.6f );
+        m_tCursorTimer.Start(0.6f);
       }
     }
 
-    void CEditBox::MouseMove( CMouse & pMouse )
+    void CEditBox::MouseMove(CMouse & pMouse)
     {
       CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
 
-      SetMouseOver( pMouse.InArea( Pos.GetX(), Pos.GetY(), GetWidth(), GetHeight() ) );
+      SetMouseOver(pMouse.InArea(Pos.GetX(), Pos.GetY(), GetWidth(), GetHeight()));
     }
 
-    bool CEditBox::KeyEvent( SKey sKey )
+    bool CEditBox::KeyEvent(SKey sKey)
     {
-      if( !sKey.m_vKey )
+      if (!sKey.m_vKey)
       {
-        if( m_Gui.GetMouse().GetLeftButton() )
+        if (m_Gui.GetMouse().GetLeftButton())
         {
-          if( GetMouseOver() )
+          if (GetMouseOver())
           {
             int iX = m_Gui.GetMouse().GetPos().GetX();
-            int iAbsX = ( *GetParent()->GetAbsPos() + *GetRelPos() ).GetX();
+            int iAbsX = (*GetParent()->GetAbsPos() + *GetRelPos()).GetX();
 
-            std::string sString( &GetString()[ GetStart() ] );
+            std::string sString(&GetString()[ GetStart() ]);
 
-            if( iX >= iAbsX + m_Gui.GetFont()->GetStringWidth( sString.c_str() ) )
-              SetIndex( sString.length() );
+            if (iX >= iAbsX + m_Gui.GetFont()->GetStringWidth(sString.c_str()))
+              SetIndex(sString.length());
             else
             {
-              for( int i = 0; i <= static_cast<int>( sString.length() ); i++ )
+              for(int i = 0; i <= static_cast<int>(sString.length()); i++)
               {
-                if( iX <= iAbsX + m_Gui.GetFont()->GetStringWidth( sString.c_str() ) )
+                if (iX <= iAbsX + m_Gui.GetFont()->GetStringWidth(sString.c_str()))
                 {
                   if (i < sString.size())
                   {
                     sString[ i ] = 0;
                   }
-                  if( iX > iAbsX + m_Gui.GetFont()->GetStringWidth( sString.c_str() ) )
-                    SetIndex( i );
+                  if (iX > iAbsX + m_Gui.GetFont()->GetStringWidth(sString.c_str()))
+                    SetIndex(i);
                 }
                 sString = &GetString()[ GetStart() ];
               }
             }
 
-            GetParent()->SetFocussedElement( this );
+            GetParent()->SetFocussedElement(this);
           }
         }
       }
-      else if( sKey.m_bDown && HasFocus() )
+      else if (sKey.m_bDown && HasFocus())
       {
-        switch( sKey.m_vKey )
+        switch(sKey.m_vKey)
         {
         case VK_END:
           {
             std::string sString = GetString();
 
-            SetIndex( strlen( &sString[ GetStart() ] ) );
+            SetIndex(strlen(&sString[ GetStart() ]));
 
-            while( m_Gui.GetFont()->GetStringWidth( &sString.c_str()[ GetStart() ] ) > GetWidth() - 5 || m_iCursorX > GetWidth() - 5 )
+            while(m_Gui.GetFont()->GetStringWidth(&sString.c_str()[ GetStart() ]) > GetWidth() - 5 || m_iCursorX > GetWidth() - 5)
             {
-              SetStart( GetStart() + 1 );
-              SetIndex( GetIndex() - 1 );
+              SetStart(GetStart() + 1);
+              SetIndex(GetIndex() - 1);
             }
             break;
           }
         case VK_HOME:
           {
-            SetStart( 0 );
-            SetIndex( 0 );
+            SetStart(0);
+            SetIndex(0);
 
             break;
           }
         case VK_BACK:
           {
-            if( GetIndex() )
+            if (GetIndex())
             {
               std::string sString = GetString();
 
-              sString.erase( GetStart() + GetIndex() - 1,  1 );
+              sString.erase(GetStart() + GetIndex() - 1,  1);
 
-              SetString( sString );
-              SetIndex( GetIndex() - 1 );
+              SetString(sString);
+              SetIndex(GetIndex() - 1);
             }
-            else if( GetStart() )
+            else if (GetStart())
             {
-              SetStart( GetStart() - 1 );
-              SetIndex( 1 );
+              SetStart(GetStart() - 1);
+              SetIndex(1);
             }
 
             break;
@@ -172,91 +172,91 @@ namespace Hades
           {
             std::string sString = GetString();
 
-            if( GetIndex() <= static_cast<int>( sString.length() ) )
-              sString.erase( GetStart() + m_iIndex, 1 );
+            if (GetIndex() <= static_cast<int>(sString.length()))
+              sString.erase(GetStart() + m_iIndex, 1);
 
-            SetString( const_cast<char*>( sString.c_str() ) );
+            SetString(const_cast<char*>(sString.c_str()));
 
             break;
           }
         case VK_LEFT:
           {
-            if( !GetIndex() && GetStart() )
-              SetStart( GetStart() - 1 );
-            else if( GetIndex() )
-              SetIndex( GetIndex() - 1 );
+            if (!GetIndex() && GetStart())
+              SetStart(GetStart() - 1);
+            else if (GetIndex())
+              SetIndex(GetIndex() - 1);
 
             break;
           }
         case VK_RIGHT:
           {
-            SetIndex( GetIndex() + 1 );
+            SetIndex(GetIndex() + 1);
 
             std::string sString = GetString();
             sString[ GetIndex() ] = 0;
 
-            while( m_Gui.GetFont()->GetStringWidth( &sString.c_str()[ GetStart() ] ) > GetWidth() - 5 || m_iCursorX > GetWidth() - 5 )
+            while(m_Gui.GetFont()->GetStringWidth(&sString.c_str()[ GetStart() ]) > GetWidth() - 5 || m_iCursorX > GetWidth() - 5)
             {
-              SetStart( GetStart() + 1 );
-              SetIndex( GetIndex() - 1 );
+              SetStart(GetStart() + 1);
+              SetIndex(GetIndex() - 1);
             }
 
             break;
           }
         case VK_RETURN:
           {
-            GetParent()->SetFocussedElement( 0 );
+            GetParent()->SetFocussedElement(0);
 
             tCallback pAction = GetCallback();
 
-            if( pAction )
-              pAction( GetString().c_str(), this );
+            if (pAction)
+              pAction(GetString().c_str(), this);
 
             break;
           }
         default:
           {
-            std::string sString( GetString() );
+            std::string sString(GetString());
 
             int iPrevLen = sString.length();
 
             BYTE bKeys[256] = { 0 };
-            GetKeyboardState( bKeys );
+            GetKeyboardState(bKeys);
 
             WORD wKey = 0;
-            ToAscii( sKey.m_vKey, HIWORD( sKey.m_lParam )&0xFF, bKeys, &wKey, 0 );
+            ToAscii(sKey.m_vKey, HIWORD(sKey.m_lParam)&0xFF, bKeys, &wKey, 0);
 
-            char szKey[2] = { static_cast<char>( wKey ), 0 };
-            if( GetStart() + m_iIndex >= 0 && GetStart() + m_iIndex <= static_cast<int>( sString.length() ) )
+            char szKey[2] = { static_cast<char>(wKey), 0 };
+            if (GetStart() + m_iIndex >= 0 && GetStart() + m_iIndex <= static_cast<int>(sString.length()))
             {
-              if( wKey != 22 )
-                sString.insert( GetStart() + m_iIndex, szKey );
+              if (wKey != 22)
+                sString.insert(GetStart() + m_iIndex, szKey);
               else
               {
-                if( !OpenClipboard( 0 ) )
+                if (!OpenClipboard(0))
                   break;
 
-                HANDLE hData = GetClipboardData( CF_TEXT );
-                char * pszBuffer = static_cast<char*>( GlobalLock( hData ) );
+                HANDLE hData = GetClipboardData(CF_TEXT);
+                char * pszBuffer = static_cast<char*>(GlobalLock(hData));
 
-                if( pszBuffer )
-                  sString.insert( GetStart() + m_iIndex, pszBuffer );
+                if (pszBuffer)
+                  sString.insert(GetStart() + m_iIndex, pszBuffer);
 
-                GlobalUnlock( hData );
+                GlobalUnlock(hData);
                 CloseClipboard();
               }
             }
 
-            SetString( const_cast<char*>( sString.c_str() ) );
-            if( sKey.m_vKey == ' ' )
-              SetIndex( GetIndex() + 1 );
+            SetString(const_cast<char*>(sString.c_str()));
+            if (sKey.m_vKey == ' ')
+              SetIndex(GetIndex() + 1);
             else
-              SetIndex( GetIndex() + sString.length() - iPrevLen );
+              SetIndex(GetIndex() + sString.length() - iPrevLen);
 
-            while( m_Gui.GetFont()->GetStringWidth( &GetString().c_str()[ GetStart() ] ) > GetWidth() - 5 )
+            while(m_Gui.GetFont()->GetStringWidth(&GetString().c_str()[ GetStart() ]) > GetWidth() - 5)
             {
-              SetStart( GetStart() + 1 );
-              SetIndex( GetIndex() - 1 );
+              SetStart(GetStart() + 1);
+              SetIndex(GetIndex() - 1);
             }
 
             break;
@@ -272,12 +272,12 @@ namespace Hades
       return m_iIndex;
     }
 
-    void CEditBox::SetIndex( int iIndex )
+    void CEditBox::SetIndex(int iIndex)
     {
-      std::string sString( !GetString().empty() ? &GetString()[ GetStart() ] : 
+      std::string sString(!GetString().empty() ? &GetString()[ GetStart() ] : 
         "");
 
-      if( iIndex > static_cast<int>( sString.length() ) || iIndex < 0 )
+      if (iIndex > static_cast<int>(sString.length()) || iIndex < 0)
         return;
 
       if (iIndex < sString.size())
@@ -285,7 +285,7 @@ namespace Hades
         sString[ iIndex ] = 0;
       }
 
-      m_iCursorX = m_Gui.GetFont()->GetStringWidth( sString.c_str() );
+      m_iCursorX = m_Gui.GetFont()->GetStringWidth(sString.c_str());
 
       m_iIndex = iIndex;
     }
@@ -295,19 +295,19 @@ namespace Hades
       return m_iStart;
     }
 
-    void CEditBox::SetStart( int iStart )
+    void CEditBox::SetStart(int iStart)
     {
       m_iStart = iStart;
     }
 
-    void CEditBox::UpdateTheme( int iIndex )
+    void CEditBox::UpdateTheme(int iIndex)
     {
-      SElementState * pState = GetElementState( iIndex );
+      SElementState * pState = GetElementState(iIndex);
 
-      pInner = pState->GetColor( "Inner" );
-      pBorder = pState->GetColor( "Border" );
-      pString = pState->GetColor( "String" );
-      pCursor = pState->GetColor( "Cursor" );
+      pInner = pState->GetColor("Inner");
+      pBorder = pState->GetColor("Border");
+      pString = pState->GetColor("String");
+      pCursor = pState->GetColor("Cursor");
     }
   }
 }

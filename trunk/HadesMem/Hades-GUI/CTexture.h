@@ -38,17 +38,17 @@ namespace Hades
 
       BYTE m_bAlpha;
     public:
-      CTexture( ID3DXSprite * pSprite, const char * szPath );
+      CTexture(ID3DXSprite * pSprite, const char * szPath);
 
-      inline void SetSprite( ID3DXSprite * pSprite )
+      inline void SetSprite(ID3DXSprite * pSprite)
       {
         m_pSprite = pSprite;
       }
 
       IDirect3DTexture9 * GetTexture() const;
-      void SetAlpha( BYTE bAlpha );
+      void SetAlpha(BYTE bAlpha);
 
-      void Draw( CPos cpPos, int iWidth, int iHeight );
+      void Draw(CPos cpPos, int iWidth, int iHeight);
     };
   }
 }

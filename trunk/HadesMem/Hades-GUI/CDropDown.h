@@ -37,7 +37,7 @@ namespace Hades
       {
         std::string m_sString, m_sValue;
 
-        SEntry( std::string sString, std::string sValue )
+        SEntry(std::string sString, std::string sValue)
         {
           m_sString = sString;
           m_sValue = sValue;
@@ -52,13 +52,13 @@ namespace Hades
       CDropDown(class CGUI& Gui, TiXmlElement* pElement);
 
       void Draw();
-      void MouseMove( CMouse & pMouse );
-      bool KeyEvent( SKey sKey );
+      void MouseMove(CMouse & pMouse);
+      bool KeyEvent(SKey sKey);
 
-      void AddElement( std::string sElem, std::string sValue );
+      void AddElement(std::string sElem, std::string sValue);
       std::string GetValue() const;
 
-      void UpdateTheme( int iIndex );
+      void UpdateTheme(int iIndex);
     };
   }
 }

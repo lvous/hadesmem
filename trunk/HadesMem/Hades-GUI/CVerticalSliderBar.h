@@ -35,9 +35,9 @@ namespace Hades
       CVerticalSliderBar(class CGUI& Gui, TiXmlElement* pElement);
 
       void Draw();
-      void MouseMove( CMouse & pMouse );
+      void MouseMove(CMouse & pMouse);
 
-      void UpdateTheme( int iIndex );
+      void UpdateTheme(int iIndex);
     };
   }
 }

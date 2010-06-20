@@ -29,12 +29,12 @@ namespace Hades
     CFont::CFont(CGUI& Gui, IDirect3DDevice9 * pDevice, int iHeight, const char * pszFaceName)
       : m_Gui(Gui)
     {
-      HRESULT hResult = D3DXCreateFontA( pDevice, -MulDiv( iHeight, GetDeviceCaps( GetDC( 0 ), LOGPIXELSY ), 72 ), 0, FW_NORMAL, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, pszFaceName, &m_pFont );
+      HRESULT hResult = D3DXCreateFontA(pDevice, -MulDiv(iHeight, GetDeviceCaps(GetDC(0), LOGPIXELSY), 72), 0, FW_NORMAL, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, pszFaceName, &m_pFont);
 
-      if( FAILED( hResult ) )
-        MessageBoxA( 0, DXGetErrorDescriptionA( hResult ), "D3DXCreateFontA failed", 0 );
+      if (FAILED(hResult))
+        MessageBoxA(0, DXGetErrorDescriptionA(hResult), "D3DXCreateFontA failed", 0);
 
-      m_pFont->PreloadCharacters( 0, 255 );
+      m_pFont->PreloadCharacters(0, 255);
     }
 
     void CFont::OnLostDevice()
@@ -42,22 +42,22 @@ namespace Hades
       m_pFont->OnLostDevice();
     }
 
-    void CFont::OnResetDevice( IDirect3DDevice9 * /*pDevice*/ )
+    void CFont::OnResetDevice(IDirect3DDevice9 * /*pDevice*/)
     {
       m_pFont->OnResetDevice();
     }
 
-    void CFont::DrawString( int iX, int iY, DWORD dwFlags, CColor * pColor, std::string sString, int /*iWidth*/ )
+    void CFont::DrawString(int iX, int iY, DWORD dwFlags, CColor * pColor, std::string sString, int /*iWidth*/)
     {
-      m_Gui.GetSprite()->Begin( D3DXSPRITE_ALPHABLEND | D3DXSPRITE_SORT_TEXTURE );
+      m_Gui.GetSprite()->Begin(D3DXSPRITE_ALPHABLEND | D3DXSPRITE_SORT_TEXTURE);
 
       D3DXMATRIX mat;
-      D3DXMatrixTranslation( &mat, static_cast<float>( iX ), static_cast<float>( iY ), 0 );
-      m_Gui.GetSprite()->SetTransform( &mat );
+      D3DXMatrixTranslation(&mat, static_cast<float>(iX), static_cast<float>(iY), 0);
+      m_Gui.GetSprite()->SetTransform(&mat);
 
       RECT drawRect = { 0 };
-      DWORD dwDrawFlags = DT_NOCLIP | ( ( dwFlags & FT_CENTER ) ? DT_CENTER : 0 ) | ( ( dwFlags & FT_VCENTER ) ? DT_VCENTER : 0 );
-      m_pFont->DrawTextA( m_Gui.GetSprite(), sString.c_str(), -1, &drawRect, dwDrawFlags, pColor->GetD3DColor() );
+      DWORD dwDrawFlags = DT_NOCLIP | ((dwFlags & FT_CENTER) ? DT_CENTER : 0) | ((dwFlags & FT_VCENTER) ? DT_VCENTER : 0);
+      m_pFont->DrawTextA(m_Gui.GetSprite(), sString.c_str(), -1, &drawRect, dwDrawFlags, pColor->GetD3DColor());
 
       m_Gui.GetSprite()->End();
     }
@@ -73,7 +73,7 @@ namespace Hades
       });
 
       RECT MyRect = { 0 };
-      m_pFont->DrawTextA( 0, MyString.c_str(), -1, &MyRect, DT_CALCRECT, 0 );
+      m_pFont->DrawTextA(0, MyString.c_str(), -1, &MyRect, DT_CALCRECT, 0);
 
       return MyRect.right - MyRect.left;
     }
@@ -81,23 +81,23 @@ namespace Hades
     int CFont::GetStringHeight() const
     {
       RECT rRect = { 0 };
-      m_pFont->DrawTextA( 0, "Y", -1, &rRect, DT_CALCRECT, 0 );
+      m_pFont->DrawTextA(0, "Y", -1, &rRect, DT_CALCRECT, 0);
 
       return rRect.bottom - rRect.top;
     }
 
-    void CFont::CutString( int iMaxWidth, std::string & rString ) const
+    void CFont::CutString(int iMaxWidth, std::string & rString) const
     {
       int iIndex = 0, iLength = rString.length();
 
-      for( int iWidth = 0; iIndex < iLength && iWidth + 10 < iMaxWidth; )
+      for(int iWidth = 0; iIndex < iLength && iWidth + 10 < iMaxWidth;)
       {
         char szCurrent[ 2 ] = { rString.c_str()[ iIndex ], 0 };
-        iWidth += m_Gui.GetFont()->GetStringWidth( szCurrent );
+        iWidth += m_Gui.GetFont()->GetStringWidth(szCurrent);
         iIndex++;
       }
 
-      if( iIndex < iLength )
+      if (iIndex < iLength)
         rString[ iIndex - 1 ] = '\0';
     }
   }

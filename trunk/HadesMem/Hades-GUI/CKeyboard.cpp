@@ -26,25 +26,25 @@ namespace Hades
 {
   namespace GUI
   {
-    bool CKeyboard::HandleMessage( unsigned int uMsg, WPARAM wParam, LPARAM lParam )
+    bool CKeyboard::HandleMessage(unsigned int uMsg, WPARAM wParam, LPARAM lParam)
     {
-      if( !m_Gui.IsVisible() || uMsg < WM_KEYFIRST || uMsg > WM_KEYLAST || m_Gui.GetMouse().GetLeftButton() )
+      if (!m_Gui.IsVisible() || uMsg < WM_KEYFIRST || uMsg > WM_KEYLAST || m_Gui.GetMouse().GetLeftButton())
         return false;
 
-      switch( uMsg )
+      switch(uMsg)
       {
       case WM_KEYDOWN:
-        SetKey( SKey( static_cast<char>( wParam ), true, lParam ) );
+        SetKey(SKey(static_cast<char>(wParam), true, lParam));
         break;
       case WM_KEYUP:
-        SetKey( SKey( static_cast<char>( wParam ), false, lParam ) );
+        SetKey(SKey(static_cast<char>(wParam), false, lParam));
         break;
       }
 
-      return m_Gui.KeyEvent( GetKey() );
+      return m_Gui.KeyEvent(GetKey());
     }
 
-    void CKeyboard::SetKey( SKey sKey )
+    void CKeyboard::SetKey(SKey sKey)
     {
       m_sKey = sKey;
     }
@@ -52,7 +52,7 @@ namespace Hades
     SKey CKeyboard::GetKey()
     {
       SKey sRet = m_sKey;
-      SetKey( SKey( 0, false ) );
+      SetKey(SKey(0, false));
       return sRet;
     }
 

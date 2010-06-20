@@ -101,6 +101,7 @@ namespace Hades
 #include "CDropDown.h"
 #include "CTextBox.h"
 #include "CListBox.h"
+#include "Error.h"
 
 namespace Hades
 {
@@ -111,9 +112,13 @@ namespace Hades
     class CGUI
     {
     public:
-      CGUI( IDirect3DDevice9 * pDevice );
+      // Constructor
+      CGUI(IDirect3DDevice9* pDevice);
+
+      // Destructor
       ~CGUI();
 
+      // Load interface data from file
       void LoadInterfaceFromFile(std::string const& Path);
 
       void FillArea(int iX, int iY, int iWidth, int iHeight, D3DCOLOR d3dColor);

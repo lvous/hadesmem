@@ -38,14 +38,14 @@ namespace Hades
       CCheckBox(class CGUI& Gui, TiXmlElement* pElement);
 
       bool GetChecked() const;
-      void SetChecked( bool bChecked );
+      void SetChecked(bool bChecked);
 
       void Draw();
       void PreDraw();
-      void MouseMove( CMouse & pMouse );
-      bool KeyEvent( SKey sKey );
+      void MouseMove(CMouse & pMouse);
+      bool KeyEvent(SKey sKey);
 
-      void UpdateTheme( int iIndex );
+      void UpdateTheme(int iIndex);
     };
   }
 }

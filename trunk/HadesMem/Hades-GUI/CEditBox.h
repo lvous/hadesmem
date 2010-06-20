@@ -43,16 +43,16 @@ namespace Hades
       void Draw();
 
       void PreDraw();
-      void MouseMove( CMouse & pMouse );
-      bool KeyEvent( SKey sKey );
+      void MouseMove(CMouse & pMouse);
+      bool KeyEvent(SKey sKey);
 
       int GetIndex() const;
-      void SetIndex( int iIndex );
+      void SetIndex(int iIndex);
 
       int GetStart() const;
-      void SetStart( int iStart );
+      void SetStart(int iStart);
 
-      void UpdateTheme( int iIndex );
+      void UpdateTheme(int iIndex);
     };
   }
 }

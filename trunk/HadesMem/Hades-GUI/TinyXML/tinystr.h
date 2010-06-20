@@ -46,10 +46,10 @@ distribution.
 	required - it is used to check that the TiXmlString class isn't incorrectly
 	used. Be nice to old compilers and macro it here:
 */
-#if defined(_MSC_VER) && (_MSC_VER >= 1200 )
+#if defined(_MSC_VER) && (_MSC_VER >= 1200)
 	// Microsoft visual studio, version 6 and higher.
 	#define TIXML_EXPLICIT explicit
-#elif defined(__GNUC__) && (__GNUC__ >= 3 )
+#elif defined(__GNUC__) && (__GNUC__ >= 3)
 	// GCC version 3 and higher.s
 	#define TIXML_EXPLICIT explicit
 #else
@@ -80,21 +80,21 @@ class TiXmlString
 	}
 
 	// TiXmlString copy constructor
-	TiXmlString ( const TiXmlString & copy) : rep_(0)
+	TiXmlString (const TiXmlString & copy) : rep_(0)
 	{
 		init(copy.length());
 		memcpy(start(), copy.data(), length());
 	}
 
 	// TiXmlString constructor, based on a string
-	TIXML_EXPLICIT TiXmlString ( const char * copy) : rep_(0)
+	TIXML_EXPLICIT TiXmlString (const char * copy) : rep_(0)
 	{
-		init( static_cast<size_type>( strlen(copy) ));
+		init(static_cast<size_type>(strlen(copy)));
 		memcpy(start(), copy, length());
 	}
 
 	// TiXmlString constructor, based on a string
-	TIXML_EXPLICIT TiXmlString ( const char * str, size_type len) : rep_(0)
+	TIXML_EXPLICIT TiXmlString (const char * str, size_type len) : rep_(0)
 	{
 		init(len);
 		memcpy(start(), str, len);
@@ -109,7 +109,7 @@ class TiXmlString
 	// = operator
 	TiXmlString& operator = (const char * copy)
 	{
-		return assign( copy, (size_type)strlen(copy));
+		return assign(copy, (size_type)strlen(copy));
 	}
 
 	// = operator
@@ -122,7 +122,7 @@ class TiXmlString
 	// += operator. Maps to append
 	TiXmlString& operator += (const char * suffix)
 	{
-		return append(suffix, static_cast<size_type>( strlen(suffix) ));
+		return append(suffix, static_cast<size_type>(strlen(suffix)));
 	}
 
 	// += operator. Maps to append
@@ -160,14 +160,14 @@ class TiXmlString
 	// single char extraction
 	const char& at (size_type index) const
 	{
-		assert( index < length() );
+		assert(index < length());
 		return rep_->str[ index ];
 	}
 
 	// [] operator
 	char& operator [] (size_type index) const
 	{
-		assert( index < length() );
+		assert(index < length());
 		return rep_->str[ index ];
 	}
 
@@ -184,7 +184,7 @@ class TiXmlString
 
 		for (const char* p = c_str() + offset; *p != '\0'; ++p)
 		{
-		   if (*p == tofind) return static_cast< size_type >( p - c_str() );
+		   if (*p == tofind) return static_cast< size_type >(p - c_str());
 		}
 		return npos;
 	}
@@ -238,8 +238,8 @@ class TiXmlString
 			// to the normal allocation, although use an 'int' for systems
 			// that are overly picky about structure alignment.
 			const size_type bytesNeeded = sizeof(Rep) + cap;
-			const size_type intsNeeded = ( bytesNeeded + sizeof(int) - 1 ) / sizeof( int ); 
-			rep_ = reinterpret_cast<Rep*>( new int[ intsNeeded ] );
+			const size_type intsNeeded = (bytesNeeded + sizeof(int) - 1) / sizeof(int); 
+			rep_ = reinterpret_cast<Rep*>(new int[ intsNeeded ]);
 
 			rep_->str[ rep_->size = sz ] = '\0';
 			rep_->capacity = cap;
@@ -256,7 +256,7 @@ class TiXmlString
 		{
 			// The rep_ is really an array of ints. (see the allocator, above).
 			// Cast it back before delete, so the compiler won't incorrectly call destructors.
-			delete [] ( reinterpret_cast<int*>( rep_ ) );
+			delete [] (reinterpret_cast<int*>(rep_));
 		}
 	}
 
@@ -268,8 +268,8 @@ class TiXmlString
 
 inline bool operator == (const TiXmlString & a, const TiXmlString & b)
 {
-	return    ( a.length() == b.length() )				// optimization on some platforms
-	       && ( strcmp(a.c_str(), b.c_str()) == 0 );	// actual compare
+	return    (a.length() == b.length())				// optimization on some platforms
+	       && (strcmp(a.c_str(), b.c_str()) == 0);	// actual compare
 }
 inline bool operator < (const TiXmlString & a, const TiXmlString & b)
 {
