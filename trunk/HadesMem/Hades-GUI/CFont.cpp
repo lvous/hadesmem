@@ -62,18 +62,20 @@ namespace Hades
       m_Gui.GetSprite()->End();
     }
 
-    int CFont::GetStringWidth( const char * pszString ) const
+    int CFont::GetStringWidth(std::string const& MyString) const
     {
-      std::string sString( pszString );
-      RECT rRect = { 0 };
+      std::string NewString;
+      std::transform(MyString.begin(), MyString.end(), 
+        std::back_inserter(NewString), 
+        [] (char Current)
+      {
+        return (Current == ' ') ? '.' : Current;
+      });
 
-      for( int i = 0; i <= static_cast<int>( sString.size() ); i++ )
-        if( sString[i] == ' ' )
-          sString[i] = '.';
+      RECT MyRect = { 0 };
+      m_pFont->DrawTextA( 0, MyString.c_str(), -1, &MyRect, DT_CALCRECT, 0 );
 
-      m_pFont->DrawTextA( 0, sString.c_str(), -1, &rRect, DT_CALCRECT, 0 );
-
-      return rRect.right - rRect.left;
+      return MyRect.right - MyRect.left;
     }
 
     int CFont::GetStringHeight() const

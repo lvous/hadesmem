@@ -85,13 +85,10 @@ namespace Hades
     CWindow::~CWindow()
     {
       std::for_each(m_vElements.begin(), m_vElements.end(), 
-        [] (CElement*& pElement) 
+        [] (CElement* pElement) 
       {
         delete pElement;
-        pElement = 0;
       });
-
-      m_vElements.clear();
     }
 
     void CWindow::AddElement( CElement * pElement )

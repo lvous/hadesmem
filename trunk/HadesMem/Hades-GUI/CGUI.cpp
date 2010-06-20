@@ -64,10 +64,9 @@ namespace Hades
     CGUI::~CGUI()
     {
       std::for_each(m_vWindows.begin(), m_vWindows.end(), 
-        [] (CWindow*& pWindow)
+        [] (CWindow* pWindow)
       {
         delete pWindow;
-        pWindow = 0;
       });
     }
 

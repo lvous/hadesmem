@@ -74,6 +74,7 @@ namespace Hades
 #include <memory>
 #include <sstream>
 #include <iomanip>
+#include <iterator>
 #include <algorithm>
 #include <functional>
 

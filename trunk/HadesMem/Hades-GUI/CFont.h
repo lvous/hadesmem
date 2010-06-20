@@ -45,7 +45,7 @@ namespace Hades
 
       void DrawString( int iX, int iY, DWORD dwFlags, CColor * pColor, std::string sString, int iWidth = 0 );
 
-      int GetStringWidth( const char * pszString ) const;
+      int GetStringWidth(std::string const& MyString) const;
       int GetStringHeight() const;
 
       void CutString( int iWidth, std::string & rString ) const;

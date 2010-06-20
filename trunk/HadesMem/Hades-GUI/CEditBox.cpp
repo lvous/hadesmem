@@ -110,7 +110,10 @@ namespace Hades
               {
                 if( iX <= iAbsX + m_Gui.GetFont()->GetStringWidth( sString.c_str() ) )
                 {
-                  sString[ i ] = 0;
+                  if (i < sString.size())
+                  {
+                    sString[ i ] = 0;
+                  }
                   if( iX > iAbsX + m_Gui.GetFont()->GetStringWidth( sString.c_str() ) )
                     SetIndex( i );
                 }
@@ -271,12 +274,16 @@ namespace Hades
 
     void CEditBox::SetIndex( int iIndex )
     {
-      std::string sString( &GetString()[ GetStart() ] );
+      std::string sString( !GetString().empty() ? &GetString()[ GetStart() ] : 
+        "");
 
       if( iIndex > static_cast<int>( sString.length() ) || iIndex < 0 )
         return;
 
-      sString[ iIndex ] = 0;
+      if (iIndex < sString.size())
+      {
+        sString[ iIndex ] = 0;
+      }
 
       m_iCursorX = m_Gui.GetFont()->GetStringWidth( sString.c_str() );
 
