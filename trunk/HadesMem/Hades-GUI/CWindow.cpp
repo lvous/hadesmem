@@ -270,7 +270,7 @@ namespace Hades
       for(int i = 0; i < static_cast<int>(m_vElements.size()); i++)
         if (m_vElements[i] == pElement)
           m_vElements.erase(m_vElements.begin() + i);
-      m_vElements.insert( m_vElements.end(), pElement);
+      m_vElements.insert(m_vElements.end(), pElement);
     }
 
     void CWindow::UpdateTheme(int iIndex)

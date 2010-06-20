@@ -605,7 +605,7 @@ public:
 	/** Add a new node related to this. Adds a child after the specified child.
 		Returns a pointer to the new object or NULL if an error occured.
 	*/
-	TiXmlNode* InsertAfterChild( TiXmlNode* afterThis, const TiXmlNode& addThis);
+	TiXmlNode* InsertAfterChild(TiXmlNode* afterThis, const TiXmlNode& addThis);
 
 	/** Replace a child of this node.
 		Returns a pointer to the new object or NULL if an error occured.

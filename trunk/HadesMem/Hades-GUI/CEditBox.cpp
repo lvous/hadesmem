@@ -63,7 +63,9 @@ namespace Hades
       {
         m_Gui.DrawOutlinedBox(Pos.GetX(), Pos.GetY(), GetWidth(), GetHeight(), pInner->GetD3DColor(), pBorder->GetD3DColor());
 
-        std::string sTemp = &GetString()[ GetStart() ];
+        std::string sTemp(GetStart() < GetString().size() ? 
+          &GetString()[ GetStart() ] : "");
+
         m_Gui.GetFont()->CutString(GetWidth(), sTemp);
 
         m_Gui.GetFont()->DrawString(Pos.GetX() + 4, Pos.GetY() + GetHeight() / 2, FT_VCENTER, pString, sTemp);
@@ -274,8 +276,8 @@ namespace Hades
 
     void CEditBox::SetIndex(int iIndex)
     {
-      std::string sString(!GetString().empty() ? &GetString()[ GetStart() ] : 
-        "");
+      std::string sString(GetStart() < GetString().size() ? 
+        &GetString()[ GetStart() ] : "");
 
       if (iIndex > static_cast<int>(sString.length()) || iIndex < 0)
         return;

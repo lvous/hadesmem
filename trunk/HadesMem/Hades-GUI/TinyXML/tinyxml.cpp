@@ -60,7 +60,7 @@ void TiXmlBase::EncodeString(const TIXML_STRING& str, TIXML_STRING* outString)
 	{
 		unsigned char c = (unsigned char) str[i];
 
-		if (  c == '&' 
+		if (c == '&' 
 		     && i < ((int)str.length() - 2)
 			 && str[i+1] == '#'
 			 && str[i+2] == 'x')
@@ -1789,7 +1789,7 @@ bool TiXmlPrinter::VisitEnter(const TiXmlElement& element, const TiXmlAttribute*
 	else 
 	{
 		buffer += ">";
-		if (  element.FirstChild()->ToText()
+		if (element.FirstChild()->ToText()
 			  && element.LastChild() == element.FirstChild()
 			  && element.FirstChild()->ToText()->CDATA() == false)
 		{

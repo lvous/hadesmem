@@ -413,7 +413,7 @@ const char* TiXmlBase::ReadName(const char* p, TIXML_STRING * name, TiXmlEncodin
 	// After that, they can be letters, underscores, numbers,
 	// hyphens, or colons. (Colons are valid ony for namespaces,
 	// but tinyxml can't tell namespaces from names.)
-	if (  p && *p 
+	if (p && *p 
 		 && (IsAlpha((unsigned char) *p, encoding) || *p == '_'))
 	{
 		const char* start = p;
@@ -579,13 +579,13 @@ const char* TiXmlBase::ReadText(	const char* p,
 									TiXmlEncoding encoding)
 {
     *text = "";
-	if (  !trimWhiteSpace			// certain tags always keep whitespace
+	if (!trimWhiteSpace			// certain tags always keep whitespace
 		 || !condenseWhiteSpace)	// if true, whitespace is always kept
 	{
 		// Keep all the white space.
 		while (	   p && *p
 				&& !StringEqual(p, endTag, caseInsensitive, encoding)
-			 )
+			)
 		{
 			int len;
 			char cArr[4] = { 0, 0, 0, 0 };
@@ -765,7 +765,7 @@ const char* TiXmlDocument::Parse(const char* p, TiXmlParsingData* prevData, TiXm
 		}
 
 		// Did we get encoding info?
-		if (  encoding == TIXML_ENCODING_UNKNOWN
+		if (encoding == TIXML_ENCODING_UNKNOWN
 			 && node->ToDeclaration())
 		{
 			TiXmlDeclaration* dec = node->ToDeclaration();
@@ -875,7 +875,7 @@ TiXmlNode* TiXmlNode::Identify(const char* p, TiXmlEncoding encoding)
 		#endif
 		returnNode = new TiXmlUnknown();
 	}
-	else if (  IsAlpha(*(p+1), encoding)
+	else if (IsAlpha(*(p+1), encoding)
 			  || *(p+1) == '_')
 	{
 		#ifdef DEBUG_PARSER
@@ -931,7 +931,7 @@ void TiXmlElement::StreamIn (std::istream * in, TIXML_STRING * tag)
 	// Okay...if we are a "/>" tag, then we're done. We've read a complete tag.
 	// If not, identify and stream.
 
-	if (  tag->at(tag->length() - 1) == '>' 
+	if (tag->at(tag->length() - 1) == '>' 
 		 && tag->at(tag->length() - 2) == '/')
 	{
 		// All good!
@@ -1445,7 +1445,7 @@ const char* TiXmlAttribute::Parse(const char* p, TiXmlParsingData* data, TiXmlEn
 		// But this is such a common error that the parser will try
 		// its best, even without them.
 		value = "";
-		while (   p && *p											// existence
+		while (p && *p											// existence
 				&& !IsWhiteSpace(*p) && *p != '\n' && *p != '\r'	// whitespace
 				&& *p != '/' && *p != '>')							// tag end
 		{
@@ -1523,7 +1523,7 @@ const char* TiXmlText::Parse(const char* p, TiXmlParsingData* data, TiXmlEncodin
 		// Keep all the white space, ignore the encoding, etc.
 		while (	   p && *p
 				&& !StringEqual(p, endTag, false, encoding)
-			 )
+			)
 		{
 			value += *p;
 			++p;

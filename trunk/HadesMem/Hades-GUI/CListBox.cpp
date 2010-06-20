@@ -107,7 +107,7 @@ namespace Hades
 
       bool bRet = true;
 
-      if (GetMouseOver() || (!sKey.m_bDown && !m_Gui.GetMouse().GetWheel()) )
+      if (GetMouseOver() || (!sKey.m_bDown && !m_Gui.GetMouse().GetWheel()))
       {
         bRet = pSlider->KeyEvent(Pos, sKey);
         //MouseMove(m_Gui.GetMouse());
