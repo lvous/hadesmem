@@ -35,6 +35,10 @@ distribution.
  */
 
 #ifndef TIXML_USE_STL
+#define TIXML_USE_STL
+#endif
+
+#ifndef TIXML_USE_STL
 
 #ifndef TIXML_STRING_INCLUDED
 #define TIXML_STRING_INCLUDED

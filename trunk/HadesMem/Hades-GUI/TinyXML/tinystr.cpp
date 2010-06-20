@@ -28,6 +28,10 @@ distribution.
 
 
 #ifndef TIXML_USE_STL
+#define TIXML_USE_STL
+#endif
+
+#ifndef TIXML_USE_STL
 
 #include "tinystr.h"
 
