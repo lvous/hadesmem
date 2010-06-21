@@ -28,24 +28,22 @@ namespace Hades
   {
     class CPos
     {
-      int m_iX, m_iY;
-
     public:
-
-      CPos(CPos * pPos);
-      CPos(int iX, int iY);
       CPos();
-
-      ~CPos();
+      CPos(CPos* pPos);
+      CPos(int X, int Y);
 
       int GetX() const;
       int GetY() const;
 
-      void SetX(int iX);
-      void SetY(int iY);
+      void SetX(int X);
+      void SetY(int Y);
 
-      const CPos operator + (const CPos & otherPos) const;
-      const CPos operator - (const CPos & otherPos) const;
+      const CPos operator + (CPos const& Rhs) const;
+      const CPos operator - (CPos const& Rhs) const;
+
+    private:
+      int m_X, m_Y;
     };
   }
 }

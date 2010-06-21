@@ -207,10 +207,10 @@ namespace Hades
 
     void CElement::SetElementState(std::string sState, int iIndex)
     {
-      m_pElementState[ iIndex ] = GetThemeElement(iIndex)->m_mStates[ sState ];
+      m_pElementState[ iIndex ] = GetThemeElement(iIndex)->m_States[ sState ];
 
       if (!m_pElementState)
-        m_pElementState[ iIndex ] = GetThemeElement(iIndex)->m_mStates[ GetThemeElement(iIndex)->sDefaultState ];
+        m_pElementState[ iIndex ] = GetThemeElement(iIndex)->m_States[ GetThemeElement(iIndex)->sDefaultState ];
 
       UpdateTheme(iIndex);
     }

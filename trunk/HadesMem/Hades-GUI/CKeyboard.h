@@ -22,7 +22,8 @@ THE SOFTWARE.
 
 #pragma once
 
-#include "CGUI.h"
+// Windows API
+#include <Windows.h>
 
 namespace Hades
 {
@@ -30,43 +31,30 @@ namespace Hades
   {
     struct SKey
     {
-      char m_vKey;
-      bool m_bDown;
-      LPARAM m_lParam;
+      explicit SKey(char Key = 0, bool Down = false, LPARAM lParam = 0)
+        : m_Key(Key), 
+        m_Down(Down), 
+        m_lParam(lParam)
+      { }
 
-      SKey()
-      {
-        m_vKey = 0;
-        m_bDown = false;
-        m_lParam = 0;
-      }
-      SKey(char vKey, bool bDown)
-      {
-        m_vKey = vKey;
-        m_bDown = bDown;
-        m_lParam = 0;
-      }
-      SKey(char vKey, bool bDown, LPARAM lParam)
-      {
-        m_vKey = vKey;
-        m_bDown = bDown;
-        m_lParam = lParam;
-      }
+      char m_Key;
+      bool m_Down;
+      LPARAM m_lParam;
     };
 
     class CKeyboard
     {
-      SKey m_sKey;
-
-      class CGUI& m_Gui;
-
     public:
       CKeyboard(class CGUI& Gui);
 
-      bool HandleMessage(unsigned int uMsg, WPARAM wParam, LPARAM lParam);
+      bool HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
       void SetKey(SKey sKey);
       SKey GetKey();
+
+    private:
+      class CGUI& m_Gui;
+      SKey m_Key;
     };
   }
 }

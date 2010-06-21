@@ -174,7 +174,7 @@ namespace Hades
               }
 
               // Create new state
-              SElementState* pState = CurElem->m_mStates[pszString] = 
+              SElementState* pState = CurElem->m_States[pszString] = 
                 new SElementState();
 
               // Set state parent to current theme
@@ -193,7 +193,7 @@ namespace Hades
                 }
 
                 // Create colour for element
-                pState->mColors[pszString] = new CColor(pColourElem);
+                pState->m_Colours[pszString] = new CColor(pColourElem);
               }
 
               // Loop over all state textures
@@ -207,7 +207,7 @@ namespace Hades
                   Attribute("path");
 
                 // Create texture for element
-                CTexture* pTexture = pState->mTextures[pTexElem->
+                CTexture* pTexture = pState->m_Textures[pTexElem->
                   Attribute("string")] = new CTexture(GetSprite(), 
                   TexPath.str().c_str());
 
@@ -245,7 +245,7 @@ namespace Hades
     }
 
     void CGUI::DrawLine(int StartX, int StartY, int EndX, int EndY, int Width, 
-      D3DCOLOR d3dColor)
+      D3DCOLOR D3DColour)
     {
       m_pLine->SetWidth(static_cast<float>(Width));
 
@@ -256,7 +256,7 @@ namespace Hades
         static_cast<float>(EndY));
 
       m_pLine->Begin();
-      m_pLine->Draw(MyVec, 2, d3dColor);
+      m_pLine->Draw(MyVec, 2, D3DColour);
       m_pLine->End();
     }
 
@@ -368,8 +368,8 @@ namespace Hades
     {
       bool Top = false;
 
-      if (!MyKey.m_vKey && (MyKey.m_bDown || (GetMouse().GetWheel() && 
-        !MyKey.m_bDown)))
+      if (!MyKey.m_Key && (MyKey.m_Down || (GetMouse().GetWheel() && 
+        !MyKey.m_Down)))
       {
         CMouse& MyMouse = GetMouse();
 
@@ -439,7 +439,7 @@ namespace Hades
             pWindow->KeyEvent(MyKey);
           }
 
-          if (!MyKey.m_bDown)
+          if (!MyKey.m_Down)
           {
             Top = false;
           }

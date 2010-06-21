@@ -95,7 +95,7 @@ namespace Hades
 
     bool CEditBox::KeyEvent(SKey sKey)
     {
-      if (!sKey.m_vKey)
+      if (!sKey.m_Key)
       {
         if (m_Gui.GetMouse().GetLeftButton())
         {
@@ -135,9 +135,9 @@ namespace Hades
           }
         }
       }
-      else if (sKey.m_bDown && HasFocus())
+      else if (sKey.m_Down && HasFocus())
       {
-        switch(sKey.m_vKey)
+        switch(sKey.m_Key)
         {
         case VK_END:
           {
@@ -234,7 +234,7 @@ namespace Hades
             GetKeyboardState(bKeys);
 
             WORD wKey = 0;
-            ToAscii(sKey.m_vKey, HIWORD(sKey.m_lParam) & 0xFF, bKeys, &wKey, 0);
+            ToAscii(sKey.m_Key, HIWORD(sKey.m_lParam) & 0xFF, bKeys, &wKey, 0);
 
             char szKey[2] = { static_cast<char>(wKey), 0 };
             if (GetStart() + m_iIndex >= 0 && GetStart() + m_iIndex <= static_cast<int>(sString.length()))
@@ -264,7 +264,7 @@ namespace Hades
             }
 
             SetString(sString.c_str());
-            if (sKey.m_vKey == ' ')
+            if (sKey.m_Key == ' ')
             {
               SetIndex(GetIndex() + 1);
             }

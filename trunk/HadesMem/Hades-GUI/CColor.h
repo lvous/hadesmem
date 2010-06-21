@@ -22,7 +22,10 @@ THE SOFTWARE.
 
 #pragma once
 
+// C++ Standard Library
 #include <map>
+
+// TinyXML
 #include "TinyXML\TinyXML.h"
 
 namespace Hades
@@ -31,50 +34,53 @@ namespace Hades
   {
     class CColor
     {
-      D3DCOLOR m_d3dColor;
     public:
       CColor();
-      CColor(int iRed, int iGreen, int iBlue, int iAlpha);
-      CColor(D3DCOLOR d3dColor);
-      CColor(TiXmlElement * pElement);
-      ~CColor();
+      CColor(int Red, int Green, int Blue, int Alpha);
+      CColor(D3DCOLOR D3DColour);
+      CColor(TiXmlElement* pElement);
 
-      void SetD3DColor(D3DCOLOR d3dColor);
-      void SetRed(int iRed);
-      void SetGreen(int iGreen);
-      void SetBlue(int iBlue);
-      void SetAlpha(int iAlpha);
+      void SetD3DColor(D3DCOLOR D3DColour);
+
+      void SetRed(int Red);
+      void SetGreen(int Green);
+      void SetBlue(int Blue);
+      void SetAlpha(int Alpha);
 
       D3DCOLOR GetD3DColor() const;
+
       int GetRed() const;
       int GetGreen() const;
       int GetBlue() const;
       int GetAlpha() const;
 
-      const CColor operator / (const int iDivisor) const;
-      const CColor operator * (const int iMultiplicator) const;
+      const CColor operator / (const int Divisor) const;
+      const CColor operator * (const int Multiplicator) const;
 
-      const CColor operator - (const CColor & cSubColor) const;
-      const CColor operator + (const CColor & cAddColor) const;
+      const CColor operator - (CColor const& SubColor) const;
+      const CColor operator + (CColor const& AddColor) const;
+
+    private:
+      D3DCOLOR m_D3DColour;
     };
 
     struct SElement;
 
     struct SElementState
     {
-      SElement * pParent;
+      SElement* pParent;
 
-      CColor * GetColor(std::string sString) const;
-      CTexture * GetTexture(std::string sString) const;
+      CColor* GetColor(std::string const& Name) const;
+      CTexture* GetTexture(std::string const& Name) const;
 
-      std::map<std::string, CColor*> mColors;
-      std::map<std::string, CTexture*> mTextures;
+      std::map<std::string, CColor*> m_Colours;
+      std::map<std::string, CTexture*> m_Textures;
     };
 
     struct SElement
     {
       std::string sDefaultState;
-      std::map<std::string, SElementState*> m_mStates;
+      std::map<std::string, SElementState*> m_States;
     };
   }
 }

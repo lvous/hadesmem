@@ -26,107 +26,105 @@ namespace Hades
 {
   namespace GUI
   {
-    CColor::CColor() : m_d3dColor(0)
+    CColor::CColor() 
+      : m_D3DColour(0)
+    { }
+
+    CColor::CColor(int Red, int Green, int Blue, int Alpha)
+      : m_D3DColour(0)
     {
+      SetD3DColor(D3DCOLOR_RGBA(Red, Green, Blue, Alpha));
     }
 
-    CColor::CColor(int iRed, int iGreen, int iBlue, int iAlpha)
+    CColor::CColor(D3DCOLOR D3DColour)
+      : m_D3DColour(0)
     {
-      SetD3DColor(D3DCOLOR_RGBA(iRed, iGreen, iBlue, iAlpha));
+      SetD3DColor(D3DColour);
     }
 
-    CColor::CColor(D3DCOLOR d3dColor)
+    CColor::CColor(TiXmlElement* pElement)
+      : m_D3DColour(0)
     {
-      SetD3DColor(d3dColor);
+      int Colours[4] = { 0 };
+
+      pElement->QueryIntAttribute("r", &Colours[0]);
+      pElement->QueryIntAttribute("g", &Colours[1]);
+      pElement->QueryIntAttribute("b", &Colours[2]);
+      pElement->QueryIntAttribute("a", &Colours[3]);
+
+      SetD3DColor(D3DCOLOR_RGBA(Colours[0], Colours[1], Colours[2], 
+        Colours[3]));
     }
 
-    CColor::CColor(TiXmlElement * pElement)
+    const CColor CColor::operator / (const int Divisor) const
     {
-      int iColors[ 4 ] = { 0 };
-
-      pElement->QueryIntAttribute("r", &iColors[ 0 ]);
-      pElement->QueryIntAttribute("g", &iColors[ 1 ]);
-      pElement->QueryIntAttribute("b", &iColors[ 2 ]);
-      pElement->QueryIntAttribute("a", &iColors[ 3 ]);
-
-      SetD3DColor(D3DCOLOR_RGBA(iColors[ 0 ], iColors[ 1 ], iColors[ 2 ], iColors[ 3 ]));
+      return CColor(GetRed() / Divisor, GetGreen() / Divisor, 
+        GetBlue() / Divisor, GetAlpha());
     }
 
-    CColor::~CColor()
+    const CColor CColor::operator - (CColor const& SubColor) const
     {
+      return CColor(GetRed() - SubColor.GetRed(), 
+        GetGreen() - SubColor.GetGreen(), GetBlue() - SubColor.GetBlue(), 
+        GetAlpha());
     }
 
-    const CColor CColor::operator / (const int iDivisor) const
+    const CColor CColor::operator + (CColor const& AddColor) const
     {
-      return CColor(GetRed() / iDivisor, GetGreen() / iDivisor, GetBlue() / iDivisor, GetAlpha());
+      return CColor(GetRed() + AddColor.GetRed(), 
+        GetGreen() + AddColor.GetGreen(), GetBlue() + AddColor.GetBlue(), 
+        GetAlpha());
     }
 
-    const CColor CColor::operator - (const CColor & cSubColor) const
+    const CColor CColor::operator * (const int Multiplicator) const
     {
-      return CColor(GetRed() - cSubColor.GetRed(), GetGreen() - cSubColor.GetGreen(), GetBlue() - cSubColor.GetBlue(), GetAlpha());
+      return CColor(GetRed() * Multiplicator, GetGreen() * Multiplicator, 
+        GetBlue() * Multiplicator, GetAlpha());
     }
 
-    const CColor CColor::operator + (const CColor & cAddColor) const
+    void CColor::SetD3DColor(D3DCOLOR D3DColour)
     {
-      return CColor(GetRed() + cAddColor.GetRed(), GetGreen() + cAddColor.GetGreen(), GetBlue() + cAddColor.GetBlue(), GetAlpha());
+      m_D3DColour = D3DColour;
     }
 
-    const CColor CColor::operator * (const int iMultiplicator) const
+    void CColor::SetRed(int Red)
     {
-      return CColor(GetRed() * iMultiplicator, GetGreen() * iMultiplicator, GetBlue() * iMultiplicator, GetAlpha());
+      SetD3DColor(D3DCOLOR_RGBA(Red, GetGreen(), GetBlue(), GetAlpha()));
     }
 
-    void CColor::SetD3DColor(D3DCOLOR d3dColor)
+    void CColor::SetGreen(int Green)
     {
-      m_d3dColor = d3dColor;
-      //SetAlpha(d3dColor >> 24);
-      //SetRed((d3dColor >> 16)&0xFF);
-      //SetGreen((d3dColor >> 8)&0xFF);
-      //SetBlue(d3dColor&0xFF); 
+      SetD3DColor(D3DCOLOR_RGBA(GetRed(), Green, GetBlue(), GetAlpha()));
     }
 
-    void CColor::SetRed(int iRed)
+    void CColor::SetBlue(int Blue)
     {
-      SetD3DColor(D3DCOLOR_RGBA(iRed, GetGreen(), GetBlue(), GetAlpha()));
-      //m_iRed = iRed;
+      SetD3DColor(D3DCOLOR_RGBA(GetRed(), GetGreen(), Blue, GetAlpha()));
     }
 
-    void CColor::SetGreen(int iGreen)
+    void CColor::SetAlpha(int Alpha)
     {
-      SetD3DColor(D3DCOLOR_RGBA(GetRed(), iGreen, GetBlue(), GetAlpha()));
-      //m_iGreen = iGreen;
-    }
-
-    void CColor::SetBlue(int iBlue)
-    {
-      SetD3DColor(D3DCOLOR_RGBA(GetRed(), GetGreen(), iBlue, GetAlpha()));
-      //m_iBlue = iBlue;
-    }
-
-    void CColor::SetAlpha(int iAlpha)
-    {
-      SetD3DColor(D3DCOLOR_RGBA(GetRed(), GetGreen(), GetBlue(), iAlpha));
-      //m_iAlpha = iAlpha;
+      SetD3DColor(D3DCOLOR_RGBA(GetRed(), GetGreen(), GetBlue(), Alpha));
     }
 
     D3DCOLOR CColor::GetD3DColor() const
     {
-      return m_d3dColor;
+      return m_D3DColour;
     }
 
     int CColor::GetRed() const
     {
-      return (GetD3DColor() >> 16)&0xFF;
+      return (GetD3DColor() >> 16) & 0xFF;
     }
 
     int CColor::GetGreen() const
     {
-      return (GetD3DColor() >> 8)&0xFF;
+      return (GetD3DColor() >> 8) & 0xFF;
     }
 
     int CColor::GetBlue() const
     {
-      return GetD3DColor()&0xFF;
+      return GetD3DColor() & 0xFF;
     }
 
     int CColor::GetAlpha() const
@@ -134,34 +132,42 @@ namespace Hades
       return GetD3DColor() >> 24;
     }
 
-    CColor * SElementState::GetColor(std::string sString) const
+    CColor* SElementState::GetColor(std::string const& Name) const
     {
-      std::map<std::string, CColor*>::const_iterator iIter = mColors.find(sString);
+      auto Iter = m_Colours.find(Name);
 
-      if (iIter == mColors.end())
+      if (Iter == m_Colours.end())
       {
-        iIter = pParent->m_mStates.find(pParent->sDefaultState)->second->mColors.find(sString);
+        Iter = pParent->m_States.find(pParent->sDefaultState)->second->
+          m_Colours.find(Name);
 
-        if (iIter == pParent->m_mStates.find(pParent->sDefaultState)->second->mColors.end())
-          MessageBoxA(0, "Color not found.", sString.c_str(), 0);
+        if (Iter == pParent->m_States.find(pParent->sDefaultState)->second->
+          m_Colours.end())
+        {
+          MessageBoxA(0, "Color not found.", Name.c_str(), 0);
+        }
       }
 
-      return iIter->second;
+      return Iter->second;
     }
 
-    CTexture * SElementState::GetTexture(std::string sString) const
+    CTexture * SElementState::GetTexture(std::string const& Name) const
     {
-      std::map<std::string, CTexture*>::const_iterator iIter = mTextures.find(sString);
+      auto Iter = m_Textures.find(Name);
 
-      if (iIter == mTextures.end())
+      if (Iter == m_Textures.end())
       {
-        iIter = pParent->m_mStates.find(pParent->sDefaultState)->second->mTextures.find(sString);
+        Iter = pParent->m_States.find(pParent->sDefaultState)->second->
+          m_Textures.find(Name);
 
-        if (iIter == pParent->m_mStates.find(pParent->sDefaultState)->second->mTextures.end())
-          MessageBoxA(0, "Texture not found.", sString.c_str(), 0);
+        if (Iter == pParent->m_States.find(pParent->sDefaultState)->second->
+          m_Textures.end())
+        {
+          MessageBoxA(0, "Texture not found.", Name.c_str(), 0);
+        }
       }
 
-      return iIter->second;
+      return Iter->second;
     }
   }
 }

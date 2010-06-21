@@ -20,16 +20,27 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+// Hades
 #include "CGUI.h"
+#include "CMouse.h"
+#include "CKeyboard.h"
 
 namespace Hades
 {
   namespace GUI
   {
-    bool CKeyboard::HandleMessage(unsigned int uMsg, WPARAM wParam, LPARAM lParam)
+    CKeyboard::CKeyboard(CGUI& Gui) 
+      : m_Gui(Gui), 
+      m_Key()
+    { }
+
+    bool CKeyboard::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
     {
-      if (!m_Gui.IsVisible() || uMsg < WM_KEYFIRST || uMsg > WM_KEYLAST || m_Gui.GetMouse().GetLeftButton())
+      if (!m_Gui.IsVisible() || uMsg < WM_KEYFIRST || uMsg > WM_KEYLAST || 
+        m_Gui.GetMouse().GetLeftButton())
+      {
         return false;
+      }
 
       switch(uMsg)
       {
@@ -46,18 +57,14 @@ namespace Hades
 
     void CKeyboard::SetKey(SKey sKey)
     {
-      m_sKey = sKey;
+      m_Key = sKey;
     }
 
     SKey CKeyboard::GetKey()
     {
-      SKey sRet = m_sKey;
+      SKey sRet = m_Key;
       SetKey(SKey(0, false));
       return sRet;
     }
-
-    CKeyboard::CKeyboard(CGUI& Gui) 
-      : m_Gui(Gui)
-    { }
   }
 }

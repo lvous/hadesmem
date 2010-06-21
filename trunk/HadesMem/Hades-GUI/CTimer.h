@@ -22,8 +22,9 @@ THE SOFTWARE.
 
 #pragma once
 
-#pragma comment (lib,"winmm.lib")
-#include <windows.h>
+// Windows API
+#include <Windows.h>
+#pragma comment (lib, "winmm.lib")
 
 namespace Hades
 {
@@ -32,18 +33,18 @@ namespace Hades
     class CTimer
     {
     public:
-
       CTimer();
-      ~CTimer();
 
-      void Start(float fSec);
+      void Start(float Seconds);
+
       void Stop();
 
       float TimeLeft();
+
       bool Running();
 
     protected:
-      DWORD dwStop;
+      DWORD m_StopTime;
     };
   }
 }

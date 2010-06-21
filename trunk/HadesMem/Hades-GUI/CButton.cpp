@@ -63,7 +63,7 @@ namespace Hades
 
     bool CButton::KeyEvent(SKey sKey)
     {
-      if (!sKey.m_vKey)
+      if (!sKey.m_Key)
       {
         if (GetMouseOver() && m_Gui.GetMouse().GetLeftButton(0))
         {

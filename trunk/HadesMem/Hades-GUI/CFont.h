@@ -22,10 +22,12 @@ THE SOFTWARE.
 
 #pragma once
 
-#include <stdio.h>
+// C++ Standard Library
 #include <string>
-#include "D3D9.h"
-#include "CColor.h"
+
+// DirectX
+#include <d3d9.h>
+#include <d3dx9.h>
 
 namespace Hades
 {
@@ -33,22 +35,26 @@ namespace Hades
   {
     class CFont
     {
-      CComPtr<ID3DXFont> m_pFont;
-
-      class CGUI& m_Gui;
-
     public:
-      CFont(class CGUI& Gui, IDirect3DDevice9 * pDevice, int iHeight, const char * pszFaceName);
+      CFont(class CGUI& Gui, IDirect3DDevice9* pDevice, int Height, 
+        std::string const& FaceName);
 
       void OnLostDevice();
-      void OnResetDevice(IDirect3DDevice9 * pDevice);
 
-      void DrawString(int iX, int iY, DWORD dwFlags, CColor * pColor, std::string sString, int iWidth = 0);
+      void OnResetDevice(IDirect3DDevice9* pDevice);
+
+      void DrawString(int X, int Y, DWORD Flags, class CColor* pColor, 
+        std::string const& MyString, int Width = 0);
 
       int GetStringWidth(std::string const& MyString) const;
+
       int GetStringHeight() const;
 
-      void CutString(int iWidth, std::string & rString) const;
+      void CutString(int Width, std::string& MyString) const;
+
+    private:
+      class CGUI& m_Gui;
+      CComPtr<ID3DXFont> m_pFont;
     };
   }
 }

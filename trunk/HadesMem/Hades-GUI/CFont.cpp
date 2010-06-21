@@ -20,19 +20,45 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+// C++ Standard Library
+#include <iterator>
+#include <algorithm>
+
+// Hades
 #include "CGUI.h"
+#include "CFont.h"
+#include "CColor.h"
 
 namespace Hades
 {
   namespace GUI
   {
-    CFont::CFont(CGUI& Gui, IDirect3DDevice9 * pDevice, int iHeight, const char * pszFaceName)
-      : m_Gui(Gui)
+    CFont::CFont(CGUI& Gui, IDirect3DDevice9* pDevice, int Height, 
+      std::string const& FaceName)
+      : m_Gui(Gui), 
+      m_pFont()
     {
-      HRESULT hResult = D3DXCreateFontA(pDevice, -MulDiv(iHeight, GetDeviceCaps(GetDC(0), LOGPIXELSY), 72), 0, FW_NORMAL, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, pszFaceName, &m_pFont);
+      HRESULT Result = D3DXCreateFontA(
+        pDevice, 
+        -MulDiv(Height, GetDeviceCaps(GetDC(0), LOGPIXELSY), 72), 
+        0, 
+        FW_NORMAL, 
+        0, 
+        0, 
+        DEFAULT_CHARSET, 
+        OUT_DEFAULT_PRECIS, 
+        DEFAULT_QUALITY, 
+        DEFAULT_PITCH | FF_DONTCARE, 
+        FaceName.c_str(), 
+        &m_pFont);
 
-      if (FAILED(hResult))
-        MessageBoxA(0, DXGetErrorDescriptionA(hResult), "D3DXCreateFontA failed", 0);
+      if (FAILED(Result))
+      {
+        BOOST_THROW_EXCEPTION(HadesGuiError() << 
+          ErrorFunction("CFont::CFont") << 
+          ErrorString("Could not create font.") << 
+          ErrorCodeWin(Result));
+      }
 
       m_pFont->PreloadCharacters(0, 255);
     }
@@ -47,17 +73,22 @@ namespace Hades
       m_pFont->OnResetDevice();
     }
 
-    void CFont::DrawString(int iX, int iY, DWORD dwFlags, CColor * pColor, std::string sString, int /*iWidth*/)
+    void CFont::DrawString(int X, int Y, DWORD Flags, CColor* pColor, 
+      std::string const& MyString, int /*Width*/)
     {
-      m_Gui.GetSprite()->Begin(D3DXSPRITE_ALPHABLEND | D3DXSPRITE_SORT_TEXTURE);
+      m_Gui.GetSprite()->Begin(D3DXSPRITE_ALPHABLEND | 
+        D3DXSPRITE_SORT_TEXTURE);
 
-      D3DXMATRIX mat;
-      D3DXMatrixTranslation(&mat, static_cast<float>(iX), static_cast<float>(iY), 0);
-      m_Gui.GetSprite()->SetTransform(&mat);
+      D3DXMATRIX Matrix;
+      D3DXMatrixTranslation(&Matrix, static_cast<float>(X), 
+        static_cast<float>(Y), 0);
+      m_Gui.GetSprite()->SetTransform(&Matrix);
 
-      RECT drawRect = { 0 };
-      DWORD dwDrawFlags = DT_NOCLIP | ((dwFlags & FT_CENTER) ? DT_CENTER : 0) | ((dwFlags & FT_VCENTER) ? DT_VCENTER : 0);
-      m_pFont->DrawTextA(m_Gui.GetSprite(), sString.c_str(), -1, &drawRect, dwDrawFlags, pColor->GetD3DColor());
+      RECT DrawRect = { 0 };
+      DWORD DrawFlags = DT_NOCLIP | ((Flags & FT_CENTER) ? DT_CENTER : 0) | 
+        ((Flags & FT_VCENTER) ? DT_VCENTER : 0);
+      m_pFont->DrawTextA(m_Gui.GetSprite(), MyString.c_str(), -1, &DrawRect, 
+        DrawFlags, pColor->GetD3DColor());
 
       m_Gui.GetSprite()->End();
     }
@@ -87,19 +118,22 @@ namespace Hades
       return rRect.bottom - rRect.top;
     }
 
-    void CFont::CutString(int iMaxWidth, std::string & rString) const
+    void CFont::CutString(int MaxWidth, std::string& MyString) const
     {
-      int iIndex = 0, iLength = rString.length();
+      int Index = 0;
+      std::size_t Length = MyString.size();
 
-      for(int iWidth = 0; iIndex < iLength && iWidth + 10 < iMaxWidth;)
+      for(int Width = 0; Index < Length && Width + 10 < MaxWidth; )
       {
-        char szCurrent[ 2 ] = { rString.c_str()[ iIndex ], 0 };
-        iWidth += m_Gui.GetFont()->GetStringWidth(szCurrent);
-        iIndex++;
+        char Current[2] = { MyString.c_str()[Index], 0 };
+        Width += m_Gui.GetFont()->GetStringWidth(Current);
+        ++Index;
       }
 
-      if (iIndex < iLength)
-        rString[ iIndex - 1 ] = '\0';
+      if (Index < Length)
+      {
+        MyString[Index - 1] = '\0';
+      }
     }
   }
 }

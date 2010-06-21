@@ -134,7 +134,7 @@ namespace Hades
     {
       CPos Pos = basePos + *GetRelPos();
 
-      if (!sKey.m_vKey)
+      if (!sKey.m_Key)
       {
         if (m_Gui.GetMouse().GetLeftButton())
         {

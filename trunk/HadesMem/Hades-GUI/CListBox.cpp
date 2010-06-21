@@ -96,7 +96,7 @@ namespace Hades
     {
       CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
 
-      if (!sKey.m_vKey)
+      if (!sKey.m_Key)
       {
         if (GetMouseOver())
         {
@@ -107,7 +107,7 @@ namespace Hades
 
       bool bRet = true;
 
-      if (GetMouseOver() || (!sKey.m_bDown && !m_Gui.GetMouse().GetWheel()))
+      if (GetMouseOver() || (!sKey.m_Down && !m_Gui.GetMouse().GetWheel()))
       {
         bRet = pSlider->KeyEvent(Pos, sKey);
         //MouseMove(m_Gui.GetMouse());

@@ -161,7 +161,7 @@ namespace Hades
 
     bool CHorizontalSliderBar::KeyEvent(SKey sKey)
     {
-      if (!sKey.m_vKey)
+      if (!sKey.m_Key)
       {
         SetDragged(GetMouseOver() && m_Gui.GetMouse().GetLeftButton());
 

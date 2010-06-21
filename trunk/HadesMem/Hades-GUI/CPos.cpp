@@ -20,62 +20,56 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "CGUI.h"
+// Hades
+#include "CPos.h"
 
 namespace Hades
 {
   namespace GUI
   {
-    CPos::CPos(CPos * pPos)
-    {
-      m_iX = pPos->GetX();
-      m_iY = pPos->GetY();
-    }
+    CPos::CPos(CPos* pPos)
+      : m_X(pPos->GetX()), 
+      m_Y(pPos->GetY())
+    { }
 
-    CPos::CPos(int iX, int iY)
-    {
-      m_iX = iX;
-      m_iY = iY;
-    }
+    CPos::CPos(int X, int Y)
+      : m_X(X), 
+      m_Y(Y)
+    { }
 
     CPos::CPos()
-    {
-      m_iX = 0;
-      m_iY = 0;
-    }
-
-    CPos::~CPos()
-    {
-    }
+      : m_X(0), 
+      m_Y(0)
+    { }
 
     int CPos::GetX() const
     {
-      return m_iX;
+      return m_X;
     }
 
     int CPos::GetY() const
     {
-      return m_iY;
+      return m_Y;
     }
 
-    void CPos::SetX(int iX)
+    void CPos::SetX(int X)
     {
-      m_iX = iX;
+      m_X = X;
     }
 
-    void CPos::SetY(int iY)
+    void CPos::SetY(int Y)
     {
-      m_iY = iY;
+      m_Y = Y;
     }
 
-    const CPos CPos::operator + (const CPos & otherPos) const
+    const CPos CPos::operator + (CPos const& Rhs) const
     {
-      return CPos(GetX() + otherPos.GetX(), GetY() + otherPos.GetY());
+      return CPos(GetX() + Rhs.GetX(), GetY() + Rhs.GetY());
     }
 
-    const CPos CPos::operator - (const CPos & otherPos) const
+    const CPos CPos::operator - (CPos const& Rhs) const
     {
-      return CPos(GetX() - otherPos.GetX(), GetY() - otherPos.GetY());
+      return CPos(GetX() - Rhs.GetX(), GetY() - Rhs.GetY());
     }
   }
 }
