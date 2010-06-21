@@ -20,7 +20,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+// Hades
 #include "CGUI.h"
+#include "CColor.h"
+#include "CMouse.h"
+#include "CElement.h"
 
 #define DBLCLICK_TIME 0.3f
 
@@ -28,32 +32,36 @@ namespace Hades
 {
   namespace GUI
   {
-    CMouse::CMouse(CGUI& Gui, IDirect3DDevice9 * pDevice)
-      : m_Gui(Gui)
+    CMouse::CMouse(CGUI& Gui, IDirect3DDevice9* pDevice)
+      : m_Gui(Gui), 
+      m_pDevice(pDevice), 
+      m_Pos(), 
+      m_BakPos(), 
+      m_pInnerColor(new CColor(255, 255, 255, 255)), 
+      m_pBorderColor(new CColor(0, 0, 0, 255)), 
+      m_pDraggingElement(nullptr), 
+      m_LeftButtonState(0), 
+      m_RightButtonState(0), 
+      m_MiddleButtonState(0), 
+      m_WheelState(0), 
+      m_LeftButtonTimer(), 
+      m_RightButtonTimer(), 
+      m_MiddleButtonTimer()
     {
-      m_pDevice = pDevice;
-
-      m_pInnerColor = new CColor(255, 255, 255, 255);
-      m_pBorderColor = new CColor(0, 0, 0, 255);
-
       SetLeftButton(0);
       SetRightButton(0);
       SetMiddleButton(0);
       SetWheel(0);
-
-      SetDragging(0);
-    }
-
-    CMouse::~CMouse()
-    {
     }
 
     bool CMouse::HandleMessage(unsigned int uMsg, WPARAM wParam, LPARAM lParam)
     {
       if (!m_Gui.IsVisible() || uMsg < WM_MOUSEFIRST || uMsg > WM_MOUSELAST)
+      {
         return false;
+      }
 
-      bool bDown = false;
+      bool IsDown = false;
 
       switch(uMsg)
       {
@@ -66,15 +74,15 @@ namespace Hades
 
       case WM_LBUTTONDOWN:
         SetLeftButton(1);
-        bDown = true;
+        IsDown = true;
         break;
       case WM_RBUTTONDOWN:
         SetRightButton(1);
-        bDown = true;
+        IsDown = true;
         break;
       case WM_MBUTTONDOWN:
         SetMiddleButton(1);
-        bDown = true;
+        IsDown = true;
         break;
 
       case WM_LBUTTONUP:
@@ -88,157 +96,182 @@ namespace Hades
         break;
 
       case WM_MOUSEWHEEL:
-        float fDelta = GET_WHEEL_DELTA_WPARAM(wParam);
+        float Delta = GET_WHEEL_DELTA_WPARAM(wParam);
 
-        if (fDelta > 0.0f)
+        if (Delta > 0.0f)
+        {
           SetWheel(1);
-        else if (fDelta < 0.0f)
+        }
+        else if (Delta < 0.0f)
+        {
           SetWheel(2);
+        }
         else
+        {
           SetWheel(0);
+        }
 
         break;
       }
 
-      return m_Gui.KeyEvent(SKey(0, bDown));
+      return m_Gui.KeyEvent(SKey(0, IsDown));
     }
 
-    void CMouse::SetPos(CPos cPos)
+    void CMouse::SetPos(CPos MyPos)
     {
-      m_pos = cPos;
+      m_Pos = MyPos;
     }
 
-    void CMouse::SetPos(int iX, int iY)
+    void CMouse::SetPos(int X, int Y)
     {
-      m_pos.SetX(iX);
-      m_pos.SetY(iY);
+      m_Pos.SetX(X);
+      m_Pos.SetY(Y);
     }
 
     CPos CMouse::GetPos() const
     {
-      return m_pos;
+      return m_Pos;
     }
 
-    bool CMouse::InArea(int iX, int iY, int iWidth, int iHeight) const
+    bool CMouse::InArea(int X, int Y, int Width, int Height) const
     {
-      return (m_pos.GetX() >= iX && m_pos.GetX() <= iX + iWidth && m_pos.GetY() >= iY && m_pos.GetY() <= iY + iHeight);
+      return (m_Pos.GetX() >= X && m_Pos.GetX() <= X + Width && 
+        m_Pos.GetY() >= Y && m_Pos.GetY() <= Y + Height);
     }
 
-    bool CMouse::InArea(CElement * pElement, int iHeight) const
+    bool CMouse::InArea(CElement* pElement, int Height) const
     {
-      if (!iHeight)
-        iHeight = pElement->GetHeight();
+      if (!Height)
+      {
+        Height = pElement->GetHeight();
+      }
 
-      return InArea(pElement->GetAbsPos()->GetX(), pElement->GetAbsPos()->GetY(), pElement->GetWidth(), iHeight);
+      return InArea(pElement->GetAbsPos()->GetX(), 
+        pElement->GetAbsPos()->GetY(), 
+        pElement->GetWidth(), Height);
     }
 
     void CMouse::Draw()
     {
     }
 
-    int CMouse::GetLeftButton(int iState)
+    int CMouse::GetLeftButton(int State)
     {
-      int iRet = m_iLeftButton;
+      int Ret = m_LeftButtonState;
 
-      if (iState != -1)
-        SetLeftButton(iState);
-
-      return iRet;
-    }
-
-    int CMouse::GetRightButton(int iState)
-    {
-      int iRet = m_iRightButton;
-
-      if (iState != -1)
-        SetRightButton(iState);
-
-      return iRet;
-    }
-
-    int CMouse::GetMiddleButton(int iState)
-    {
-      int iRet = m_iMiddleButton;
-
-      if (iState != -1)
-        SetMiddleButton(iState);
-
-      return iRet;
-    }
-
-    int CMouse::GetWheel(int iState)
-    {
-      int iRet = m_iWheel;
-
-      if (iState != -1)
-        SetWheel(iState);
-
-      return iRet;
-    }
-
-    void CMouse::SetLeftButton(int iState)
-    {
-      if (iState == 1)
+      if (State != -1)
       {
-        if (m_tLeftButton.Running())
+        SetLeftButton(State);
+      }
+
+      return Ret;
+    }
+
+    int CMouse::GetRightButton(int State)
+    {
+      int Ret = m_RightButtonState;
+
+      if (State != -1)
+      {
+        SetRightButton(State);
+      }
+
+      return Ret;
+    }
+
+    int CMouse::GetMiddleButton(int State)
+    {
+      int Ret = m_MiddleButtonState;
+
+      if (State != -1)
+      {
+        SetMiddleButton(State);
+      }
+
+      return Ret;
+    }
+
+    int CMouse::GetWheel(int State)
+    {
+      int Ret = m_WheelState;
+
+      if (State != -1)
+      {
+        SetWheel(State);
+      }
+
+      return Ret;
+    }
+
+    void CMouse::SetLeftButton(int State)
+    {
+      if (State == 1)
+      {
+        if (m_LeftButtonTimer.Running())
         {
-          m_iLeftButton = 2;
-          m_tLeftButton.Stop();
+          m_LeftButtonState = 2;
+          m_LeftButtonTimer.Stop();
         }
         else
         {
-          m_iLeftButton = 1;
-          m_tLeftButton.Start(DBLCLICK_TIME);
+          m_LeftButtonState = 1;
+          m_LeftButtonTimer.Start(DBLCLICK_TIME);
         }
       }
       else
-        m_iLeftButton = iState;
+      {
+        m_LeftButtonState = State;
+      }
     }
 
-    void CMouse::SetRightButton(int iState)
+    void CMouse::SetRightButton(int State)
     {
-      if (iState == 1)
+      if (State == 1)
       {
-        if (m_tRightButton.Running())
+        if (m_RightButtonTimer.Running())
         {
-          m_iRightButton = 2;
-          m_tRightButton.Stop();
+          m_RightButtonState = 2;
+          m_RightButtonTimer.Stop();
         }
         else
         {
-          m_iRightButton = 1;
-          m_tRightButton.Start(DBLCLICK_TIME);
+          m_RightButtonState = 1;
+          m_RightButtonTimer.Start(DBLCLICK_TIME);
         }
       }
       else
-        m_iRightButton = iState;
+      {
+        m_RightButtonState = State;
+      }
     }
 
-    void CMouse::SetMiddleButton(int iState)
+    void CMouse::SetMiddleButton(int State)
     {
-      if (iState == 1)
+      if (State == 1)
       {
-        if (m_tMiddleButton.Running())
+        if (m_MiddleButtonTimer.Running())
         {
-          m_iMiddleButton = 2;
-          m_tMiddleButton.Stop();
+          m_MiddleButtonState = 2;
+          m_MiddleButtonTimer.Stop();
         }
         else
         {
-          m_iMiddleButton = 1;
-          m_tMiddleButton.Start(DBLCLICK_TIME);
+          m_MiddleButtonState = 1;
+          m_MiddleButtonTimer.Start(DBLCLICK_TIME);
         }
       }
       else
-        m_iMiddleButton = iState;
+      {
+        m_MiddleButtonState = State;
+      }
     }
 
-    void CMouse::SetWheel(int iState)
+    void CMouse::SetWheel(int State)
     {
-      m_iWheel = iState;
+      m_WheelState = State;
     }
 
-    void CMouse::SetDragging(CElement * pElement)
+    void CMouse::SetDragging(CElement* pElement)
     {
       m_pDraggingElement = pElement;
     }
@@ -250,17 +283,17 @@ namespace Hades
 
     void CMouse::SavePos()
     {
-      m_bpos = m_pos;
+      m_BakPos = m_Pos;
     }
 
     void CMouse::LoadPos()
     {
-      m_pos = m_bpos;
+      m_Pos = m_BakPos;
     }
 
     CPos CMouse::GetSavedPos() const
     {
-      return m_bpos;
+      return m_BakPos;
     }
   }
 }

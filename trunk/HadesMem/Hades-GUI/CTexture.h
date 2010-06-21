@@ -22,7 +22,15 @@ THE SOFTWARE.
 
 #pragma once
 
-#include "CGUI.h"
+// C++ Standard Library
+#include <string>
+
+// Windows API
+#include <atlbase.h>
+
+// DirectX
+#include <d3d9.h>
+#include <d3dx9.h>
 
 namespace Hades
 {
@@ -30,25 +38,23 @@ namespace Hades
   {
     class CTexture
     {
-      CComPtr<IDirect3DTexture9> m_pTexture;
-      D3DSURFACE_DESC m_TexDesc;
-
-      ID3DXSprite * m_pSprite;
-      IDirect3DDevice9 * m_pDevice;
-
-      BYTE m_bAlpha;
     public:
-      CTexture(ID3DXSprite * pSprite, const char * szPath);
+      CTexture(ID3DXSprite* pSprite, std::string const& Path);
 
-      inline void SetSprite(ID3DXSprite * pSprite)
-      {
-        m_pSprite = pSprite;
-      }
+      void SetSprite(ID3DXSprite * pSprite);
 
-      IDirect3DTexture9 * GetTexture() const;
+      IDirect3DTexture9* GetTexture() const;
+
       void SetAlpha(BYTE bAlpha);
 
-      void Draw(CPos cpPos, int iWidth, int iHeight);
+      void Draw(class CPos cpPos, int iWidth, int iHeight);
+
+    private:
+      CComPtr<IDirect3DTexture9> m_pTexture;
+      D3DSURFACE_DESC m_TexDesc;
+      ID3DXSprite* m_pSprite;
+      IDirect3DDevice9* m_pDevice;
+      BYTE m_Alpha;
     };
   }
 }

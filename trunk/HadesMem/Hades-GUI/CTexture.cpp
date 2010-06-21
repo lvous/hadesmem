@@ -20,54 +20,72 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "CGUI.h"
+// Hades
+#include "CPos.h"
+#include "Error.h"
+#include "CTexture.h"
 
 namespace Hades
 {
   namespace GUI
   {
-    CTexture::CTexture(ID3DXSprite * pSprite, const char * szPath) : m_bAlpha(255)
+    CTexture::CTexture(ID3DXSprite* pSprite, std::string const& Path) 
+      : m_pTexture(), 
+      m_TexDesc(), 
+      m_pSprite(pSprite), 
+      m_pDevice(nullptr), 
+      m_Alpha(255)
     {
       pSprite->GetDevice(&m_pDevice);
 
-      D3DXCreateTextureFromFileA(m_pDevice, szPath, &m_pTexture);
-
-      if (!m_pTexture)
+      HRESULT Result = D3DXCreateTextureFromFileA(m_pDevice, Path.c_str(), 
+        &m_pTexture);
+      if (FAILED(Result))
       {
-        std::stringstream sStream;
-        sStream << "Failed to load texture: " << szPath;
-        MessageBoxA(0, sStream.str().c_str(), "CTexture::CTexture(...)", 0);
-        return;
+        BOOST_THROW_EXCEPTION(HadesGuiError() << 
+          ErrorFunction("CTexture::CTexture") << 
+          ErrorString("Could not create texture.") << 
+          ErrorCodeWin(Result));
       }
 
       m_pTexture->GetLevelDesc(0, &m_TexDesc);
-      m_pSprite = pSprite;
     }
 
-    IDirect3DTexture9 * CTexture::GetTexture() const
+    IDirect3DTexture9* CTexture::GetTexture() const
     {
       return m_pTexture;
     }
-    void CTexture::SetAlpha(BYTE bAlpha)
+
+    void CTexture::SetAlpha(BYTE Alpha)
     {
-      m_bAlpha = bAlpha;
+      m_Alpha = Alpha;
     }
 
-    void CTexture::Draw(CPos cpPos, int iWidth, int iHeight)
+    void CTexture::Draw(CPos MyPos, int Width, int Height)
     {
-      D3DXVECTOR2 vTransformation = D3DXVECTOR2(static_cast<float>(cpPos.GetX()), static_cast<float>(cpPos.GetY()));
+      D3DXMATRIX MainMat;
 
-      D3DXVECTOR2 vScaling((1.0f / m_TexDesc.Width) * iWidth, (1.0f / m_TexDesc.Height) * iHeight);
+      D3DXVECTOR2 VecScaling((1.0f / m_TexDesc.Width) * Width, 
+        (1.0f / m_TexDesc.Height) * Height);
 
-      D3DXMATRIX mainMatrix;
+      D3DXVECTOR2 VecTransform = D3DXVECTOR2(static_cast<float>(MyPos.GetX()), 
+        static_cast<float>(MyPos.GetY()));
 
-      D3DXMatrixTransformation2D(&mainMatrix, 0, 0, &vScaling, 0, 0, &vTransformation);
+      D3DXMatrixTransformation2D(&MainMat, 0, 0, &VecScaling, 0, 0, &VecTransform);
 
-      m_pSprite->SetTransform(&mainMatrix);
+      m_pSprite->SetTransform(&MainMat);
 
       m_pSprite->Begin(D3DXSPRITE_ALPHABLEND);
-      m_pSprite->Draw(m_pTexture, 0, 0, 0, D3DCOLOR_RGBA(255, 255, 255, m_bAlpha));
+
+      m_pSprite->Draw(m_pTexture, 0, 0, 0, D3DCOLOR_RGBA(255, 255, 255, 
+        m_Alpha));
+
       m_pSprite->End();
+    }
+
+    void CTexture::SetSprite(ID3DXSprite* pSprite)
+    {
+      m_pSprite = pSprite;
     }
   }
 }

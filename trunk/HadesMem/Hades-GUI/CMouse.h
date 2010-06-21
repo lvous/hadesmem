@@ -22,7 +22,15 @@ THE SOFTWARE.
 
 #pragma once
 
-#include "CGUI.h"
+// C++ Standard Library
+#include <memory>
+
+// DirectX
+#include <d3d9.h>
+
+// Hades
+#include "CPos.h"
+#include "CTimer.h"
 
 namespace Hades
 {
@@ -30,49 +38,47 @@ namespace Hades
   {
     class CMouse
     {
-      IDirect3DDevice9 * m_pDevice;
-      CPos m_pos, m_bpos;
-
-      CColor * m_pInnerColor, * m_pBorderColor;
-
-      CElement * m_pDraggingElement;
-
-      int m_iLeftButton, m_iRightButton, m_iMiddleButton, m_iWheel;
-      CTimer m_tLeftButton, m_tRightButton, m_tMiddleButton;
-
-      class CGUI& m_Gui;
-
     public:
-      CMouse(class CGUI& Gui, IDirect3DDevice9 * pDevice);
-      ~CMouse();
+      CMouse(class CGUI& Gui, IDirect3DDevice9* pDevice);
 
       bool HandleMessage(unsigned int uMsg, WPARAM wParam, LPARAM lParam);
 
-      void SetPos(int iX, int iY);
-      void SetPos(CPos cPos);
+      void SetPos(int X, int Y);
+      void SetPos(CPos MyPos);
       CPos GetPos() const;
 
-      bool InArea(int iX, int iY, int iWidth, int iHeight) const;
-      bool InArea(CElement * pElement, int iHeight = 0) const;
+      bool InArea(int X, int Y, int Width, int Height) const;
+      bool InArea(class CElement* pElement, int Height = 0) const;
 
       void Draw();
 
-      int GetLeftButton(int iState = -1);
-      int GetRightButton(int iState = -1);
-      int GetMiddleButton(int iState = -1);
-      int GetWheel(int iState = -1);
+      int GetLeftButton(int State = -1);
+      int GetRightButton(int State = -1);
+      int GetMiddleButton(int State = -1);
+      int GetWheel(int State = -1);
 
-      void SetLeftButton(int iState);
-      void SetRightButton(int iState);
-      void SetMiddleButton(int iState);
-      void SetWheel(int iState);
+      void SetLeftButton(int State);
+      void SetRightButton(int State);
+      void SetMiddleButton(int State);
+      void SetWheel(int State);
 
-      void SetDragging(CElement * pElement);
-      CElement * GetDragging() const;
+      void SetDragging(class CElement* pElement);
+      class CElement* GetDragging() const;
 
       void SavePos();
       void LoadPos();
       CPos GetSavedPos() const;
+
+    private:
+      class CGUI& m_Gui;
+      IDirect3DDevice9* m_pDevice;
+      CPos m_Pos, m_BakPos;
+      std::shared_ptr<class CColor> m_pInnerColor;
+      std::shared_ptr<class CColor> m_pBorderColor;
+      class CElement* m_pDraggingElement;
+      int m_LeftButtonState, m_RightButtonState, m_MiddleButtonState, 
+        m_WheelState;
+      CTimer m_LeftButtonTimer, m_RightButtonTimer, m_MiddleButtonTimer;
     };
   }
 }

@@ -26,6 +26,7 @@ THE SOFTWARE.
 
 // Hades
 #include "CGUI.h"
+#include "Error.h"
 #include "CFont.h"
 #include "CColor.h"
 
