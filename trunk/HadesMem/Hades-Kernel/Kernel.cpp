@@ -22,6 +22,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include <iostream>
 
 // Boost
+#include <boost/bind.hpp>
 #include <boost/format.hpp>
 
 // Windows API
@@ -30,7 +31,10 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Hades
 #include "Kernel.h"
 #include "Loader.h"
+#include "Hades-D3D9/GuiMgr.h"
 #include "Hades-Common/I18n.h"
+#include "Hades-D3D9/D3D9Mgr.h"
+#include "Hades-Input/InputMgr.h"
 #include "Hades-Common/Filesystem.h"
 
 namespace Hades
@@ -39,7 +43,9 @@ namespace Hades
   Kernel::Kernel() 
     : m_Memory(new Hades::Memory::MemoryMgr(GetCurrentProcessId())), 
     m_pD3D9Mgr(nullptr), 
-    m_pInputMgr(nullptr)
+    m_pInputMgr(nullptr), 
+    m_pGuiMgr(nullptr), 
+    m_LuaMgr()
   { }
 
   // Initialize kernel
@@ -74,6 +80,13 @@ namespace Hades
     // Initialize Loader
     Loader::Initialize(this);
     Loader::LoadConfig(PathToSelfDir + L"/Config/Loader.xml");
+
+    // Expose Hades API
+    luabind::module(m_LuaMgr.GetState(), "Hades")
+    [
+      luabind::def("WriteLn", luabind::tag_function<void (std::string const&)>(
+        Wrappers::WriteLn(this)))
+    ];
 
     // Start aux modules
 #if defined(_M_X64)
@@ -132,23 +145,91 @@ namespace Hades
     pInitialize(this);
   }
 
+  // Get D3D9 manager wrapper
   D3D9MgrWrapper* Kernel::GetD3D9Mgr()
   {
     return m_pD3D9Mgr;
   }
 
+  // Set D3D9 manager wrapper
   void Kernel::SetD3D9Mgr(D3D9MgrWrapper* pD3D9Mgr)
   {
+    // Sanity check
+    if (m_pD3D9Mgr)
+    {
+      std::wcout << "Kernel::SetD3D9Mgr: Warning! Attempt to overwrite "
+        "existing D3D9Mgr instance." << std::endl;
+      return;
+    }
+
+    // Set D3D9 manager
     m_pD3D9Mgr = pD3D9Mgr;
   }
 
+  // Get input manager wrapper
   InputMgrWrapper* Kernel::GetInputMgr()
   {
     return m_pInputMgr;
   }
 
+  // Set input manager wrapper
   void Kernel::SetInputMgr(InputMgrWrapper* pInputMgr)
   {
+    // Sanity check
+    if (m_pInputMgr)
+    {
+      std::wcout << "Kernel::SetInputMgr: Warning! Attempt to overwrite "
+        "existing InputMgr instance." << std::endl;
+      return;
+    }
+
+    // Set input manager
     m_pInputMgr = pInputMgr;
+  }
+
+  // Set GUI manager
+  void Kernel::SetGuiMgr(GuiMgr* pGuiMgr)
+  {
+    // Sanity check
+    if (m_pGuiMgr)
+    {
+      std::wcout << "Kernel::SetGuiMgr: Warning! Attempt to overwrite "
+        "existing GuiMgr instance." << std::endl;
+      return;
+    }
+
+    // Set GUI manager
+    m_pGuiMgr = pGuiMgr;
+    m_pGuiMgr->RegisterOnConsoleInput(std::bind(&Kernel::OnConsoleInput, this, 
+      std::placeholders::_1));
+  }
+
+  // Get GUI manager
+  GuiMgr* Kernel::GetGuiMgr()
+  {
+    return m_pGuiMgr;
+  }
+
+  // GUI manager OnConsoleInput callback
+  void Kernel::OnConsoleInput(std::string const& Input)
+  {
+    try
+    {
+      // Run lua
+      m_LuaMgr.RunString(Input);
+    }
+    catch (boost::exception const& e)
+    {
+      // Print error information
+      m_pGuiMgr->Print(boost::diagnostic_information(e));
+    }
+    catch (std::exception const& e)
+    {
+      // Print error information
+      m_pGuiMgr->Print(e.what());
+    }
+
+    // Debug output
+    std::cout << "Kernel::OnConsoleInput: \"" << Input << "\"." << std::endl;
   }
 }

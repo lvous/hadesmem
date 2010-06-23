@@ -22,6 +22,12 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Windows API
 #include <Windows.h>
 
+// Boost
+#pragma warning(push, 1)
+#pragma warning(disable: 4267)
+#include <boost/signals2.hpp>
+#pragma warning(pop)
+
 // Hades
 #include "D3D9Helper.h"
 #include "Hades-GUI/CGUI.h"
@@ -41,12 +47,20 @@ namespace Hades
     GuiMgr(class Kernel* pKernel);
 
     // Print output
-    void Print(std::string const& Output);
+    virtual void Print(std::string const& Output);
 
+    // Callback type
+    typedef boost::signals2::signal<void (std::string const& Input)> 
+      OnConsoleInputCallbacks;
+
+    // Register callback for OnConsoleInput event
+    virtual boost::signals2::connection RegisterOnConsoleInput(
+      OnConsoleInputCallbacks::slot_type const& Subscriber);
+
+  private:
     // Callback on input
     std::string OnConsoleInput(char const* pszArgs, GUI::CElement* pElement);
 
-  private:
     // Input callbacks
     bool OnInputMsg(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     bool OnSetCursor(HCURSOR hCursor);
@@ -75,5 +89,8 @@ namespace Hades
     // Saved cursor position
     int m_CursorX;
     int m_CursorY;
+
+    // OnConsoleInput callbacks
+    OnConsoleInputCallbacks m_CallsOnConsoleInput;
   };
 }

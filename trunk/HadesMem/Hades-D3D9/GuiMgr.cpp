@@ -36,7 +36,8 @@ namespace Hades
     m_pKernel(pKernel), 
     m_pDevice(nullptr), 
     m_CursorX(0), 
-    m_CursorY(0)
+    m_CursorY(0), 
+    m_CallsOnConsoleInput()
   {
     // Register for D3D events
     D3D9Mgr::RegisterOnInitialize(std::bind(&GuiMgr::OnInitialize, this, 
@@ -61,6 +62,9 @@ namespace Hades
     pKernel->GetInputMgr()->RegisterOnSetCursorPos(std::bind(
       &GuiMgr::OnSetCursorPos, this, std::placeholders::_1, 
       std::placeholders::_2));
+
+    // Notify kernel of creation
+    m_pKernel->SetGuiMgr(this);
   }
 
   // Initialize GUI from device
@@ -310,8 +314,11 @@ namespace Hades
   std::string GuiMgr::OnConsoleInput(char const* pszArgs, 
     GUI::CElement* pElement)
   {
-    // Print input to console
-    Print(pszArgs);
+    // Get input
+    std::string const Input(pszArgs);
+
+    // Notify subscribers
+    m_CallsOnConsoleInput(Input);
 
     // Clear input box and refocus
     auto pEditBox = dynamic_cast<GUI::CEditBox*>(pElement);
@@ -348,5 +355,12 @@ namespace Hades
     // Add output
     auto pOutBoxReal = dynamic_cast<GUI::CTextBox*>(pOutBox);
     pOutBoxReal->AddString(Output);
+  }
+
+  // Register callback for OnConsoleInput event
+  boost::signals2::connection GuiMgr::RegisterOnConsoleInput(
+    OnConsoleInputCallbacks::slot_type const& Subscriber )
+  {
+    return m_CallsOnConsoleInput.connect(Subscriber);
   }
 }

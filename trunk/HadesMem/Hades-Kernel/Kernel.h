@@ -27,9 +27,8 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include <boost/noncopyable.hpp>
 
 // Hades
-#include "Hades-D3D9/D3D9Mgr.h"
+#include "Scripting.h"
 #include "Hades-Memory/Memory.h"
-#include "Hades-Input/InputMgr.h"
 
 namespace Hades
 {
@@ -54,16 +53,25 @@ namespace Hades
     virtual void LoadModule(std::wstring const& Module);
 
     // Get D3D9 manager wrapper
-    virtual D3D9MgrWrapper* GetD3D9Mgr();
+    virtual class D3D9MgrWrapper* GetD3D9Mgr();
 
     // Set D3D9 manager wrapper
-    virtual void SetD3D9Mgr(D3D9MgrWrapper* pD3D9Mgr);
+    virtual void SetD3D9Mgr(class D3D9MgrWrapper* pD3D9Mgr);
 
     // Get input manager wrapper
-    virtual InputMgrWrapper* GetInputMgr();
+    virtual class InputMgrWrapper* GetInputMgr();
 
     // Set input manager wrapper
-    virtual void SetInputMgr(InputMgrWrapper* pD3D9Mgr);
+    virtual void SetInputMgr(class InputMgrWrapper* pD3D9Mgr);
+
+    // Set GUI manager
+    virtual void SetGuiMgr(class GuiMgr* pGuiMgr);
+
+    // Get GUI manager
+    virtual class GuiMgr* GetGuiMgr();
+
+    // GUI manager OnConsoleInput callback
+    virtual void OnConsoleInput(std::string const& Input);
 
   protected:
     // Disable copying
@@ -75,9 +83,15 @@ namespace Hades
     std::shared_ptr<Memory::MemoryMgr> m_Memory;
 
     // D3D9 manager wrapper
-    D3D9MgrWrapper* m_pD3D9Mgr;
+    class D3D9MgrWrapper* m_pD3D9Mgr;
 
     // Input manager wrapper
-    InputMgrWrapper* m_pInputMgr;
+    class InputMgrWrapper* m_pInputMgr;
+
+    // GUI manager
+    class GuiMgr* m_pGuiMgr;
+
+    // Lua manager
+    LuaMgr m_LuaMgr;
   };
 }
