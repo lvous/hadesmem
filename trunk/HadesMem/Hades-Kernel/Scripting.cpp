@@ -17,7 +17,6 @@ You should have received a copy of the GNU General Public License
 along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 // Hades
 #include "Kernel.h"
 #include "Scripting.h"
@@ -35,6 +34,17 @@ namespace Hades
     {
       HADES_SCRIPTING_TRYCATCH_BEGIN
         m_pKernel->GetGuiMgr()->Print(Input);
+      HADE_SCRIPTING_TRYCATCH_END
+    }
+
+    LoadExt::LoadExt(Kernel* pKernel)
+      : m_pKernel(pKernel)
+    { }
+
+    void LoadExt::operator()(std::string const& LoadExt) const
+    {
+      HADES_SCRIPTING_TRYCATCH_BEGIN
+        m_pKernel->LoadExtension(boost::lexical_cast<std::wstring>(LoadExt));
       HADE_SCRIPTING_TRYCATCH_END
     }
   }

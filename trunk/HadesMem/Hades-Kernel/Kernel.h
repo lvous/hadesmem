@@ -37,7 +37,7 @@ namespace Hades
   { };
 
   // Hades kernel
-  class Kernel
+  class Kernel : private boost::noncopyable
   {
   public:
     // Constructor
@@ -51,6 +51,9 @@ namespace Hades
 
     // Load and initialize a Hades helper module
     virtual void LoadModule(std::wstring const& Module);
+
+    // Load and initialize a Hades extension
+    virtual void LoadExtension(std::wstring const& Module);
 
     // Get D3D9 manager wrapper
     virtual class D3D9MgrWrapper* GetD3D9Mgr();
@@ -73,14 +76,12 @@ namespace Hades
     // GUI manager OnConsoleInput callback
     virtual void OnConsoleInput(std::string const& Input);
 
-  protected:
-    // Disable copying
-    Kernel(Kernel const&);
-    Kernel& operator= (Kernel const&);
-
   private:
     // Memory manager
     std::shared_ptr<Memory::MemoryMgr> m_Memory;
+
+    // Path to self dir
+    std::wstring const m_PathToSelfDir;
 
     // D3D9 manager wrapper
     class D3D9MgrWrapper* m_pD3D9Mgr;

@@ -42,6 +42,7 @@ namespace Hades
   // Constructor
   Kernel::Kernel() 
     : m_Memory(new Hades::Memory::MemoryMgr(GetCurrentProcessId())), 
+    m_PathToSelfDir(Hades::Windows::GetSelfDirPath().file_string()), 
     m_pD3D9Mgr(nullptr), 
     m_pInputMgr(nullptr), 
     m_pGuiMgr(nullptr), 
@@ -70,22 +71,23 @@ namespace Hades
 
     // Path to self
     auto const PathToSelf(Hades::Windows::GetSelfPath().file_string());
-    auto const PathToSelfDir(Hades::Windows::GetSelfDirPath().file_string());
 
     // Debug output
     std::wcout << boost::wformat(L"Kernel::Initialize: Path to Self (Full): = "
-      L"\"%ls\", Path To Self (Dir): = \"%ls\".") %PathToSelf %PathToSelfDir 
+      L"\"%ls\", Path To Self (Dir): = \"%ls\".") %PathToSelf %m_PathToSelfDir 
       << std::endl;
 
     // Initialize Loader
     Loader::Initialize(this);
-    Loader::LoadConfig(PathToSelfDir + L"/Config/Loader.xml");
+    Loader::LoadConfig(m_PathToSelfDir + L"/Config/Loader.xml");
 
     // Expose Hades API
     luabind::module(m_LuaMgr.GetState(), "Hades")
     [
       luabind::def("WriteLn", luabind::tag_function<void (std::string const&)>(
         Wrappers::WriteLn(this)))
+      ,luabind::def("LoadExt", luabind::tag_function<void (std::string const&)>(
+        Wrappers::LoadExt(this)))
     ];
 
     // Start aux modules
@@ -98,8 +100,8 @@ namespace Hades
 #else
 #error Unsupported platform!
 #endif
-    LoadModule(PathToSelfDir + L"\\" + InputModName);
-    LoadModule(PathToSelfDir + L"\\" + D3D9ModName);
+    LoadModule(m_PathToSelfDir + L"\\" + InputModName);
+    LoadModule(m_PathToSelfDir + L"\\" + D3D9ModName);
 
     // Debug output
     std::wcout << "Kernel::Initialize: Hades-Kernel initialized." << std::endl;
@@ -143,6 +145,13 @@ namespace Hades
 
     // Call initialization routine
     pInitialize(this);
+  }
+
+  // Load and initialize a Hades extension
+  void Kernel::LoadExtension(std::wstring const& Module)
+  {
+    // Load module from extension directory
+    LoadModule(m_PathToSelfDir + L"/Extensions/" + Module);
   }
 
   // Get D3D9 manager wrapper
@@ -213,6 +222,9 @@ namespace Hades
   // GUI manager OnConsoleInput callback
   void Kernel::OnConsoleInput(std::string const& Input)
   {
+    // Debug output
+    std::cout << "Kernel::OnConsoleInput: \"" << Input << "\"." << std::endl;
+
     try
     {
       // Run lua
@@ -228,8 +240,5 @@ namespace Hades
       // Print error information
       m_pGuiMgr->Print(e.what());
     }
-
-    // Debug output
-    std::cout << "Kernel::OnConsoleInput: \"" << Input << "\"." << std::endl;
   }
 }

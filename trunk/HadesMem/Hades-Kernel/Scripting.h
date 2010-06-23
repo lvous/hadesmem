@@ -70,6 +70,17 @@ namespace Hades
     private:
       Kernel* m_pKernel;
     };
+
+    class LoadExt
+    {
+    public:
+      explicit LoadExt(Kernel* pKernel);
+
+      void operator() (std::string const& LoadExt) const;
+
+    private:
+      Kernel* m_pKernel;
+    };
   }
 
   // Lua exception type
