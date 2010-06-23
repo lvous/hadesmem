@@ -219,8 +219,33 @@ namespace Hades
     bool GuiToggled = false;
     if (uMsg == WM_KEYDOWN && wParam == VK_F12)
     {
+      // Toggle visibility
       ToggleVisible();
       GuiToggled = true;
+
+      // Get console window
+      auto pConsole = m_pGui->GetWindowByString("HADES_CONSOLE_WINDOW", 1);
+      if (!pConsole)
+      {
+        std::wcout << "GuiMgr::Print: Warning! Could not find console window." 
+          << std::endl;
+      }
+      else
+      {
+        // Get input box
+        auto pInBox = pConsole->GetElementByString("HADES_CONSOLE_INPUT", 1);
+        if (!pInBox)
+        {
+          std::wcout << "GuiMgr::Print: Warning! Could not find console input "
+            "box." << std::endl;
+        }
+        else
+        {
+          // Set input box as focused element
+          auto pInBoxReal = dynamic_cast<GUI::CEditBox*>(pInBox);
+          pInBoxReal->GetParent()->SetFocussedElement(pInBoxReal);
+        }
+      }
     }
 
     // Notify GUI of input events
