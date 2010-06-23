@@ -16,4 +16,9 @@
 	<Target Name="Left4Dead.exe" Module="Hades-Kernel_IA32.dll"/>
 	<Target Name="Left4Dead2.exe" Module="Hades-Kernel_IA32.dll"/>
 	<Target Name="Crysis.exe" Module="Hades-Kernel_IA32.dll"/>
+	<Target Name="Crysis.exe" Module="Hades-Kernel_IA32.dll"/>
+	<Target Name="Eve.exe" Module="Hades-Kernel_IA32.dll"/>
+	<Target Name="iw3mp.exe" Module="Hades-Kernel_IA32.dll"/>
+	<Target Name="iw3sp.exe" Module="Hades-Kernel_IA32.dll"/>
+	<Target Name="S8.exe" Module="Hades-Kernel_IA32.dll"/>
 </Targets>
