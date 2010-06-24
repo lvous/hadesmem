@@ -79,6 +79,7 @@ namespace Hades
     static boost::signals2::connection RegisterOnSetCursorPos(
       OnSetCursorPosCallbacks::slot_type const& Subscriber);
 
+  private:
     // SetCursor hook
     static HCURSOR WINAPI SetCursor_Hook(HCURSOR Cursor);
 
@@ -88,7 +89,6 @@ namespace Hades
     // SetCursorPos hook
     static BOOL WINAPI SetCursorPos_Hook(int X, int Y);
 
-  private:
     // Window hook procedure
     static LRESULT CALLBACK MyWindowProc(
       HWND hwnd,

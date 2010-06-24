@@ -90,12 +90,6 @@ namespace Hades
   // LuaState wrapper class for RAII
   class LuaState : private boost::noncopyable
   {
-    // Only LuaMgr can create states
-    friend class LuaMgr;
-
-    // Underlying lua state
-    lua_State* m_State;
-
   public:
     // Destructor
     ~LuaState()
@@ -123,10 +117,17 @@ namespace Hades
     LuaState() 
       : m_State(lua_open()) // Open LUA
     { }
+
+  private:
+    // Only LuaMgr can create states
+    friend class LuaMgr;
+
+    // Underlying lua state
+    lua_State* m_State;
   };
 
   // Lua managing class
-  class LuaMgr
+  class LuaMgr : private boost::noncopyable
   {
   public:
     // Constructor
