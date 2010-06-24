@@ -52,7 +52,7 @@ namespace Hades
   class DotNetMgr
   {
   public:
-    DotNetMgr(class Kernel* pKernel, std::wstring const& RuntimeVersion);
+    DotNetMgr(class Kernel* pKernel, std::wstring const& ConfigPath);
 
     ~DotNetMgr();
 

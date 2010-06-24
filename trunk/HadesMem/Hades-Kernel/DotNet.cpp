@@ -1,10 +1,15 @@
 // C++ Standard Library
+#include <vector>
+#include <fstream>
 #include <iostream>
 
 // Boost
 #pragma warning(push, 1)
 #include <boost/thread.hpp>
 #pragma warning(pop)
+
+// RapidXML
+#include <RapidXML/rapidxml.hpp>
 
 // Hades
 #include "DotNet.h"
@@ -13,13 +18,51 @@
 
 namespace Hades
 {
-  DotNetMgr::DotNetMgr(Kernel* pKernel, std::wstring const& RuntimeVersion) 
+  DotNetMgr::DotNetMgr(Kernel* pKernel, std::wstring const& ConfigPath) 
     : m_pKernel(pKernel), 
     m_pMetaHost(nullptr), 
     m_pRuntimeInfo(nullptr), 
     m_pClrHost(nullptr), 
     m_ClrStarted(false)
   {
+    // Open config file
+    std::wifstream ConfigFile(ConfigPath.c_str());
+    if (!ConfigFile)
+    {
+      BOOST_THROW_EXCEPTION(DotNetMgrError() << 
+        ErrorFunction("DotNetMgr::DotNetMgr") << 
+        ErrorString("Could not open config file."));
+    }
+
+    // Copy file to buffer
+    std::istreambuf_iterator<wchar_t> ConfigFileEnd;
+    std::istreambuf_iterator<wchar_t> ConfigFileBeg(ConfigFile);
+    std::vector<wchar_t> ConfigFileBuf(ConfigFileBeg, ConfigFileEnd);
+    ConfigFileBuf.push_back(L'\0');
+
+    // Open XML document
+    rapidxml::xml_document<wchar_t> ConfigDoc;
+    ConfigDoc.parse<0>(&ConfigFileBuf[0]);
+
+    // Ensure runtime tag is found
+    auto RuntimeTag = ConfigDoc.first_node(L"Runtime");
+    if (!RuntimeTag)
+    {
+      BOOST_THROW_EXCEPTION(DotNetMgrError() << 
+        ErrorFunction("DotNetMgr::DotNetMgr") << 
+        ErrorString("Runtime data must be specified."));
+    }
+
+    // Get runtime version
+    auto RuntimeVerNode = RuntimeTag->first_attribute(L"Version");
+    if (!RuntimeVerNode)
+    {
+      BOOST_THROW_EXCEPTION(DotNetMgrError() << 
+        ErrorFunction("DotNetMgr::DotNetMgr") << 
+        ErrorString("Runtime version must be specified."));
+    }
+    std::wstring const RuntimeVersion(RuntimeVerNode->value());
+
     HRESULT ClrCreateResult = CLRCreateInstance(
       CLSID_CLRMetaHost, 
       IID_ICLRMetaHost, 

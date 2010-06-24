@@ -85,9 +85,8 @@ namespace Hades
     Loader::LoadConfig(m_PathToSelfDir + L"/Config/Loader.xml");
 
 //     // Initialize .NET
-//     // TODO: Make this user configurable
-//     std::wstring RuntimeVersion(L"v4.0.30319");
-//     m_pDotNetMgr.reset(new DotNetMgr(this, RuntimeVersion));
+//     m_pDotNetMgr.reset(new DotNetMgr(this, m_PathToSelfDir + 
+//       L"/Config/DotNet.xml"));
 
     // Expose Hades API
     luabind::module(m_LuaMgr.GetState(), "Hades")
