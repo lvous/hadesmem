@@ -84,9 +84,9 @@ namespace Hades
     Loader::Initialize(this);
     Loader::LoadConfig(m_PathToSelfDir + L"/Config/Loader.xml");
 
-//     // Initialize .NET
-//     m_pDotNetMgr.reset(new DotNetMgr(this, m_PathToSelfDir + 
-//       L"/Config/DotNet.xml"));
+    // Initialize .NET
+    m_pDotNetMgr.reset(new DotNetMgr(this, m_PathToSelfDir + 
+      L"/Config/DotNet.xml"));
 
     // Expose Hades API
     luabind::module(m_LuaMgr.GetState(), "Hades")

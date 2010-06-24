@@ -26,6 +26,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #pragma warning(push, 1)
 #pragma warning(disable: 4267)
 #include <boost/signals2.hpp>
+#include <boost/thread/mutex.hpp>
 #pragma warning(pop)
 
 // Hades
@@ -56,6 +57,9 @@ namespace Hades
     // Register callback for OnConsoleInput event
     virtual boost::signals2::connection RegisterOnConsoleInput(
       OnConsoleInputCallbacks::slot_type const& Subscriber);
+
+    // Get GUI mutex
+    virtual boost::mutex& GetGuiMutex();
 
   private:
     // Callback on input
@@ -92,5 +96,8 @@ namespace Hades
 
     // OnConsoleInput callbacks
     OnConsoleInputCallbacks m_CallsOnConsoleInput;
+
+    // GUI mutex
+    boost::mutex m_GuiMutex;
   };
 }

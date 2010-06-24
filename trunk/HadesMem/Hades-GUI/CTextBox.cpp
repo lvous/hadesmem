@@ -22,10 +22,6 @@ THE SOFTWARE.
 
 #include "CGUI.h"
 
-#pragma warning(push, 1)
-#include <boost/thread/locks.hpp>
-#pragma warning(pop)
-
 namespace Hades
 {
   namespace GUI
@@ -57,8 +53,6 @@ namespace Hades
 
     void CTextBox::Draw()
     {
-      boost::lock_guard<boost::recursive_mutex> MyLock(m_Mutex);
-
       CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
 
       m_Gui.DrawOutlinedBox(Pos.GetX(), Pos.GetY(), GetWidth(), GetHeight(), 
@@ -109,8 +103,6 @@ namespace Hades
 
     void CTextBox::AddString(std::string MyString)
     {
-      boost::lock_guard<boost::recursive_mutex> MyLock(m_Mutex);
-
       if (MyString.empty())
       {
         return;
@@ -172,8 +164,6 @@ namespace Hades
 
     void CTextBox::Clear()
     {
-      boost::lock_guard<boost::recursive_mutex> MyLock(m_Mutex);
-
       m_vStrings.clear();
     }
 

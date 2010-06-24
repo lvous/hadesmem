@@ -6,6 +6,8 @@
 // Boost
 #pragma warning(push, 1)
 #include <boost/thread.hpp>
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/locks.hpp>
 #pragma warning(pop)
 
 // RapidXML
@@ -165,11 +167,19 @@ namespace Hades
     }
     catch (boost::exception const& e)
     {
+      // Lock GUI mutex
+      boost::lock_guard<boost::mutex> GuiLock(pKernel->GetGuiMgr()->
+        GetGuiMutex());
+
       // Print error information
       pKernel->GetGuiMgr()->Print(boost::diagnostic_information(e));
     }
     catch (std::exception const& e)
     {
+      // Lock GUI mutex
+      boost::lock_guard<boost::mutex> GuiLock(pKernel->GetGuiMgr()->
+        GetGuiMutex());
+
       // Print error information
       pKernel->GetGuiMgr()->Print(e.what());
     }

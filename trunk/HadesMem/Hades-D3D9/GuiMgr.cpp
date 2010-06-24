@@ -37,7 +37,8 @@ namespace Hades
     m_pDevice(nullptr), 
     m_CursorX(0), 
     m_CursorY(0), 
-    m_CallsOnConsoleInput()
+    m_CallsOnConsoleInput(), 
+    m_GuiMutex()
   {
     // Register for D3D events
     D3D9Mgr::RegisterOnInitialize(std::bind(&GuiMgr::OnInitialize, this, 
@@ -156,8 +157,13 @@ namespace Hades
       return;
     }
 
-    // Draw GUI
-    m_pGui->Draw();
+    {
+      // Lock GUI mutex
+      boost::lock_guard<boost::mutex> GuiLock(m_GuiMutex);
+
+      // Draw GUI
+      m_pGui->Draw();
+    }
 
     // Get viewport
     D3DVIEWPORT9 Viewport;
@@ -387,5 +393,11 @@ namespace Hades
     OnConsoleInputCallbacks::slot_type const& Subscriber )
   {
     return m_CallsOnConsoleInput.connect(Subscriber);
+  }
+
+  // Get GUI mutex
+  boost::mutex& GuiMgr::GetGuiMutex()
+  {
+    return m_GuiMutex;
   }
 }
