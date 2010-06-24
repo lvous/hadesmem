@@ -19,6 +19,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 // Hades
 #include "Kernel.h"
+#include "DotNet.h"
 #include "Scripting.h"
 #include "Hades-D3D9/GuiMgr.h"
 
@@ -45,6 +46,23 @@ namespace Hades
     {
       HADES_SCRIPTING_TRYCATCH_BEGIN
         m_pKernel->LoadExtension(boost::lexical_cast<std::wstring>(LoadExt));
+      HADE_SCRIPTING_TRYCATCH_END
+    }
+
+    DotNet::DotNet(DotNetMgr* pDotNet)
+      : m_pDotNet(pDotNet)
+    { }
+
+    void DotNet::operator()(std::string const& Assembly, 
+      std::string const& Type, std::string const& Method, 
+      std::string const& Parameters) const
+    {
+      HADES_SCRIPTING_TRYCATCH_BEGIN
+        m_pDotNet->LoadAssembly(
+          boost::lexical_cast<std::wstring>(Assembly), 
+          boost::lexical_cast<std::wstring>(Type), 
+          boost::lexical_cast<std::wstring>(Method), 
+          boost::lexical_cast<std::wstring>(Parameters));
       HADE_SCRIPTING_TRYCATCH_END
     }
   }

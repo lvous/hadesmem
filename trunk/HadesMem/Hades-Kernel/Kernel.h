@@ -94,5 +94,8 @@ namespace Hades
 
     // Lua manager
     LuaMgr m_LuaMgr;
+
+    // DotNet manager
+    std::shared_ptr<DotNetMgr> m_pDotNetMgr;
   };
 }

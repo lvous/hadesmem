@@ -31,6 +31,8 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Hades
 #include "Kernel.h"
 #include "Loader.h"
+#include "DotNet.h"
+#include "Scripting.h"
 #include "Hades-D3D9/GuiMgr.h"
 #include "Hades-Common/I18n.h"
 #include "Hades-D3D9/D3D9Mgr.h"
@@ -46,7 +48,8 @@ namespace Hades
     m_pD3D9Mgr(nullptr), 
     m_pInputMgr(nullptr), 
     m_pGuiMgr(nullptr), 
-    m_LuaMgr()
+    m_LuaMgr(), 
+    m_pDotNetMgr(nullptr)
   { }
 
   // Initialize kernel
@@ -81,13 +84,21 @@ namespace Hades
     Loader::Initialize(this);
     Loader::LoadConfig(m_PathToSelfDir + L"/Config/Loader.xml");
 
+    // Initialize .NET
+    // TODO: Make this user configurable
+    std::wstring RuntimeVersion(L"v4.0.30319");
+    m_pDotNetMgr.reset(new DotNetMgr(this, RuntimeVersion));
+
     // Expose Hades API
     luabind::module(m_LuaMgr.GetState(), "Hades")
     [
       luabind::def("WriteLn", luabind::tag_function<void (std::string const&)>(
         Wrappers::WriteLn(this)))
       ,luabind::def("LoadExt", luabind::tag_function<void (std::string const&)>(
-        Wrappers::LoadExt(this)))
+      Wrappers::LoadExt(this)))
+      ,luabind::def("DotNet", luabind::tag_function<void (std::string const&, 
+        std::string const&, std::string const&, std::string const&)>(
+        Wrappers::DotNet(&*m_pDotNetMgr)))
     ];
 
     // Start aux modules

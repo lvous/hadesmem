@@ -57,6 +57,7 @@ extern "C"
 namespace Hades
 {
   class Kernel;
+  class DotNetMgr;
 
   namespace Wrappers
   {
@@ -80,6 +81,19 @@ namespace Hades
 
     private:
       Kernel* m_pKernel;
+    };
+
+    class DotNet
+    {
+    public:
+      explicit DotNet(DotNetMgr* pDotNet);
+
+      void operator() (std::string const& Assembly, 
+        std::string const& Type, std::string const& Method, 
+        std::string const& Parameters) const;
+
+    private:
+      DotNetMgr* m_pDotNet;
     };
   }
 

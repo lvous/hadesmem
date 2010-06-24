@@ -22,6 +22,10 @@ THE SOFTWARE.
 
 #include "CGUI.h"
 
+#pragma warning(push, 1)
+#include <boost/thread/locks.hpp>
+#pragma warning(pop)
+
 namespace Hades
 {
   namespace GUI
@@ -33,32 +37,47 @@ namespace Hades
 
       pSlider = new CHelperSlider(Gui, CPos(GetWidth() - HELPERSLIDER_WIDTH, 0), GetHeight());
 
-      for(TiXmlElement * pString = pElement->FirstChildElement("Row"); pString; pString = pString->NextSiblingElement("Row"))
+      for(TiXmlElement* pString = pElement->FirstChildElement("Row"); pString; 
+        pString = pString->NextSiblingElement("Row"))
+      {
         AddString(pString->GetText());
+      }
 
       SetThemeElement(m_Gui.GetThemeElement("TextBox"));
 
       if (!GetThemeElement())
+      {
         MessageBoxA(0, "Theme element invalid.", "TextBox", 0);
+      }
       else
+      {
         SetElementState("Norm");
+      }
     }
 
     void CTextBox::Draw()
     {
+      boost::lock_guard<boost::recursive_mutex> MyLock(m_Mutex);
+
       CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
 
-      m_Gui.DrawOutlinedBox(Pos.GetX(), Pos.GetY(), GetWidth(), GetHeight(), pInner->GetD3DColor(), pBorder->GetD3DColor());
+      m_Gui.DrawOutlinedBox(Pos.GetX(), Pos.GetY(), GetWidth(), GetHeight(), 
+        pInner->GetD3DColor(), pBorder->GetD3DColor());
 
       int iAddHeight = m_Gui.GetFont()->GetStringHeight();
       if (m_vStrings.size())
-        for(int i = pSlider->GetValue(), iHeight = 0; i <= pSlider->GetMaxValue() && iHeight < GetHeight() - m_Gui.GetFont()->GetStringHeight(); i++)
+      {
+        for(int i = pSlider->GetValue(), iHeight = 0; i <= 
+          pSlider->GetMaxValue() && iHeight < GetHeight() - 
+          m_Gui.GetFont()->GetStringHeight(); i++)
         {
-          m_Gui.GetFont()->DrawString(Pos.GetX() + 3, Pos.GetY() + iHeight, 0, pString, m_vStrings[ i ], GetWidth() - HELPERSLIDER_WIDTH);
+          m_Gui.GetFont()->DrawString(Pos.GetX() + 3, Pos.GetY() + iHeight, 0, 
+            pString, m_vStrings[ i ], GetWidth() - HELPERSLIDER_WIDTH);
           iHeight += iAddHeight;
         }
+      }
 
-        pSlider->Draw(Pos);
+      pSlider->Draw(Pos);
     }
 
     void CTextBox::PreDraw()
@@ -70,7 +89,8 @@ namespace Hades
     {
       CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
 
-      SetMouseOver(pMouse.InArea(Pos.GetX(), Pos.GetY(), GetWidth(), GetHeight()));
+      SetMouseOver(pMouse.InArea(Pos.GetX(), Pos.GetY(), GetWidth(), 
+        GetHeight()));
 
       pSlider->MouseMove(Pos, pMouse);
     }
@@ -80,47 +100,60 @@ namespace Hades
       CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
 
       if (GetMouseOver() || (!sKey.m_Down && !m_Gui.GetMouse().GetWheel()))
+      {
         return pSlider->KeyEvent(Pos, sKey);
+      }
 
       return true;
     }
 
-    void CTextBox::AddString(std::string sString)
+    void CTextBox::AddString(std::string MyString)
     {
-      if (!sString.length())
-        return;
+      boost::lock_guard<boost::recursive_mutex> MyLock(m_Mutex);
 
-      std::vector<std::string> vPending;
-      int iLength = static_cast<int>(sString.length());
-      for(int i = iLength - 1; i > 0; i--)
+      if (MyString.empty())
       {
-        if (sString[ i ] == '\n')
-        {
-          sString[ i ] = '\0';
+        return;
+      }
 
-          if (i + 1 < iLength)
+      std::vector<std::string> Pending;
+      std::size_t StringLen = MyString.size();
+      for (std::size_t i = StringLen; i && i--; )
+      {
+        if (MyString[i] == '\n')
+        {
+          MyString[i] = '\0';
+
+          if (i + 1 < MyString.size())
           {
-            if (sString[ i + 1 ] == '\r')
+            if (MyString[i + 1] == '\r')
             {
-              if (i + 2 < iLength)
-                vPending.push_back(&sString.c_str()[ i + 2 ]);
+              if (i + 2 < StringLen)
+              {
+                Pending.push_back(&MyString.c_str()[i + 2]);
+              }
             }
             else
-              vPending.push_back(&sString.c_str()[ i + 1 ]);
+            {
+              Pending.push_back(&MyString.c_str()[i + 1]);
+            }
           }
         }
       }
 
       pSlider->SetMaxValue(m_vStrings.size());
-      m_vStrings.push_back(sString.c_str());
+
+      m_vStrings.push_back(MyString.c_str());
 
       int iHeight = 0;
       for(int i = pSlider->GetValue(); i <= pSlider->GetMaxValue(); i++)
       {
-        float fWidth = static_cast<float>(m_Gui.GetFont()->GetStringWidth(m_vStrings[ i ].c_str()));
-        int iLines = static_cast<int>(ceilf(fWidth / (GetWidth() - HELPERSLIDER_WIDTH)));
+        float fWidth = static_cast<float>(m_Gui.GetFont()->GetStringWidth(
+          m_vStrings[i]));
+        int iLines = static_cast<int>(ceilf(fWidth / (GetWidth() - 
+          HELPERSLIDER_WIDTH)));
 
-        int iTempHeight = iLines*m_Gui.GetFont()->GetStringHeight();
+        int iTempHeight = iLines * m_Gui.GetFont()->GetStringHeight();
         iHeight += iTempHeight;
 
         while(iHeight > GetHeight() - m_Gui.GetFont()->GetStringHeight())
@@ -130,12 +163,17 @@ namespace Hades
         }
       }
 
-      for(std::vector<std::string>::reverse_iterator iIter = vPending.rbegin(); iIter != vPending.rend(); iIter++)
-        AddString(*iIter);
+      std::for_each(Pending.rbegin(), Pending.rend(), 
+        [this] (std::string const& Current)
+      {
+        AddString(Current);
+      });
     }
 
     void CTextBox::Clear()
     {
+      boost::lock_guard<boost::recursive_mutex> MyLock(m_Mutex);
+
       m_vStrings.clear();
     }
 

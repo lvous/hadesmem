@@ -24,6 +24,10 @@ THE SOFTWARE.
 
 #include "CGUI.h"
 
+#pragma warning(push, 1)
+#include <boost/thread/recursive_mutex.hpp>
+#pragma warning(pop)
+
 namespace Hades
 {
   namespace GUI
@@ -40,6 +44,9 @@ namespace Hades
       std::vector<std::string> m_vStrings;
 
       CColor * pString, * pInner, * pBorder;
+
+      boost::recursive_mutex m_Mutex;
+
     public:
       CTextBox(class CGUI& Gui, TiXmlElement* pElement);
 
