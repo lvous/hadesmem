@@ -87,6 +87,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Hades-HXGenHack", "Hades-HX
 		{EBA1A67B-2C15-41A3-9891-5D8F59B5FBA8} = {EBA1A67B-2C15-41A3-9891-5D8F59B5FBA8}
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hades-DotNetTest", "Hades-DotNetTest\Hades-DotNetTest.csproj", "{EC60D026-C217-447E-A26D-A3838B85D2A4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hades-DomainManager", "Hades-DomainManager\Hades-DomainManager.csproj", "{FFDEA1C2-D17F-4062-A92A-D029149B4021}"
+EndProject
 Global
 	GlobalSection(SubversionScc) = preSolution
 		Svn-Managed = True
@@ -227,6 +231,22 @@ Global
 		{60A74D9D-3A2C-40AB-BD6A-35D12B5A0C39}.Release|Win32.Build.0 = Release|Win32
 		{60A74D9D-3A2C-40AB-BD6A-35D12B5A0C39}.Release|x64.ActiveCfg = Release|x64
 		{60A74D9D-3A2C-40AB-BD6A-35D12B5A0C39}.Release|x64.Build.0 = Release|x64
+		{EC60D026-C217-447E-A26D-A3838B85D2A4}.Debug|Win32.ActiveCfg = Debug|x86
+		{EC60D026-C217-447E-A26D-A3838B85D2A4}.Debug|Win32.Build.0 = Debug|x86
+		{EC60D026-C217-447E-A26D-A3838B85D2A4}.Debug|x64.ActiveCfg = Debug|x64
+		{EC60D026-C217-447E-A26D-A3838B85D2A4}.Debug|x64.Build.0 = Debug|x64
+		{EC60D026-C217-447E-A26D-A3838B85D2A4}.Release|Win32.ActiveCfg = Release|x86
+		{EC60D026-C217-447E-A26D-A3838B85D2A4}.Release|Win32.Build.0 = Release|x86
+		{EC60D026-C217-447E-A26D-A3838B85D2A4}.Release|x64.ActiveCfg = Release|x64
+		{EC60D026-C217-447E-A26D-A3838B85D2A4}.Release|x64.Build.0 = Release|x64
+		{FFDEA1C2-D17F-4062-A92A-D029149B4021}.Debug|Win32.ActiveCfg = Debug|x86
+		{FFDEA1C2-D17F-4062-A92A-D029149B4021}.Debug|Win32.Build.0 = Debug|x86
+		{FFDEA1C2-D17F-4062-A92A-D029149B4021}.Debug|x64.ActiveCfg = Debug|x64
+		{FFDEA1C2-D17F-4062-A92A-D029149B4021}.Debug|x64.Build.0 = Debug|x64
+		{FFDEA1C2-D17F-4062-A92A-D029149B4021}.Release|Win32.ActiveCfg = Release|x86
+		{FFDEA1C2-D17F-4062-A92A-D029149B4021}.Release|Win32.Build.0 = Release|x86
+		{FFDEA1C2-D17F-4062-A92A-D029149B4021}.Release|x64.ActiveCfg = Release|x64
+		{FFDEA1C2-D17F-4062-A92A-D029149B4021}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

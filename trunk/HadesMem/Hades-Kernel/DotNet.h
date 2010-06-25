@@ -42,37 +42,45 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include "Hades-Common/Error.h"
 #include "Hades-D3D9/D3D9Helper.h"
 
-
 namespace Hades
 {
   // DotNetMgr exception type
   class DotNetMgrError : public virtual HadesError 
   { };
 
+  // .NET managing class
+  // Thanks to Apoc for the code this is based off.
   class DotNetMgr
   {
   public:
+    // Constructor
     DotNetMgr(class Kernel* pKernel, std::wstring const& ConfigPath);
 
+    // Destructor
     ~DotNetMgr();
 
+    // Load .NET assembly
     void LoadAssembly(std::wstring const& Assembly, 
       std::wstring const& Type, std::wstring const& Method, 
       std::wstring const& Parameters);
 
   private:
+    // Real LoadAssembly implementation
     void LoadAssemblyReal(class Kernel* pKernel, 
       std::wstring Assembly, 
       std::wstring Type, 
       std::wstring Method, 
       std::wstring Parameters);
 
+    // Kernel instance
     class Kernel* m_pKernel;
 
+    // CLR COM interface
     CComPtr<ICLRMetaHost> m_pMetaHost;
     CComPtr<ICLRRuntimeInfo> m_pRuntimeInfo;
     CComPtr<ICLRRuntimeHost> m_pClrHost;
 
+    // Is CLR started
     bool m_ClrStarted;
   };
 }

@@ -20,6 +20,7 @@
 
 namespace Hades
 {
+  // Constructor
   DotNetMgr::DotNetMgr(Kernel* pKernel, std::wstring const& ConfigPath) 
     : m_pKernel(pKernel), 
     m_pMetaHost(nullptr), 
@@ -121,15 +122,18 @@ namespace Hades
 
     m_ClrStarted = true;
   }
-
+    
+  // Destructor
   DotNetMgr::~DotNetMgr()
   {
+    // Stop CLR if necessary
     if (m_ClrStarted)
     {
       m_pClrHost->Stop();
     }
   }
 
+  // Load .NET assembly
   void DotNetMgr::LoadAssembly(std::wstring const& Assembly, 
     std::wstring const& Type, std::wstring const& Method, 
     std::wstring const& Parameters)
@@ -139,6 +143,7 @@ namespace Hades
     LoadThread;
   }
 
+  // Real LoadAssembly implementation
   void DotNetMgr::LoadAssemblyReal(Kernel* pKernel, 
     std::wstring Assembly, 
     std::wstring Type, 
