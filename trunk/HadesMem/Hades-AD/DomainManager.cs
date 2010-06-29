@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
+using System.Windows.Forms;
 
 namespace HadesAD
 {
@@ -38,7 +39,7 @@ namespace HadesAD
     {
         public static void Echo(string text)
         {
-
+            MessageBox.Show(text);
         }
     }
 
