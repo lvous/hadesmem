@@ -151,12 +151,8 @@ namespace Hades
         ErrorString("Could not get domain manager for the default domain."));
     }
 
-    std::string DomainTest(boost::lexical_cast<std::string>(Domain));
-    std::string AssemblyTemp(boost::lexical_cast<std::string>(Assembly));
-    std::string ParametersTemp(boost::lexical_cast<std::string>(Parameters));
-
-    pDomainMgrForDefaultDomain->RunAssembly(DomainTest.c_str(), 
-      AssemblyTemp.c_str(), ParametersTemp.c_str());
+    pDomainMgrForDefaultDomain->RunAssembly(Domain.c_str(), Assembly.c_str(), 
+      Parameters.c_str());
   }
 
   void __stdcall DotNetMgr::SubscribeFrameEvent(FrameCallback Function)
