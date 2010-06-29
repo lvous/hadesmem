@@ -20,67 +20,52 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 // C++ Standard Library
+#include <memory>
 #include <string>
-
-// Boost
-#pragma warning(push, 1)
-#pragma warning(disable: 4267)
-#include <boost/signals2.hpp>
-#pragma warning(pop)
+#include <vector>
 
 // Windows API
-#include <Windows.h>
 #include <atlbase.h>
-#include <metahost.h>
-#include <CorError.h>
+#include <mscoree.h>
+#import <mscorlib.tlb> raw_interfaces_only\
+  rename("ReportEvent","ReportEventManaged")
 
-// DirectX
+// DirectX API
 #include <d3d9.h>
-#include <d3dx9.h>
 
 // Hades
+#include "Hades-D3D9/D3D9Mgr.h"
 #include "Hades-Common/Error.h"
-#include "Hades-D3D9/D3D9Helper.h"
 
+// Hades namespace
 namespace Hades
 {
   // DotNetMgr exception type
   class DotNetMgrError : public virtual HadesError 
   { };
 
-  // .NET managing class
-  // Thanks to Apoc for the code this is based off.
+  // DotNet related code
   class DotNetMgr
   {
   public:
-    // Constructor
-    DotNetMgr(class Kernel* pKernel, std::wstring const& ConfigPath);
+    typedef void (__stdcall* FrameCallback)();
 
-    // Destructor
-    ~DotNetMgr();
+    static void __stdcall SubscribeFrameEvent(FrameCallback Function);
 
-    // Load .NET assembly
-    void LoadAssembly(std::wstring const& Assembly, 
-      std::wstring const& Type, std::wstring const& Method, 
-      std::wstring const& Parameters);
+    void LoadAssembly(const std::wstring& Assembly, 
+      const std::wstring& Parameters, 
+      const std::wstring& Domain);
+
+    void OnFrameEvent(IDirect3DDevice9* pDevice, D3D9HelperPtr pHelper);
+
+    DotNetMgr(class Kernel* pKernel);
 
   private:
-    // Real LoadAssembly implementation
-    void LoadAssemblyReal(class Kernel* pKernel, 
-      std::wstring Assembly, 
-      std::wstring Type, 
-      std::wstring Method, 
-      std::wstring Parameters);
-
-    // Kernel instance
+    CComPtr<ICLRRuntimeHost> m_pClrHost;
+    class HadesHostControl* m_pClrHostControl;
+    bool m_IsDotNetInitialized;
     class Kernel* m_pKernel;
 
-    // CLR COM interface
-    CComPtr<ICLRMetaHost> m_pMetaHost;
-    CComPtr<ICLRRuntimeInfo> m_pRuntimeInfo;
-    CComPtr<ICLRRuntimeHost> m_pClrHost;
-
-    // Is CLR started
-    bool m_ClrStarted;
+    static std::vector<FrameCallback> m_FrameEvents;
   };
 }

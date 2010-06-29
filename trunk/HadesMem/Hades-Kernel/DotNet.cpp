@@ -1,192 +1,176 @@
-// C++ Standard Library
-#include <vector>
-#include <fstream>
-#include <iostream>
+/*
+This file is part of HadesMem.
+Copyright © 2010 Cypherjb (aka Chazwazza, aka Cypher). 
+<http://www.cypherjb.com/> <cypher.jb@gmail.com>
 
-// Boost
-#pragma warning(push, 1)
-#include <boost/thread.hpp>
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/locks.hpp>
-#pragma warning(pop)
+HadesMem is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-// RapidXML
-#include <RapidXML/rapidxml.hpp>
+HadesMem is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
+*/
 
 // Hades
 #include "DotNet.h"
 #include "Kernel.h"
-#include "Hades-D3D9/GuiMgr.h"
+#include "CLRHostControl.h"
+#include "Hades-Common/I18n.h"
 
+// C++ Standard Library
+#include <exception>
+#include <stdexcept>
+#include <iostream>
+
+// Boost C++ Libraries
+#pragma warning(push, 1)
+#include <boost/format.hpp>
+#include <boost/foreach.hpp>
+#include <boost/function.hpp>
+#pragma warning(pop)
+
+// Hades namespace
 namespace Hades
 {
+  // Static data
+  std::vector<DotNetMgr::FrameCallback> DotNetMgr::m_FrameEvents;
+
   // Constructor
-  DotNetMgr::DotNetMgr(Kernel* pKernel, std::wstring const& ConfigPath) 
-    : m_pKernel(pKernel), 
-    m_pMetaHost(nullptr), 
-    m_pRuntimeInfo(nullptr), 
-    m_pClrHost(nullptr), 
-    m_ClrStarted(false)
+  DotNetMgr::DotNetMgr(Kernel* pKernel) 
+    : m_pClrHost(), 
+    m_pClrHostControl(nullptr), 
+    m_IsDotNetInitialized(false), 
+    m_pKernel(pKernel)
   {
-    // Open config file
-    std::wifstream ConfigFile(ConfigPath.c_str());
-    if (!ConfigFile)
+#pragma warning(push)
+#pragma warning(disable: 4996)
+    // Initialize the CLR using CorBindToRuntimeEx. This gets us
+    // the ICLRRuntimeHost pointer we'll need to call Start.
+    // TODO: Test using null as version
+    HRESULT BindResult = CorBindToRuntimeEx(L"v2.0.50727", L"wks", 
+      STARTUP_CONCURRENT_GC, CLSID_CLRRuntimeHost, IID_ICLRRuntimeHost, 
+      reinterpret_cast<PVOID*>(&m_pClrHost));
+    if (FAILED(BindResult))
     {
       BOOST_THROW_EXCEPTION(DotNetMgrError() << 
         ErrorFunction("DotNetMgr::DotNetMgr") << 
-        ErrorString("Could not open config file."));
+        ErrorString("Failed to bind .NET framework.") << 
+        ErrorCodeWin(BindResult));
     }
+#pragma warning(pop)
 
-    // Copy file to buffer
-    std::istreambuf_iterator<wchar_t> ConfigFileEnd;
-    std::istreambuf_iterator<wchar_t> ConfigFileBeg(ConfigFile);
-    std::vector<wchar_t> ConfigFileBuf(ConfigFileBeg, ConfigFileEnd);
-    ConfigFileBuf.push_back(L'\0');
+    m_pClrHostControl = new HadesHostControl();
+    m_pClrHost->SetHostControl(static_cast<IHostControl*>(
+      m_pClrHostControl));
 
-    // Open XML document
-    rapidxml::xml_document<wchar_t> ConfigDoc;
-    ConfigDoc.parse<0>(&ConfigFileBuf[0]);
-
-    // Ensure runtime tag is found
-    auto RuntimeTag = ConfigDoc.first_node(L"Runtime");
-    if (!RuntimeTag)
+    // Get a pointer to the ICLRControl interface.
+    ICLRControl *pCLRControl = NULL;
+    HRESULT GetClrResult = m_pClrHost->GetCLRControl(&pCLRControl);
+    if (FAILED(GetClrResult))
     {
       BOOST_THROW_EXCEPTION(DotNetMgrError() << 
         ErrorFunction("DotNetMgr::DotNetMgr") << 
-        ErrorString("Runtime data must be specified."));
+        ErrorString("Could not get CLR control.") << 
+        ErrorCodeWin(GetClrResult));
     }
 
-    // Get runtime version
-    auto RuntimeVerNode = RuntimeTag->first_attribute(L"Version");
-    if (!RuntimeVerNode)
-    {
-      BOOST_THROW_EXCEPTION(DotNetMgrError() << 
-        ErrorFunction("DotNetMgr::DotNetMgr") << 
-        ErrorString("Runtime version must be specified."));
-    }
-    std::wstring const RuntimeVersion(RuntimeVerNode->value());
+    // Call SetAppDomainManagerType to associate our domain manager with
+    // the process.
+    std::wstring DomainMgr(L"HadesAD, Version=1.0.0.0, PublicKeyToken="
+      L"cd2e409a307a3c42, culture=neutral, processorArchitecture=MSIL");
+    std::wstring DomainMgrType(L"HadesAD.HadesVM");
+    pCLRControl->SetAppDomainManagerType(DomainMgr.c_str(), 
+      DomainMgrType.c_str());
 
-    HRESULT ClrCreateResult = CLRCreateInstance(
-      CLSID_CLRMetaHost, 
-      IID_ICLRMetaHost, 
-      reinterpret_cast<void**>(&m_pMetaHost.p));
-    if (FAILED(ClrCreateResult))
-    {
-      BOOST_THROW_EXCEPTION(DotNetMgrError() << 
-        ErrorFunction("DotNetMgr::DotNetMgr") << 
-        ErrorString("Could not create CLR Meta Host.") << 
-        ErrorCodeWin(ClrCreateResult));
-    }
-
-    HRESULT GetRuntimeResult = m_pMetaHost->GetRuntime(
-      RuntimeVersion.c_str(), 
-      IID_ICLRRuntimeInfo, 
-      reinterpret_cast<void**>(&m_pRuntimeInfo.p));
-    if (FAILED(GetRuntimeResult))
-    {
-      BOOST_THROW_EXCEPTION(DotNetMgrError() << 
-        ErrorFunction("DotNetMgr::DotNetMgr") << 
-        ErrorString("Could not create CLR Runtime Info.") << 
-        ErrorCodeWin(GetRuntimeResult));
-    }
-
-    HRESULT BindLegacyResult = m_pRuntimeInfo->BindAsLegacyV2Runtime();
-    if (FAILED(BindLegacyResult))
-    {
-      BOOST_THROW_EXCEPTION(DotNetMgrError() << 
-        ErrorFunction("DotNetMgr::DotNetMgr") << 
-        ErrorString("Could not bind as legacy runtime.") << 
-        ErrorCodeWin(BindLegacyResult));
-    }
-
-    HRESULT GetInterfaceResult = m_pRuntimeInfo->GetInterface(
-      CLSID_CLRRuntimeHost, 
-      IID_ICLRRuntimeHost, 
-      reinterpret_cast<void**>(&m_pClrHost.p));
-    if (FAILED(GetInterfaceResult))
-    {
-      BOOST_THROW_EXCEPTION(DotNetMgrError() << 
-        ErrorFunction("DotNetMgr::DotNetMgr") << 
-        ErrorString("Could not create CLR Runtime Host.") << 
-        ErrorCodeWin(GetInterfaceResult));
-    }
-
-    HRESULT ClrStartResult = m_pClrHost->Start();
-    if (FAILED(ClrStartResult))
+    // Start the CLR.
+    HRESULT StartResult = m_pClrHost->Start();
+    if (FAILED(StartResult))
     {
       BOOST_THROW_EXCEPTION(DotNetMgrError() << 
         ErrorFunction("DotNetMgr::DotNetMgr") << 
         ErrorString("Could not start CLR.") << 
-        ErrorCodeWin(ClrStartResult));
+        ErrorCodeWin(StartResult));
     }
 
-    m_ClrStarted = true;
+    HadesAD::IHadesVM* pDomainManagerForDefaultDomain = 
+      m_pClrHostControl->GetDomainManagerForDefaultDomain();
+
+    if (!pDomainManagerForDefaultDomain)
+    {
+      BOOST_THROW_EXCEPTION(DotNetMgrError() << 
+        ErrorFunction("DotNetMgr::DotNetMgr") << 
+        ErrorString("Could not find default domain CLR."));
+    }
+
+    // Call into the default application domain to attach the frame event
+#pragma warning(push)
+#pragma warning(disable: 4244)
+    pDomainManagerForDefaultDomain->AttachFrameEvent(
+      reinterpret_cast<LONG_PTR>(&DotNetMgr::SubscribeFrameEvent));
+#pragma warning(pop)
+
+    m_IsDotNetInitialized = true;
+
+    std::wcout << "DotNetMgr: .NET framework successfully initialized." 
+      << std::endl;
+
+    // Register OnFrame event for callback system
+    m_pKernel->GetD3D9Mgr()->RegisterOnFrame(std::bind(
+      &DotNetMgr::OnFrameEvent, this, std::placeholders::_1, 
+      std::placeholders::_2));
+
+    // Debug output
+    std::wcout << "DotNetMgr initialized." << std::endl;
   }
-    
-  // Destructor
-  DotNetMgr::~DotNetMgr()
+
+  // Load an assembly in the context of the current process
+  void DotNetMgr::LoadAssembly(const std::wstring& Assembly, 
+    const std::wstring& Parameters, 
+    const std::wstring& Domain)
   {
-    // Stop CLR if necessary
-    if (m_ClrStarted)
+    if (!m_IsDotNetInitialized)
     {
-      m_pClrHost->Stop();
+      BOOST_THROW_EXCEPTION(DotNetMgrError() << 
+        ErrorFunction("DotNetMgr::DotNetMgr") << 
+        ErrorString(".NET is not initialized."));
     }
+
+    HadesAD::IHadesVM* pDomainMgrForDefaultDomain = m_pClrHostControl->
+      GetDomainManagerForDefaultDomain();
+
+    if (!pDomainMgrForDefaultDomain)
+    {
+      BOOST_THROW_EXCEPTION(DotNetMgrError() << 
+        ErrorFunction("DotNetMgr::DotNetMgr") << 
+        ErrorString("Could not get domain manager for the default domain."));
+    }
+
+    std::string DomainTest(boost::lexical_cast<std::string>(Domain));
+    std::string AssemblyTemp(boost::lexical_cast<std::string>(Assembly));
+    std::string ParametersTemp(boost::lexical_cast<std::string>(Parameters));
+
+    pDomainMgrForDefaultDomain->RunAssembly(DomainTest.c_str(), 
+      AssemblyTemp.c_str(), ParametersTemp.c_str());
   }
 
-  // Load .NET assembly
-  void DotNetMgr::LoadAssembly(std::wstring const& Assembly, 
-    std::wstring const& Type, std::wstring const& Method, 
-    std::wstring const& Parameters)
+  void __stdcall DotNetMgr::SubscribeFrameEvent(FrameCallback Function)
   {
-    boost::thread LoadThread(&DotNetMgr::LoadAssemblyReal, 
-      this, m_pKernel, Assembly, Type, Method, Parameters);
-    LoadThread;
+    m_FrameEvents.push_back(Function);
   }
 
-  // Real LoadAssembly implementation
-  void DotNetMgr::LoadAssemblyReal(Kernel* pKernel, 
-    std::wstring Assembly, 
-    std::wstring Type, 
-    std::wstring Method, 
-    std::wstring Parameters)
+  void DotNetMgr::OnFrameEvent(IDirect3DDevice9* /*pDevice*/, 
+    D3D9HelperPtr /*pHelper*/)
   {
-    try
+    std::for_each(m_FrameEvents.begin(), m_FrameEvents.end(), 
+      [] (FrameCallback Current) 
     {
-      DWORD AppDomainResult = 0;
-      HRESULT Result = m_pClrHost->ExecuteInDefaultAppDomain(
-        Assembly.c_str(), 
-        Type.c_str(), 
-        Method.c_str(), 
-        Parameters.c_str(), 
-        &AppDomainResult);
-      if (FAILED(Result))
-      {
-        std::wcout << "DotNetMgr::LoadAssembly: Failed to execute in default "
-          "app domain." << std::endl;
-
-        BOOST_THROW_EXCEPTION(DotNetMgrError() << 
-          ErrorFunction("DotNetMgr::LoadAssembly") << 
-          ErrorString("Could not execute in default app domain.") << 
-          ErrorCodeWin(Result));
-      }
-    }
-    catch (boost::exception const& e)
-    {
-      // Lock GUI mutex
-      boost::lock_guard<boost::mutex> GuiLock(pKernel->GetGuiMgr()->
-        GetGuiMutex());
-
-      // Print error information
-      pKernel->GetGuiMgr()->Print(boost::diagnostic_information(e));
-    }
-    catch (std::exception const& e)
-    {
-      // Lock GUI mutex
-      boost::lock_guard<boost::mutex> GuiLock(pKernel->GetGuiMgr()->
-        GetGuiMutex());
-
-      // Print error information
-      pKernel->GetGuiMgr()->Print(e.what());
-    }
+      Current();
+    });
   }
 }

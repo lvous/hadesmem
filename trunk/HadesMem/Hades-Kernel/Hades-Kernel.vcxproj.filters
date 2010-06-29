@@ -30,6 +30,9 @@
     <ClCompile Include="DotNet.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="CLRHostControl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Kernel.h">
@@ -42,6 +45,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DotNet.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CLRHostControl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

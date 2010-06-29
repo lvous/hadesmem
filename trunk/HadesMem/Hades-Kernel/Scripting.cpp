@@ -54,15 +54,13 @@ namespace Hades
     { }
 
     void DotNet::operator()(std::string const& Assembly, 
-      std::string const& Type, std::string const& Method, 
-      std::string const& Parameters) const
+      std::string const& Parameters, std::string const& Domain) const
     {
       HADES_SCRIPTING_TRYCATCH_BEGIN
         m_pDotNet->LoadAssembly(
           boost::lexical_cast<std::wstring>(Assembly), 
-          boost::lexical_cast<std::wstring>(Type), 
-          boost::lexical_cast<std::wstring>(Method), 
-          boost::lexical_cast<std::wstring>(Parameters));
+          boost::lexical_cast<std::wstring>(Parameters), 
+          boost::lexical_cast<std::wstring>(Domain));
       HADE_SCRIPTING_TRYCATCH_END
     }
   }

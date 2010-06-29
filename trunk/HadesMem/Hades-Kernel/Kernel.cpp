@@ -84,22 +84,6 @@ namespace Hades
     Loader::Initialize(this);
     Loader::LoadConfig(m_PathToSelfDir + L"/Config/Loader.xml");
 
-    // Initialize .NET
-    m_pDotNetMgr.reset(new DotNetMgr(this, m_PathToSelfDir + 
-      L"/Config/DotNet.xml"));
-
-    // Expose Hades API
-    luabind::module(m_LuaMgr.GetState(), "Hades")
-    [
-      luabind::def("WriteLn", luabind::tag_function<void (std::string const&)>(
-        Wrappers::WriteLn(this)))
-      ,luabind::def("LoadExt", luabind::tag_function<void (std::string const&)>(
-      Wrappers::LoadExt(this)))
-      ,luabind::def("DotNet", luabind::tag_function<void (std::string const&, 
-        std::string const&, std::string const&, std::string const&)>(
-        Wrappers::DotNet(&*m_pDotNetMgr)))
-    ];
-
     // Start aux modules
 #if defined(_M_X64)
     std::wstring const D3D9ModName(L"Hades-D3D9_AMD64.dll");
@@ -112,6 +96,21 @@ namespace Hades
 #endif
     LoadModule(m_PathToSelfDir + L"\\" + InputModName);
     LoadModule(m_PathToSelfDir + L"\\" + D3D9ModName);
+
+    // Initialize .NET
+    m_pDotNetMgr.reset(new DotNetMgr(this));
+
+    // Expose Hades API
+    luabind::module(m_LuaMgr.GetState(), "Hades")
+    [
+      luabind::def("WriteLn", luabind::tag_function<void (std::string const&)>(
+        Wrappers::WriteLn(this)))
+      ,luabind::def("LoadExt", luabind::tag_function<void (std::string const&)>(
+        Wrappers::LoadExt(this)))
+      ,luabind::def("DotNet", luabind::tag_function<void (std::string const&, 
+        std::string const&, std::string const&)>(Wrappers::DotNet(
+        &*m_pDotNetMgr)))
+    ];
 
     // Debug output
     std::wcout << "Kernel::Initialize: Hades-Kernel initialized." << std::endl;

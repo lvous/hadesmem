@@ -215,6 +215,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="CLRHostControl.cpp" />
     <ClCompile Include="DllMain.cpp" />
     <ClCompile Include="DotNet.cpp" />
     <ClCompile Include="Kernel.cpp" />
@@ -222,6 +223,7 @@
     <ClCompile Include="Scripting.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CLRHostControl.h" />
     <ClInclude Include="DotNet.h" />
     <ClInclude Include="Kernel.h" />
     <ClInclude Include="Loader.h" />

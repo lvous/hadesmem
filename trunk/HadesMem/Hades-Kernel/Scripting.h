@@ -89,8 +89,8 @@ namespace Hades
       explicit DotNet(DotNetMgr* pDotNet);
 
       void operator() (std::string const& Assembly, 
-        std::string const& Type, std::string const& Method, 
-        std::string const& Parameters) const;
+        std::string const& Parameters, 
+        std::string const& Domain) const;
 
     private:
       DotNetMgr* m_pDotNet;

@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using HadesAD;
 
 namespace Hades_DotNetTest
 {
@@ -14,6 +15,17 @@ namespace Hades_DotNetTest
         public Main()
         {
             InitializeComponent();
+        }
+
+        private void Main_Load(object sender, EventArgs e)
+        {
+            HadesVM.AddFrameHandler(OnFrame);
+        }
+
+        public void OnFrame()
+        {
+            LstOutput.Items.Add("OnFrame!");
+            //MessageBox.Show("OnFrame!");
         }
     }
 }
