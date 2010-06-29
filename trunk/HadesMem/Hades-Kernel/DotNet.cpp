@@ -52,7 +52,6 @@ namespace Hades
 #pragma warning(disable: 4996)
     // Initialize the CLR using CorBindToRuntimeEx. This gets us
     // the ICLRRuntimeHost pointer we'll need to call Start.
-    // TODO: Test using null as version
     HRESULT BindResult = CorBindToRuntimeEx(L"v2.0.50727", L"wks", 
       STARTUP_CONCURRENT_GC, CLSID_CLRRuntimeHost, IID_ICLRRuntimeHost, 
       reinterpret_cast<PVOID*>(&m_pClrHost));
