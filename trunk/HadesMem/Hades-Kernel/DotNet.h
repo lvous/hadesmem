@@ -40,32 +40,35 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Hades namespace
 namespace Hades
 {
-  // DotNetMgr exception type
-  class DotNetMgrError : public virtual HadesError 
-  { };
-
-  // DotNet related code
-  class DotNetMgr
+  namespace Kernel
   {
-  public:
-    typedef void (__stdcall* FrameCallback)();
+    // DotNetMgr exception type
+    class DotNetMgrError : public virtual HadesError 
+    { };
 
-    static void __stdcall SubscribeFrameEvent(FrameCallback Function);
+    // DotNet related code
+    class DotNetMgr
+    {
+    public:
+      typedef void (__stdcall* FrameCallback)();
 
-    void LoadAssembly(const std::wstring& Assembly, 
-      const std::wstring& Parameters, 
-      const std::wstring& Domain);
+      static void __stdcall SubscribeFrameEvent(FrameCallback Function);
 
-    void OnFrameEvent(IDirect3DDevice9* pDevice, D3D9HelperPtr pHelper);
+      void LoadAssembly(const std::wstring& Assembly, 
+        const std::wstring& Parameters, 
+        const std::wstring& Domain);
 
-    DotNetMgr(class Kernel* pKernel);
+      void OnFrameEvent(IDirect3DDevice9* pDevice, D3D9::D3D9HelperPtr pHelper);
 
-  private:
-    CComPtr<ICLRRuntimeHost> m_pClrHost;
-    class HadesHostControl* m_pClrHostControl;
-    bool m_IsDotNetInitialized;
-    class Kernel* m_pKernel;
+      DotNetMgr(class Kernel* pKernel);
 
-    static std::vector<FrameCallback> m_FrameEvents;
-  };
+    private:
+      CComPtr<ICLRRuntimeHost> m_pClrHost;
+      class HadesHostControl* m_pClrHostControl;
+      bool m_IsDotNetInitialized;
+      class Kernel* m_pKernel;
+
+      static std::vector<FrameCallback> m_FrameEvents;
+    };
+  }
 }

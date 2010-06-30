@@ -74,7 +74,7 @@ extern "C" __declspec(dllexport) DWORD __stdcall Initialize(HMODULE Module)
       << std::endl;
 
     // Initialize Hades kernel
-    static Hades::Kernel MyKernel;
+    static Hades::Kernel::Kernel MyKernel;
     MyKernel.Initialize();
   }
   catch (boost::exception const& e)

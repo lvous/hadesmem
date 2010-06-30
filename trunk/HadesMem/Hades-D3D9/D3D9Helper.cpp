@@ -22,76 +22,79 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace Hades
 {
-  // Constructor
-  D3D9Helper::D3D9Helper() 
-    : m_pLine(nullptr) 
-  { }
-
-  // OnLostDevice callback
-  void D3D9Helper::OnLostDevice(IDirect3DDevice9* /*pDevice*/, 
-    D3D9HelperPtr /*pHelper*/)
+  namespace D3D9
   {
-    m_pLine->OnLostDevice();
-  }
+    // Constructor
+    D3D9Helper::D3D9Helper() 
+      : m_pLine(nullptr) 
+    { }
 
-  // OnResetDevice callback
-  void D3D9Helper::OnResetDevice(IDirect3DDevice9* /*pDevice*/, 
-    D3D9HelperPtr /*pHelper*/)
-  {
-    m_pLine->OnResetDevice();
-  }
+    // OnLostDevice callback
+    void D3D9Helper::OnLostDevice(IDirect3DDevice9* /*pDevice*/, 
+      D3D9HelperPtr /*pHelper*/)
+    {
+      m_pLine->OnLostDevice();
+    }
 
-  // OnInitialize callback
-  void D3D9Helper::OnInitialize(IDirect3DDevice9* pDevice, 
-    D3D9HelperPtr /*pHelper*/)
-  {
-    D3DXCreateLine(pDevice, &m_pLine);
-  }
+    // OnResetDevice callback
+    void D3D9Helper::OnResetDevice(IDirect3DDevice9* /*pDevice*/, 
+      D3D9HelperPtr /*pHelper*/)
+    {
+      m_pLine->OnResetDevice();
+    }
 
-  // Draw box
-  void D3D9Helper::DrawBox(Math::Vec2f const& BottomLeft, 
-    Math::Vec2f const& TopRight, float LineWidth, D3DCOLOR Color)
-  {
-    // Width of box
-    float Width = TopRight[0] - BottomLeft[0];
-    // Height of box
-    float Height = TopRight[1] - BottomLeft[1];
+    // OnInitialize callback
+    void D3D9Helper::OnInitialize(IDirect3DDevice9* pDevice, 
+      D3D9HelperPtr /*pHelper*/)
+    {
+      D3DXCreateLine(pDevice, &m_pLine);
+    }
 
-    // Top left corner of box
-    Math::Vec2f TopLeft(TopRight[0] - Width, TopRight[1]);
-    // Bottom right corner of box
-    Math::Vec2f BottomRight(TopRight[0], TopRight[1] - Height);
+    // Draw box
+    void D3D9Helper::DrawBox(Math::Vec2f const& BottomLeft, 
+      Math::Vec2f const& TopRight, float LineWidth, D3DCOLOR Color)
+    {
+      // Width of box
+      float Width = TopRight[0] - BottomLeft[0];
+      // Height of box
+      float Height = TopRight[1] - BottomLeft[1];
 
-    // Bottom left to top left
-    DrawLine(BottomLeft, TopLeft, LineWidth, Color);
-    // Bottom left to bottom right
-    DrawLine(BottomLeft, BottomRight, LineWidth, Color);
-    // Bottom right to top right
-    DrawLine(BottomRight, TopRight, LineWidth, Color);
-    // Top left to top right
-    DrawLine(TopLeft, TopRight, LineWidth, Color);
-  }
+      // Top left corner of box
+      Math::Vec2f TopLeft(TopRight[0] - Width, TopRight[1]);
+      // Bottom right corner of box
+      Math::Vec2f BottomRight(TopRight[0], TopRight[1] - Height);
 
-  // Draw line
-  void D3D9Helper::DrawLine(Math::Vec2f const& Start, Math::Vec2f const& End, 
-    float Width, D3DCOLOR Color)
-  {
-    m_pLine->SetWidth(Width);
+      // Bottom left to top left
+      DrawLine(BottomLeft, TopLeft, LineWidth, Color);
+      // Bottom left to bottom right
+      DrawLine(BottomLeft, BottomRight, LineWidth, Color);
+      // Bottom right to top right
+      DrawLine(BottomRight, TopRight, LineWidth, Color);
+      // Top left to top right
+      DrawLine(TopLeft, TopRight, LineWidth, Color);
+    }
 
-    D3DXVECTOR2 D3DXVec[2] = 
-    { 
-      D3DXVECTOR2(Start[0], Start[1]), 
-      D3DXVECTOR2(End[0], End[1]) 
-    };
+    // Draw line
+    void D3D9Helper::DrawLine(Math::Vec2f const& Start, Math::Vec2f const& End, 
+      float Width, D3DCOLOR Color)
+    {
+      m_pLine->SetWidth(Width);
 
-    m_pLine->Begin();
-    m_pLine->Draw(D3DXVec, 2, Color);
-    m_pLine->End();
-  }
+      D3DXVECTOR2 D3DXVec[2] = 
+      { 
+        D3DXVECTOR2(Start[0], Start[1]), 
+        D3DXVECTOR2(End[0], End[1]) 
+      };
 
-  // Get D3D line
-  ID3DXLine* D3D9Helper::GetLine()
-  {
-    return m_pLine;
+      m_pLine->Begin();
+      m_pLine->Draw(D3DXVec, 2, Color);
+      m_pLine->End();
+    }
+
+    // Get D3D line
+    ID3DXLine* D3D9Helper::GetLine()
+    {
+      return m_pLine;
+    }
   }
 }

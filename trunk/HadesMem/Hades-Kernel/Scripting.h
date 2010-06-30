@@ -45,56 +45,59 @@ extern "C"
 
 namespace Hades
 {
-  // Lua exception type
-  class LuaError : public virtual HadesError 
-  { };
-
-  // LuaState wrapper class for RAII
-  class LuaState : private boost::noncopyable
+  namespace Kernel
   {
-  public:
-    // Destructor
-    ~LuaState();
+    // Lua exception type
+    class LuaError : public virtual HadesError 
+    { };
 
-    // Implicitly act as a lua_State pointer
-    operator lua_State*() const;
+    // LuaState wrapper class for RAII
+    class LuaState : private boost::noncopyable
+    {
+    public:
+      // Destructor
+      ~LuaState();
 
-    // Implicitly act as a lua_State pointer
-    operator lua_State*();
+      // Implicitly act as a lua_State pointer
+      operator lua_State*() const;
 
-  protected:
-    // Constructor
-    LuaState();
+      // Implicitly act as a lua_State pointer
+      operator lua_State*();
 
-  private:
-    // Only LuaMgr can create states
-    friend class LuaMgr;
+    protected:
+      // Constructor
+      LuaState();
 
-    // Underlying lua state
-    lua_State* m_State;
-  };
+    private:
+      // Only LuaMgr can create states
+      friend class LuaMgr;
 
-  // Lua managing class
-  class LuaMgr : private boost::noncopyable
-  {
-  public:
-    // Constructor
-    LuaMgr();
+      // Underlying lua state
+      lua_State* m_State;
+    };
 
-    // Get LUA state
-    const LuaState& GetState() const;
+    // Lua managing class
+    class LuaMgr : private boost::noncopyable
+    {
+    public:
+      // Constructor
+      LuaMgr();
 
-    // Run a LUA script on disk
-    void RunFile(std::string const& Path) const;
+      // Get LUA state
+      const LuaState& GetState() const;
 
-    // Run a LUA script from a string
-    void RunString(std::string const& Script) const;
+      // Run a LUA script on disk
+      void RunFile(std::string const& Path) const;
 
-    // Reports an error to the console
-    void ReportError(int Status) const;
+      // Run a LUA script from a string
+      void RunString(std::string const& Script) const;
 
-  private:
-    // Lua state
-    LuaState m_State;
-  };
+      // Reports an error to the console
+      void ReportError(int Status) const;
+
+    private:
+      // Lua state
+      LuaState m_State;
+    };
+  }
 }

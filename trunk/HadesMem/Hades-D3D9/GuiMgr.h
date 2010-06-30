@@ -33,71 +33,75 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include "D3D9Helper.h"
 #include "Hades-GUI/CGUI.h"
 #include "Hades-Common/Error.h"
+#include "Hades-Kernel/Kernel.h"
 
 namespace Hades
 {
-  // GuiMgr exception type
-  class GuiMgrError : public virtual HadesError 
-  { };
-
-  // GUI managing class
-  class GuiMgr
+  namespace D3D9
   {
-  public:
-    // Constructor
-    GuiMgr(class Kernel* pKernel);
+    // GuiMgr exception type
+    class GuiMgrError : public virtual HadesError 
+    { };
 
-    // Print output
-    virtual void Print(std::string const& Output);
+    // GUI managing class
+    class GuiMgr
+    {
+    public:
+      // Constructor
+      GuiMgr(Kernel::Kernel* pKernel);
 
-    // Callback type
-    typedef boost::signals2::signal<void (std::string const& Input)> 
-      OnConsoleInputCallbacks;
+      // Print output
+      virtual void Print(std::string const& Output);
 
-    // Register callback for OnConsoleInput event
-    virtual boost::signals2::connection RegisterOnConsoleInput(
-      OnConsoleInputCallbacks::slot_type const& Subscriber);
+      // Callback type
+      typedef boost::signals2::signal<void (std::string const& Input)> 
+        OnConsoleInputCallbacks;
 
-    // Get GUI mutex
-    virtual boost::mutex& GetGuiMutex();
+      // Register callback for OnConsoleInput event
+      virtual boost::signals2::connection RegisterOnConsoleInput(
+        OnConsoleInputCallbacks::slot_type const& Subscriber);
 
-  private:
-    // Callback on input
-    std::string OnConsoleInput(char const* pszArgs, GUI::CElement* pElement);
+      // Get GUI mutex
+      virtual boost::mutex& GetGuiMutex();
 
-    // Input callbacks
-    bool OnInputMsg(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-    bool OnSetCursor(HCURSOR hCursor);
-    bool OnGetCursorPos(LPPOINT lpPoint);
-    bool OnSetCursorPos(int X, int Y);
+    private:
+      // Callback on input
+      std::string OnConsoleInput(char const* pszArgs, GUI::CElement* pElement);
 
-    // D3D9Mgr callbacks
-    void OnInitialize(IDirect3DDevice9* pDevice, D3D9HelperPtr pHelper);
-    void OnFrame(IDirect3DDevice9* pDevice, D3D9HelperPtr pHelper);
-    void OnLostDevice(IDirect3DDevice9* pDevice, D3D9HelperPtr pHelper);
-    void OnResetDevice(IDirect3DDevice9* pDevice, D3D9HelperPtr pHelper);
-    void OnRelease(IDirect3DDevice9* pDevice, D3D9HelperPtr pHelper);
+      // Input callbacks
+      bool OnInputMsg(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+      bool OnSetCursor(HCURSOR hCursor);
+      bool OnGetCursorPos(LPPOINT lpPoint);
+      bool OnSetCursorPos(int X, int Y);
 
-    // Toggle visibility
-    void ToggleVisible();
+      // D3D9Mgr callbacks
+      void OnInitialize(IDirect3DDevice9* pDevice, D3D9HelperPtr pHelper);
+      void OnFrame(IDirect3DDevice9* pDevice, D3D9HelperPtr pHelper);
+      void OnLostDevice(IDirect3DDevice9* pDevice, D3D9HelperPtr pHelper);
+      void OnResetDevice(IDirect3DDevice9* pDevice, D3D9HelperPtr pHelper);
+      void OnRelease(IDirect3DDevice9* pDevice, D3D9HelperPtr pHelper);
 
-    // GUI instance
-    GUI::CGUI* m_pGui;
+      // Toggle visibility
+      void ToggleVisible();
 
-    // Kernel instance
-    class Kernel* m_pKernel;
+      // GUI instance
+      GUI::CGUI* m_pGui;
 
-    // D3D9 device
-    IDirect3DDevice9* m_pDevice;
+      // Kernel instance
+      Kernel::Kernel* m_pKernel;
 
-    // Saved cursor position
-    int m_CursorX;
-    int m_CursorY;
+      // D3D9 device
+      IDirect3DDevice9* m_pDevice;
 
-    // OnConsoleInput callbacks
-    OnConsoleInputCallbacks m_CallsOnConsoleInput;
+      // Saved cursor position
+      int m_CursorX;
+      int m_CursorY;
 
-    // GUI mutex
-    boost::mutex m_GuiMutex;
-  };
+      // OnConsoleInput callbacks
+      OnConsoleInputCallbacks m_CallsOnConsoleInput;
+
+      // GUI mutex
+      boost::mutex m_GuiMutex;
+    };
+  }
 }

@@ -39,7 +39,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 // Initialize Hades-Input
 extern "C" __declspec(dllexport) DWORD __stdcall Initialize(
-  Hades::Kernel* pKernel)
+  Hades::Kernel::Kernel* pKernel)
 {
   try
   {
@@ -72,11 +72,11 @@ extern "C" __declspec(dllexport) DWORD __stdcall Initialize(
       << std::endl;
 
     // Initialize input manager wrapper
-    static Hades::InputMgrWrapper MyInputMgrWrapper;
+    static Hades::Input::InputMgrWrapper MyInputMgrWrapper;
     pKernel->SetInputMgr(&MyInputMgrWrapper);
 
     // Initialize input manager
-    Hades::InputMgr::Startup(pKernel);
+    Hades::Input::InputMgr::Startup(pKernel);
   }
   catch (boost::exception const& e)
   {

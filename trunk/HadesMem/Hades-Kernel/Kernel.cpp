@@ -42,213 +42,216 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace Hades
 {
-  // Constructor
-  Kernel::Kernel() 
-    : m_Memory(new Hades::Memory::MemoryMgr(GetCurrentProcessId())), 
-    m_PathToSelfDir(Hades::Windows::GetSelfDirPath().file_string()), 
-    m_pD3D9Mgr(nullptr), 
-    m_pInputMgr(nullptr), 
-    m_pGuiMgr(nullptr), 
-    m_LuaMgr(), 
-    m_pDotNetMgr(nullptr)
-  { }
-
-  // Initialize kernel
-  void Kernel::Initialize()
+  namespace Kernel
   {
-    // Get string to binary we're injected into
-    DWORD const BinPathSize = MAX_PATH;
-    std::wstring BinPath;
-    if (!GetModuleFileName(nullptr, Util::MakeStringBuffer(BinPath, 
-      BinPathSize), BinPathSize))
+    // Constructor
+    Kernel::Kernel() 
+      : m_Memory(new Hades::Memory::MemoryMgr(GetCurrentProcessId())), 
+      m_PathToSelfDir(Hades::Windows::GetSelfDirPath().file_string()), 
+      m_pInputMgr(nullptr), 
+      m_pD3D9Mgr(nullptr), 
+      m_pGuiMgr(nullptr), 
+      m_LuaMgr(), 
+      m_pDotNetMgr(nullptr)
+    { }
+
+    // Initialize kernel
+    void Kernel::Initialize()
     {
-      DWORD LastError = GetLastError();
-      BOOST_THROW_EXCEPTION(KernelError() << 
-        ErrorFunction("Kernel::Initialize") << 
-        ErrorString("Could not get path to current binary.") << 
-        ErrorCodeWin(LastError));
-    }
+      // Get string to binary we're injected into
+      DWORD const BinPathSize = MAX_PATH;
+      std::wstring BinPath;
+      if (!GetModuleFileName(nullptr, Util::MakeStringBuffer(BinPath, 
+        BinPathSize), BinPathSize))
+      {
+        DWORD LastError = GetLastError();
+        BOOST_THROW_EXCEPTION(KernelError() << 
+          ErrorFunction("Kernel::Initialize") << 
+          ErrorString("Could not get path to current binary.") << 
+          ErrorCodeWin(LastError));
+      }
 
-    // Debug output
-    std::wcout << boost::wformat(L"Kernel::Initialize: Path to current binary "
-      L"= \"%ls\".") %BinPath << std::endl;
+      // Debug output
+      std::wcout << boost::wformat(L"Kernel::Initialize: Path to current binary "
+        L"= \"%ls\".") %BinPath << std::endl;
 
-    // Path to self
-    auto const PathToSelf(Hades::Windows::GetSelfPath().file_string());
+      // Path to self
+      auto const PathToSelf(Hades::Windows::GetSelfPath().file_string());
 
-    // Debug output
-    std::wcout << boost::wformat(L"Kernel::Initialize: Path to Self (Full): = "
-      L"\"%ls\", Path To Self (Dir): = \"%ls\".") %PathToSelf %m_PathToSelfDir 
-      << std::endl;
+      // Debug output
+      std::wcout << boost::wformat(L"Kernel::Initialize: Path to Self (Full): = "
+        L"\"%ls\", Path To Self (Dir): = \"%ls\".") %PathToSelf %m_PathToSelfDir 
+        << std::endl;
 
-    // Initialize Loader
-    Loader::Initialize(this);
-    Loader::LoadConfig(m_PathToSelfDir + L"/Config/Loader.xml");
+      // Initialize Loader
+      Loader::Initialize(this);
+      Loader::LoadConfig(m_PathToSelfDir + L"/Config/Loader.xml");
 
-    // Start aux modules
+      // Start aux modules
 #if defined(_M_X64)
-    std::wstring const D3D9ModName(L"Hades-D3D9_AMD64.dll");
-    std::wstring const InputModName(L"Hades-Input_AMD64.dll");
+      std::wstring const D3D9ModName(L"Hades-D3D9_AMD64.dll");
+      std::wstring const InputModName(L"Hades-Input_AMD64.dll");
 #elif defined(_M_IX86)
-    std::wstring const D3D9ModName(L"Hades-D3D9_IA32.dll");
-    std::wstring const InputModName(L"Hades-Input_IA32.dll");
+      std::wstring const D3D9ModName(L"Hades-D3D9_IA32.dll");
+      std::wstring const InputModName(L"Hades-Input_IA32.dll");
 #else
 #error Unsupported platform!
 #endif
-    LoadModule(m_PathToSelfDir + L"\\" + InputModName);
-    LoadModule(m_PathToSelfDir + L"\\" + D3D9ModName);
+      LoadModule(m_PathToSelfDir + L"\\" + InputModName);
+      LoadModule(m_PathToSelfDir + L"\\" + D3D9ModName);
 
-    // Initialize .NET
-    m_pDotNetMgr.reset(new DotNetMgr(this));
+      // Initialize .NET
+      m_pDotNetMgr.reset(new DotNetMgr(this));
 
-    // Expose Hades API
-    luabind::module(m_LuaMgr.GetState(), "Hades")
-    [
-      luabind::def("WriteLn", luabind::tag_function<void (std::string const&)>(
-        Wrappers::WriteLn(this)))
-      ,luabind::def("LoadExt", luabind::tag_function<void (std::string const&)>(
-        Wrappers::LoadExt(this)))
-      ,luabind::def("DotNet", luabind::tag_function<void (std::string const&, 
-        std::string const&, std::string const&)>(Wrappers::DotNet(
-        &*m_pDotNetMgr)))
-    ];
+      // Expose Hades API
+      luabind::module(m_LuaMgr.GetState(), "Hades")
+      [
+        luabind::def("WriteLn", luabind::tag_function<void (
+          std::string const&)>(Wrappers::WriteLn(this)))
+        ,luabind::def("LoadExt", luabind::tag_function<void (
+          std::string const&)>(Wrappers::LoadExt(this)))
+        ,luabind::def("DotNet", luabind::tag_function<void (std::string const&, 
+          std::string const&, std::string const&)>(Wrappers::DotNet(
+          &*m_pDotNetMgr)))
+      ];
 
-    // Debug output
-    std::wcout << "Kernel::Initialize: Hades-Kernel initialized." << std::endl;
-  }
-
-  // Get memory manager
-  std::shared_ptr<Hades::Memory::MemoryMgr> Kernel::GetMemoryMgr() 
-  {
-    return m_Memory;
-  }
-
-  // Load and initialize a Hades helper module
-  void Kernel::LoadModule(std::wstring const& Module) 
-  {
-    // Load module
-    HMODULE const MyModule = LoadLibrary(Module.c_str());
-    if (!MyModule)
-    {
-      DWORD LastError = GetLastError();
-      BOOST_THROW_EXCEPTION(KernelError() << 
-        ErrorFunction("Kernel::LoadModule") << 
-        ErrorString("Could not find module \"" + 
-        boost::lexical_cast<std::string>(Module) + "\".") << 
-        ErrorCodeWin(LastError));
+      // Debug output
+      std::wcout << "Kernel::Initialize: Hades-Kernel initialized." << std::endl;
     }
 
-    // Get address of Initialize export. Should be exported by all Hades 
-    // extensions and modules.
-    typedef void (__stdcall* tInitialize)(Kernel* pKernel);
-    auto const pInitialize = reinterpret_cast<tInitialize>(GetProcAddress(
-      MyModule, "_Initialize@4"));
-    if (!pInitialize)
+    // Get memory manager
+    std::shared_ptr<Hades::Memory::MemoryMgr> Kernel::GetMemoryMgr() 
     {
-      DWORD LastError = GetLastError();
-      BOOST_THROW_EXCEPTION(KernelError() << 
-        ErrorFunction("Kernel::LoadModule") << 
-        ErrorString("Could not find '_Initialize@4' in module \"" + 
-        boost::lexical_cast<std::string>(Module) + "\".") << 
-        ErrorCodeWin(LastError));
+      return m_Memory;
     }
 
-    // Call initialization routine
-    pInitialize(this);
-  }
-
-  // Load and initialize a Hades extension
-  void Kernel::LoadExtension(std::wstring const& Module)
-  {
-    // Load module from extension directory
-    LoadModule(m_PathToSelfDir + L"/Extensions/" + Module);
-  }
-
-  // Get D3D9 manager wrapper
-  D3D9MgrWrapper* Kernel::GetD3D9Mgr()
-  {
-    return m_pD3D9Mgr;
-  }
-
-  // Set D3D9 manager wrapper
-  void Kernel::SetD3D9Mgr(D3D9MgrWrapper* pD3D9Mgr)
-  {
-    // Sanity check
-    if (m_pD3D9Mgr)
+    // Load and initialize a Hades helper module
+    void Kernel::LoadModule(std::wstring const& Module) 
     {
-      std::wcout << "Kernel::SetD3D9Mgr: Warning! Attempt to overwrite "
-        "existing D3D9Mgr instance." << std::endl;
-      return;
+      // Load module
+      HMODULE const MyModule = LoadLibrary(Module.c_str());
+      if (!MyModule)
+      {
+        DWORD LastError = GetLastError();
+        BOOST_THROW_EXCEPTION(KernelError() << 
+          ErrorFunction("Kernel::LoadModule") << 
+          ErrorString("Could not find module \"" + 
+          boost::lexical_cast<std::string>(Module) + "\".") << 
+          ErrorCodeWin(LastError));
+      }
+
+      // Get address of Initialize export. Should be exported by all Hades 
+      // extensions and modules.
+      typedef void (__stdcall* tInitialize)(Kernel* pKernel);
+      auto const pInitialize = reinterpret_cast<tInitialize>(GetProcAddress(
+        MyModule, "_Initialize@4"));
+      if (!pInitialize)
+      {
+        DWORD LastError = GetLastError();
+        BOOST_THROW_EXCEPTION(KernelError() << 
+          ErrorFunction("Kernel::LoadModule") << 
+          ErrorString("Could not find '_Initialize@4' in module \"" + 
+          boost::lexical_cast<std::string>(Module) + "\".") << 
+          ErrorCodeWin(LastError));
+      }
+
+      // Call initialization routine
+      pInitialize(this);
     }
 
-    // Set D3D9 manager
-    m_pD3D9Mgr = pD3D9Mgr;
-  }
-
-  // Get input manager wrapper
-  InputMgrWrapper* Kernel::GetInputMgr()
-  {
-    return m_pInputMgr;
-  }
-
-  // Set input manager wrapper
-  void Kernel::SetInputMgr(InputMgrWrapper* pInputMgr)
-  {
-    // Sanity check
-    if (m_pInputMgr)
+    // Load and initialize a Hades extension
+    void Kernel::LoadExtension(std::wstring const& Module)
     {
-      std::wcout << "Kernel::SetInputMgr: Warning! Attempt to overwrite "
-        "existing InputMgr instance." << std::endl;
-      return;
+      // Load module from extension directory
+      LoadModule(m_PathToSelfDir + L"/Extensions/" + Module);
     }
 
-    // Set input manager
-    m_pInputMgr = pInputMgr;
-  }
-
-  // Set GUI manager
-  void Kernel::SetGuiMgr(GuiMgr* pGuiMgr)
-  {
-    // Sanity check
-    if (m_pGuiMgr)
+    // Get D3D9 manager wrapper
+    D3D9::D3D9MgrWrapper* Kernel::GetD3D9Mgr()
     {
-      std::wcout << "Kernel::SetGuiMgr: Warning! Attempt to overwrite "
-        "existing GuiMgr instance." << std::endl;
-      return;
+      return m_pD3D9Mgr;
+    }
+
+    // Set D3D9 manager wrapper
+    void Kernel::SetD3D9Mgr(D3D9::D3D9MgrWrapper* pD3D9Mgr)
+    {
+      // Sanity check
+      if (m_pD3D9Mgr)
+      {
+        std::wcout << "Kernel::SetD3D9Mgr: Warning! Attempt to overwrite "
+          "existing D3D9Mgr instance." << std::endl;
+        return;
+      }
+
+      // Set D3D9 manager
+      m_pD3D9Mgr = pD3D9Mgr;
+    }
+
+    // Get input manager wrapper
+    Input::InputMgrWrapper* Kernel::GetInputMgr()
+    {
+      return m_pInputMgr;
+    }
+
+    // Set input manager wrapper
+    void Kernel::SetInputMgr(Input::InputMgrWrapper* pInputMgr)
+    {
+      // Sanity check
+      if (m_pInputMgr)
+      {
+        std::wcout << "Kernel::SetInputMgr: Warning! Attempt to overwrite "
+          "existing InputMgr instance." << std::endl;
+        return;
+      }
+
+      // Set input manager
+      m_pInputMgr = pInputMgr;
     }
 
     // Set GUI manager
-    m_pGuiMgr = pGuiMgr;
-    m_pGuiMgr->RegisterOnConsoleInput(std::bind(&Kernel::OnConsoleInput, this, 
-      std::placeholders::_1));
-  }
-
-  // Get GUI manager
-  GuiMgr* Kernel::GetGuiMgr()
-  {
-    return m_pGuiMgr;
-  }
-
-  // GUI manager OnConsoleInput callback
-  void Kernel::OnConsoleInput(std::string const& Input)
-  {
-    // Debug output
-    std::cout << "Kernel::OnConsoleInput: \"" << Input << "\"." << std::endl;
-
-    try
+    void Kernel::SetGuiMgr(D3D9::GuiMgr* pGuiMgr)
     {
-      // Run lua
-      m_LuaMgr.RunString(Input);
+      // Sanity check
+      if (m_pGuiMgr)
+      {
+        std::wcout << "Kernel::SetGuiMgr: Warning! Attempt to overwrite "
+          "existing GuiMgr instance." << std::endl;
+        return;
+      }
+
+      // Set GUI manager
+      m_pGuiMgr = pGuiMgr;
+      m_pGuiMgr->RegisterOnConsoleInput(std::bind(&Kernel::OnConsoleInput, this, 
+        std::placeholders::_1));
     }
-    catch (boost::exception const& e)
+
+    // Get GUI manager
+    D3D9::GuiMgr* Kernel::GetGuiMgr()
     {
-      // Print error information
-      m_pGuiMgr->Print(boost::diagnostic_information(e));
+      return m_pGuiMgr;
     }
-    catch (std::exception const& e)
+
+    // GUI manager OnConsoleInput callback
+    void Kernel::OnConsoleInput(std::string const& Input)
     {
-      // Print error information
-      m_pGuiMgr->Print(e.what());
+      // Debug output
+      std::cout << "Kernel::OnConsoleInput: \"" << Input << "\"." << std::endl;
+
+      try
+      {
+        // Run lua
+        m_LuaMgr.RunString(Input);
+      }
+      catch (boost::exception const& e)
+      {
+        // Print error information
+        m_pGuiMgr->Print(boost::diagnostic_information(e));
+      }
+      catch (std::exception const& e)
+      {
+        // Print error information
+        m_pGuiMgr->Print(e.what());
+      }
     }
   }
 }

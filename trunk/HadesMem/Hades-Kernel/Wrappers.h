@@ -38,44 +38,47 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace Hades
 {
-  class Kernel;
-  class DotNetMgr;
-
-  namespace Wrappers
+  namespace Kernel
   {
-    class WriteLn
+    class Kernel;
+    class DotNetMgr;
+
+    namespace Wrappers
     {
-    public:
-      explicit WriteLn(Kernel* pKernel);
+      class WriteLn
+      {
+      public:
+        explicit WriteLn(Kernel* pKernel);
 
-      void operator() (std::string const& Input) const;
+        void operator() (std::string const& Input) const;
 
-    private:
-      Kernel* m_pKernel;
-    };
+      private:
+        Kernel* m_pKernel;
+      };
 
-    class LoadExt
-    {
-    public:
-      explicit LoadExt(Kernel* pKernel);
+      class LoadExt
+      {
+      public:
+        explicit LoadExt(Kernel* pKernel);
 
-      void operator() (std::string const& LoadExt) const;
+        void operator() (std::string const& LoadExt) const;
 
-    private:
-      Kernel* m_pKernel;
-    };
+      private:
+        Kernel* m_pKernel;
+      };
 
-    class DotNet
-    {
-    public:
-      explicit DotNet(DotNetMgr* pDotNet);
+      class DotNet
+      {
+      public:
+        explicit DotNet(DotNetMgr* pDotNet);
 
-      void operator() (std::string const& Assembly, 
-        std::string const& Parameters, 
-        std::string const& Domain) const;
+        void operator() (std::string const& Assembly, 
+          std::string const& Parameters, 
+          std::string const& Domain) const;
 
-    private:
-      DotNetMgr* m_pDotNet;
-    };
+      private:
+        DotNetMgr* m_pDotNet;
+      };
+    }
   }
 }

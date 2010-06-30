@@ -35,125 +35,129 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 // Hades
 #include "Hades-Common/Error.h"
+#include "Hades-Kernel/Kernel.h"
 #include "Hades-Memory/Patcher.h"
 
 namespace Hades
 {
-  // InputMgr exception type
-  class InputMgrError : public virtual HadesError 
-  { };
-
-  // Input managing class
-  class InputMgr
+  namespace Input
   {
-  public:
-    // Initialize input subsystem
-    static void Startup(class Kernel* pKernel);
+    // InputMgr exception type
+    class InputMgrError : public virtual HadesError 
+    { };
 
-    // Hook window for input
-    static void HookWindow(HWND Window);
-
-    // Callback types
-    typedef boost::signals2::signal<bool (HWND hwnd, UINT uMsg, WPARAM 
-      wParam, LPARAM lParam)> OnWindowMessageCallbacks;
-    typedef boost::signals2::signal<bool (HCURSOR hCursor)> 
-      OnSetCursorCallbacks;
-    typedef boost::signals2::signal<bool (LPPOINT lpPoint)> 
-      OnGetCursorPosCallbacks;
-    typedef boost::signals2::signal<bool (int X, int Y)> 
-      OnSetCursorPosCallbacks;
-
-    // Register callback for OnWindowMsg event
-    static boost::signals2::connection RegisterOnWindowMessage(
-      OnWindowMessageCallbacks::slot_type const& Subscriber);
-
-    // Register callback for OnSetCursor event
-    static boost::signals2::connection RegisterOnSetCursor(
-      OnSetCursorCallbacks::slot_type const& Subscriber);
-
-    // Register callback for OnGetCursorPos event
-    static boost::signals2::connection RegisterOnGetCursorPos(
-      OnGetCursorPosCallbacks::slot_type const& Subscriber);
-
-    // Register callback for OnSetCursorPos event
-    static boost::signals2::connection RegisterOnSetCursorPos(
-      OnSetCursorPosCallbacks::slot_type const& Subscriber);
-
-  private:
-    // SetCursor hook
-    static HCURSOR WINAPI SetCursor_Hook(HCURSOR Cursor);
-
-    // GetCursorPos hook
-    static BOOL WINAPI GetCursorPos_Hook(LPPOINT lpPoint);
-
-    // SetCursorPos hook
-    static BOOL WINAPI SetCursorPos_Hook(int X, int Y);
-
-    // Window hook procedure
-    static LRESULT CALLBACK MyWindowProc(
-      HWND hwnd,
-      UINT uMsg,
-      WPARAM wParam,
-      LPARAM lParam);
-
-    // Hades manager
-    static class Kernel* m_pKernel;
-
-    // Target windows and previous window procedures
-    static std::map<HWND, WNDPROC> m_TargetWindows;
-
-    // Callback managers
-    static OnWindowMessageCallbacks m_CallsOnWndMsg;
-    static OnSetCursorCallbacks m_CallsOnSetCursor;
-    static OnGetCursorPosCallbacks m_CallsOnGetCursorPos;
-    static OnSetCursorPosCallbacks m_CallsOnSetCursorPos;
-
-    // SetCursor hook
-    static std::shared_ptr<Memory::PatchDetour> m_pSetCursorHk;
-
-    // GetCursorPos hook
-    static std::shared_ptr<Memory::PatchDetour> m_pGetCursorPosHk;
-
-    // SetCursorPos hook
-    static std::shared_ptr<Memory::PatchDetour> m_pSetCursorPosHk;
-  };
-
-  // Input managing class wrapper
-  class InputMgrWrapper
-  {
-  public:
-    virtual void Startup(class Kernel* pHades)
+    // Input managing class
+    class InputMgr
     {
-      return InputMgr::Startup(pHades);
-    }
+    public:
+      // Initialize input subsystem
+      static void Startup(Kernel::Kernel* pKernel);
 
-    virtual void HookWindow(HWND Window)
-    {
-      return InputMgr::HookWindow(Window);
-    }
+      // Hook window for input
+      static void HookWindow(HWND Window);
 
-    virtual boost::signals2::connection RegisterOnWindowMessage(
-      const InputMgr::OnWindowMessageCallbacks::slot_type& Subscriber)
-    {
-      return InputMgr::RegisterOnWindowMessage(Subscriber);
-    }
+      // Callback types
+      typedef boost::signals2::signal<bool (HWND hwnd, UINT uMsg, WPARAM 
+        wParam, LPARAM lParam)> OnWindowMessageCallbacks;
+      typedef boost::signals2::signal<bool (HCURSOR hCursor)> 
+        OnSetCursorCallbacks;
+      typedef boost::signals2::signal<bool (LPPOINT lpPoint)> 
+        OnGetCursorPosCallbacks;
+      typedef boost::signals2::signal<bool (int X, int Y)> 
+        OnSetCursorPosCallbacks;
 
-    virtual boost::signals2::connection RegisterOnSetCursor(
-      InputMgr::OnSetCursorCallbacks::slot_type const& Subscriber)
-    {
-      return InputMgr::RegisterOnSetCursor(Subscriber);
-    }
+      // Register callback for OnWindowMsg event
+      static boost::signals2::connection RegisterOnWindowMessage(
+        OnWindowMessageCallbacks::slot_type const& Subscriber);
 
-    virtual boost::signals2::connection RegisterOnGetCursorPos(
-      InputMgr::OnGetCursorPosCallbacks::slot_type const& Subscriber)
-    {
-      return InputMgr::RegisterOnGetCursorPos(Subscriber);
-    }
+      // Register callback for OnSetCursor event
+      static boost::signals2::connection RegisterOnSetCursor(
+        OnSetCursorCallbacks::slot_type const& Subscriber);
 
-    virtual boost::signals2::connection RegisterOnSetCursorPos(
-      InputMgr::OnSetCursorPosCallbacks::slot_type const& Subscriber)
+      // Register callback for OnGetCursorPos event
+      static boost::signals2::connection RegisterOnGetCursorPos(
+        OnGetCursorPosCallbacks::slot_type const& Subscriber);
+
+      // Register callback for OnSetCursorPos event
+      static boost::signals2::connection RegisterOnSetCursorPos(
+        OnSetCursorPosCallbacks::slot_type const& Subscriber);
+
+    private:
+      // SetCursor hook
+      static HCURSOR WINAPI SetCursor_Hook(HCURSOR Cursor);
+
+      // GetCursorPos hook
+      static BOOL WINAPI GetCursorPos_Hook(LPPOINT lpPoint);
+
+      // SetCursorPos hook
+      static BOOL WINAPI SetCursorPos_Hook(int X, int Y);
+
+      // Window hook procedure
+      static LRESULT CALLBACK MyWindowProc(
+        HWND hwnd,
+        UINT uMsg,
+        WPARAM wParam,
+        LPARAM lParam);
+
+      // Hades manager
+      static Kernel::Kernel* m_pKernel;
+
+      // Target windows and previous window procedures
+      static std::map<HWND, WNDPROC> m_TargetWindows;
+
+      // Callback managers
+      static OnWindowMessageCallbacks m_CallsOnWndMsg;
+      static OnSetCursorCallbacks m_CallsOnSetCursor;
+      static OnGetCursorPosCallbacks m_CallsOnGetCursorPos;
+      static OnSetCursorPosCallbacks m_CallsOnSetCursorPos;
+
+      // SetCursor hook
+      static std::shared_ptr<Memory::PatchDetour> m_pSetCursorHk;
+
+      // GetCursorPos hook
+      static std::shared_ptr<Memory::PatchDetour> m_pGetCursorPosHk;
+
+      // SetCursorPos hook
+      static std::shared_ptr<Memory::PatchDetour> m_pSetCursorPosHk;
+    };
+
+    // Input managing class wrapper
+    class InputMgrWrapper
     {
-      return InputMgr::RegisterOnSetCursorPos(Subscriber);
-    }
-  };
+    public:
+      virtual void Startup(Kernel::Kernel* pHades)
+      {
+        return InputMgr::Startup(pHades);
+      }
+
+      virtual void HookWindow(HWND Window)
+      {
+        return InputMgr::HookWindow(Window);
+      }
+
+      virtual boost::signals2::connection RegisterOnWindowMessage(
+        const InputMgr::OnWindowMessageCallbacks::slot_type& Subscriber)
+      {
+        return InputMgr::RegisterOnWindowMessage(Subscriber);
+      }
+
+      virtual boost::signals2::connection RegisterOnSetCursor(
+        InputMgr::OnSetCursorCallbacks::slot_type const& Subscriber)
+      {
+        return InputMgr::RegisterOnSetCursor(Subscriber);
+      }
+
+      virtual boost::signals2::connection RegisterOnGetCursorPos(
+        InputMgr::OnGetCursorPosCallbacks::slot_type const& Subscriber)
+      {
+        return InputMgr::RegisterOnGetCursorPos(Subscriber);
+      }
+
+      virtual boost::signals2::connection RegisterOnSetCursorPos(
+        InputMgr::OnSetCursorPosCallbacks::slot_type const& Subscriber)
+      {
+        return InputMgr::RegisterOnSetCursorPos(Subscriber);
+      }
+    };
+  }
 }

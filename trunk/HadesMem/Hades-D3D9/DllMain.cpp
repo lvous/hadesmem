@@ -40,7 +40,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 // Initialize Hades-D3D9
 extern "C" __declspec(dllexport) DWORD __stdcall Initialize(
-  Hades::Kernel* pKernel)
+  Hades::Kernel::Kernel* pKernel)
 {
   try
   {
@@ -73,14 +73,14 @@ extern "C" __declspec(dllexport) DWORD __stdcall Initialize(
       << std::endl;
 
     // Initialize D3D9 manager wrapper
-    static Hades::D3D9MgrWrapper MyD3D9MgrWrapper;
+    static Hades::D3D9::D3D9MgrWrapper MyD3D9MgrWrapper;
     pKernel->SetD3D9Mgr(&MyD3D9MgrWrapper);
 
     // Initialize D3D9 manager
-    Hades::D3D9Mgr::Startup(pKernel);
+    Hades::D3D9::D3D9Mgr::Startup(pKernel);
 
     // Initialize GUI manager
-    static Hades::GuiMgr MyGuiMgr(pKernel);
+    static Hades::D3D9::GuiMgr MyGuiMgr(pKernel);
   }
   catch (boost::exception const& e)
   {

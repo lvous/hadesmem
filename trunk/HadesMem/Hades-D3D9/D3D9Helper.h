@@ -32,36 +32,39 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace Hades
 {
-  // D3D9Helper pointer type
-  typedef std::tr1::shared_ptr<class D3D9Helper> D3D9HelperPtr;
-
-  // D3D9 helper class
-  class D3D9Helper
+  namespace D3D9
   {
-  public:
-    // Constructor
-    D3D9Helper();
+    // D3D9Helper pointer type
+    typedef std::tr1::shared_ptr<class D3D9Helper> D3D9HelperPtr;
 
-    // OnLostDevice callback
-    void OnLostDevice(IDirect3DDevice9* pDevice, D3D9HelperPtr pHelper);
-    // OnResetDevice callback
-    void OnResetDevice(IDirect3DDevice9* pDevice, D3D9HelperPtr pHelper);
-    // OnInitialize callback
-    void OnInitialize(IDirect3DDevice9* pDevice, D3D9HelperPtr pHelper);
+    // D3D9 helper class
+    class D3D9Helper
+    {
+    public:
+      // Constructor
+      D3D9Helper();
 
-    // Draw line
-    void DrawLine(Math::Vec2f const& Start, Math::Vec2f const& End, 
-      float Width, D3DCOLOR Color);
+      // OnLostDevice callback
+      void OnLostDevice(IDirect3DDevice9* pDevice, D3D9HelperPtr pHelper);
+      // OnResetDevice callback
+      void OnResetDevice(IDirect3DDevice9* pDevice, D3D9HelperPtr pHelper);
+      // OnInitialize callback
+      void OnInitialize(IDirect3DDevice9* pDevice, D3D9HelperPtr pHelper);
 
-    // Draw box
-    void DrawBox(Math::Vec2f const& BottomLeft, Math::Vec2f const& TopRight, 
-      float LineWidth, D3DCOLOR Color);
+      // Draw line
+      void DrawLine(Math::Vec2f const& Start, Math::Vec2f const& End, 
+        float Width, D3DCOLOR Color);
 
-    // Get D3D line
-    ID3DXLine* GetLine();
+      // Draw box
+      void DrawBox(Math::Vec2f const& BottomLeft, Math::Vec2f const& TopRight, 
+        float LineWidth, D3DCOLOR Color);
 
-  private:
-    // D3D line
-    ID3DXLine* m_pLine;
-  };
+      // Get D3D line
+      ID3DXLine* GetLine();
+
+    private:
+      // D3D line
+      ID3DXLine* m_pLine;
+    };
+  }
 }

@@ -37,7 +37,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 // Initialize Hades-Input
 extern "C" __declspec(dllexport) DWORD __stdcall Initialize(
-  Hades::Kernel* pKernel)
+  Hades::Kernel::Kernel* pKernel)
 {
   try
   {

@@ -33,44 +33,47 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Hades namespace
 namespace Hades
 {
-  // CLR host control class. Manages Hades-AD.
-  class HadesHostControl : public IHostControl
+  namespace Kernel
   {
-  public:	   
-    // IHostControl
-    HRESULT STDMETHODCALLTYPE GetHostManager(REFIID riid, void **ppObject);
-    HRESULT STDMETHODCALLTYPE SetAppDomainManager(DWORD dwAppDomainID, 
-      IUnknown *pUnkAppDomainManager);
-    HRESULT STDMETHODCALLTYPE GetDomainNeutralAssemblies(
-      ICLRAssemblyReferenceList **ppReferenceList);
+    // CLR host control class. Manages Hades-AD.
+    class HadesHostControl : public IHostControl
+    {
+    public:	   
+      // IHostControl
+      HRESULT STDMETHODCALLTYPE GetHostManager(REFIID riid, void **ppObject);
+      HRESULT STDMETHODCALLTYPE SetAppDomainManager(DWORD dwAppDomainID, 
+        IUnknown *pUnkAppDomainManager);
+      HRESULT STDMETHODCALLTYPE GetDomainNeutralAssemblies(
+        ICLRAssemblyReferenceList **ppReferenceList);
 
-    // IUnknown
-    virtual HRESULT STDMETHODCALLTYPE QueryInterface(const IID &iid, 
-      void **ppv);
-    virtual ULONG STDMETHODCALLTYPE AddRef();
-    virtual ULONG STDMETHODCALLTYPE Release();
+      // IUnknown
+      virtual HRESULT STDMETHODCALLTYPE QueryInterface(const IID &iid, 
+        void **ppv);
+      virtual ULONG STDMETHODCALLTYPE AddRef();
+      virtual ULONG STDMETHODCALLTYPE Release();
 
-    // Constructor
-    HadesHostControl();
+      // Constructor
+      HadesHostControl();
 
-    // Destructor
-    virtual ~HadesHostControl();
+      // Destructor
+      virtual ~HadesHostControl();
 
-    // Get default domain domain manager
-    HadesAD::IHadesVM *GetDomainManagerForDefaultDomain();
+      // Get default domain domain manager
+      HadesAD::IHadesVM *GetDomainManagerForDefaultDomain();
 
-    // Typedef for map to hold all domain managers
-    typedef std::map<int, HadesAD::IHadesVM*> DomainMap;
+      // Typedef for map to hold all domain managers
+      typedef std::map<int, HadesAD::IHadesVM*> DomainMap;
 
-    // Get all domain managers
-    DomainMap& GetAllDomainManagers();
+      // Get all domain managers
+      DomainMap& GetAllDomainManagers();
 
-  private:
-    // Reference count
-    long m_RefCount;
-    // Default domain domain manager
-    HadesAD::IHadesVM* m_pDefaultDomainDomainManager;
-    // All domains
-    DomainMap m_Domains;
-  };
+    private:
+      // Reference count
+      long m_RefCount;
+      // Default domain domain manager
+      HadesAD::IHadesVM* m_pDefaultDomainDomainManager;
+      // All domains
+      DomainMap m_Domains;
+    };
+  }
 }

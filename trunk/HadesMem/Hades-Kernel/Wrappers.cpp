@@ -25,43 +25,46 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace Hades
 {
-  namespace Wrappers
+  namespace Kernel
   {
-    WriteLn::WriteLn(Kernel* pKernel)
-      : m_pKernel(pKernel)
-    { }
-
-    void WriteLn::operator()(std::string const& Input) const
+    namespace Wrappers
     {
-      HADES_SCRIPTING_TRYCATCH_BEGIN
-        m_pKernel->GetGuiMgr()->Print(Input);
-      HADE_SCRIPTING_TRYCATCH_END
-    }
+      WriteLn::WriteLn(Kernel* pKernel)
+        : m_pKernel(pKernel)
+      { }
 
-    LoadExt::LoadExt(Kernel* pKernel)
-      : m_pKernel(pKernel)
-    { }
+      void WriteLn::operator()(std::string const& Input) const
+      {
+        HADES_SCRIPTING_TRYCATCH_BEGIN
+          m_pKernel->GetGuiMgr()->Print(Input);
+        HADE_SCRIPTING_TRYCATCH_END
+      }
 
-    void LoadExt::operator()(std::string const& LoadExt) const
-    {
-      HADES_SCRIPTING_TRYCATCH_BEGIN
-        m_pKernel->LoadExtension(boost::lexical_cast<std::wstring>(LoadExt));
-      HADE_SCRIPTING_TRYCATCH_END
-    }
+      LoadExt::LoadExt(Kernel* pKernel)
+        : m_pKernel(pKernel)
+      { }
 
-    DotNet::DotNet(DotNetMgr* pDotNet)
-      : m_pDotNet(pDotNet)
-    { }
+      void LoadExt::operator()(std::string const& LoadExt) const
+      {
+        HADES_SCRIPTING_TRYCATCH_BEGIN
+          m_pKernel->LoadExtension(boost::lexical_cast<std::wstring>(LoadExt));
+        HADE_SCRIPTING_TRYCATCH_END
+      }
 
-    void DotNet::operator()(std::string const& Assembly, 
-      std::string const& Parameters, std::string const& Domain) const
-    {
-      HADES_SCRIPTING_TRYCATCH_BEGIN
-        m_pDotNet->LoadAssembly(
-        boost::lexical_cast<std::wstring>(Assembly), 
-        boost::lexical_cast<std::wstring>(Parameters), 
-        boost::lexical_cast<std::wstring>(Domain));
-      HADE_SCRIPTING_TRYCATCH_END
+      DotNet::DotNet(DotNetMgr* pDotNet)
+        : m_pDotNet(pDotNet)
+      { }
+
+      void DotNet::operator()(std::string const& Assembly, 
+        std::string const& Parameters, std::string const& Domain) const
+      {
+        HADES_SCRIPTING_TRYCATCH_BEGIN
+          m_pDotNet->LoadAssembly(
+          boost::lexical_cast<std::wstring>(Assembly), 
+          boost::lexical_cast<std::wstring>(Parameters), 
+          boost::lexical_cast<std::wstring>(Domain));
+        HADE_SCRIPTING_TRYCATCH_END
+      }
     }
   }
 }

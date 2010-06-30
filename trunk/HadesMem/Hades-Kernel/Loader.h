@@ -34,52 +34,61 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace Hades
 {
-  // Loader exception type
-  class LoaderError : public virtual HadesError 
-  { };
-
-  // Loader class. Used to hook games that can only be run via loaders.
-  // Todo: Support all loaders via generic method.
-  // Todo: Add ShellExecuteEx support.
-  class Loader
+  namespace Kernel
   {
-  public:
-    // Initialize loader
-    static void Initialize(class Kernel* pKernel);
+    // Loader exception type
+    class LoaderError : public virtual HadesError 
+    { };
 
-    // Load configuration data from XML file
-    static void LoadConfig(std::wstring const& Path);
+    // Loader class. Used to hook games that can only be run via loaders.
+    // Todo: Support all loaders via generic method.
+    // Todo: Add ShellExecuteEx support.
+    class Loader
+    {
+    public:
+      // Initialize loader
+      static void Initialize(class Kernel* pKernel);
 
-    // Initialize settings and hook APIs
-    static void AddExe(std::wstring const& ProcessName, 
-      std::wstring const& ModuleName);
+      // Load configuration data from XML file
+      static void LoadConfig(std::wstring const& Path);
 
-  private:
-    // Whether we should inject into the process
-    static std::wstring ShouldInject(std::wstring const& ProcessName);
+      // Initialize settings and hook APIs
+      static void AddExe(std::wstring const& ProcessName, 
+        std::wstring const& ModuleName);
 
-    // CreateProcessInternalW API hook
-    static BOOL WINAPI CreateProcessInternalW_Hook(PVOID Unknown1, 
-      LPCWSTR lpApplicationName, LPWSTR lpCommandLine, 
-      LPSECURITY_ATTRIBUTES lpProcessAttributes, 
-      LPSECURITY_ATTRIBUTES lpThreadAttributes, BOOL bInheritHandles, 
-      DWORD dwCreationFlags, LPVOID lpEnvironment, LPCWSTR lpCurrentDirectory, 
-      LPSTARTUPINFOW lpStartupInfo, LPPROCESS_INFORMATION lpProcessInformation, 
-      PVOID Unknown2);
+    private:
+      // Whether we should inject into the process
+      static std::wstring ShouldInject(std::wstring const& ProcessName);
 
-    // Attempt to inject module into target
-    static void AttemptInjection(LPPROCESS_INFORMATION ProcInfo, 
-      std::wstring const& Module);
+      // CreateProcessInternalW API hook
+      static BOOL WINAPI CreateProcessInternalW_Hook(
+        PVOID Unknown1, 
+        LPCWSTR lpApplicationName, 
+        LPWSTR lpCommandLine, 
+        LPSECURITY_ATTRIBUTES lpProcessAttributes, 
+        LPSECURITY_ATTRIBUTES lpThreadAttributes, 
+        BOOL bInheritHandles, 
+        DWORD dwCreationFlags, 
+        LPVOID lpEnvironment, 
+        LPCWSTR lpCurrentDirectory, 
+        LPSTARTUPINFOW lpStartupInfo, 
+        LPPROCESS_INFORMATION lpProcessInformation, 
+        PVOID Unknown2);
 
-    // Memory manager
-    static std::shared_ptr<Memory::MemoryMgr> m_Memory;
+      // Attempt to inject module into target
+      static void AttemptInjection(LPPROCESS_INFORMATION ProcInfo, 
+        std::wstring const& Module);
 
-    // Settings
-    typedef std::pair<std::wstring, std::wstring> ProcAndMod;
-    typedef std::vector<ProcAndMod> ProcAndModList;
-    static ProcAndModList m_ProcsAndMods;
+      // Memory manager
+      static std::shared_ptr<Memory::MemoryMgr> m_Memory;
 
-    // CreateProcessInternalW hook
-    static std::shared_ptr<Memory::PatchDetour> m_pCreateProcessInternalWHk;
-  };
+      // Settings
+      typedef std::pair<std::wstring, std::wstring> ProcAndMod;
+      typedef std::vector<ProcAndMod> ProcAndModList;
+      static ProcAndModList m_ProcsAndMods;
+
+      // CreateProcessInternalW hook
+      static std::shared_ptr<Memory::PatchDetour> m_pCreateProcessInternalWHk;
+    };
+  }
 }
