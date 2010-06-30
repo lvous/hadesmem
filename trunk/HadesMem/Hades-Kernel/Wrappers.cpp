@@ -65,6 +65,11 @@ namespace Hades
           boost::lexical_cast<std::wstring>(Domain));
         HADE_SCRIPTING_TRYCATCH_END
       }
+
+      void Exit::operator()() const
+      {
+        ExitProcess(0);
+      }
     }
   }
 }

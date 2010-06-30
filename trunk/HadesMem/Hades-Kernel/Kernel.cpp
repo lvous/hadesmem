@@ -113,6 +113,7 @@ namespace Hades
         ,luabind::def("DotNet", luabind::tag_function<void (std::string const&, 
           std::string const&, std::string const&)>(Wrappers::DotNet(
           &*m_pDotNetMgr)))
+        ,luabind::def("Exit", luabind::tag_function<void ()>(Wrappers::Exit()))
       ];
 
       // Debug output

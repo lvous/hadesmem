@@ -79,6 +79,12 @@ namespace Hades
       private:
         DotNetMgr* m_pDotNet;
       };
+
+      class Exit
+      {
+      public:
+        void operator() () const;
+      };
     }
   }
 }
