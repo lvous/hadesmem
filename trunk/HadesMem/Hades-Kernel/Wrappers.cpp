@@ -70,6 +70,20 @@ namespace Hades
       {
         ExitProcess(0);
       }
+
+      SessionId::SessionId(Kernel* pKernel)
+        : m_pKernel(pKernel)
+      { }
+
+      void SessionId::operator()(unsigned int MySessionId) const
+      {
+        m_pKernel->SetSessionId(MySessionId);
+      }
+
+      unsigned int SessionId::operator()() const
+      {
+        return m_pKernel->GetSessionId();
+      }
     }
   }
 }

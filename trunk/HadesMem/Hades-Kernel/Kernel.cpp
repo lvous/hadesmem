@@ -52,7 +52,8 @@ namespace Hades
       m_pD3D9Mgr(nullptr), 
       m_pGuiMgr(nullptr), 
       m_LuaMgr(), 
-      m_pDotNetMgr(nullptr)
+      m_pDotNetMgr(nullptr), 
+      m_SessionId(0)
     { }
 
     // Initialize kernel
@@ -114,6 +115,10 @@ namespace Hades
           std::string const&, std::string const&)>(Wrappers::DotNet(
           &*m_pDotNetMgr)))
         ,luabind::def("Exit", luabind::tag_function<void ()>(Wrappers::Exit()))
+        ,luabind::def("SessionId", luabind::tag_function<unsigned int ()>(
+          Wrappers::SessionId(this)))
+        ,luabind::def("SessionId", luabind::tag_function<void (unsigned int)>(
+          Wrappers::SessionId(this)))
       ];
 
       // Debug output
@@ -254,6 +259,31 @@ namespace Hades
         // Print error information
         m_pGuiMgr->Print(e.what());
       }
+    }
+
+    // Get session ID
+    unsigned int Kernel::GetSessionId()
+    {
+      return m_SessionId;
+    }
+
+    // Set session ID
+    void Kernel::SetSessionId(unsigned int SessionId)
+    {
+      // Sanity check
+      if (m_SessionId)
+      {
+        std::wcout << "Kernel::SetSessionId: Warning! Attempt to overwrite "
+          "an existing session ID." << std::endl;
+        return;
+      }
+
+      // Debug output
+      std::wcout << "Kernel::SetSessionId: Assigning session ID '" << 
+        SessionId << "'." << std::endl;
+      
+      // Set session ID
+      m_SessionId = SessionId;
     }
   }
 }

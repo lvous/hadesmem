@@ -85,6 +85,19 @@ namespace Hades
       public:
         void operator() () const;
       };
+
+      class SessionId
+      {
+      public:
+        SessionId(Kernel* pKernel);
+
+        void operator() (unsigned int MySessionId) const;
+
+        unsigned int operator() () const;
+
+      private:
+        Kernel* m_pKernel;
+      };
     }
   }
 }

@@ -88,10 +88,16 @@ namespace Hades
       // Get GUI manager
       virtual D3D9::GuiMgr* GetGuiMgr();
 
-      // GUI manager OnConsoleInput callback
-      virtual void OnConsoleInput(std::string const& Input);
+      // Get session ID
+      virtual unsigned int GetSessionId();
+
+      // Set session ID
+      virtual void SetSessionId(unsigned int SessionId);
 
     private:
+      // GUI manager OnConsoleInput callback
+      void OnConsoleInput(std::string const& Input);
+
       // Memory manager
       std::shared_ptr<Memory::MemoryMgr> m_Memory;
 
@@ -112,6 +118,9 @@ namespace Hades
 
       // DotNet manager
       std::shared_ptr<DotNetMgr> m_pDotNetMgr;
+
+      // Session ID
+      unsigned int m_SessionId;
     };
   }
 }
