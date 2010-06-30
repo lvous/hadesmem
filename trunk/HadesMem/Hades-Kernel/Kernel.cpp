@@ -32,6 +32,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include "Kernel.h"
 #include "Loader.h"
 #include "DotNet.h"
+#include "Wrappers.h"
 #include "Scripting.h"
 #include "Hades-D3D9/GuiMgr.h"
 #include "Hades-Common/I18n.h"

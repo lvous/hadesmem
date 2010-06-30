@@ -18,50 +18,96 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 // Hades
-#include "Kernel.h"
-#include "DotNet.h"
 #include "Scripting.h"
-#include "Hades-D3D9/GuiMgr.h"
 
 namespace Hades
 {
-  namespace Wrappers
+  // Destructor
+  LuaState::~LuaState()
   {
-    WriteLn::WriteLn(Kernel* pKernel)
-      : m_pKernel(pKernel)
-    { }
+    // Close LUA
+    lua_close(m_State);
+  }
 
-    void WriteLn::operator()(std::string const& Input) const
+  // Implicitly act as a lua_State pointer
+  LuaState::operator lua_State*() const
+  {
+    // Return underlying lua state
+    return m_State;
+  }
+
+  // Implicitly act as a lua_State pointer
+  LuaState::operator lua_State*()
+  {
+    // Return underlying lua state
+    return m_State;
+  }
+
+  // Constructor
+  LuaState::LuaState() 
+    : m_State(lua_open()) // Open LUA
+  { }
+
+  // Constructor
+  LuaMgr::LuaMgr() : m_State()
+  {
+    // Open LuaBind with Lua state
+    luabind::open(m_State);
+  }
+
+  // Get LUA state
+  const LuaState& LuaMgr::GetState() const
+  {
+    return m_State;
+  }
+
+  // Run a LUA script on disk
+  void LuaMgr::RunFile( std::string const& Path ) const
+  {
+    // Load and execute file
+    int Status = luaL_dofile(m_State, Path.c_str());
+    // Clean up if an error occurred
+    if (Status != 0) 
     {
-      HADES_SCRIPTING_TRYCATCH_BEGIN
-        m_pKernel->GetGuiMgr()->Print(Input);
-      HADE_SCRIPTING_TRYCATCH_END
+      lua_gc(m_State, LUA_GCCOLLECT, 0);
     }
+    // Report any errors
+    ReportError(Status);
+  }
 
-    LoadExt::LoadExt(Kernel* pKernel)
-      : m_pKernel(pKernel)
-    { }
-
-    void LoadExt::operator()(std::string const& LoadExt) const
+  // Run a LUA script from a string
+  void LuaMgr::RunString( std::string const& Script ) const
+  {
+    // Load and execute string
+    int Status = luaL_dostring(m_State, Script.c_str());
+    // Clean up if an error occurred
+    if (Status != 0) 
     {
-      HADES_SCRIPTING_TRYCATCH_BEGIN
-        m_pKernel->LoadExtension(boost::lexical_cast<std::wstring>(LoadExt));
-      HADE_SCRIPTING_TRYCATCH_END
+      lua_gc(m_State, LUA_GCCOLLECT, 0);
     }
+    // Report any errors
+    ReportError(Status);
+  }
 
-    DotNet::DotNet(DotNetMgr* pDotNet)
-      : m_pDotNet(pDotNet)
-    { }
-
-    void DotNet::operator()(std::string const& Assembly, 
-      std::string const& Parameters, std::string const& Domain) const
+  // Reports an error to the console
+  void LuaMgr::ReportError( int Status ) const
+  {
+    // Check if an error occurred
+    if (Status && !lua_isnil(m_State, -1)) 
     {
-      HADES_SCRIPTING_TRYCATCH_BEGIN
-        m_pDotNet->LoadAssembly(
-          boost::lexical_cast<std::wstring>(Assembly), 
-          boost::lexical_cast<std::wstring>(Parameters), 
-          boost::lexical_cast<std::wstring>(Domain));
-      HADE_SCRIPTING_TRYCATCH_END
+      // Get error message as string
+      const char* Message = lua_tostring(m_State, -1);
+      // If a conversion to string is not possible set that as the message
+      if (Message == NULL) 
+      {
+        Message = "Error object is not a string";
+      }
+      // Pop error message off stack
+      lua_pop(m_State, 1);
+      // Throw exception for error
+      BOOST_THROW_EXCEPTION(LuaError() << 
+        ErrorFunction("LuaMgr::ReportError") << 
+        ErrorString(Message));
     }
   }
 }

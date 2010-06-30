@@ -221,6 +221,7 @@
     <ClCompile Include="Kernel.cpp" />
     <ClCompile Include="Loader.cpp" />
     <ClCompile Include="Scripting.cpp" />
+    <ClCompile Include="Wrappers.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CLRHostControl.h" />
@@ -228,6 +229,7 @@
     <ClInclude Include="Kernel.h" />
     <ClInclude Include="Loader.h" />
     <ClInclude Include="Scripting.h" />
+    <ClInclude Include="Wrappers.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -43,60 +43,8 @@ extern "C"
 // Hades
 #include "Hades-Common/Error.h"
 
-#define HADES_SCRIPTING_TRYCATCH_BEGIN \
-  try\
-{
-
-#define HADE_SCRIPTING_TRYCATCH_END \
-}\
-  catch (boost::exception const& e)\
-{\
-  throw std::exception(boost::diagnostic_information(e).c_str());\
-}
-
 namespace Hades
 {
-  class Kernel;
-  class DotNetMgr;
-
-  namespace Wrappers
-  {
-    class WriteLn
-    {
-    public:
-      explicit WriteLn(Kernel* pKernel);
-
-      void operator() (std::string const& Input) const;
-
-    private:
-      Kernel* m_pKernel;
-    };
-
-    class LoadExt
-    {
-    public:
-      explicit LoadExt(Kernel* pKernel);
-
-      void operator() (std::string const& LoadExt) const;
-
-    private:
-      Kernel* m_pKernel;
-    };
-
-    class DotNet
-    {
-    public:
-      explicit DotNet(DotNetMgr* pDotNet);
-
-      void operator() (std::string const& Assembly, 
-        std::string const& Parameters, 
-        std::string const& Domain) const;
-
-    private:
-      DotNetMgr* m_pDotNet;
-    };
-  }
-
   // Lua exception type
   class LuaError : public virtual HadesError 
   { };
@@ -106,31 +54,17 @@ namespace Hades
   {
   public:
     // Destructor
-    ~LuaState()
-    {
-      // Close LUA
-      lua_close(m_State);
-    }
+    ~LuaState();
 
     // Implicitly act as a lua_State pointer
-    operator lua_State*() const 
-    {
-      // Return underlying lua state
-      return m_State;
-    }
+    operator lua_State*() const;
 
     // Implicitly act as a lua_State pointer
-    operator lua_State*() 
-    {
-      // Return underlying lua state
-      return m_State;
-    }
+    operator lua_State*();
 
   protected:
     // Constructor
-    LuaState() 
-      : m_State(lua_open()) // Open LUA
-    { }
+    LuaState();
 
   private:
     // Only LuaMgr can create states
@@ -145,68 +79,19 @@ namespace Hades
   {
   public:
     // Constructor
-    LuaMgr() 
-      : m_State()
-    {
-      // Open LuaBind with Lua state
-      luabind::open(m_State);
-    }
+    LuaMgr();
 
     // Get LUA state
-    const LuaState& GetState() 
-    {
-      return m_State;
-    }
+    const LuaState& GetState() const;
 
     // Run a LUA script on disk
-    void RunFile(std::string const& Path)
-    {
-      // Load and execute file
-      int Status = luaL_dofile(m_State, Path.c_str());
-      // Clean up if an error occurred
-      if (Status != 0) 
-      {
-        lua_gc(m_State, LUA_GCCOLLECT, 0);
-      }
-      // Report any errors
-      ReportError(Status);
-    }
+    void RunFile(std::string const& Path) const;
 
     // Run a LUA script from a string
-    void RunString(std::string const& Script)
-    {
-      // Load and execute string
-      int Status = luaL_dostring(m_State, Script.c_str());
-      // Clean up if an error occurred
-      if (Status != 0) 
-      {
-        lua_gc(m_State, LUA_GCCOLLECT, 0);
-      }
-      // Report any errors
-      ReportError(Status);
-    }
+    void RunString(std::string const& Script) const;
 
     // Reports an error to the console
-    void ReportError(int Status)
-    {
-      // Check if an error occurred
-      if (Status && !lua_isnil(m_State, -1)) 
-      {
-        // Get error message as string
-        const char* Message = lua_tostring(m_State, -1);
-        // If a conversion to string is not possible set that as the message
-        if (Message == NULL) 
-        {
-          Message = "Error object is not a string";
-        }
-        // Pop error message off stack
-        lua_pop(m_State, 1);
-        // Throw exception for error
-        BOOST_THROW_EXCEPTION(LuaError() << 
-          ErrorFunction("LuaMgr::ReportError") << 
-          ErrorString(Message));
-      }
-    }
+    void ReportError(int Status) const;
 
   private:
     // Lua state
