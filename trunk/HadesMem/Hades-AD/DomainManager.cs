@@ -7,9 +7,62 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
+using System.ComponentModel;
 
 namespace HadesAD
 {
+    internal static class CmdLineToArgvW
+    {
+        // The previous examples on this page used incorrect
+        // pointer logic and were removed.
+
+        internal static string[] SplitArgs(string unsplitArgumentLine)
+        {
+            int numberOfArgs;
+            IntPtr ptrToSplitArgs;
+            string[] splitArgs;
+
+            ptrToSplitArgs = CommandLineToArgvW(unsplitArgumentLine, 
+                out numberOfArgs);
+
+            // CommandLineToArgvW returns NULL upon failure.
+            if (ptrToSplitArgs == IntPtr.Zero)
+                throw new ArgumentException("Unable to split argument.", 
+                    new Win32Exception());
+
+            // Make sure the memory ptrToSplitArgs to is freed, even upon 
+            // failure.
+            try
+            {
+                splitArgs = new string[numberOfArgs];
+
+                // ptrToSplitArgs is an array of pointers to null terminated 
+                // Unicode strings.
+                // Copy each of these strings into our split argument array.
+                for (int i = 0; i < numberOfArgs; i++)
+                {
+                    splitArgs[i] = Marshal.PtrToStringUni(Marshal.ReadIntPtr(
+                        ptrToSplitArgs, i * IntPtr.Size));
+                }
+
+                return splitArgs;
+            }
+            finally
+            {
+                // Free memory obtained by CommandLineToArgW.
+                LocalFree(ptrToSplitArgs);
+            }
+        }
+
+        [DllImport("shell32.dll", SetLastError = true)]
+        static extern IntPtr CommandLineToArgvW(
+            [MarshalAs(UnmanagedType.LPWStr)] string lpCmdLine,
+            out int pNumArgs);
+
+        [DllImport("kernel32.dll")]
+        static extern IntPtr LocalFree(IntPtr hMem);
+    }
+
     public interface IHadesVM
     {
         void RegisterOnFrame([In] IntPtr callback);
@@ -281,7 +334,7 @@ namespace HadesAD
         internal class AsEx
         {
             internal string appdomainName;
-            internal string parameters;
+            internal string[] parameters;
             internal string assemblyName;
             internal AppDomain Domain;
 
@@ -289,7 +342,7 @@ namespace HadesAD
                 string p_appdomainName, string parameters)
             {
                 this.assemblyName = p_assemblyName;
-                this.parameters = parameters;
+                this.parameters = CmdLineToArgvW.SplitArgs(parameters);
                 this.Domain = p_Domain;
                 this.appdomainName = p_appdomainName;
             }
@@ -299,7 +352,8 @@ namespace HadesAD
                 int num;
                 try
                 {
-                    return this.Domain.ExecuteAssembly(this.assemblyName);
+                    return this.Domain.ExecuteAssembly(this.assemblyName, 
+                        new System.Security.Policy.Evidence(), parameters);
                 }
                 catch (FileNotFoundException exception)
                 {
