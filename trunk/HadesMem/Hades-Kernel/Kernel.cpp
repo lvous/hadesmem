@@ -72,16 +72,16 @@ namespace Hades
       }
 
       // Debug output
-      std::wcout << boost::wformat(L"Kernel::Initialize: Path to current binary "
-        L"= \"%ls\".") %BinPath << std::endl;
+      std::wcout << boost::wformat(L"Kernel::Initialize: Path to current "
+        L"binary = \"%ls\".") %BinPath << std::endl;
 
       // Path to self
       auto const PathToSelf(Hades::Windows::GetSelfPath().file_string());
 
       // Debug output
-      std::wcout << boost::wformat(L"Kernel::Initialize: Path to Self (Full): = "
-        L"\"%ls\", Path To Self (Dir): = \"%ls\".") %PathToSelf %m_PathToSelfDir 
-        << std::endl;
+      std::wcout << boost::wformat(L"Kernel::Initialize: Path to Self "
+        L"(Full): = \"%ls\", Path To Self (Dir): = \"%ls\".") %PathToSelf 
+        %m_PathToSelfDir << std::endl;
 
       // Initialize Loader
       Loader::Initialize(this);
@@ -116,7 +116,8 @@ namespace Hades
       ];
 
       // Debug output
-      std::wcout << "Kernel::Initialize: Hades-Kernel initialized." << std::endl;
+      std::wcout << "Kernel::Initialize: Hades-Kernel initialized." 
+        << std::endl;
     }
 
     // Get memory manager
@@ -221,8 +222,8 @@ namespace Hades
 
       // Set GUI manager
       m_pGuiMgr = pGuiMgr;
-      m_pGuiMgr->RegisterOnConsoleInput(std::bind(&Kernel::OnConsoleInput, this, 
-        std::placeholders::_1));
+      m_pGuiMgr->RegisterOnConsoleInput(std::bind(&Kernel::OnConsoleInput, 
+        this, std::placeholders::_1));
     }
 
     // Get GUI manager
