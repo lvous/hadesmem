@@ -12,8 +12,8 @@ namespace HadesAD
 {
     public interface IHadesVM
     {
-        void AttachFrameEvent([In] IntPtr value);
-        uint EnumDomains([In] IntPtr Callback, [In] int pData);
+        void RegisterOnFrame([In] IntPtr callback);
+        uint EnumDomains([In] IntPtr callback, [In] int pData);
         dlgExecute GetExecute();
         dlgFrame GetFrame();
         bool RunAssembly([In] string appDomainName, [In] string assemblyName,
@@ -22,24 +22,18 @@ namespace HadesAD
         bool UnloadDomain([In] string appDomainName);
     }
 
-    enum AssemblyNameType
-    {
-        File,
-        Name
-    }
-
-    public delegate void dlgDomainEnumCallback(string Name, int pData);
+    public delegate void dlgDomainEnumCallback(string callback, int pData);
     public delegate bool dlgExecute(string appDomain, string appName,
         string parameters);
     public delegate void dlgFrame();
-    internal delegate void dlgSetExecute(dlgExecute Exec);
-    internal delegate void dlgSetFrame(IntPtr FrameFunc);
+    internal delegate void dlgSetExecute(dlgExecute exec);
+    internal delegate void dlgSetFrame(IntPtr frameFunc);
 
     public class Hades
     {
-        public static void Echo(string text)
+        public static void Echo(string output)
         {
-            MessageBox.Show(text);
+            MessageBox.Show(output);
         }
     }
 
@@ -55,7 +49,7 @@ namespace HadesAD
         {
             AsEx ex = (AsEx)Obj;
             Thread.CurrentThread.Name = ex.appdomainName +
-                " AppDomain main thread";
+                " AppDomain main ExecThread";
             try
             {
                 ex.ExecuteAssembly();
@@ -82,7 +76,7 @@ namespace HadesAD
             }
         }
 
-        public void AttachFrameEvent([In] IntPtr value)
+        public void RegisterOnFrame([In] IntPtr value)
         {
             dlgSetFrame delegateForFunctionPointer =
               (dlgSetFrame)Marshal.GetDelegateForFunctionPointer(value,
@@ -120,9 +114,9 @@ namespace HadesAD
                 "--------------");
             lock (Domains)
             {
-                foreach (string str in Domains.Keys)
+                foreach (string domain in Domains.Keys)
                 {
-                    Hades.Echo(str);
+                    Hades.Echo(domain);
                 }
             }
         }
@@ -141,18 +135,18 @@ namespace HadesAD
             }
         }
 
-        public uint EnumDomains(IntPtr Callback, int pData)
+        public uint EnumDomains(IntPtr callback, int pData)
         {
             dlgDomainEnumCallback delegateForFunctionPointer =
                 (dlgDomainEnumCallback)Marshal.GetDelegateForFunctionPointer(
-                Callback, typeof(dlgDomainEnumCallback));
+                callback, typeof(dlgDomainEnumCallback));
             uint num = 0;
             lock (Domains)
             {
-                foreach (string str in Domains.Keys)
+                foreach (string domain in Domains.Keys)
                 {
                     num++;
-                    delegateForFunctionPointer(str, pData);
+                    delegateForFunctionPointer(domain, pData);
                 }
             }
             return num;
@@ -247,9 +241,9 @@ namespace HadesAD
                 }
                 AsEx parameter = new AsEx(domain, assemblyName, appDomainName,
                   parameters);
-                Thread thread = new Thread(HadesVM.AssemblyExecuter);
-                thread.SetApartmentState(ApartmentState.STA);
-                thread.Start(parameter);
+                Thread ExecThread = new Thread(HadesVM.AssemblyExecuter);
+                ExecThread.SetApartmentState(ApartmentState.STA);
+                ExecThread.Start(parameter);
                 return true;
             }
             catch (Exception exception)

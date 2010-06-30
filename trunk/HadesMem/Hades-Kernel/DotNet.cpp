@@ -110,7 +110,7 @@ namespace Hades
     // Call into the default application domain to attach the frame event
 #pragma warning(push)
 #pragma warning(disable: 4244)
-    pDomainManagerForDefaultDomain->AttachFrameEvent(
+    pDomainManagerForDefaultDomain->RegisterOnFrame(
       reinterpret_cast<LONG_PTR>(&DotNetMgr::SubscribeFrameEvent));
 #pragma warning(pop)
 

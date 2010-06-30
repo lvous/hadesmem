@@ -12,13 +12,18 @@ namespace Hades_DotNetTest
 {
     public partial class Main : Form
     {
-        public Main()
+        private string[] MainArgs;
+
+        public Main(string[] args)
         {
+            MainArgs = args;
             InitializeComponent();
         }
 
         private void Main_Load(object sender, EventArgs e)
         {
+            foreach (string arg in MainArgs)
+                LstOutput.Items.Add(arg);
             HadesVM.AddFrameHandler(OnFrame);
         }
 
