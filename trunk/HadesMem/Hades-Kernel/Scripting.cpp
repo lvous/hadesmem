@@ -49,7 +49,8 @@ namespace Hades
   { }
 
   // Constructor
-  LuaMgr::LuaMgr() : m_State()
+  LuaMgr::LuaMgr() 
+    : m_State()
   {
     // Open LuaBind with Lua state
     luabind::open(m_State);
@@ -62,7 +63,7 @@ namespace Hades
   }
 
   // Run a LUA script on disk
-  void LuaMgr::RunFile( std::string const& Path ) const
+  void LuaMgr::RunFile(std::string const& Path) const
   {
     // Load and execute file
     int Status = luaL_dofile(m_State, Path.c_str());
@@ -76,7 +77,7 @@ namespace Hades
   }
 
   // Run a LUA script from a string
-  void LuaMgr::RunString( std::string const& Script ) const
+  void LuaMgr::RunString(std::string const& Script) const
   {
     // Load and execute string
     int Status = luaL_dostring(m_State, Script.c_str());
@@ -90,7 +91,7 @@ namespace Hades
   }
 
   // Reports an error to the console
-  void LuaMgr::ReportError( int Status ) const
+  void LuaMgr::ReportError(int Status) const
   {
     // Check if an error occurred
     if (Status && !lua_isnil(m_State, -1)) 
