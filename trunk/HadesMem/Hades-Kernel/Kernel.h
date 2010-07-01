@@ -94,6 +94,12 @@ namespace Hades
       // Set session ID
       virtual void SetSessionId(unsigned int SessionId);
 
+      // Run script
+      virtual void RunScript(std::string const& Script);
+
+      // Run script file
+      virtual void RunScriptFile(std::string const& Script);
+
     private:
       // GUI manager OnConsoleInput callback
       void OnConsoleInput(std::string const& Input);

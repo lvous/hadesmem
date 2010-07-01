@@ -285,5 +285,82 @@ namespace Hades
       // Set session ID
       m_SessionId = SessionId;
     }
+
+    // Run script
+    void Kernel::RunScript(std::string const& Script)
+    {
+      // Debug output
+      std::cout << "Kernel::RunScript: \"" << Script << "\"." << std::endl;
+
+      try
+      {
+        // Run lua
+        m_LuaMgr.RunString(Script);
+      }
+      catch (boost::exception const& e)
+      {
+        // Print error information
+        if (m_pGuiMgr)
+        {
+          m_pGuiMgr->Print(boost::diagnostic_information(e));
+        }
+        else
+        {
+          std::cout << "Kernel::RunScript: Error! " << 
+            boost::diagnostic_information(e) << std::endl;
+        }
+      }
+      catch (std::exception const& e)
+      {
+        // Print error information
+        if (m_pGuiMgr)
+        {
+          m_pGuiMgr->Print(e.what());
+        }
+        else
+        {
+          std::cout << "Kernel::RunScript: Error! " << e.what() << std::endl;
+        }
+      }
+    }
+
+    // Run script file
+    void Kernel::RunScriptFile(std::string const& Script)
+    {
+      // Debug output
+      std::cout << "Kernel::RunScriptFile: \"" << Script << "\"." << std::endl;
+
+      try
+      {
+        // Run lua
+        m_LuaMgr.RunFile(Script);
+      }
+      catch (boost::exception const& e)
+      {
+        // Print error information
+        if (m_pGuiMgr)
+        {
+          m_pGuiMgr->Print(boost::diagnostic_information(e));
+        }
+        else
+        {
+          std::cout << "Kernel::RunScriptFile: Error! " << 
+            boost::diagnostic_information(e) << std::endl;
+        }
+      }
+      catch (std::exception const& e)
+      {
+        // Print error information
+        if (m_pGuiMgr)
+        {
+          m_pGuiMgr->Print(e.what());
+        }
+        else
+        {
+          std::cout << "Kernel::RunScriptFile: Error! " << e.what() << 
+            std::endl;
+        }
+      }
+    }
   }
 }
