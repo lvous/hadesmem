@@ -65,7 +65,8 @@ namespace Hades
       static void __stdcall SubscribeFrameEvent(FrameCallback Function);
 
       // Hades OnFrame callback
-      void OnFrameEvent(IDirect3DDevice9* pDevice, D3D9::D3D9HelperPtr pHelper);
+      void OnFrameEvent(IDirect3DDevice9* pDevice, 
+        D3D9::D3D9HelperPtr pHelper);
 
       // CLR Host
       CComPtr<ICLRRuntimeHost> m_pClrHost;
