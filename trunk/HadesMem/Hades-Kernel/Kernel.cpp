@@ -116,10 +116,10 @@ namespace Hades
           std::string const&, std::string const&)>(Wrappers::DotNet(
           &*m_pDotNetMgr)))
         ,luabind::def("Exit", luabind::tag_function<void ()>(Wrappers::Exit()))
-        ,luabind::def("SessionId", luabind::tag_function<unsigned int ()>(
+        ,luabind::def("GetSessionId", luabind::tag_function<unsigned int ()>(
           Wrappers::SessionId(this)))
-        ,luabind::def("SessionId", luabind::tag_function<void (unsigned int)>(
-          Wrappers::SessionId(this)))
+        ,luabind::def("SetSessionId", luabind::tag_function<void 
+          (unsigned int)>(Wrappers::SessionId(this)))
       ];
 
       // Debug output
@@ -285,6 +285,9 @@ namespace Hades
       
       // Set session ID
       m_SessionId = SessionId;
+
+      // Notify .NET layer of session ID change
+      m_pDotNetMgr->SetSessionId(SessionId);
     }
 
     // Run script

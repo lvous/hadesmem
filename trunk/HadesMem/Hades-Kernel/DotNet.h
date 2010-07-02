@@ -33,6 +33,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include <d3d9.h>
 
 // Hades
+#include "CLRHostControl.h"
 #include "Hades-D3D9/D3D9Mgr.h"
 #include "Hades-Common/Error.h"
 
@@ -57,6 +58,9 @@ namespace Hades
         const std::wstring& Parameters, 
         const std::wstring& Domain);
 
+      // Notify of session ID change
+      void SetSessionId(unsigned int SessionId);
+
     private:
       // .NET OnFrame callback type
       typedef void (__stdcall* FrameCallback)();
@@ -72,10 +76,10 @@ namespace Hades
       CComPtr<ICLRRuntimeHost> m_pClrHost;
       // Hades CLR host control
       std::shared_ptr<class HadesHostControl> m_pClrHostControl;
-      // .NET initialized flag
-      bool m_IsDotNetInitialized;
       // Kernel instance
       class Kernel* m_pKernel;
+      // Hades domain manager instance
+      HadesAD::IHadesVM* m_pDomainMgr;
 
       // .NET frame event callback list
       static std::vector<FrameCallback> m_FrameEvents;

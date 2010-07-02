@@ -73,6 +73,7 @@ namespace HadesAD
             [In] string parameters);
         bool IsDomainActive([In] string appDomainName);
         bool UnloadDomain([In] string appDomainName);
+        void SetSessionId(uint sessionId);
     }
 
     public delegate void dlgDomainEnumCallback(string callback, int pData);
@@ -97,6 +98,19 @@ namespace HadesAD
         private static List<dlgFrame> FrameHandlers = new List<dlgFrame>();
         private static dlgExecute Execute = new dlgExecute(HadesVM.Run);
         private static dlgFrame Frame = new dlgFrame(HadesVM.OnFrame);
+        private static uint SessionId = 0;
+
+        public static uint GetSessionId()
+        {
+            return SessionId;
+        }
+
+        public void SetSessionId(uint sessionId)
+        {
+            MessageBox.Show("Old Session ID: " + SessionId.ToString());
+            SessionId = sessionId;
+            MessageBox.Show("New Session ID: " + SessionId.ToString());
+        }
 
         internal static void AssemblyExecuter(object Obj)
         {

@@ -20,7 +20,6 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Hades
 #include "DotNet.h"
 #include "Kernel.h"
-#include "CLRHostControl.h"
 #include "Hades-Common/I18n.h"
 
 // C++ Standard Library
@@ -51,8 +50,8 @@ namespace Hades
     DotNetMgr::DotNetMgr(Kernel* pKernel, std::wstring const& Config) 
       : m_pClrHost(), 
       m_pClrHostControl(nullptr), 
-      m_IsDotNetInitialized(false), 
-      m_pKernel(pKernel)
+      m_pKernel(pKernel), 
+      m_pDomainMgr(nullptr)
     {
       // Open config file
       std::wifstream ConfigFile(Config.c_str());
@@ -173,19 +172,18 @@ namespace Hades
       }
 
       // Get domain manager
-      HadesAD::IHadesVM* pHadesDomainMgr = m_pClrHostControl->
-        GetDomainManagerForDefaultDomain();
-      if (!pHadesDomainMgr)
+      m_pDomainMgr = m_pClrHostControl->GetDomainManagerForDefaultDomain();
+      if (!m_pDomainMgr)
       {
         BOOST_THROW_EXCEPTION(DotNetMgrError() << 
           ErrorFunction("DotNetMgr::DotNetMgr") << 
-          ErrorString("Could not find default domain CLR."));
+          ErrorString("Could not get domain manager instance."));
       }
 
       // Call into the default application domain to attach the frame event
 #pragma warning(push)
 #pragma warning(disable: 4244)
-      pHadesDomainMgr->RegisterOnFrame(reinterpret_cast<LONG_PTR>(
+      m_pDomainMgr->RegisterOnFrame(reinterpret_cast<LONG_PTR>(
         &DotNetMgr::SubscribeFrameEvent));
 #pragma warning(pop)
 
@@ -193,9 +191,6 @@ namespace Hades
       m_pKernel->GetD3D9Mgr()->RegisterOnFrame(std::bind(
         &DotNetMgr::OnFrameEvent, this, std::placeholders::_1, 
         std::placeholders::_2));
-
-      // Set initialization flag
-      m_IsDotNetInitialized = true;
 
       // Debug output
       std::wcout << "DotNetMgr::DotNetMgr: initialized." << std::endl;
@@ -206,26 +201,8 @@ namespace Hades
       const std::wstring& Parameters, 
       const std::wstring& Domain)
     {
-      // Sanity check
-      if (!m_IsDotNetInitialized)
-      {
-        BOOST_THROW_EXCEPTION(DotNetMgrError() << 
-          ErrorFunction("DotNetMgr::DotNetMgr") << 
-          ErrorString(".NET is not initialized."));
-      }
-
-      // Get Hades domain manager
-      HadesAD::IHadesVM* pHadesDomainMgr = m_pClrHostControl->
-        GetDomainManagerForDefaultDomain();
-      if (!pHadesDomainMgr)
-      {
-        BOOST_THROW_EXCEPTION(DotNetMgrError() << 
-          ErrorFunction("DotNetMgr::DotNetMgr") << 
-          ErrorString("Could not get domain manager for the default domain."));
-      }
-
       // Run assembly using domain manager
-      pHadesDomainMgr->RunAssembly(Domain.c_str(), Assembly.c_str(), 
+      m_pDomainMgr->RunAssembly(Domain.c_str(), Assembly.c_str(), 
         Parameters.c_str());
     }
 
@@ -246,6 +223,13 @@ namespace Hades
       {
         Current();
       });
+    }
+
+    // Notify of session ID change
+    void DotNetMgr::SetSessionId(unsigned int SessionId)
+    {
+      // Notify domain manager of session ID change
+      m_pDomainMgr->SetSessionId(SessionId);
     }
   }
 }
