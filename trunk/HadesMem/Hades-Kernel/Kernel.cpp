@@ -285,9 +285,6 @@ namespace Hades
       
       // Set session ID
       m_SessionId = SessionId;
-
-      // Notify .NET layer of session ID change
-      m_pDotNetMgr->SetSessionId(SessionId);
     }
 
     // Run script

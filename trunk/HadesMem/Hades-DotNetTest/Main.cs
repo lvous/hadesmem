@@ -22,8 +22,6 @@ namespace Hades_DotNetTest
 
         private void Main_Load(object sender, EventArgs e)
         {
-            uint SessionId = HadesVM.GetSessionId();
-            LstOutput.Items.Add("Session ID: " + SessionId.ToString());
             foreach (string arg in MainArgs)
                 LstOutput.Items.Add(arg);
             HadesVM.AddFrameHandler(OnFrame);

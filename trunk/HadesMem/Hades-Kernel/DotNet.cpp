@@ -224,12 +224,5 @@ namespace Hades
         Current();
       });
     }
-
-    // Notify of session ID change
-    void DotNetMgr::SetSessionId(unsigned int SessionId)
-    {
-      // Notify domain manager of session ID change
-      m_pDomainMgr->SetSessionId(SessionId);
-    }
   }
 }
