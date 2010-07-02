@@ -102,7 +102,8 @@ namespace Hades
       LoadModule(m_PathToSelfDir + L"\\" + D3D9ModName);
 
       // Initialize .NET
-      m_pDotNetMgr.reset(new DotNetMgr(this));
+      m_pDotNetMgr.reset(new DotNetMgr(this, m_PathToSelfDir + 
+        L"/Config/DotNet.xml"));
 
       // Expose Hades API
       luabind::module(m_LuaMgr.GetState(), "Hades")

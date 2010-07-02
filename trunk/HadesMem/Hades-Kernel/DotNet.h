@@ -25,10 +25,9 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 
 // Windows API
+#include <Windows.h>
 #include <atlbase.h>
 #include <mscoree.h>
-#import <mscorlib.tlb> raw_interfaces_only\
-  rename("ReportEvent","ReportEventManaged")
 
 // DirectX API
 #include <d3d9.h>
@@ -50,6 +49,8 @@ namespace Hades
     class DotNetMgr
     {
     public:
+      DotNetMgr(class Kernel* pKernel, std::wstring const& Config);
+
       typedef void (__stdcall* FrameCallback)();
 
       static void __stdcall SubscribeFrameEvent(FrameCallback Function);
@@ -58,11 +59,9 @@ namespace Hades
         const std::wstring& Parameters, 
         const std::wstring& Domain);
 
+    private:
       void OnFrameEvent(IDirect3DDevice9* pDevice, D3D9::D3D9HelperPtr pHelper);
 
-      DotNetMgr(class Kernel* pKernel);
-
-    private:
       CComPtr<ICLRRuntimeHost> m_pClrHost;
       class HadesHostControl* m_pClrHostControl;
       bool m_IsDotNetInitialized;
