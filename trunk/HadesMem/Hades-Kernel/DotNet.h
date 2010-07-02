@@ -49,24 +49,34 @@ namespace Hades
     class DotNetMgr
     {
     public:
+      // Constructor
       DotNetMgr(class Kernel* pKernel, std::wstring const& Config);
 
-      typedef void (__stdcall* FrameCallback)();
-
-      static void __stdcall SubscribeFrameEvent(FrameCallback Function);
-
+      // Load an assembly in the context of the current process
       void LoadAssembly(const std::wstring& Assembly, 
         const std::wstring& Parameters, 
         const std::wstring& Domain);
 
     private:
+      // .NET OnFrame callback type
+      typedef void (__stdcall* FrameCallback)();
+
+      // Subscribe for OnFrame event
+      static void __stdcall SubscribeFrameEvent(FrameCallback Function);
+
+      // Hades OnFrame callback
       void OnFrameEvent(IDirect3DDevice9* pDevice, D3D9::D3D9HelperPtr pHelper);
 
+      // CLR Host
       CComPtr<ICLRRuntimeHost> m_pClrHost;
-      class HadesHostControl* m_pClrHostControl;
+      // Hades CLR host control
+      std::shared_ptr<class HadesHostControl> m_pClrHostControl;
+      // .NET initialized flag
       bool m_IsDotNetInitialized;
+      // Kernel instance
       class Kernel* m_pKernel;
 
+      // .NET frame event callback list
       static std::vector<FrameCallback> m_FrameEvents;
     };
   }

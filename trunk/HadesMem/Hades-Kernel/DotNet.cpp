@@ -44,7 +44,7 @@ namespace Hades
 {
   namespace Kernel
   {
-    // Static data
+    // .NET frame event callback list
     std::vector<DotNetMgr::FrameCallback> DotNetMgr::m_FrameEvents;
 
     // Constructor
@@ -141,11 +141,12 @@ namespace Hades
       }
 #pragma warning(pop)
 
-      m_pClrHostControl = new HadesHostControl();
+      // Set CLR host control
+      m_pClrHostControl.reset(new HadesHostControl());
       m_pClrHost->SetHostControl(static_cast<IHostControl*>(
-        m_pClrHostControl));
+        &*m_pClrHostControl));
 
-      // Get a pointer to the ICLRControl interface.
+      // Get a pointer to the ICLRControl interface
       ICLRControl *pCLRControl = NULL;
       HRESULT GetClrResult = m_pClrHost->GetCLRControl(&pCLRControl);
       if (FAILED(GetClrResult))
@@ -157,11 +158,11 @@ namespace Hades
       }
 
       // Call SetAppDomainManagerType to associate our domain manager with
-      // the process.
+      // the process
       pCLRControl->SetAppDomainManagerType(DomainMgrAssembly.c_str(), 
         DomainMgrType.c_str());
 
-      // Start the CLR.
+      // Start the CLR
       HRESULT StartResult = m_pClrHost->Start();
       if (FAILED(StartResult))
       {
@@ -171,6 +172,7 @@ namespace Hades
           ErrorCodeWin(StartResult));
       }
 
+      // Get domain manager
       HadesAD::IHadesVM* pHadesDomainMgr = m_pClrHostControl->
         GetDomainManagerForDefaultDomain();
       if (!pHadesDomainMgr)
@@ -204,6 +206,7 @@ namespace Hades
       const std::wstring& Parameters, 
       const std::wstring& Domain)
     {
+      // Sanity check
       if (!m_IsDotNetInitialized)
       {
         BOOST_THROW_EXCEPTION(DotNetMgrError() << 
@@ -211,6 +214,7 @@ namespace Hades
           ErrorString(".NET is not initialized."));
       }
 
+      // Get Hades domain manager
       HadesAD::IHadesVM* pHadesDomainMgr = m_pClrHostControl->
         GetDomainManagerForDefaultDomain();
       if (!pHadesDomainMgr)
@@ -220,18 +224,23 @@ namespace Hades
           ErrorString("Could not get domain manager for the default domain."));
       }
 
+      // Run assembly using domain manager
       pHadesDomainMgr->RunAssembly(Domain.c_str(), Assembly.c_str(), 
         Parameters.c_str());
     }
 
+    // Subscribe for OnFrame event
     void __stdcall DotNetMgr::SubscribeFrameEvent(FrameCallback Function)
     {
+      // Add callback to list
       m_FrameEvents.push_back(Function);
     }
 
+    // Hades OnFrame callback
     void DotNetMgr::OnFrameEvent(IDirect3DDevice9* /*pDevice*/, 
       D3D9::D3D9HelperPtr /*pHelper*/)
     {
+      // Run all callbacks
       std::for_each(m_FrameEvents.begin(), m_FrameEvents.end(), 
         [] (FrameCallback Current) 
       {
