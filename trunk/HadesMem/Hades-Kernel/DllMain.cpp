@@ -56,22 +56,24 @@ extern "C" __declspec(dllexport) DWORD __stdcall Initialize(HMODULE Module)
 
     // Version and copyright output
 #if defined(_M_X64)
-    std::wcout << "Hades-Kernel AMD64 [Version " << VerNum << "]" << std::endl;
+    std::wcout << "Hades-Kernel::Initialize: Hades-Kernel AMD64 [Version " << 
+      VerNum << "]" << std::endl;
 #elif defined(_M_IX86)
-    std::wcout << "Hades-Kernel IA32 [Version " << VerNum << "]" << std::endl;
+    std::wcout << "Hades-Kernel::Initialize: Hades-Kernel IA32 [Version " << 
+      VerNum << "]" << std::endl;
 #else
 #error Unsupported platform!
 #endif
-    std::wcout << "Copyright (C) 2010 Cypherjb. All rights reserved." << 
-      std::endl;
-    std::wcout << "Website: http://www.cypherjb.com/, "
-      "Email: cypher.jb@gmail.com." << std::endl;
-    std::wcout << "Built on " << __DATE__ << " at " << __TIME__ << "." << 
-      std::endl << std::endl;
+    std::wcout << "Hades-Kernel::Initialize: Copyright (C) 2010 Cypherjb. All "
+      "rights reserved." << std::endl;
+    std::wcout << "Hades-Kernel::Initialize: Website: "
+      "http://www.cypherjb.com/, Email: cypher.jb@gmail.com." << std::endl;
+    std::wcout << "Hades-Kernel::Initialize: Built on " << __DATE__ << " at " 
+      << __TIME__ << "." << std::endl;
 
     // Debug output
-    std::wcout << boost::wformat(L"Initialize: Module = %p.") %Module 
-      << std::endl;
+    std::wcout << boost::wformat(L"Hades-Kernel::Initialize: Module = %p.") 
+      %Module << std::endl;
 
     // Initialize Hades kernel
     static Hades::Kernel::Kernel MyKernel;

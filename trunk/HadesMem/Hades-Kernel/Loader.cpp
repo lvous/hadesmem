@@ -77,7 +77,7 @@ namespace Hades
       }
 
       // Debug output
-      std::wcout << "Loader initialized." << std::endl;
+      std::wcout << "Loader::Loader: Loader initialized." << std::endl;
     }
 
     // Initialize settings and hook APIs

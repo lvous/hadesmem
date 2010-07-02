@@ -118,8 +118,8 @@ namespace Hades
 
       m_IsDotNetInitialized = true;
 
-      std::wcout << "DotNetMgr: .NET framework successfully initialized." 
-        << std::endl;
+      std::wcout << "DotNetMgr::DotNetMgr: .NET framework successfully "
+        "initialized." << std::endl;
 
       // Register OnFrame event for callback system
       m_pKernel->GetD3D9Mgr()->RegisterOnFrame(std::bind(
@@ -127,7 +127,7 @@ namespace Hades
         std::placeholders::_2));
 
       // Debug output
-      std::wcout << "DotNetMgr initialized." << std::endl;
+      std::wcout << "DotNetMgr::DotNetMgr: initialized." << std::endl;
     }
 
     // Load an assembly in the context of the current process

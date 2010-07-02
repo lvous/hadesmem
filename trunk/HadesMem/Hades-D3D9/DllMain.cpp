@@ -55,22 +55,24 @@ extern "C" __declspec(dllexport) DWORD __stdcall Initialize(
 
     // Version and copyright output
 #if defined(_M_X64)
-    std::wcout << "Hades-D3D9 AMD64 [Version " << VerNum << "]" << std::endl;
+    std::wcout << "Hades-D3D9::Initialize: Hades-D3D9 AMD64 [Version " << 
+      VerNum << "]" << std::endl;
 #elif defined(_M_IX86)
-    std::wcout << "Hades-D3D9 IA32 [Version " << VerNum << "]" << std::endl;
+    std::wcout << "Hades-D3D9::Initialize: Hades-D3D9 IA32 [Version " << 
+      VerNum << "]" << std::endl;
 #else
 #error Unsupported platform!
 #endif
-    std::wcout << "Copyright (C) 2010 Cypherjb. All rights reserved." << 
-      std::endl;
-    std::wcout << "Website: http://www.cypherjb.com/, "
+    std::wcout << "Hades-D3D9::Initialize: Copyright (C) 2010 Cypherjb. All "
+      "rights reserved." << std::endl;
+    std::wcout << "Hades-D3D9::Initialize: Website: http://www.cypherjb.com/, "
       "Email: cypher.jb@gmail.com." << std::endl;
-    std::wcout << "Built on " << __DATE__ << " at " << __TIME__ << "." << 
-      std::endl << std::endl;
+    std::wcout << "Hades-D3D9::Initialize: Built on " << __DATE__ << " at " << 
+      __TIME__ << "." << std::endl;
 
     // Debug output
-    std::wcout << boost::wformat(L"Initialize: Kernel = %p.") %pKernel 
-      << std::endl;
+    std::wcout << boost::wformat(L"Hades-D3D9::Initialize: Kernel = %p.") 
+      %pKernel << std::endl;
 
     // Initialize D3D9 manager wrapper
     static Hades::D3D9::D3D9MgrWrapper MyD3D9MgrWrapper;
