@@ -42,7 +42,7 @@ namespace Hades
     { };
 
     // Get memory region list
-    inline std::vector<boost::shared_ptr<class Region>> GetRegionList(
+    inline std::vector<boost::shared_ptr<class Region>> GetMemoryRegionList(
       MemoryMgr const& MyMemory);
 
     // Region wide stream overload
