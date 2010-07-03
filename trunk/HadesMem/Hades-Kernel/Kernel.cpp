@@ -28,6 +28,9 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Windows API
 #include <Windows.h>
 
+// RapidXML
+#include <RapidXML/rapidxml.hpp>
+
 // Hades
 #include "Kernel.h"
 #include "Loader.h"
@@ -53,7 +56,8 @@ namespace Hades
       m_pGuiMgr(nullptr), 
       m_LuaMgr(), 
       m_pDotNetMgr(nullptr), 
-      m_SessionId(0)
+      m_SessionId(0), 
+      m_HookConfig()
     { }
 
     // Initialize kernel
@@ -83,6 +87,9 @@ namespace Hades
       std::wcout << boost::wformat(L"Kernel::Initialize: Path to Self "
         L"(Full): = \"%ls\", Path To Self (Dir): = \"%ls\".") %PathToSelf 
         %m_PathToSelfDir << std::endl;
+
+      // Initialize hook config data
+      LoadHookConfig(m_PathToSelfDir + L"/Config/Hook.xml");
 
       // Initialize Loader
       Loader::Initialize(this);
@@ -362,6 +369,88 @@ namespace Hades
             std::endl;
         }
       }
+    }
+
+    // Load hook configuration data
+    void Kernel::LoadHookConfig(std::wstring const& Path)
+    {
+      // Open config file
+      std::wifstream ConfigFile(Path.c_str());
+      if (!ConfigFile)
+      {
+        BOOST_THROW_EXCEPTION(KernelError() << 
+          ErrorFunction("Loader::LoadHookConfig") << 
+          ErrorString("Could not open config file."));
+      }
+
+      // Copy file to buffer
+      std::istreambuf_iterator<wchar_t> const ConfFileBeg(ConfigFile);
+      std::istreambuf_iterator<wchar_t> const ConfFileEnd;
+      std::vector<wchar_t> ConfFileBuf(ConfFileBeg, ConfFileEnd);
+      ConfFileBuf.push_back(L'\0');
+
+      // Open XML document
+      rapidxml::xml_document<wchar_t> ConfigDoc;
+      ConfigDoc.parse<0>(&ConfFileBuf[0]);
+
+      // Ensure loader tag is found
+      auto const HooksTag = ConfigDoc.first_node(L"Hooks");
+      if (!HooksTag)
+      {
+        BOOST_THROW_EXCEPTION(KernelError() << 
+          ErrorFunction("Kernel::LoadHookConfig") << 
+          ErrorString("Invalid config file format."));
+      }
+
+      // Loop over all hooks
+      for (auto Pattern = HooksTag->first_node(L"Hook"); Pattern; 
+        Pattern = Pattern->next_sibling(L"Hook"))
+      {
+        // Get hook attributes
+        auto const NameNode = Pattern->first_attribute(L"Name");
+        auto const EnabledNode = Pattern->first_attribute(L"Enabled");
+        std::wstring const Name(NameNode ? NameNode->value() : L"");
+        std::wstring const Enabled(EnabledNode ? EnabledNode->value() : L"");
+
+        // Ensure data is valid
+        if (Name.empty() || Enabled.empty())
+        {
+          BOOST_THROW_EXCEPTION(KernelError() << 
+            ErrorFunction("Loader::LoadHookConfig") << 
+            ErrorString("Invalid hook attributes."));
+        }
+
+        // Convert enabled string to bool
+        bool EnabledReal = false;
+        try
+        {
+          auto EnabledTemp = boost::lexical_cast<unsigned int>(Enabled);
+          EnabledReal = EnabledTemp != 0;
+        }
+        catch (boost::bad_lexical_cast const& /*e*/)
+        {
+          BOOST_THROW_EXCEPTION(KernelError() << 
+            ErrorFunction("Loader::LoadHookConfig") << 
+            ErrorString("Invalid hook attributes."));
+        }
+
+        // Add current hook data
+        m_HookConfig[Name] = EnabledReal;
+      }
+    }
+
+    // Whether hook is enabled
+    bool Kernel::IsHookEnabled(std::wstring const& Name)
+    {
+      // Get hook data
+      auto const Iter = m_HookConfig.find(Name);
+      if (Iter == m_HookConfig.end())
+      {
+        BOOST_THROW_EXCEPTION(KernelError() << 
+          ErrorFunction("Loader::IsHookEnabled") << 
+          ErrorString("Invalid hook name."));
+      }
+      return Iter->second;
     }
   }
 }

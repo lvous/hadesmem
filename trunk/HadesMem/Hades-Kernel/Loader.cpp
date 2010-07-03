@@ -35,7 +35,8 @@ namespace Hades
       m_Memory = pKernel->GetMemoryMgr();
 
       // Ensure hooks are only applied once
-      if (!m_pCreateProcessInternalWHk)
+      if (!m_pCreateProcessInternalWHk && pKernel->IsHookEnabled(
+        L"kernel32.dll!CreateProcessInternalW"))
       {
         // Get handle to Kernel32
         HMODULE Kernel32Mod = GetModuleHandle(L"kernel32.dll");
@@ -337,9 +338,9 @@ namespace Hades
     // Load configuration data from XML file
     void Loader::LoadConfig(std::wstring const& Path)
     {
-      // Open current file
-      std::wifstream PatternFile(Path.c_str());
-      if (!PatternFile)
+      // Open config file
+      std::wifstream ConfigFile(Path.c_str());
+      if (!ConfigFile)
       {
         BOOST_THROW_EXCEPTION(LoaderError() << 
           ErrorFunction("Loader::LoadConfig") << 
@@ -347,17 +348,17 @@ namespace Hades
       }
 
       // Copy file to buffer
-      std::istreambuf_iterator<wchar_t> PatFileBeg(PatternFile);
-      std::istreambuf_iterator<wchar_t> PatFileEnd;
-      std::vector<wchar_t> PatFileBuf(PatFileBeg, PatFileEnd);
-      PatFileBuf.push_back(L'\0');
+      std::istreambuf_iterator<wchar_t> const ConfFileBeg(ConfigFile);
+      std::istreambuf_iterator<wchar_t> const ConfFileEnd;
+      std::vector<wchar_t> ConfFileBuf(ConfFileBeg, ConfFileEnd);
+      ConfFileBuf.push_back(L'\0');
 
       // Open XML document
-      rapidxml::xml_document<wchar_t> AccountsDoc;
-      AccountsDoc.parse<0>(&PatFileBuf[0]);
+      rapidxml::xml_document<wchar_t> ConfigDoc;
+      ConfigDoc.parse<0>(&ConfFileBuf[0]);
 
       // Ensure loader tag is found
-      auto TargetsTag = AccountsDoc.first_node(L"Targets");
+      auto const TargetsTag = ConfigDoc.first_node(L"Targets");
       if (!TargetsTag)
       {
         BOOST_THROW_EXCEPTION(LoaderError() << 
@@ -370,10 +371,10 @@ namespace Hades
         Pattern = Pattern->next_sibling(L"Target"))
       {
         // Get target attributes
-        auto NameNode = Pattern->first_attribute(L"Name");
-        auto ModuleNode = Pattern->first_attribute(L"Module");
-        std::wstring Name(NameNode ? NameNode->value() : L"");
-        std::wstring Module(ModuleNode ? ModuleNode->value() : L"");
+        auto const NameNode = Pattern->first_attribute(L"Name");
+        auto const ModuleNode = Pattern->first_attribute(L"Module");
+        std::wstring const Name(NameNode ? NameNode->value() : L"");
+        std::wstring const Module(ModuleNode ? ModuleNode->value() : L"");
 
         // Ensure data is valid
         if (Name.empty() || Module.empty())

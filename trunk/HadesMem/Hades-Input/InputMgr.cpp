@@ -67,6 +67,8 @@ namespace Hades
           ErrorCodeWin(LastError));
       }
 
+      // Hook if required
+      if (!m_pSetCursorHk && m_pKernel->IsHookEnabled(L"user32.dll!SetCursor"))
       {
         // Get address of SetCursor
         FARPROC pSetCursor = GetProcAddress(User32Mod, "SetCursor");
@@ -95,6 +97,9 @@ namespace Hades
         m_pSetCursorHk->Apply();
       }
 
+      // Hook if required
+      if (!m_pGetCursorPosHk && m_pKernel->IsHookEnabled(
+        L"user32.dll!GetCursorPos"))
       {
         // Get address of GetCursorPos
         FARPROC pGetCursorPos = GetProcAddress(User32Mod, "GetCursorPos");
@@ -123,6 +128,9 @@ namespace Hades
         m_pGetCursorPosHk->Apply();
       }
 
+      // Hook if required
+      if (!m_pSetCursorHk && m_pKernel->IsHookEnabled(
+        L"user32.dll!SetCursorPos"))
       {
         // Get address of SetCursorPos
         FARPROC pSetCursorPos = GetProcAddress(User32Mod, "SetCursorPos");

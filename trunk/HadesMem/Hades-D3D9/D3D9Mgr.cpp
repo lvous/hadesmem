@@ -66,44 +66,49 @@ namespace Hades
       // Set HadesMgr pointer
       m_pKernel = pKernel;
 
-      // Load D3D9
-      // Todo: Defer hooking until game loads D3D9 (e.g. via LoadLibrary 
-      // hook).
-      HMODULE D3D9Mod = LoadLibrary(L"d3d9.dll");
-      if (!D3D9Mod)
+      // Hook if required
+      if (!m_pDirect3DCreate9Hk && m_pKernel->IsHookEnabled(
+        L"d3d9.dll!Direct3DCreate9"))
       {
-        DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(D3D9MgrError() << 
-          ErrorFunction("D3D9Mgr::Startup") << 
-          ErrorString("Could not load D3D9.") << 
-          ErrorCodeWin(LastError));
+        // Load D3D9
+        // Todo: Defer hooking until game loads D3D9 (e.g. via LoadLibrary 
+        // hook).
+        HMODULE D3D9Mod = LoadLibrary(L"d3d9.dll");
+        if (!D3D9Mod)
+        {
+          DWORD LastError = GetLastError();
+          BOOST_THROW_EXCEPTION(D3D9MgrError() << 
+            ErrorFunction("D3D9Mgr::Startup") << 
+            ErrorString("Could not load D3D9.") << 
+            ErrorCodeWin(LastError));
+        }
+
+        // Get address of Direct3DCreate9
+        FARPROC pDirect3DCreate9 = GetProcAddress(D3D9Mod, "Direct3DCreate9");
+        if (!pDirect3DCreate9)
+        {
+          DWORD LastError = GetLastError();
+          BOOST_THROW_EXCEPTION(D3D9MgrError() << 
+            ErrorFunction("D3D9Mgr::Startup") << 
+            ErrorString("Could not get address of Direct3DCreate9.") << 
+            ErrorCodeWin(LastError));
+        }
+
+        // Target and detour pointer
+        PBYTE Target = reinterpret_cast<PBYTE>(pDirect3DCreate9);
+        PBYTE Detour = reinterpret_cast<PBYTE>(&Direct3DCreate9_Hook);
+
+        // Debug output
+        std::wcout << "D3D9Mgr::Startup: Hooking d3d9.dll!Direct3DCreate9." << 
+          std::endl;
+        std::wcout << boost::wformat(L"D3D9Mgr::Startup: Target = %p, "
+          L"Detour = %p.") %Target %Detour << std::endl;
+
+        // Hook Direct3DCreate9
+        m_pDirect3DCreate9Hk.reset(new Hades::Memory::PatchDetour(*pKernel->
+          GetMemoryMgr(), Target, Detour));
+        m_pDirect3DCreate9Hk->Apply();
       }
-
-      // Get address of Direct3DCreate9
-      FARPROC pDirect3DCreate9 = GetProcAddress(D3D9Mod, "Direct3DCreate9");
-      if (!pDirect3DCreate9)
-      {
-        DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(D3D9MgrError() << 
-          ErrorFunction("D3D9Mgr::Startup") << 
-          ErrorString("Could not get address of Direct3DCreate9.") << 
-          ErrorCodeWin(LastError));
-      }
-
-      // Target and detour pointer
-      PBYTE Target = reinterpret_cast<PBYTE>(pDirect3DCreate9);
-      PBYTE Detour = reinterpret_cast<PBYTE>(&Direct3DCreate9_Hook);
-
-      // Debug output
-      std::wcout << "D3D9Mgr::Startup: Hooking d3d9.dll!Direct3DCreate9." << 
-        std::endl;
-      std::wcout << boost::wformat(L"D3D9Mgr::Startup: Target = %p, "
-        L"Detour = %p.") %Target %Detour << std::endl;
-
-      // Hook Direct3DCreate9
-      m_pDirect3DCreate9Hk.reset(new Hades::Memory::PatchDetour(*pKernel->
-        GetMemoryMgr(), Target, Detour));
-      m_pDirect3DCreate9Hk->Apply();
     }
 
     // Direct3DCreate9 hook implementation
@@ -133,8 +138,9 @@ namespace Hades
           static boost::mutex HookMutex;
           boost::lock_guard<boost::mutex> HookLock(HookMutex);
 
-          // Only hook if we haven't already hooked
-          if (!m_pCreateDeviceHk)
+          // Hook if required
+          if (!m_pCreateDeviceHk && m_pKernel->IsHookEnabled(
+            L"d3d9.dll!IDirect3D9::CreateDevice"))
           {
             // Get VMT
             PBYTE* pDeviceVMT = *reinterpret_cast<PBYTE**>(pD3D9);
@@ -220,13 +226,14 @@ namespace Hades
           static boost::mutex HookMutex;
           boost::lock_guard<boost::mutex> HookLock(HookMutex);
 
-          // Only hook if we haven't already hooked
-          if (!m_pEndSceneHk)
-          {
-            // Get device and VMT
-            IDirect3DDevice9* pDevice = *ppReturnedDeviceInterface;
-            PBYTE* pDeviceVMT = *reinterpret_cast<PBYTE**>(pDevice);
+          // Get device and VMT
+          IDirect3DDevice9* pDevice = *ppReturnedDeviceInterface;
+          PBYTE* pDeviceVMT = *reinterpret_cast<PBYTE**>(pDevice);
 
+          // Hook if required
+          if (!m_pEndSceneHk && m_pKernel->IsHookEnabled(
+            L"d3d9.dll!IDirect3DDevice9::EndScene"))
+          {
             // Target and detour pointer
             PBYTE pEndScene = pDeviceVMT[42];
             PBYTE pEndSceneHk = reinterpret_cast<PBYTE>(&EndScene_Hook);
@@ -239,7 +246,12 @@ namespace Hades
             m_pEndSceneHk.reset(new Hades::Memory::PatchDetour(*m_pKernel->
               GetMemoryMgr(), pEndScene, pEndSceneHk));
             m_pEndSceneHk->Apply();
+          }
 
+          // Hook if required
+          if (!m_pResetHk && m_pKernel->IsHookEnabled(
+            L"d3d9.dll!IDirect3DDevice9::Reset"))
+          {
             // Target and detour pointer
             PBYTE pReset = pDeviceVMT[16];
             PBYTE pResetHk = reinterpret_cast<PBYTE>(&Reset_Hook);
@@ -252,7 +264,12 @@ namespace Hades
             m_pResetHk.reset(new Hades::Memory::PatchDetour(*m_pKernel->
               GetMemoryMgr(), pReset, pResetHk));
             m_pResetHk->Apply();
+          }
 
+          // Hook if required
+          if (!m_pReleaseHk && m_pKernel->IsHookEnabled(
+            L"d3d9.dll!IDirect3DDevice9::Release"))
+          {
             // Target and detour pointer
             PBYTE pRelease = pDeviceVMT[2];
             PBYTE pReleaseHk = reinterpret_cast<PBYTE>(&Release_Hook);

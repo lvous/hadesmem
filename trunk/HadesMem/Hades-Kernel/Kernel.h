@@ -20,6 +20,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 // C++ Standard Library
+#include <map>
 #include <string>
 #include <memory>
 
@@ -100,9 +101,15 @@ namespace Hades
       // Run script file
       virtual void RunScriptFile(std::string const& Script);
 
+      // Whether hook is enabled
+      virtual bool IsHookEnabled(std::wstring const& Name);
+
     private:
       // GUI manager OnConsoleInput callback
       void OnConsoleInput(std::string const& Input);
+
+      // Load hook configuration data
+      void LoadHookConfig(std::wstring const& Path);
 
       // Memory manager
       std::shared_ptr<Memory::MemoryMgr> m_Memory;
@@ -127,6 +134,9 @@ namespace Hades
 
       // Session ID
       unsigned int m_SessionId;
+
+      // Hook configuration data
+      std::map<std::wstring, bool> m_HookConfig;
     };
   }
 }
