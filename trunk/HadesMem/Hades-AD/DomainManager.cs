@@ -79,9 +79,8 @@ namespace HadesAD
     public delegate bool dlgExecute(string appDomain, string appName,
         string parameters);
     public delegate void dlgFrame();
-    internal delegate void dlgSetExecute(dlgExecute exec);
     internal delegate void dlgSetFrame(IntPtr frameFunc);
-
+    
     public class Hades
     {
         public static void Echo(string output)
@@ -97,6 +96,45 @@ namespace HadesAD
         private static List<dlgFrame> FrameHandlers = new List<dlgFrame>();
         private static dlgExecute Execute = new dlgExecute(HadesVM.Run);
         private static dlgFrame Frame = new dlgFrame(HadesVM.OnFrame);
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto)]
+        public static extern IntPtr GetModuleHandle(string lpModuleName);
+
+        [DllImport("kernel32", CharSet = CharSet.Ansi, ExactSpelling = true, 
+            SetLastError = true)]
+        static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)] 
+        internal delegate IntPtr dlgRunLuaScript([MarshalAs(UnmanagedType.
+            LPStr)] string Script, uint Index);
+
+        public static string GetScriptResult(string Script, uint Index)
+        {
+            IntPtr HadesKernelMod = GetModuleHandle("Hades-Kernel_IA32.dll");
+            if (HadesKernelMod.ToInt32() == 0)
+            {
+                throw new Exception("Could not find Hades Kernel DLL.");
+            }
+
+            IntPtr pRunLuaScript = GetProcAddress(HadesKernelMod, 
+                "_RunLuaScript@8");
+            if (pRunLuaScript.ToInt32() == 0)
+            {
+                throw new Exception("Could not find RunLuaScript export.");
+            }
+
+            dlgRunLuaScript RunLuaScriptFunc = (dlgRunLuaScript)Marshal.
+                GetDelegateForFunctionPointer(pRunLuaScript, 
+                typeof(dlgRunLuaScript));
+
+            IntPtr Result = RunLuaScriptFunc(Script, Index);
+            if (Result.ToInt32() == 0)
+            {
+                throw new Exception("Could not get requested result.");
+            }
+
+            return Marshal.PtrToStringAnsi(Result);
+        }
 
         internal static void AssemblyExecuter(object Obj)
         {

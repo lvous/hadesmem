@@ -25,6 +25,8 @@ namespace Hades_DotNetTest
             foreach (string arg in MainArgs)
                 LstOutput.Items.Add(arg);
             HadesVM.AddFrameHandler(OnFrame);
+            LstOutput.Items.Add(HadesVM.GetScriptResult(
+                "return Hades.GetSessionId()", 0));
         }
 
         public void OnFrame()

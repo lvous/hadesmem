@@ -47,6 +47,9 @@ namespace Hades
 {
   namespace Kernel
   {
+    // Static kernel instance
+    Kernel* Kernel::m_pKernel = nullptr;
+
     // Constructor
     Kernel::Kernel() 
       : m_Memory(new Hades::Memory::MemoryMgr(GetCurrentProcessId())), 
@@ -63,6 +66,9 @@ namespace Hades
     // Initialize kernel
     void Kernel::Initialize()
     {
+      // Initialize static kernel instance
+      m_pKernel = this;
+
       // Get string to binary we're injected into
       DWORD const BinPathSize = MAX_PATH;
       std::wstring BinPath;
@@ -249,24 +255,8 @@ namespace Hades
     // GUI manager OnConsoleInput callback
     void Kernel::OnConsoleInput(std::string const& Input)
     {
-      // Debug output
-      std::cout << "Kernel::OnConsoleInput: \"" << Input << "\"." << std::endl;
-
-      try
-      {
-        // Run lua
-        m_LuaMgr.RunString(Input);
-      }
-      catch (boost::exception const& e)
-      {
-        // Print error information
-        m_pGuiMgr->Print(boost::diagnostic_information(e));
-      }
-      catch (std::exception const& e)
-      {
-        // Print error information
-        m_pGuiMgr->Print(e.what());
-      }
+      // Run lua
+      RunScript(Input);
     }
 
     // Get session ID
@@ -295,7 +285,7 @@ namespace Hades
     }
 
     // Run script
-    void Kernel::RunScript(std::string const& Script)
+    std::vector<std::string> Kernel::RunScript(std::string const& Script)
     {
       // Debug output
       std::cout << "Kernel::RunScript: \"" << Script << "\"." << std::endl;
@@ -303,7 +293,17 @@ namespace Hades
       try
       {
         // Run lua
-        m_LuaMgr.RunString(Script);
+        auto const Results(m_LuaMgr.RunString(Script));
+
+        // Print results
+        std::for_each(Results.begin(), Results.end(), 
+          [this] (std::string const& Current)
+        {
+          m_pGuiMgr->Print(Current);
+        });
+
+        // Return results
+        return Results;
       }
       catch (boost::exception const& e)
       {
@@ -330,6 +330,9 @@ namespace Hades
           std::cout << "Kernel::RunScript: Error! " << e.what() << std::endl;
         }
       }
+
+      // No results
+      return std::vector<std::string>();
     }
 
     // Run script file
@@ -451,6 +454,12 @@ namespace Hades
           ErrorString("Invalid hook name."));
       }
       return Iter->second;
+    }
+
+    // Get static Kernel instance
+    Kernel* Kernel::GetKernelInstance()
+    {
+      return m_pKernel;
     }
   }
 }

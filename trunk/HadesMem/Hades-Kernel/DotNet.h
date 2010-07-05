@@ -61,6 +61,9 @@ namespace Hades
       // Notify of session ID change
       void SetSessionId(unsigned int SessionId);
 
+      // Run Lua string
+      std::string RunLuaScript(std::string const& Lua);
+
     private:
       // .NET OnFrame callback type
       typedef void (__stdcall* FrameCallback)();

@@ -17,6 +17,9 @@ You should have received a copy of the GNU General Public License
 along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+// C++ Standard Library
+#include <iostream>
+
 // Hades
 #include "Scripting.h"
 
@@ -79,17 +82,68 @@ namespace Hades
     }
 
     // Run a LUA script from a string
-    void LuaMgr::RunString(std::string const& Script) const
+    std::vector<std::string> LuaMgr::RunString(std::string const& Script) const
     {
-      // Load and execute string
-      int Status = luaL_dostring(m_State, Script.c_str());
+      // Load string
+      int Status = luaL_loadstring(m_State, Script.c_str());
+
       // Clean up if an error occurred
       if (Status != 0) 
       {
         lua_gc(m_State, LUA_GCCOLLECT, 0);
       }
+
       // Report any errors
       ReportError(Status);
+
+      // Execute string
+      Status = lua_pcall(m_State, 0, LUA_MULTRET, 0);
+
+      // Clean up if an error occurred
+      if (Status != 0) 
+      {
+        lua_gc(m_State, LUA_GCCOLLECT, 0);
+      }
+
+      // Report any errors
+      ReportError(Status);
+
+      // Get number of results
+      int NumResults = lua_gettop(m_State);
+
+      // Debug output
+      char const* TopResult = lua_tostring(m_State, lua_gettop(m_State));
+      std::wcout << "LuaMgr::RunString: NumResults = " << NumResults << 
+        ", TopResult = " << (TopResult ? TopResult : "<Unknown>") << "." << 
+        std::endl;
+
+      // Result list
+      std::vector<std::string> Results;
+      Results.reserve(NumResults);
+
+      // Loop over all results
+      for (int i = 1; i <= NumResults; ++i)
+      {
+        // Convert result to string
+        char const* Result(lua_tostring(m_State, i));
+
+        // Boolean 'false' returns a null pointer and must be converted
+        // manually.
+        if (!Result  || !Result[0])
+          Result = "nil";
+
+        // Add result to list
+        Results.push_back(Result);
+      }
+
+      // Pop results
+      lua_pop(m_State, NumResults);
+
+      // Clear stack
+      lua_settop(m_State, 0);
+
+      // Return result list
+      return Results;
     }
 
     // Reports an error to the console

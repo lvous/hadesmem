@@ -21,6 +21,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 // C++ Standard Library
 #include <string>
+#include <vector>
 
 // Boost
 #pragma warning(push, 1)
@@ -90,7 +91,7 @@ namespace Hades
       void RunFile(std::string const& Path) const;
 
       // Run a LUA script from a string
-      void RunString(std::string const& Script) const;
+      std::vector<std::string> RunString(std::string const& Script) const;
 
       // Reports an error to the console
       void ReportError(int Status) const;

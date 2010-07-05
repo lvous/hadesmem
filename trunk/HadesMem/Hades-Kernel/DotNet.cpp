@@ -43,6 +43,44 @@ namespace Hades
 {
   namespace Kernel
   {
+    extern "C" __declspec(dllexport) char const* __stdcall RunLuaScript(
+      char const* pScript, unsigned int Index)
+    {
+      static char pNothing[] = "";
+
+      try
+      {
+        auto Results(Kernel::GetKernelInstance()->RunScript(pScript));
+        if (Results.empty() || Index >= Results.size())
+        {
+          return nullptr;
+        }
+
+        std::string const& Result(Results[Index]);
+
+        char* pTopResult = new char[Result.size() + 1];
+        std::copy(Result.begin(), Result.end(), pTopResult);
+        pTopResult[Result.size()] = 0;
+
+        return pTopResult;
+      }
+      catch (boost::exception const& e)
+      {
+        std::cout << "RunLuaScript: Error! " << 
+          boost::diagnostic_information(e) << std::endl; 
+      }
+      catch (std::exception const& e)
+      {
+        std::cout << "RunLuaScript: Error! " << e.what() << std::endl; 
+      }
+      catch (...)
+      {
+        std::cout << "RunLuaScript: Unknown error!" << std::endl;
+      }
+
+      return nullptr;
+    }
+
     // .NET frame event callback list
     std::vector<DotNetMgr::FrameCallback> DotNetMgr::m_FrameEvents;
 
@@ -223,6 +261,16 @@ namespace Hades
       {
         Current();
       });
+    }
+
+    // Run Lua string
+    std::string DotNetMgr::RunLuaScript(std::string const& Lua)
+    {
+      // Run string and get results
+      auto const Results(m_pKernel->RunScript(Lua));
+
+      // Return top result
+      return Results.empty() ? "" : *Results.begin();
     }
   }
 }
