@@ -115,14 +115,17 @@ namespace HadesAD
 
     public static string GetScriptResult(string Script, uint Index)
     {
-      IntPtr HadesKernelMod = GetModuleHandle("Hades-Kernel_IA32.dll");
-      if (HadesKernelMod.ToInt32() == 0)
+      IntPtr HadesKernelMod32 = GetModuleHandle("Hades-Kernel_IA32.dll");
+      IntPtr HadesKernelMod64 = GetModuleHandle("Hades-Kernel_AMD64.dll");
+      if (HadesKernelMod32.ToInt64() == 0 && HadesKernelMod64.ToInt64() == 0)
       {
         throw new Exception("Could not find Hades Kernel DLL.");
       }
+      IntPtr HadesKernelMod = 
+        HadesKernelMod32.ToInt64() != 0 ? HadesKernelMod32 : HadesKernelMod64;
 
       IntPtr pRunLuaScript = GetProcAddress(HadesKernelMod, "_RunLuaScript@8");
-      if (pRunLuaScript.ToInt32() == 0)
+      if (pRunLuaScript.ToInt64() == 0)
       {
         throw new Exception("Could not find RunLuaScript export.");
       }
@@ -132,7 +135,7 @@ namespace HadesAD
           typeof(dlgRunLuaScript));
 
       IntPtr Result = RunLuaScriptFunc(Script, Index);
-      if (Result.ToInt32() == 0)
+      if (Result.ToInt64() == 0)
       {
         throw new Exception("Could not get requested result.");
       }
