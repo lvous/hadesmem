@@ -96,7 +96,8 @@ namespace Hades
       virtual void SetSessionId(unsigned int SessionId);
 
       // Run script
-      virtual std::vector<std::string> RunScript(std::string const& Script);
+      virtual std::vector<std::string> RunScript(std::string const& Script, 
+        bool EchoToConsole);
 
       // Run script file
       virtual void RunScriptFile(std::string const& Script);

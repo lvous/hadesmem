@@ -104,6 +104,12 @@ namespace HadesAD
             SetLastError = true)]
         static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
 
+        [DllImport("kernel32.dll", SetLastError = true)]
+        static extern bool HeapFree(IntPtr hHeap, uint dwFlags, IntPtr lpMem);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        static extern IntPtr GetProcessHeap();
+
         [UnmanagedFunctionPointer(CallingConvention.StdCall)] 
         internal delegate IntPtr dlgRunLuaScript([MarshalAs(UnmanagedType.
             LPStr)] string Script, uint Index);
@@ -133,7 +139,14 @@ namespace HadesAD
                 throw new Exception("Could not get requested result.");
             }
 
-            return Marshal.PtrToStringAnsi(Result);
+            string ResultStr = Marshal.PtrToStringAnsi(Result);
+
+            if (!HeapFree(GetProcessHeap(), 0, Result))
+            {
+                throw new Exception("Could not free result memory.");
+            }
+
+            return ResultStr;
         }
 
         internal static void AssemblyExecuter(object Obj)

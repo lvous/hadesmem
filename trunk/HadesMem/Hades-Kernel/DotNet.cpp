@@ -43,25 +43,32 @@ namespace Hades
 {
   namespace Kernel
   {
+    // Run Lua script. Exported to allow access in .NET layer.
     extern "C" __declspec(dllexport) char const* __stdcall RunLuaScript(
       char const* pScript, unsigned int Index)
     {
-      static char pNothing[] = "";
-
       try
       {
-        auto Results(Kernel::GetKernelInstance()->RunScript(pScript));
+        // Get kernel instance and run script
+        auto Results(Kernel::GetKernelInstance()->RunScript(pScript, false));
         if (Results.empty() || Index >= Results.size())
         {
           return nullptr;
         }
 
+        // Get specified result
         std::string const& Result(Results[Index]);
 
-        char* pTopResult = new char[Result.size() + 1];
-        std::copy(Result.begin(), Result.end(), pTopResult);
-        pTopResult[Result.size()] = 0;
+        // Allocate memory for result
+        PSTR pTopResult = static_cast<PSTR>(HeapAlloc(
+          GetProcessHeap(), 
+          HEAP_ZERO_MEMORY | HEAP_GENERATE_EXCEPTIONS, 
+          Results.size()));
 
+        // Copy result to new memory
+        std::copy(Result.begin(), Result.end(), pTopResult);
+
+        // Return pointer to result
         return pTopResult;
       }
       catch (boost::exception const& e)
@@ -261,16 +268,6 @@ namespace Hades
       {
         Current();
       });
-    }
-
-    // Run Lua string
-    std::string DotNetMgr::RunLuaScript(std::string const& Lua)
-    {
-      // Run string and get results
-      auto const Results(m_pKernel->RunScript(Lua));
-
-      // Return top result
-      return Results.empty() ? "" : *Results.begin();
     }
   }
 }

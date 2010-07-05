@@ -256,7 +256,7 @@ namespace Hades
     void Kernel::OnConsoleInput(std::string const& Input)
     {
       // Run lua
-      RunScript(Input);
+      RunScript(Input, true);
     }
 
     // Get session ID
@@ -285,10 +285,11 @@ namespace Hades
     }
 
     // Run script
-    std::vector<std::string> Kernel::RunScript(std::string const& Script)
+    std::vector<std::string> Kernel::RunScript(std::string const& Script, 
+      bool EchoToConsole)
     {
       // Debug output
-      std::cout << "Kernel::RunScript: \"" << Script << "\"." << std::endl;
+      std::cout << "Kernel::RunScript: Script = \"" << Script << "\"." << std::endl;
 
       try
       {
@@ -297,9 +298,15 @@ namespace Hades
 
         // Print results
         std::for_each(Results.begin(), Results.end(), 
-          [this] (std::string const& Current)
+          [this, EchoToConsole] (std::string const& Current)
         {
-          m_pGuiMgr->Print(Current);
+          if (EchoToConsole)
+          {
+            m_pGuiMgr->Print(Current);
+          }
+
+          std::cout << "Kernel::RunScript: Current Result = \"" << Current 
+            << "\"." << std::endl;
         });
 
         // Return results
@@ -308,7 +315,7 @@ namespace Hades
       catch (boost::exception const& e)
       {
         // Print error information
-        if (m_pGuiMgr)
+        if (EchoToConsole && m_pGuiMgr)
         {
           m_pGuiMgr->Print(boost::diagnostic_information(e));
         }
@@ -321,7 +328,7 @@ namespace Hades
       catch (std::exception const& e)
       {
         // Print error information
-        if (m_pGuiMgr)
+        if (EchoToConsole && m_pGuiMgr)
         {
           m_pGuiMgr->Print(e.what());
         }
