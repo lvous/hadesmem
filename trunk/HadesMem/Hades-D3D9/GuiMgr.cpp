@@ -20,6 +20,10 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // C++ Standard Library
 #include <iostream>
 
+// Windows
+#include <atlbase.h>
+#include <atlwin.h>
+
 // Hades
 #include "GuiMgr.h"
 #include "D3D9Mgr.h"
@@ -152,6 +156,17 @@ namespace Hades
     // D3D9Mgr OnFrame callback
     void GuiMgr::OnFrame(IDirect3DDevice9* pDevice, D3D9HelperPtr pHelper)
     {
+      // Update window title
+      CWindow MyWindow(m_pKernel->GetD3D9Mgr()->GetDeviceWindow());
+      if (!MyWindow.SetWindowTextW(m_pKernel->GetSessionName().c_str()))
+      {
+        DWORD LastError = GetLastError();
+        BOOST_THROW_EXCEPTION(GuiMgrError() << 
+          ErrorFunction("GuiMgr::OnFrame") << 
+          ErrorString("Could not set window text.") << 
+          ErrorCodeWin(LastError));
+      }
+
       // Ensure GUI is valid
       if (!m_pGui)
       {

@@ -104,6 +104,9 @@ namespace Hades
 
       // Whether hook is enabled
       virtual bool IsHookEnabled(std::wstring const& Name);
+      
+      // Get session name
+      virtual std::wstring GetSessionName();
 
       // Get static Kernel instance
       static Kernel* GetKernelInstance();

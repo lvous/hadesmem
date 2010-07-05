@@ -98,6 +98,17 @@ namespace Hades
       private:
         Kernel* m_pKernel;
       };
+
+      class SessionName
+      {
+      public:
+        SessionName(Kernel* pKernel);
+
+        std::string operator() () const;
+
+      private:
+        Kernel* m_pKernel;
+      };
     }
   }
 }

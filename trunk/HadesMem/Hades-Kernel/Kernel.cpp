@@ -133,6 +133,8 @@ namespace Hades
           Wrappers::SessionId(this)))
         ,luabind::def("SetSessionId", luabind::tag_function<void 
           (unsigned int)>(Wrappers::SessionId(this)))
+        ,luabind::def("GetSessionName", luabind::tag_function<std::string ()>(
+          Wrappers::SessionName(this)))
       ];
 
       // Debug output
@@ -467,6 +469,13 @@ namespace Hades
     Kernel* Kernel::GetKernelInstance()
     {
       return m_pKernel;
+    }
+
+    // Get session name
+    std::wstring Kernel::GetSessionName()
+    {
+      return L"Hades [Session " + boost::lexical_cast<std::wstring>(
+        GetSessionId()) + L"]";
     }
   }
 }

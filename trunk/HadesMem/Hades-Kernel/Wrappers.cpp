@@ -22,6 +22,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include "DotNet.h"
 #include "Wrappers.h"
 #include "Hades-D3D9/GuiMgr.h"
+#include "Hades-Common/I18n.h"
 
 namespace Hades
 {
@@ -83,6 +84,15 @@ namespace Hades
       unsigned int SessionId::operator()() const
       {
         return m_pKernel->GetSessionId();
+      }
+
+      SessionName::SessionName(Kernel* pKernel)
+        : m_pKernel(pKernel)
+      { }
+
+      std::string SessionName::operator()() const
+      {
+        return boost::lexical_cast<std::string>(m_pKernel->GetSessionName());
       }
     }
   }

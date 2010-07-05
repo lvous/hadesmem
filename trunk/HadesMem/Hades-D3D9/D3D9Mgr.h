@@ -68,6 +68,9 @@ namespace Hades
       static boost::signals2::connection RegisterOnRelease(
         const Callbacks::slot_type& Subscriber);
 
+      // Get current device window
+      static HWND GetDeviceWindow();
+
     private:
       // Direct3DCreate9 hook implementation
       static IDirect3D9* WINAPI Direct3DCreate9_Hook(UINT SDKVersion);
@@ -116,6 +119,9 @@ namespace Hades
 
       // Current device
       static IDirect3DDevice9* m_pDevice;
+
+      // Current device window
+      static HWND m_WindowCur;
 
       // State block
       static IDirect3DStateBlock9*	m_pStateBlock;
@@ -169,6 +175,12 @@ namespace Hades
         const D3D9Mgr::Callbacks::slot_type& Subscriber)
       {
         return D3D9Mgr::RegisterOnRelease(Subscriber);
+      }
+
+      // Get current device window
+      virtual HWND GetDeviceWindow()
+      {
+        return D3D9Mgr::GetDeviceWindow();
       }
     };
   }

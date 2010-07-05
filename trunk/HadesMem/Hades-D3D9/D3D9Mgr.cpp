@@ -44,6 +44,9 @@ namespace Hades
     // Current device
     IDirect3DDevice9* D3D9Mgr::m_pDevice;
 
+    // Current device window
+    HWND D3D9Mgr::m_WindowCur;
+
     // State block
     IDirect3DStateBlock9* D3D9Mgr::m_pStateBlock;
 
@@ -206,6 +209,9 @@ namespace Hades
 
         // Hook window
         m_pKernel->GetInputMgr()->HookWindow(hFocusWindow);
+
+        // Set current window
+        m_WindowCur = hFocusWindow;
 
         // Call trampoline
         HRESULT Result = pCreateDevice(pThis, Adapter, DeviceType, hFocusWindow, 
@@ -517,6 +523,12 @@ namespace Hades
     {
       // Register callback and return connection
       return m_CallsOnRelease.connect(Subscriber);
+    }
+
+    // Get current device window
+    HWND D3D9Mgr::GetDeviceWindow()
+    {
+      return m_WindowCur;
     }
   }
 }
