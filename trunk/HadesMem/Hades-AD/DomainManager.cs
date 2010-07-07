@@ -352,5 +352,63 @@ namespace HadesAD
         return -1;
       }
     }
+
+    public class Scripting
+    {
+      [DllImport("kernel32.dll", CharSet = CharSet.Auto)]
+      public static extern IntPtr GetModuleHandle(string lpModuleName);
+
+      [DllImport("kernel32", CharSet = CharSet.Ansi, ExactSpelling = true,
+          SetLastError = true)]
+      static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
+
+      [DllImport("kernel32.dll", SetLastError = true)]
+      static extern bool HeapFree(IntPtr hHeap, uint dwFlags, IntPtr lpMem);
+
+      [DllImport("kernel32.dll", SetLastError = true)]
+      static extern IntPtr GetProcessHeap();
+
+      [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+      internal delegate IntPtr dlgRunLuaScript([MarshalAs(UnmanagedType.
+          LPStr)] string Script, uint Index);
+
+      // Run script and get result by index
+      public static string GetScriptResult(string Script, uint Index)
+      {
+        IntPtr HadesKernelMod32 = GetModuleHandle("Hades-Kernel_IA32.dll");
+        IntPtr HadesKernelMod64 = GetModuleHandle("Hades-Kernel_AMD64.dll");
+        if (HadesKernelMod32.ToInt64() == 0 && HadesKernelMod64.ToInt64() == 0)
+        {
+          throw new Exception("Could not find Hades Kernel DLL.");
+        }
+        IntPtr HadesKernelMod =
+          HadesKernelMod32.ToInt64() != 0 ? HadesKernelMod32 : HadesKernelMod64;
+
+        IntPtr pRunLuaScript = GetProcAddress(HadesKernelMod, "_RunLuaScript@8");
+        if (pRunLuaScript.ToInt64() == 0)
+        {
+          throw new Exception("Could not find RunLuaScript export.");
+        }
+
+        dlgRunLuaScript RunLuaScriptFunc = (dlgRunLuaScript)Marshal.
+            GetDelegateForFunctionPointer(pRunLuaScript,
+            typeof(dlgRunLuaScript));
+
+        IntPtr Result = RunLuaScriptFunc(Script, Index);
+        if (Result.ToInt64() == 0)
+        {
+          throw new Exception("Could not get requested result.");
+        }
+
+        string ResultStr = Marshal.PtrToStringAnsi(Result);
+
+        if (!HeapFree(GetProcessHeap(), 0, Result))
+        {
+          throw new Exception("Could not free result memory.");
+        }
+
+        return ResultStr;
+      }
+    }
   }
 }
