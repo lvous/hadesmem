@@ -63,7 +63,7 @@ namespace Hades
         PSTR pTopResult = static_cast<PSTR>(HeapAlloc(
           GetProcessHeap(), 
           HEAP_ZERO_MEMORY | HEAP_GENERATE_EXCEPTIONS, 
-          Results.size()));
+          Result.size() + 1));
 
         // Copy result to new memory
         std::copy(Result.begin(), Result.end(), pTopResult);
