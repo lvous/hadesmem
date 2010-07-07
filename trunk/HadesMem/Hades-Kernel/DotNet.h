@@ -53,6 +53,9 @@ namespace Hades
       // Constructor
       DotNetMgr(class Kernel* pKernel, std::wstring const& Config);
 
+      // Destructor
+      ~DotNetMgr();
+
       // Load an assembly in the context of the current process
       void LoadAssembly(const std::wstring& Assembly, 
         const std::wstring& Parameters, 

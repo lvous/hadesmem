@@ -238,7 +238,22 @@ namespace Hades
         std::placeholders::_2));
 
       // Debug output
-      std::wcout << "DotNetMgr::DotNetMgr: initialized." << std::endl;
+      std::wcout << "DotNetMgr::DotNetMgr: Initialized." << std::endl;
+    }
+
+    // Destructor
+    DotNetMgr::~DotNetMgr()
+    {
+      // Debug output
+      std::wcout << "DotNetMgr::~DotNetMgr: Stopping CLR." << std::endl;
+
+      // Stop CLR
+      HRESULT StopClrResult = m_pClrHost->Stop();
+      if (FAILED(StopClrResult))
+      {
+        std::wcout << boost::wformat(L"DotNetMgr::~DotNetMgr: Could not stop "
+          L"CLR. Result = %p.") %StopClrResult << std::endl;
+      }
     }
 
     // Load an assembly in the context of the current process
