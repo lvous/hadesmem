@@ -27,7 +27,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Windows API
 #include <Windows.h>
 #include <atlbase.h>
-#include <mscoree.h>
+#include <MetaHost.h>
 
 // DirectX API
 #include <d3d9.h>
@@ -61,9 +61,6 @@ namespace Hades
         const std::wstring& Parameters, 
         const std::wstring& Domain);
 
-      // Notify of session ID change
-      void SetSessionId(unsigned int SessionId);
-
     private:
       // .NET OnFrame callback type
       typedef void (__stdcall* FrameCallback)();
@@ -75,8 +72,14 @@ namespace Hades
       void OnFrameEvent(IDirect3DDevice9* pDevice, 
         D3D9::D3D9HelperPtr pHelper);
 
-      // CLR Host
-      CComPtr<ICLRRuntimeHost> m_pClrHost;
+      // CLR Meta Host
+      CComPtr<ICLRMetaHost> m_pClrMetaHost;
+      // CLR Runtime Info
+      CComPtr<ICLRRuntimeInfo> m_pClrRuntimeInfo;
+      // CLR Runtime Host
+      CComPtr<ICLRRuntimeHost> m_pClrRuntimeHost;
+      // CLR Control
+      CComPtr<ICLRControl> m_pClrControl;
       // Hades CLR host control
       std::shared_ptr<class HadesHostControl> m_pClrHostControl;
       // Kernel instance

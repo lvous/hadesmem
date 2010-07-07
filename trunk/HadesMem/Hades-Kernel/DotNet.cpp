@@ -93,8 +93,11 @@ namespace Hades
 
     // Constructor
     DotNetMgr::DotNetMgr(Kernel* pKernel, std::wstring const& Config) 
-      : m_pClrHost(), 
-      m_pClrHostControl(nullptr), 
+      : m_pClrMetaHost(), 
+      m_pClrRuntimeInfo(), 
+      m_pClrRuntimeHost(), 
+      m_pClrControl(), 
+      m_pClrHostControl(), 
       m_pKernel(pKernel), 
       m_pDomainMgr(nullptr)
     {
@@ -165,55 +168,100 @@ namespace Hades
             "type."));
       }
 
-#pragma warning(push)
-#pragma warning(disable: 4996)
-      // Initialize the CLR using CorBindToRuntimeEx. This gets us
-      // the ICLRRuntimeHost pointer we'll need to call Start.
-      HRESULT BindResult = CorBindToRuntimeEx(
-        RuntimeVer.c_str(), 
-        L"wks", 
-        STARTUP_CONCURRENT_GC, 
-        CLSID_CLRRuntimeHost, 
-        IID_ICLRRuntimeHost, 
-        reinterpret_cast<PVOID*>(&m_pClrHost));
-      if (FAILED(BindResult))
+      // Create CLR meta host
+      HRESULT ClrCreateResult = CLRCreateInstance(
+        CLSID_CLRMetaHost,
+        IID_ICLRMetaHost, 
+        reinterpret_cast<LPVOID*>(&m_pClrMetaHost.p));
+      if (FAILED(ClrCreateResult))
       {
         BOOST_THROW_EXCEPTION(DotNetMgrError() << 
           ErrorFunction("DotNetMgr::DotNetMgr") << 
-          ErrorString("Failed to bind .NET framework.") << 
-          ErrorCodeWin(BindResult));
+          ErrorString("Could not create CLR Meta Host.") << 
+          ErrorCodeWin(ClrCreateResult));
       }
-#pragma warning(pop)
 
-      // Set CLR host control
+      // Create CLR runtime info
+      HRESULT GetRuntimeResult = m_pClrMetaHost->GetRuntime(
+        RuntimeVer.c_str(), 
+        IID_ICLRRuntimeInfo, 
+        reinterpret_cast<LPVOID*>(&m_pClrRuntimeInfo.p));
+      if (FAILED(GetRuntimeResult))
+      {
+        BOOST_THROW_EXCEPTION(DotNetMgrError() << 
+          ErrorFunction("DotNetMgr::DotNetMgr") << 
+          ErrorString("Could not get CLR Runtime Info.") << 
+          ErrorCodeWin(GetRuntimeResult));
+      }
+      
+      // Bind as legacy runtime
+      HRESULT BindLegacyResult = m_pClrRuntimeInfo->BindAsLegacyV2Runtime();
+      if (FAILED(BindLegacyResult))
+      {
+        BOOST_THROW_EXCEPTION(DotNetMgrError() << 
+          ErrorFunction("DotNetMgr::DotNetMgr") << 
+          ErrorString("Could not bind as legacy runtime.") << 
+          ErrorCodeWin(BindLegacyResult));
+      }
+
+      // Create CLR runtime host
+      HRESULT GetRuntimeHostResult = m_pClrRuntimeInfo->GetInterface(
+        CLSID_CLRRuntimeHost, 
+        IID_ICLRRuntimeHost, 
+        reinterpret_cast<LPVOID*>(&m_pClrRuntimeHost.p));
+      if (FAILED(GetRuntimeHostResult))
+      {
+        BOOST_THROW_EXCEPTION(DotNetMgrError() << 
+          ErrorFunction("DotNetMgr::DotNetMgr") << 
+          ErrorString("Could create CLR Runtime Host.") << 
+          ErrorCodeWin(GetRuntimeHostResult));
+      }
+
+      // Create host control
       m_pClrHostControl.reset(new HadesHostControl());
-      m_pClrHost->SetHostControl(static_cast<IHostControl*>(
-        &*m_pClrHostControl));
 
-      // Get a pointer to the ICLRControl interface
-      ICLRControl *pCLRControl = NULL;
-      HRESULT GetClrResult = m_pClrHost->GetCLRControl(&pCLRControl);
-      if (FAILED(GetClrResult))
+      // Set host control
+      HRESULT SetHostControlResult = m_pClrRuntimeHost->SetHostControl(
+        static_cast<IHostControl*>(&*m_pClrHostControl));
+      if (FAILED(SetHostControlResult))
+      {
+        BOOST_THROW_EXCEPTION(DotNetMgrError() << 
+          ErrorFunction("DotNetMgr::DotNetMgr") << 
+          ErrorString("Could set host control.") << 
+          ErrorCodeWin(SetHostControlResult));
+      }
+
+      // Get CLR control interface
+      HRESULT GetClrControlResult = m_pClrRuntimeHost->GetCLRControl(
+        &m_pClrControl.p);
+      if (FAILED(GetClrControlResult))
       {
         BOOST_THROW_EXCEPTION(DotNetMgrError() << 
           ErrorFunction("DotNetMgr::DotNetMgr") << 
           ErrorString("Could not get CLR control.") << 
-          ErrorCodeWin(GetClrResult));
+          ErrorCodeWin(GetClrControlResult));
       }
 
-      // Call SetAppDomainManagerType to associate our domain manager with
-      // the process
-      pCLRControl->SetAppDomainManagerType(DomainMgrAssembly.c_str(), 
+      // Associate domain manager with CLR instance
+      HRESULT SetAppDomainResult = m_pClrControl->SetAppDomainManagerType(
+        DomainMgrAssembly.c_str(), 
         DomainMgrType.c_str());
-
-      // Start the CLR
-      HRESULT StartResult = m_pClrHost->Start();
-      if (FAILED(StartResult))
+      if (FAILED(SetAppDomainResult))
       {
         BOOST_THROW_EXCEPTION(DotNetMgrError() << 
           ErrorFunction("DotNetMgr::DotNetMgr") << 
-          ErrorString("Could not start CLR.") << 
-          ErrorCodeWin(StartResult));
+          ErrorString("Could not set domain manager type.") << 
+          ErrorCodeWin(SetAppDomainResult));
+      }
+
+      // Start CLR
+      HRESULT StartClrResult = m_pClrRuntimeHost->Start();
+      if (FAILED(StartClrResult))
+      {
+        BOOST_THROW_EXCEPTION(DotNetMgrError() << 
+          ErrorFunction("DotNetMgr::DotNetMgr") << 
+          ErrorString("Could start CLR.") << 
+          ErrorCodeWin(StartClrResult));
       }
 
       // Get domain manager
@@ -244,11 +292,8 @@ namespace Hades
     // Destructor
     DotNetMgr::~DotNetMgr()
     {
-      // Debug output
-      std::wcout << "DotNetMgr::~DotNetMgr: Stopping CLR." << std::endl;
-
       // Stop CLR
-      HRESULT StopClrResult = m_pClrHost->Stop();
+      HRESULT StopClrResult = m_pClrRuntimeHost->Stop();
       if (FAILED(StopClrResult))
       {
         std::wcout << boost::wformat(L"DotNetMgr::~DotNetMgr: Could not stop "

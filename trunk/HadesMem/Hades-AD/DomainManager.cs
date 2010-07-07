@@ -11,158 +11,178 @@ using System.ComponentModel;
 
 namespace HadesAD
 {
-  internal static class CmdLineToArgvW
+  // Hades utility class
+  public class HadesUtil
   {
-    // The previous examples on this page used incorrect
-    // pointer logic and were removed.
-
-    internal static string[] SplitArgs(string unsplitArgumentLine)
-    {
-      int numberOfArgs;
-      IntPtr ptrToSplitArgs;
-      string[] splitArgs;
-
-      ptrToSplitArgs = CommandLineToArgvW(unsplitArgumentLine, 
-        out numberOfArgs);
-
-      // CommandLineToArgvW returns NULL upon failure.
-      if (ptrToSplitArgs == IntPtr.Zero)
-        throw new ArgumentException("Unable to split argument.",
-            new Win32Exception());
-
-      // Make sure the memory ptrToSplitArgs to is freed, even upon 
-      // failure.
-      try
-      {
-        splitArgs = new string[numberOfArgs];
-
-        // ptrToSplitArgs is an array of pointers to null terminated 
-        // Unicode strings.
-        // Copy each of these strings into our split argument array.
-        for (int i = 0; i < numberOfArgs; i++)
-        {
-          splitArgs[i] = Marshal.PtrToStringUni(Marshal.ReadIntPtr(
-              ptrToSplitArgs, i * IntPtr.Size));
-        }
-
-        return splitArgs;
-      }
-      finally
-      {
-        // Free memory obtained by CommandLineToArgW.
-        LocalFree(ptrToSplitArgs);
-      }
-    }
-
-    [DllImport("shell32.dll", SetLastError = true)]
-    static extern IntPtr CommandLineToArgvW([MarshalAs(UnmanagedType.LPWStr)] 
-      string lpCmdLine, out int pNumArgs);
-
-    [DllImport("kernel32.dll")]
-    static extern IntPtr LocalFree(IntPtr hMem);
-  }
-
-  public interface IHadesVM
-  {
-    void RegisterOnFrame([In] IntPtr callback);
-    uint EnumDomains([In] IntPtr callback, [In] int pData);
-    dlgExecute GetExecute();
-    dlgFrame GetFrame();
-    bool RunAssembly([In] string appDomainName, [In] string assemblyName,
-        [In] string parameters);
-    bool IsDomainActive([In] string appDomainName);
-    bool UnloadDomain([In] string appDomainName);
-  }
-
-  public delegate void dlgDomainEnumCallback(string callback, int pData);
-  public delegate bool dlgExecute(string appDomain, string appName, 
-      string parameters);
-  public delegate void dlgFrame();
-  internal delegate void dlgSetFrame(IntPtr frameFunc);
-
-  public class Hades
-  {
-    public static void Echo(string output)
+    // Echo error string
+    public static void EchoError(string output)
     {
       MessageBox.Show(output);
     }
+
+    // CommandLineToArgvW wrapper class
+    internal static class CmdLineToArgvW
+    {
+      // Import CommandLineToArgvW. Used to split command line.
+      [DllImport("shell32.dll", SetLastError = true)]
+      static extern IntPtr CommandLineToArgvW([MarshalAs(UnmanagedType.LPWStr)] 
+      string lpCmdLine, out int pNumArgs);
+
+      // Import LocalFree. Used to free memory allocated by CommandLineToArgvW.
+      [DllImport("kernel32.dll")]
+      static extern IntPtr LocalFree(IntPtr hMem);
+
+      // Take unsplit command line and split arguments using CommandLineToArgvW
+      internal static string[] SplitArgs(string commandLine)
+      {
+        // Convert unsplit command line to split command line
+        int numArgs;
+        IntPtr ptrSplitArgs = CommandLineToArgvW(commandLine,
+          out numArgs);
+
+        // Ensure conversion succeeded
+        if (ptrSplitArgs == IntPtr.Zero)
+        {
+          throw new ArgumentException("Unable to split argument.",
+            new Win32Exception());
+        }
+
+        // Ensure the memory allocated by CommandLineToArgvW is freed
+        try
+        {
+          // Create new string array to hold split command line
+          string[] splitArgs = new string[numArgs];
+
+          // ptrSplitArgs is an array of pointers to null terminated Unicode 
+          // strings.
+          // Copy each of these strings into our split argument array.
+          for (int i = 0; i < numArgs; i++)
+          {
+            splitArgs[i] = Marshal.PtrToStringUni(Marshal.ReadIntPtr(
+                ptrSplitArgs, i * IntPtr.Size));
+          }
+
+          // Return split arguments
+          return splitArgs;
+        }
+        finally
+        {
+          // Free memory obtained by CommandLineToArgW
+          LocalFree(ptrSplitArgs);
+        }
+      }
+    }
   }
 
+  // HadesVM interface. Used by C++ layer.
+  public interface IHadesVM
+  {
+    // Run assembly
+    bool RunAssembly(string appDomainName, string assemblyName,
+      string parameters);
+
+    // Register OnFrame callback using supplied function pointer
+    void RegisterOnFrame(IntPtr registerOnFrame);
+  }
+
+  // Hades domain manager
   public class HadesVM : AppDomainManager, IHadesVM
   {
+    // Domain list. Mapped by name.
     private static Dictionary<string, AppDomain> Domains =
       new Dictionary<string, AppDomain>();
-    private static List<dlgFrame> FrameHandlers = new List<dlgFrame>();
-    private static dlgExecute Execute = new dlgExecute(HadesVM.Run);
+
+    // OnFrame delegate type
+    public delegate void dlgFrame();
+
+    // RegisterOnFrame delegate type
+    internal delegate void dlgRegOnFrame(IntPtr frameFunc);
+
+    // OnFrame callback delegate
     private static dlgFrame Frame = new dlgFrame(HadesVM.OnFrame);
 
-    [DllImport("kernel32.dll", CharSet = CharSet.Auto)]
-    public static extern IntPtr GetModuleHandle(string lpModuleName);
+    // OnFrame event subscribers
+    private static List<dlgFrame> FrameHandlers = new List<dlgFrame>();
 
-    [DllImport("kernel32", CharSet = CharSet.Ansi, ExactSpelling = true,
-        SetLastError = true)]
-    static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
-
-    [DllImport("kernel32.dll", SetLastError = true)]
-    static extern bool HeapFree(IntPtr hHeap, uint dwFlags, IntPtr lpMem);
-
-    [DllImport("kernel32.dll", SetLastError = true)]
-    static extern IntPtr GetProcessHeap();
-
-    [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-    internal delegate IntPtr dlgRunLuaScript([MarshalAs(UnmanagedType.
-        LPStr)] string Script, uint Index);
-
-    public static string GetScriptResult(string Script, uint Index)
+    // Run assembly
+    public bool RunAssembly(string appDomainName, string assemblyName,
+      string parameters)
     {
-      IntPtr HadesKernelMod32 = GetModuleHandle("Hades-Kernel_IA32.dll");
-      IntPtr HadesKernelMod64 = GetModuleHandle("Hades-Kernel_AMD64.dll");
-      if (HadesKernelMod32.ToInt64() == 0 && HadesKernelMod64.ToInt64() == 0)
+      Run(appDomainName, assemblyName, parameters);
+      return true;
+    }
+
+    // Register OnFrame callback using supplied function pointer
+    public void RegisterOnFrame(IntPtr registerOnFrame)
+    {
+      dlgRegOnFrame DoRegisterOnFrame = (dlgRegOnFrame)Marshal.
+        GetDelegateForFunctionPointer(registerOnFrame, typeof(dlgRegOnFrame));
+      IntPtr Subscriber = Marshal.GetFunctionPointerForDelegate(Frame);
+
+      DoRegisterOnFrame(Subscriber);
+    }
+
+    // Hades OnFrame subscriber
+    public static void OnFrame()
+    {
+      try
       {
-        throw new Exception("Could not find Hades Kernel DLL.");
-      }
-      IntPtr HadesKernelMod = 
-        HadesKernelMod32.ToInt64() != 0 ? HadesKernelMod32 : HadesKernelMod64;
+        // Call HadesAD.OnFrame in all active domains
+        lock (Domains)
+        {
+          foreach (AppDomain appDomain in Domains.Values)
+          {
+            appDomain.DoCallBack(OnFrame);
+          }
+        }
 
-      IntPtr pRunLuaScript = GetProcAddress(HadesKernelMod, "_RunLuaScript@8");
-      if (pRunLuaScript.ToInt64() == 0)
+        // Call all subscribers
+        foreach (dlgFrame frameHandler in FrameHandlers)
+        {
+          frameHandler();
+        }
+      }
+      catch (Exception e)
       {
-        throw new Exception("Could not find RunLuaScript export.");
+        HadesUtil.EchoError("Exception in frame handler: " + e.ToString());
       }
+    }
 
-      dlgRunLuaScript RunLuaScriptFunc = (dlgRunLuaScript)Marshal.
-          GetDelegateForFunctionPointer(pRunLuaScript, 
-          typeof(dlgRunLuaScript));
+    // Add OnFrame subscriber
+    public static void AddFrameHandler(dlgFrame frameHandler)
+    {
+      FrameHandlers.Add(frameHandler);
+    }
 
-      IntPtr Result = RunLuaScriptFunc(Script, Index);
-      if (Result.ToInt64() == 0)
-      {
-        throw new Exception("Could not get requested result.");
-      }
+    // Remove OnFrame subscriber
+    public static void RemoveFrameHandler(dlgFrame frameHandler)
+    {
+      if (FrameHandlers.Contains(frameHandler))
+        FrameHandlers.Remove(frameHandler);
+    }
 
-      string ResultStr = Marshal.PtrToStringAnsi(Result);
-
-      if (!HeapFree(GetProcessHeap(), 0, Result))
-      {
-        throw new Exception("Could not free result memory.");
-      }
-
-      return ResultStr;
+    // Initialize the new application domain
+    public override void InitializeNewDomain(AppDomainSetup appDomainInfo)
+    {
+      // Ensure that host is notified of AppDomain creation
+      base.InitializationFlags = AppDomainManagerInitializationOptions.
+        RegisterWithHost;
     }
 
     internal static void AssemblyExecuter(object Obj)
     {
       AsEx ex = (AsEx)Obj;
-      Thread.CurrentThread.Name = ex.appdomainName + 
+      Thread.CurrentThread.Name = ex.appdomainName +
         " AppDomain main ExecThread";
+
       try
       {
         ex.ExecuteAssembly();
       }
       catch (Exception exception)
       {
-        Hades.Echo("Unhandled exception in application.");
-        Hades.Echo("Outer Exception: " + exception.ToString());
+        HadesUtil.EchoError("Unhandled exception in application.");
+        HadesUtil.EchoError("Outer Exception: " + exception.ToString());
         EchoInnerExceptions(exception);
       }
 
@@ -175,139 +195,41 @@ namespace HadesAD
         }
         catch (Exception e)
         {
-          Hades.Echo("Unhandled exception post application death.");
-          Hades.Echo("Outer Exception: " + e.ToString());
+          HadesUtil.EchoError("Unhandled exception post application death.");
+          HadesUtil.EchoError("Outer Exception: " + e.ToString());
         }
       }
-    }
-
-    public void RegisterOnFrame([In] IntPtr value)
-    {
-      dlgSetFrame delegateForFunctionPointer =
-        (dlgSetFrame)Marshal.GetDelegateForFunctionPointer(value, 
-        typeof(dlgSetFrame));
-      IntPtr ptrForDelegate = Marshal.GetFunctionPointerForDelegate(Frame);
-
-      delegateForFunctionPointer(ptrForDelegate);
-    }
-
-    public bool RunAssembly([In] string appDomainName, 
-      [In] string assemblyName, [In] string parameters)
-    {
-      Run(appDomainName, assemblyName, parameters);
-      return true;
     }
 
     public static void DomainUnloader(object Obj)
     {
       AppDomain domain = (AppDomain)Obj;
+
       try
       {
         AppDomain.Unload(domain);
       }
       catch (Exception exception)
       {
-        Hades.Echo("Exception unloading domain: " + exception.ToString());
-      }
-    }
-
-    public void EchoDomains()
-    {
-      Hades.Echo("Current Application Domains\n---------------------" +
-          "--------------");
-      lock (Domains)
-      {
-        foreach (string domain in Domains.Keys)
-        {
-          Hades.Echo(domain);
-        }
+        HadesUtil.EchoError("Exception unloading domain: " + 
+          exception.ToString());
       }
     }
 
     internal static void EchoInnerExceptions(Exception e)
     {
-      for (int i = 1; i <= 10; i++)
+      for (int i = 1; i <= 10; ++i)
       {
         if (e.InnerException == null)
         {
           return;
         }
+
         e = e.InnerException;
-        Hades.Echo("Inner Exception[" + i.ToString() + "]: " + e.ToString());
+
+        HadesUtil.EchoError("Inner Exception[" + i.ToString() + "]: " + 
+          e.ToString());
       }
-    }
-
-    public uint EnumDomains(IntPtr callback, int pData)
-    {
-      dlgDomainEnumCallback delegateForFunctionPointer =
-          (dlgDomainEnumCallback)Marshal.GetDelegateForFunctionPointer(
-          callback, typeof(dlgDomainEnumCallback));
-      uint num = 0;
-      lock (Domains)
-      {
-        foreach (string domain in Domains.Keys)
-        {
-          num++;
-          delegateForFunctionPointer(domain, pData);
-        }
-      }
-      return num;
-    }
-
-    public dlgExecute GetExecute()
-    {
-      return Execute;
-    }
-
-    public dlgFrame GetFrame()
-    {
-      return Frame;
-    }
-
-    public override void InitializeNewDomain(AppDomainSetup appDomainInfo)
-    {
-      base.InitializationFlags = AppDomainManagerInitializationOptions.
-        RegisterWithHost;
-    }
-
-    public bool IsDomainActive([In] string appDomainName)
-    {
-      lock (Domains)
-      {
-        return Domains.ContainsKey(appDomainName);
-      }
-    }
-
-    public static void OnFrame()
-    {
-      try
-      {
-        lock (Domains)
-        {
-          foreach (AppDomain appDomain in Domains.Values)
-          {
-            appDomain.DoCallBack(OnFrame);
-          }
-        }
-
-        foreach (dlgFrame frameHandler in FrameHandlers)
-          frameHandler();
-      }
-      catch (Exception e)
-      {
-        Hades.Echo("Exception in frame handler: " + e.ToString());
-      }
-    }
-
-    public static void AddFrameHandler(dlgFrame frameHandler)
-    {
-      FrameHandlers.Add(frameHandler);
-    }
-
-    public static void RemoveFrameHandler(dlgFrame frameHandler)
-    {
-      if (FrameHandlers.Contains(frameHandler))
-        FrameHandlers.Remove(frameHandler);
     }
 
     public static bool Run(string appDomainName, string assemblyName,
@@ -326,54 +248,35 @@ namespace HadesAD
           domain.SetData("parameters", parameters);
           if (domain == null)
           {
-            Hades.Echo("Could not create domain called " + appDomainName);
+            HadesUtil.EchoError("Could not create domain called " + 
+              appDomainName);
             return false;
           }
           Domains.Add(appDomainName, domain);
         }
         else
         {
-          Hades.Echo("Could not create domain called " + appDomainName + 
-            ". The domain already exists.");
-          Hades.Echo("If you want to launch another application, including " + 
-            "the same application, please choose another name.");
+          HadesUtil.EchoError("Could not create domain called " + 
+            appDomainName + ". The domain already exists.");
+          HadesUtil.EchoError("If you want to launch another application, " + 
+            "including the same application, please choose another name.");
           return false;
         }
+
         AsEx parameter = new AsEx(domain, assemblyName, appDomainName,
           parameters);
         Thread ExecThread = new Thread(HadesVM.AssemblyExecuter);
         ExecThread.SetApartmentState(ApartmentState.STA);
         ExecThread.Start(parameter);
+
         return true;
       }
       catch (Exception exception)
       {
-        Hades.Echo("Exception loading assembly: " + exception.ToString());
+        HadesUtil.EchoError("Exception loading assembly: " + 
+          exception.ToString());
         return false;
       }
-    }
-
-    public bool UnloadDomain([In] string appDomainName)
-    {
-      try
-      {
-        lock (Domains)
-        {
-          AppDomain domain;
-          if (!Domains.TryGetValue(appDomainName, out domain))
-          {
-            return false;
-          }
-          Domains.Remove(appDomainName);
-          new Thread(HadesVM.DomainUnloader).Start(domain);
-        }
-      }
-      catch (Exception exception)
-      {
-        Hades.Echo("Exception unloading domain: " + exception.ToString());
-        return false;
-      }
-      return true;
     }
 
     internal class AsEx
@@ -387,18 +290,18 @@ namespace HadesAD
           string p_appdomainName, string parameters)
       {
         this.assemblyName = p_assemblyName;
-        this.parameters = CmdLineToArgvW.SplitArgs(parameters);
+        this.parameters = HadesUtil.CmdLineToArgvW.SplitArgs(parameters);
         this.Domain = p_Domain;
         this.appdomainName = p_appdomainName;
       }
 
       internal int ExecuteAssembly()
       {
-        int num;
+        int num = 0;
+
         try
         {
-          return this.Domain.ExecuteAssembly(this.assemblyName,
-              new System.Security.Policy.Evidence(), parameters);
+          return this.Domain.ExecuteAssembly(assemblyName, parameters);
         }
         catch (FileNotFoundException exception)
         {
@@ -410,9 +313,10 @@ namespace HadesAD
         }
         catch (Exception e)
         {
-          Hades.Echo(e.ToString());
+          HadesUtil.EchoError(e.ToString());
           throw;
         }
+
         return num;
       }
 
@@ -420,31 +324,31 @@ namespace HadesAD
       {
         try
         {
-          return this.Domain.ExecuteAssemblyByName(
-              this.assemblyName);
+          return this.Domain.ExecuteAssemblyByName(this.assemblyName);
         }
         catch (FileNotFoundException exception)
         {
-          Hades.Echo("Exception[1] executing assembly: " + priorException.
-            ToString());
+          HadesUtil.EchoError("Exception[1] executing assembly: " + 
+            priorException.ToString());
           HadesVM.EchoInnerExceptions(priorException);
-          Hades.Echo("Exception[2] executing assembly: " + exception.
-            ToString());
+          HadesUtil.EchoError("Exception[2] executing assembly: " + 
+            exception.ToString());
           HadesVM.EchoInnerExceptions(exception);
         }
         catch (FileLoadException exception2)
         {
-          Hades.Echo("Exception[1] executing assembly: " + priorException.
-            ToString());
+          HadesUtil.EchoError("Exception[1] executing assembly: " + 
+            priorException.ToString());
           HadesVM.EchoInnerExceptions(priorException);
-          Hades.Echo("Exception[2] executing assembly: " + exception2.
-            ToString());
+          HadesUtil.EchoError("Exception[2] executing assembly: " + 
+            exception2.ToString());
           HadesVM.EchoInnerExceptions(exception2);
         }
         catch (Exception)
         {
           throw;
         }
+
         return -1;
       }
     }
