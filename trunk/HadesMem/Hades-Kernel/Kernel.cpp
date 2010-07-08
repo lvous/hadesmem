@@ -291,7 +291,8 @@ namespace Hades
       bool EchoToConsole)
     {
       // Debug output
-      std::cout << "Kernel::RunScript: Script = \"" << Script << "\"." << std::endl;
+      std::cout << "Kernel::RunScript: Script = \"" << Script << "\"." << 
+        std::endl;
 
       try
       {
