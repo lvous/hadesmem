@@ -274,8 +274,11 @@ namespace Hades
       }
 
       // Call into the default application domain to attach the frame event
+#pragma warning(push)
+#pragma warning(disable: 4244)
       m_pDomainMgr->RegisterOnFrame(reinterpret_cast<DWORD_PTR>(
         &DotNetMgr::SubscribeFrameEvent));
+#pragma warning(pop)
 
       // Register OnFrame event for callback system
       m_pKernel->GetD3D9Mgr()->RegisterOnFrame(std::bind(
