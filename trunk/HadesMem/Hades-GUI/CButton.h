@@ -30,17 +30,17 @@ namespace Hades
   {
     class CButton : public CElement
     {
-      CTimer m_tPressed;
+      Timer m_tPressed;
 
-      CTexture * pButton;
-      CColor * pString;
+      Texture * pButton;
+      Colour * pString;
 
     public:
-      CButton(class CGUI& Gui, TiXmlElement * pElement);
+      CButton(class GUI& Gui, TiXmlElement * pElement);
 
       void Draw();
       void PreDraw();
-      void MouseMove(CMouse & pMouse);
+      void MouseMove(Mouse & pMouse);
       bool KeyEvent(SKey sKey);
 
       void UpdateTheme(int iIndex);

@@ -42,10 +42,10 @@ namespace Hades
       LPARAM m_lParam;
     };
 
-    class CKeyboard
+    class Keyboard
     {
     public:
-      CKeyboard(class CGUI& Gui);
+      Keyboard(class GUI& Gui);
 
       bool HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -53,7 +53,7 @@ namespace Hades
       SKey GetKey();
 
     private:
-      class CGUI& m_Gui;
+      class GUI& m_Gui;
       SKey m_Key;
     };
   }

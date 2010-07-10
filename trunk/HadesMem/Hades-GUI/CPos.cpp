@@ -27,49 +27,49 @@ namespace Hades
 {
   namespace GUI
   {
-    CPos::CPos(CPos* pPos)
+    Pos::Pos(Pos* pPos)
       : m_X(pPos->GetX()), 
       m_Y(pPos->GetY())
     { }
 
-    CPos::CPos(int X, int Y)
+    Pos::Pos(int X, int Y)
       : m_X(X), 
       m_Y(Y)
     { }
 
-    CPos::CPos()
+    Pos::Pos()
       : m_X(0), 
       m_Y(0)
     { }
 
-    int CPos::GetX() const
+    int Pos::GetX() const
     {
       return m_X;
     }
 
-    int CPos::GetY() const
+    int Pos::GetY() const
     {
       return m_Y;
     }
 
-    void CPos::SetX(int X)
+    void Pos::SetX(int X)
     {
       m_X = X;
     }
 
-    void CPos::SetY(int Y)
+    void Pos::SetY(int Y)
     {
       m_Y = Y;
     }
 
-    const CPos CPos::operator + (CPos const& Rhs) const
+    const Pos Pos::operator + (Pos const& Rhs) const
     {
-      return CPos(GetX() + Rhs.GetX(), GetY() + Rhs.GetY());
+      return Pos(GetX() + Rhs.GetX(), GetY() + Rhs.GetY());
     }
 
-    const CPos CPos::operator - (CPos const& Rhs) const
+    const Pos Pos::operator - (Pos const& Rhs) const
     {
-      return CPos(GetX() - Rhs.GetX(), GetY() - Rhs.GetY());
+      return Pos(GetX() - Rhs.GetX(), GetY() - Rhs.GetY());
     }
   }
 }

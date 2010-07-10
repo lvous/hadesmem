@@ -31,24 +31,24 @@ namespace Hades
     class CWindow : public CElement
     {
       bool m_bMaximized, m_bDragging, m_bVisible;
-      CPos posDif;
+      Pos posDif;
       std::vector<CElement*> m_vElements;
       CElement * m_pFocussedElement;
 
       bool m_bCloseButtonEnabled;
-      CTimer m_tCloseButtonPressed;
+      Timer m_tCloseButtonPressed;
 
-      CColor * pTitle, * pBodyInner, * pBodyBorder;
-      CTexture * pTitlebar, * pButton;
+      Colour * pTitle, * pBodyInner, * pBodyBorder;
+      Texture * pTitlebar, * pButton;
     public:
-      CWindow(class CGUI& Gui, TiXmlElement* pElement);
+      CWindow(class GUI& Gui, TiXmlElement* pElement);
       ~CWindow();
 
       void AddElement(CElement * pElement);
 
       void Draw();
       void PreDraw();
-      void MouseMove(CMouse & pMouse);
+      void MouseMove(Mouse & pMouse);
       bool KeyEvent(SKey sKey);
 
       void SetMaximized(bool bMaximized);

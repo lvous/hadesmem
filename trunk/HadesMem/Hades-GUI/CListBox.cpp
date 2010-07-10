@@ -26,13 +26,13 @@ namespace Hades
 {
   namespace GUI
   {
-    CListBox::CListBox(CGUI& Gui, TiXmlElement* pElement)
+    CListBox::CListBox(GUI& Gui, TiXmlElement* pElement)
       : CElement(Gui)
     {
       SetElement(pElement);
       m_iMouseOverIndex = -1;
 
-      pSlider = new CHelperSlider(Gui, CPos(GetWidth() - HELPERSLIDER_WIDTH, 0), GetHeight());
+      pSlider = new CHelperSlider(Gui, Pos(GetWidth() - HELPERSLIDER_WIDTH, 0), GetHeight());
 
       for(TiXmlElement * pString = pElement->FirstChildElement("Row"); pString; pString = pString->NextSiblingElement("Row"))
         AddRow(pString->GetText());
@@ -47,22 +47,22 @@ namespace Hades
 
     void CListBox::Draw()
     {
-      CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
+      Pos Pos = GetParent()->GetAbsPos() + GetRelPos();
 
       m_Gui.DrawOutlinedBox(Pos.GetX(), Pos.GetY(), GetWidth(), GetHeight(), pInner->GetD3DColor(), pBorder->GetD3DColor());
 
-      int iAddHeight = m_Gui.GetFont()->GetStringHeight();
+      int iAddHeight = m_Gui.GetFont().GetStringHeight();
       if (m_vRows.size())
-        for(int i = pSlider->GetValue(), iHeight = 0; i < static_cast<int>(m_vRows.size()) && iHeight < GetHeight() - m_Gui.GetFont()->GetStringHeight(); i++)
+        for(int i = pSlider->GetValue(), iHeight = 0; i < static_cast<int>(m_vRows.size()) && iHeight < GetHeight() - m_Gui.GetFont().GetStringHeight(); i++)
         {
-          CColor * pColor = 0;
+          Colour * pColor = 0;
 
           if (i == m_iMouseOverIndex && GetMouseOver())
             pColor = pMouseOverString;
           else
             pColor = pString;
 
-          m_Gui.GetFont()->DrawString(Pos.GetX() + 3, Pos.GetY() + iHeight, 0, pColor, m_vRows[ i ].c_str(), GetWidth() - HELPERSLIDER_WIDTH);
+          m_Gui.GetFont().DrawString(Pos.GetX() + 3, Pos.GetY() + iHeight, 0, pColor, m_vRows[ i ].c_str(), GetWidth() - HELPERSLIDER_WIDTH);
           iHeight += iAddHeight;
         }
 
@@ -74,14 +74,14 @@ namespace Hades
       pSlider->PreDraw();
     }
 
-    void CListBox::MouseMove(CMouse & pMouse)
+    void CListBox::MouseMove(Mouse & pMouse)
     {
-      CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
+      Pos Pos = GetParent()->GetAbsPos() + GetRelPos();
 
       SetMouseOver(pMouse.InArea(Pos.GetX(), Pos.GetY(), GetWidth(), GetHeight()));
 
       m_iMouseOverIndex = -1;
-      for(int i = pSlider->GetValue(), iHeight = 0, iStringHeight = m_Gui.GetFont()->GetStringHeight(); i < static_cast<int>(m_vRows.size()) || iHeight < GetHeight(); i++)
+      for(int i = pSlider->GetValue(), iHeight = 0, iStringHeight = m_Gui.GetFont().GetStringHeight(); i < static_cast<int>(m_vRows.size()) || iHeight < GetHeight(); i++)
       {
         if (pMouse.InArea(Pos.GetX(), Pos.GetY() + iHeight, GetWidth() - BUTTON_HEIGHT, iStringHeight))
           m_iMouseOverIndex = i;
@@ -94,7 +94,7 @@ namespace Hades
 
     bool CListBox::KeyEvent(SKey sKey)
     {
-      CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
+      Pos Pos = GetParent()->GetAbsPos() + GetRelPos();
 
       if (!sKey.m_Key)
       {

@@ -31,7 +31,7 @@ namespace Hades
     class CHelperSlider : public CHorizontalSliderBar
     {
       bool m_bMouseOver[ 3 ], m_bPressed[ 2 ], m_bDragged;
-      CTimer m_tUpArrow, m_tDownArrow;
+      Timer m_tUpArrow, m_tDownArrow;
 
       SElement * m_pThemeElement[ 3 ];
       SElementState * m_pElementState[ 3 ];
@@ -39,16 +39,16 @@ namespace Hades
       void SetDragged(bool bDragged);
       bool GetDragged();
 
-      CColor * pInner, * pBorder;
-      CTexture * pSlider, * pUpArrow, * pDownArrow;
+      Colour * pInner, * pBorder;
+      Texture * pSlider, * pUpArrow, * pDownArrow;
 
     public:
-      CHelperSlider(class CGUI& Gui, CPos relPos, int iHeight);
+      CHelperSlider(class GUI& Gui, Pos relPos, int iHeight);
 
-      void Draw(CPos basePos);
+      void Draw(Pos basePos);
       void PreDraw();
-      void MouseMove(CPos basePos, CMouse & pMouse);
-      bool KeyEvent(CPos basePos, SKey sKey);
+      void MouseMove(Pos basePos, Mouse & pMouse);
+      bool KeyEvent(Pos basePos, SKey sKey);
 
       void UpdateTheme(int iIndex);
     };

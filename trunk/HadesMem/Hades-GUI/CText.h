@@ -30,13 +30,13 @@ namespace Hades
   {
     class CText : public CElement
     {
-      CColor * pString;
+      Colour * pString;
     public:
-      CText(class CGUI& Gui, TiXmlElement* pElement);
+      CText(class GUI& Gui, TiXmlElement* pElement);
 
       void Draw();
       void PreDraw();
-      void MouseMove(CMouse & pMouse);
+      void MouseMove(Mouse & pMouse);
 
       void UpdateTheme(int iIndex);
     };

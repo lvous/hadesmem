@@ -32,18 +32,18 @@ namespace Hades
     {
       int m_iStart, m_iIndex;
       int m_iCursorX;
-      CTimer m_tCursorTimer;
+      Timer m_tCursorTimer;
       bool m_bCursorState;
 
-      CColor * pInner, * pBorder, * pString, * pCursor;
+      Colour * pInner, * pBorder, * pString, * pCursor;
 
     public:
-      CEditBox(class CGUI& Gui, TiXmlElement* pElement);
+      CEditBox(class GUI& Gui, TiXmlElement* pElement);
 
       void Draw();
 
       void PreDraw();
-      void MouseMove(CMouse & pMouse);
+      void MouseMove(Mouse & pMouse);
       bool KeyEvent(SKey sKey);
 
       int GetIndex() const;

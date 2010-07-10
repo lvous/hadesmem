@@ -32,17 +32,17 @@ namespace Hades
     {
       bool m_bChecked;
 
-      CColor * pInner, * pBorder, * pString, * pCross;
+      Colour * pInner, * pBorder, * pString, * pCross;
 
     public:
-      CCheckBox(class CGUI& Gui, TiXmlElement* pElement);
+      CCheckBox(class GUI& Gui, TiXmlElement* pElement);
 
       bool GetChecked() const;
       void SetChecked(bool bChecked);
 
       void Draw();
       void PreDraw();
-      void MouseMove(CMouse & pMouse);
+      void MouseMove(Mouse & pMouse);
       bool KeyEvent(SKey sKey);
 
       void UpdateTheme(int iIndex);

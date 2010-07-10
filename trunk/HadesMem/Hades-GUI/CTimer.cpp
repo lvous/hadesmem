@@ -26,21 +26,21 @@ namespace Hades
 {
   namespace GUI
   {
-    CTimer::CTimer()
+    Timer::Timer()
       : m_StopTime(0)
     { }
 
-    void CTimer::Start(float Seconds)
+    void Timer::Start(float Seconds)
     {
       m_StopTime = static_cast<DWORD>(Seconds * 1000) + timeGetTime();
     }
 
-    void CTimer::Stop()
+    void Timer::Stop()
     {
       m_StopTime = 0;
     }
 
-    float CTimer::TimeLeft()
+    float Timer::TimeLeft()
     {
       if (Running())
       {
@@ -50,7 +50,7 @@ namespace Hades
       return 0.f; 
     }
 
-    bool CTimer::Running()
+    bool Timer::Running()
     {
       return m_StopTime > timeGetTime();
     }

@@ -26,7 +26,7 @@ namespace Hades
 {
   namespace GUI
   {
-    CButton::CButton(CGUI& Gui, TiXmlElement* pElement) 
+    CButton::CButton(GUI& Gui, TiXmlElement* pElement) 
       : CElement(Gui)
     {
       SetElement(pElement);
@@ -42,10 +42,10 @@ namespace Hades
 
     void CButton::Draw()
     {
-      const CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
+      const Pos Pos = GetParent()->GetAbsPos() + GetRelPos();
 
       pButton->Draw(Pos, GetWidth(), GetHeight());
-      m_Gui.GetFont()->DrawString(Pos.GetX() + GetWidth() / 2, Pos.GetY() + GetHeight() / 2, FT_CENTER|FT_VCENTER, pString, GetString().c_str());
+      m_Gui.GetFont().DrawString(Pos.GetX() + GetWidth() / 2, Pos.GetY() + GetHeight() / 2, FT_CENTER|FT_VCENTER, pString, GetString().c_str());
     }
 
     void CButton::PreDraw()
@@ -54,9 +54,9 @@ namespace Hades
         SetElementState(GetMouseOver()?"MouseOver":"Norm");
     }
 
-    void CButton::MouseMove(CMouse & pMouse)
+    void CButton::MouseMove(Mouse & pMouse)
     {
-      CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
+      Pos Pos = GetParent()->GetAbsPos() + GetRelPos();
 
       SetElementState(SetMouseOver(pMouse.InArea(Pos.GetX(), Pos.GetY(), GetWidth(), GetHeight()))?"MouseOver":"Norm");
     }

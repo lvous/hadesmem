@@ -36,16 +36,16 @@ namespace Hades
 {
   namespace GUI
   {
-    class CMouse
+    class Mouse
     {
     public:
-      CMouse(class CGUI& Gui, IDirect3DDevice9* pDevice);
+      Mouse(class GUI& Gui, IDirect3DDevice9* pDevice);
 
       bool HandleMessage(unsigned int uMsg, WPARAM wParam, LPARAM lParam);
 
       void SetPos(int X, int Y);
-      void SetPos(CPos MyPos);
-      CPos GetPos() const;
+      void SetPos(Pos MyPos);
+      Pos GetPos() const;
 
       bool InArea(int X, int Y, int Width, int Height) const;
       bool InArea(class CElement* pElement, int Height = 0) const;
@@ -67,18 +67,18 @@ namespace Hades
 
       void SavePos();
       void LoadPos();
-      CPos GetSavedPos() const;
+      Pos GetSavedPos() const;
 
     private:
-      class CGUI& m_Gui;
+      class GUI& m_Gui;
       IDirect3DDevice9* m_pDevice;
-      CPos m_Pos, m_BakPos;
-      std::shared_ptr<class CColor> m_pInnerColor;
-      std::shared_ptr<class CColor> m_pBorderColor;
+      Pos m_Pos, m_BakPos;
+      std::shared_ptr<class Colour> m_pInnerColor;
+      std::shared_ptr<class Colour> m_pBorderColor;
       class CElement* m_pDraggingElement;
       int m_LeftButtonState, m_RightButtonState, m_MiddleButtonState, 
         m_WheelState;
-      CTimer m_LeftButtonTimer, m_RightButtonTimer, m_MiddleButtonTimer;
+      Timer m_LeftButtonTimer, m_RightButtonTimer, m_MiddleButtonTimer;
     };
   }
 }

@@ -36,27 +36,37 @@ namespace Hades
 {
   namespace GUI
   {
-    class CFont
+    class Font
     {
     public:
-      CFont(class CGUI& Gui, IDirect3DDevice9* pDevice, int Height, 
+      Font(class GUI& Gui, IDirect3DDevice9* pDevice, int Height, 
         std::string const& FaceName);
+
+      Font(class GUI& Gui, IDirect3DDevice9* pDevice, int Height, 
+        std::wstring const& FaceName);
 
       void OnLostDevice();
 
       void OnResetDevice(IDirect3DDevice9* pDevice);
 
-      void DrawString(int X, int Y, DWORD Flags, class CColor* pColor, 
+      void DrawString(int X, int Y, DWORD Flags, class Colour* pColor, 
         std::string const& MyString, int Width = 0);
 
+      void DrawString(int X, int Y, DWORD Flags, class Colour* pColor, 
+        std::wstring const& MyString, int Width = 0);
+
       int GetStringWidth(std::string const& MyString) const;
+
+      int GetStringWidth(std::wstring const& MyString) const;
 
       int GetStringHeight() const;
 
       void CutString(int Width, std::string& MyString) const;
 
+      void CutString(int Width, std::wstring& MyString) const;
+
     private:
-      class CGUI& m_Gui;
+      class GUI& m_Gui;
       CComPtr<ID3DXFont> m_pFont;
     };
   }

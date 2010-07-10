@@ -36,29 +36,8 @@ THE SOFTWARE.
 #define FT_VCENTER	0x4
 #define FT_SINGLELINE 0x8
 
-#define D3DFVF_BITMAPFONT	(D3DFVF_XYZRHW|D3DFVF_DIFFUSE|D3DFVF_TEX1)
-#define D3DFVF_PRIMITIVES	(D3DFVF_XYZRHW|D3DFVF_DIFFUSE)
-
-// Forward declarations
-namespace Hades
-{
-  namespace GUI
-  {
-    class CTexture;
-    class CTimer;
-    class CPos;
-    class CColor;
-    class CMouse;
-    class CKeyboard;
-    class CElement;
-    class CWindow;
-    class CButton;
-    class CCheckBox;
-    class CProgressBar;
-    class CTextBox;
-    class CListBox;
-  }
-}
+#define D3DFVF_BITMAPFONT	(D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1)
+#define D3DFVF_PRIMITIVES	(D3DFVF_XYZRHW | D3DFVF_DIFFUSE)
 
 // Windows API
 #include <Windows.h>
@@ -79,6 +58,7 @@ namespace Hades
 #include <functional>
 
 // Hades-GUI
+#include "Fwd.h"
 #include "D3D9.h"
 #include "TinyXML\tinyxml.h"
 #include "CTexture.h"
@@ -107,90 +87,89 @@ namespace Hades
 {
   namespace GUI
   {
-    typedef std::function<std::string (const char* pszArgs, CElement* pElement)> tCallback;
-
-    class CGUI
+    class GUI
     {
     public:
-      // Constructor
-      CGUI(IDirect3DDevice9* pDevice);
+      GUI(IDirect3DDevice9* pDevice);
 
-      // Destructor
-      ~CGUI();
+      ~GUI();
 
-      // Load interface data from file
       void LoadInterfaceFromFile(std::string const& Path);
 
-      void FillArea(int iX, int iY, int iWidth, int iHeight, D3DCOLOR d3dColor);
-      void DrawLine(int iStartX, int iStartY, int iEndX, int iEndY, int iWidth, D3DCOLOR d3dColor);
-      void DrawOutlinedBox(int iX, int iY, int iWidth, int iHeight, D3DCOLOR d3dInnerColor, D3DCOLOR d3dBorderColor);
+      void FillArea(int X, int Y, int Width, int Height, D3DCOLOR MyColour);
+
+      void DrawLine(int StartX, int StartY, int EndX, int EndY, int Width, D3DCOLOR Colour);
+
+      void DrawOutlinedBox(int X, int Y, int Width, int Height, D3DCOLOR InnerColour, D3DCOLOR BorderColour);
 
       CWindow* AddWindow(CWindow* pWindow);
+
       void BringToTop(CWindow* pWindow);
 
       void Draw();
+
       void PreDraw();
-      void MouseMove(CMouse& pMouse);
-      bool KeyEvent(SKey sKey);
+
+      void MouseMove(Mouse& MyMouse);
+
+      bool KeyEvent(SKey MyKey);
 
       void OnLostDevice();
+
       void OnResetDevice(IDirect3DDevice9* pDevice);
 
-      CMouse& GetMouse() const;
-      CKeyboard* GetKeyboard() const;
+      CWindow* GetWindowByString(std::string const& String, int Index = 0);
 
-      IDirect3DDevice9* GetDevice() const;
-      CFont* GetFont() const;
-      ID3DXSprite* GetSprite() const;
+      SElement* GetThemeElement(std::string const& Element) const;
 
-      CWindow* GetWindowByString(std::string const& sString, int iIndex = 0);
+      void SetVisible(bool Visible);
 
-      SElement* GetThemeElement(std::string const& sElement) const;
-
-      void SetVisible(bool bVisible);
       bool IsVisible() const;
 
       bool ShouldReload() const;
+
       void Reload();
 
-      tCallback const & GetCallback(std::string const& Name) const
-      {
-        return m_mCallbacks.find(Name)->second;
-      }
+      Callback GetCallback(std::string const& Name) const;
 
-      void AddCallback(std::string const& Name, tCallback pCallback)
-      {
-        m_mCallbacks[Name] = pCallback;
-      }
+      void AddCallback(std::string const& Name, Callback MyCallback);
 
-      std::map<std::string, tCallback> const& GetCallbackMap() const
-      {
-        return m_mCallbacks;
-      }
+      std::map<std::string, Callback> const& GetCallbackMap() const;
+
+      Mouse& GetMouse() const;
+
+      Keyboard& GetKeyboard() const;
+
+      Font& GetFont() const;
+
+      IDirect3DDevice9* GetDevice() const;
+
+      CComPtr<ID3DXSprite> GetSprite() const;
 
     private:
-      bool m_bVisible, m_bReload;
+      bool m_Visible;
 
-      std::shared_ptr<CMouse> m_pMouse;
-      std::shared_ptr<CKeyboard> m_pKeyboard;
-      std::shared_ptr<CFont> m_pFont;
+      std::shared_ptr<Mouse> m_pMouse;
 
-      IDirect3DDevice9 * m_pDevice;
+      std::shared_ptr<Keyboard> m_pKeyboard;
+
+      std::shared_ptr<Font> m_pFont;
+
+      IDirect3DDevice9* m_pDevice;
 
       CComPtr<ID3DXSprite> m_pSprite;
 
       CComPtr<ID3DXLine> m_pLine;
 
-      CTimer m_tPreDrawTimer;
+      Timer m_PreDrawTimer;
 
-      std::vector<CWindow*> m_vWindows;
+      std::vector<CWindow*> m_Windows;
 
-      std::string m_sCurTheme;
+      std::string m_CurTheme;
 
-      typedef std::map<std::string, SElement*> tTheme;
-      std::map<std::string, tTheme> m_mThemes;
+      std::map<std::string, std::map<std::string, SElement*>> m_Themes;
 
-      std::map<std::string, tCallback> m_mCallbacks;
+      std::map<std::string, Callback> m_Callbacks;
     };
   }
 }

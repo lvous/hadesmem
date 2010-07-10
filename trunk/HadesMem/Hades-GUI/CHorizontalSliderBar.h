@@ -39,18 +39,18 @@ namespace Hades
       // 	typedef std::string (__cdecl * tCallback)(const char * pszArgs, CElement * pElement);
       tCallback m_pUpdater;
 
-      CColor * pLines, * pString;
-      CTexture * pSlider;
+      Colour * pLines, * pString;
+      Texture * pSlider;
 
     public:
-      CHorizontalSliderBar(class CGUI& Gui);
-      CHorizontalSliderBar(class CGUI& Gui, TiXmlElement* pElement);
+      CHorizontalSliderBar(class GUI& Gui);
+      CHorizontalSliderBar(class GUI& Gui, TiXmlElement* pElement);
 
       void SetSliderElement(TiXmlElement * pElement);
 
       void Draw();
       void PreDraw();
-      void MouseMove(CMouse & pMouse);
+      void MouseMove(Mouse & pMouse);
       bool KeyEvent(SKey sKey);
 
       int GetMinValue() const;

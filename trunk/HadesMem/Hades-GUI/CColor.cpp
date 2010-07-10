@@ -26,23 +26,23 @@ namespace Hades
 {
   namespace GUI
   {
-    CColor::CColor() 
+    Colour::Colour() 
       : m_D3DColour(0)
     { }
 
-    CColor::CColor(int Red, int Green, int Blue, int Alpha)
+    Colour::Colour(int Red, int Green, int Blue, int Alpha)
       : m_D3DColour(0)
     {
       SetD3DColor(D3DCOLOR_RGBA(Red, Green, Blue, Alpha));
     }
 
-    CColor::CColor(D3DCOLOR D3DColour)
+    Colour::Colour(D3DCOLOR D3DColour)
       : m_D3DColour(0)
     {
       SetD3DColor(D3DColour);
     }
 
-    CColor::CColor(TiXmlElement* pElement)
+    Colour::Colour(TiXmlElement* pElement)
       : m_D3DColour(0)
     {
       int Colours[4] = { 0 };
@@ -56,83 +56,83 @@ namespace Hades
         Colours[3]));
     }
 
-    const CColor CColor::operator / (const int Divisor) const
+    const Colour Colour::operator / (const int Divisor) const
     {
-      return CColor(GetRed() / Divisor, GetGreen() / Divisor, 
+      return Colour(GetRed() / Divisor, GetGreen() / Divisor, 
         GetBlue() / Divisor, GetAlpha());
     }
 
-    const CColor CColor::operator - (CColor const& SubColor) const
+    const Colour Colour::operator - (Colour const& SubColor) const
     {
-      return CColor(GetRed() - SubColor.GetRed(), 
+      return Colour(GetRed() - SubColor.GetRed(), 
         GetGreen() - SubColor.GetGreen(), GetBlue() - SubColor.GetBlue(), 
         GetAlpha());
     }
 
-    const CColor CColor::operator + (CColor const& AddColor) const
+    const Colour Colour::operator + (Colour const& AddColor) const
     {
-      return CColor(GetRed() + AddColor.GetRed(), 
+      return Colour(GetRed() + AddColor.GetRed(), 
         GetGreen() + AddColor.GetGreen(), GetBlue() + AddColor.GetBlue(), 
         GetAlpha());
     }
 
-    const CColor CColor::operator * (const int Multiplicator) const
+    const Colour Colour::operator * (const int Multiplicator) const
     {
-      return CColor(GetRed() * Multiplicator, GetGreen() * Multiplicator, 
+      return Colour(GetRed() * Multiplicator, GetGreen() * Multiplicator, 
         GetBlue() * Multiplicator, GetAlpha());
     }
 
-    void CColor::SetD3DColor(D3DCOLOR D3DColour)
+    void Colour::SetD3DColor(D3DCOLOR D3DColour)
     {
       m_D3DColour = D3DColour;
     }
 
-    void CColor::SetRed(int Red)
+    void Colour::SetRed(int Red)
     {
       SetD3DColor(D3DCOLOR_RGBA(Red, GetGreen(), GetBlue(), GetAlpha()));
     }
 
-    void CColor::SetGreen(int Green)
+    void Colour::SetGreen(int Green)
     {
       SetD3DColor(D3DCOLOR_RGBA(GetRed(), Green, GetBlue(), GetAlpha()));
     }
 
-    void CColor::SetBlue(int Blue)
+    void Colour::SetBlue(int Blue)
     {
       SetD3DColor(D3DCOLOR_RGBA(GetRed(), GetGreen(), Blue, GetAlpha()));
     }
 
-    void CColor::SetAlpha(int Alpha)
+    void Colour::SetAlpha(int Alpha)
     {
       SetD3DColor(D3DCOLOR_RGBA(GetRed(), GetGreen(), GetBlue(), Alpha));
     }
 
-    D3DCOLOR CColor::GetD3DColor() const
+    D3DCOLOR Colour::GetD3DColor() const
     {
       return m_D3DColour;
     }
 
-    int CColor::GetRed() const
+    int Colour::GetRed() const
     {
       return (GetD3DColor() >> 16) & 0xFF;
     }
 
-    int CColor::GetGreen() const
+    int Colour::GetGreen() const
     {
       return (GetD3DColor() >> 8) & 0xFF;
     }
 
-    int CColor::GetBlue() const
+    int Colour::GetBlue() const
     {
       return GetD3DColor() & 0xFF;
     }
 
-    int CColor::GetAlpha() const
+    int Colour::GetAlpha() const
     {
       return GetD3DColor() >> 24;
     }
 
-    CColor* SElementState::GetColor(std::string const& Name) const
+    Colour* SElementState::GetColor(std::string const& Name) const
     {
       auto Iter = m_Colours.find(Name);
 
@@ -151,7 +151,7 @@ namespace Hades
       return Iter->second;
     }
 
-    CTexture * SElementState::GetTexture(std::string const& Name) const
+    Texture * SElementState::GetTexture(std::string const& Name) const
     {
       auto Iter = m_Textures.find(Name);
 

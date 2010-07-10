@@ -32,13 +32,13 @@ namespace Hades
 {
   namespace GUI
   {
-    class CColor
+    class Colour
     {
     public:
-      CColor();
-      CColor(int Red, int Green, int Blue, int Alpha);
-      CColor(D3DCOLOR D3DColour);
-      CColor(TiXmlElement* pElement);
+      Colour();
+      Colour(int Red, int Green, int Blue, int Alpha);
+      Colour(D3DCOLOR D3DColour);
+      Colour(TiXmlElement* pElement);
 
       void SetD3DColor(D3DCOLOR D3DColour);
 
@@ -54,11 +54,11 @@ namespace Hades
       int GetBlue() const;
       int GetAlpha() const;
 
-      const CColor operator / (const int Divisor) const;
-      const CColor operator * (const int Multiplicator) const;
+      const Colour operator / (const int Divisor) const;
+      const Colour operator * (const int Multiplicator) const;
 
-      const CColor operator - (CColor const& SubColor) const;
-      const CColor operator + (CColor const& AddColor) const;
+      const Colour operator - (Colour const& SubColor) const;
+      const Colour operator + (Colour const& AddColor) const;
 
     private:
       D3DCOLOR m_D3DColour;
@@ -70,11 +70,11 @@ namespace Hades
     {
       SElement* pParent;
 
-      CColor* GetColor(std::string const& Name) const;
-      CTexture* GetTexture(std::string const& Name) const;
+      Colour* GetColor(std::string const& Name) const;
+      Texture* GetTexture(std::string const& Name) const;
 
-      std::map<std::string, CColor*> m_Colours;
-      std::map<std::string, CTexture*> m_Textures;
+      std::map<std::string, Colour*> m_Colours;
+      std::map<std::string, Texture*> m_Textures;
     };
 
     struct SElement

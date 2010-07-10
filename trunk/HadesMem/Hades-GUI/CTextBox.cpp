@@ -26,12 +26,12 @@ namespace Hades
 {
   namespace GUI
   {
-    CTextBox::CTextBox(CGUI& Gui, TiXmlElement* pElement)
+    CTextBox::CTextBox(GUI& Gui, TiXmlElement* pElement)
       : CElement(Gui)
     {
       SetElement(pElement);
 
-      pSlider = new CHelperSlider(Gui, CPos(GetWidth() - HELPERSLIDER_WIDTH, 0), GetHeight());
+      pSlider = new CHelperSlider(Gui, Pos(GetWidth() - HELPERSLIDER_WIDTH, 0), GetHeight());
 
       for(TiXmlElement* pString = pElement->FirstChildElement("Row"); pString; 
         pString = pString->NextSiblingElement("Row"))
@@ -53,19 +53,19 @@ namespace Hades
 
     void CTextBox::Draw()
     {
-      CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
+      Pos Pos = GetParent()->GetAbsPos() + GetRelPos();
 
       m_Gui.DrawOutlinedBox(Pos.GetX(), Pos.GetY(), GetWidth(), GetHeight(), 
         pInner->GetD3DColor(), pBorder->GetD3DColor());
 
-      int iAddHeight = m_Gui.GetFont()->GetStringHeight();
+      int iAddHeight = m_Gui.GetFont().GetStringHeight();
       if (m_vStrings.size())
       {
         for(int i = pSlider->GetValue(), iHeight = 0; i <= 
           pSlider->GetMaxValue() && iHeight < GetHeight() - 
-          m_Gui.GetFont()->GetStringHeight(); i++)
+          m_Gui.GetFont().GetStringHeight(); i++)
         {
-          m_Gui.GetFont()->DrawString(Pos.GetX() + 3, Pos.GetY() + iHeight, 0, 
+          m_Gui.GetFont().DrawString(Pos.GetX() + 3, Pos.GetY() + iHeight, 0, 
             pString, m_vStrings[ i ], GetWidth() - HELPERSLIDER_WIDTH);
           iHeight += iAddHeight;
         }
@@ -79,9 +79,9 @@ namespace Hades
       pSlider->PreDraw();
     }
 
-    void CTextBox::MouseMove(CMouse & pMouse)
+    void CTextBox::MouseMove(Mouse & pMouse)
     {
-      CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
+      Pos Pos = GetParent()->GetAbsPos() + GetRelPos();
 
       SetMouseOver(pMouse.InArea(Pos.GetX(), Pos.GetY(), GetWidth(), 
         GetHeight()));
@@ -91,7 +91,7 @@ namespace Hades
 
     bool CTextBox::KeyEvent(SKey sKey)
     {
-      CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
+      Pos Pos = GetParent()->GetAbsPos() + GetRelPos();
 
       if (GetMouseOver() || (!sKey.m_Down && !m_Gui.GetMouse().GetWheel()))
       {
@@ -140,15 +140,15 @@ namespace Hades
       int iHeight = 0;
       for(int i = pSlider->GetValue(); i <= pSlider->GetMaxValue(); i++)
       {
-        float fWidth = static_cast<float>(m_Gui.GetFont()->GetStringWidth(
+        float fWidth = static_cast<float>(m_Gui.GetFont().GetStringWidth(
           m_vStrings[i]));
         int iLines = static_cast<int>(ceilf(fWidth / (GetWidth() - 
           HELPERSLIDER_WIDTH)));
 
-        int iTempHeight = iLines * m_Gui.GetFont()->GetStringHeight();
+        int iTempHeight = iLines * m_Gui.GetFont().GetStringHeight();
         iHeight += iTempHeight;
 
-        while(iHeight > GetHeight() - m_Gui.GetFont()->GetStringHeight())
+        while(iHeight > GetHeight() - m_Gui.GetFont().GetStringHeight())
         {
           pSlider->SetValue(pSlider->GetValue() + iLines);
           iHeight -= iTempHeight;

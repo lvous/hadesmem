@@ -40,14 +40,14 @@ namespace Hades
       if (pElement->QueryIntAttribute("relY", &iTempY) == TIXML_NO_ATTRIBUTE)
         iTempY = 0;
 
-      SetRelPos(CPos(iTempX, iTempY));
+      SetRelPos(Pos(iTempX, iTempY));
 
       if (pElement->QueryIntAttribute("absX", &iTempX) == TIXML_NO_ATTRIBUTE)
         iTempX = 0;
       if (pElement->QueryIntAttribute("absY", &iTempY) == TIXML_NO_ATTRIBUTE)
         iTempY = 0;
 
-      SetAbsPos(CPos(iTempX, iTempY));
+      SetAbsPos(Pos(iTempX, iTempY));
 
       if (pElement->QueryIntAttribute("width", &iTempX) == TIXML_NO_ATTRIBUTE)
         iTempX = 0;
@@ -89,34 +89,34 @@ namespace Hades
       return m_pParent;
     }
 
-    void CElement::SetCallback(tCallback pCallback)
+    void CElement::SetCallback(Callback pCallback)
     {
       m_pCallback = pCallback;
     }
 
-    tCallback CElement::GetCallback() const
+    Callback CElement::GetCallback() const
     {
       return m_pCallback;
     }
 
-    void CElement::SetRelPos(CPos relPos)
+    void CElement::SetRelPos(Pos relPos)
     {
       m_relPos = relPos;
     }
 
-    const CPos * CElement::GetRelPos() const
+    Pos CElement::GetRelPos() const
     {
-      return &m_relPos;
+      return m_relPos;
     }
 
-    void CElement::SetAbsPos(CPos absPos)
+    void CElement::SetAbsPos(Pos absPos)
     {
       m_absPos = absPos;
     }
 
-    const CPos * CElement::GetAbsPos() const
+    Pos CElement::GetAbsPos() const
     {
-      return &m_absPos;
+      return m_absPos;
     }
 
     void CElement::SetWidth(int iWidth)
@@ -161,7 +161,7 @@ namespace Hades
         std::string::size_type sPos = 0;
         while((sPos = sFormatted.find("$", sPos)) != std::string::npos)
         {
-          for(std::map<std::string,tCallback>::const_reverse_iterator iIter = m_Gui.GetCallbackMap().rbegin(); iIter != m_Gui.GetCallbackMap().rend(); iIter++)
+          for(std::map<std::string,Callback>::const_reverse_iterator iIter = m_Gui.GetCallbackMap().rbegin(); iIter != m_Gui.GetCallbackMap().rend(); iIter++)
           {
             const std::string & sName = iIter->first;
 
@@ -232,7 +232,7 @@ namespace Hades
     {
     }
 
-    void CElement::MouseMove(CMouse &)
+    void CElement::MouseMove(Mouse &)
     {
     }
 
@@ -241,7 +241,7 @@ namespace Hades
       return true;
     }
 
-    CElement::CElement(CGUI& Gui) 
+    CElement::CElement(GUI& Gui) 
       : m_Gui(Gui)
     {
     }

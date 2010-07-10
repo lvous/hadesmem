@@ -32,13 +32,13 @@ namespace Hades
 {
   namespace GUI
   {
-    CMouse::CMouse(CGUI& Gui, IDirect3DDevice9* pDevice)
+    Mouse::Mouse(GUI& Gui, IDirect3DDevice9* pDevice)
       : m_Gui(Gui), 
       m_pDevice(pDevice), 
       m_Pos(), 
       m_BakPos(), 
-      m_pInnerColor(new CColor(255, 255, 255, 255)), 
-      m_pBorderColor(new CColor(0, 0, 0, 255)), 
+      m_pInnerColor(new Colour(255, 255, 255, 255)), 
+      m_pBorderColor(new Colour(0, 0, 0, 255)), 
       m_pDraggingElement(nullptr), 
       m_LeftButtonState(0), 
       m_RightButtonState(0), 
@@ -54,7 +54,7 @@ namespace Hades
       SetWheel(0);
     }
 
-    bool CMouse::HandleMessage(unsigned int uMsg, WPARAM wParam, LPARAM lParam)
+    bool Mouse::HandleMessage(unsigned int uMsg, WPARAM wParam, LPARAM lParam)
     {
       if (!m_Gui.IsVisible() || uMsg < WM_MOUSEFIRST || uMsg > WM_MOUSELAST)
       {
@@ -117,45 +117,45 @@ namespace Hades
       return m_Gui.KeyEvent(SKey(0, IsDown));
     }
 
-    void CMouse::SetPos(CPos MyPos)
+    void Mouse::SetPos(Pos MyPos)
     {
       m_Pos = MyPos;
     }
 
-    void CMouse::SetPos(int X, int Y)
+    void Mouse::SetPos(int X, int Y)
     {
       m_Pos.SetX(X);
       m_Pos.SetY(Y);
     }
 
-    CPos CMouse::GetPos() const
+    Pos Mouse::GetPos() const
     {
       return m_Pos;
     }
 
-    bool CMouse::InArea(int X, int Y, int Width, int Height) const
+    bool Mouse::InArea(int X, int Y, int Width, int Height) const
     {
       return (m_Pos.GetX() >= X && m_Pos.GetX() <= X + Width && 
         m_Pos.GetY() >= Y && m_Pos.GetY() <= Y + Height);
     }
 
-    bool CMouse::InArea(CElement* pElement, int Height) const
+    bool Mouse::InArea(CElement* pElement, int Height) const
     {
       if (!Height)
       {
         Height = pElement->GetHeight();
       }
 
-      return InArea(pElement->GetAbsPos()->GetX(), 
-        pElement->GetAbsPos()->GetY(), 
+      return InArea(pElement->GetAbsPos().GetX(), 
+        pElement->GetAbsPos().GetY(), 
         pElement->GetWidth(), Height);
     }
 
-    void CMouse::Draw()
+    void Mouse::Draw()
     {
     }
 
-    int CMouse::GetLeftButton(int State)
+    int Mouse::GetLeftButton(int State)
     {
       int Ret = m_LeftButtonState;
 
@@ -167,7 +167,7 @@ namespace Hades
       return Ret;
     }
 
-    int CMouse::GetRightButton(int State)
+    int Mouse::GetRightButton(int State)
     {
       int Ret = m_RightButtonState;
 
@@ -179,7 +179,7 @@ namespace Hades
       return Ret;
     }
 
-    int CMouse::GetMiddleButton(int State)
+    int Mouse::GetMiddleButton(int State)
     {
       int Ret = m_MiddleButtonState;
 
@@ -191,7 +191,7 @@ namespace Hades
       return Ret;
     }
 
-    int CMouse::GetWheel(int State)
+    int Mouse::GetWheel(int State)
     {
       int Ret = m_WheelState;
 
@@ -203,7 +203,7 @@ namespace Hades
       return Ret;
     }
 
-    void CMouse::SetLeftButton(int State)
+    void Mouse::SetLeftButton(int State)
     {
       if (State == 1)
       {
@@ -224,7 +224,7 @@ namespace Hades
       }
     }
 
-    void CMouse::SetRightButton(int State)
+    void Mouse::SetRightButton(int State)
     {
       if (State == 1)
       {
@@ -245,7 +245,7 @@ namespace Hades
       }
     }
 
-    void CMouse::SetMiddleButton(int State)
+    void Mouse::SetMiddleButton(int State)
     {
       if (State == 1)
       {
@@ -266,32 +266,32 @@ namespace Hades
       }
     }
 
-    void CMouse::SetWheel(int State)
+    void Mouse::SetWheel(int State)
     {
       m_WheelState = State;
     }
 
-    void CMouse::SetDragging(CElement* pElement)
+    void Mouse::SetDragging(CElement* pElement)
     {
       m_pDraggingElement = pElement;
     }
 
-    CElement * CMouse::GetDragging() const
+    CElement * Mouse::GetDragging() const
     {
       return m_pDraggingElement;
     }
 
-    void CMouse::SavePos()
+    void Mouse::SavePos()
     {
       m_BakPos = m_Pos;
     }
 
-    void CMouse::LoadPos()
+    void Mouse::LoadPos()
     {
       m_Pos = m_BakPos;
     }
 
-    CPos CMouse::GetSavedPos() const
+    Pos Mouse::GetSavedPos() const
     {
       return m_BakPos;
     }

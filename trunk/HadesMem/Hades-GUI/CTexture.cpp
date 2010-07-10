@@ -29,7 +29,7 @@ namespace Hades
 {
   namespace GUI
   {
-    CTexture::CTexture(ID3DXSprite* pSprite, std::string const& Path) 
+    Texture::Texture(ID3DXSprite* pSprite, std::string const& Path) 
       : m_pTexture(), 
       m_TexDesc(), 
       m_pSprite(pSprite), 
@@ -43,7 +43,7 @@ namespace Hades
       if (FAILED(Result))
       {
         BOOST_THROW_EXCEPTION(HadesGuiError() << 
-          ErrorFunction("CTexture::CTexture") << 
+          ErrorFunction("Texture::Texture") << 
           ErrorString("Could not create texture.") << 
           ErrorCodeWin(Result));
       }
@@ -51,17 +51,17 @@ namespace Hades
       m_pTexture->GetLevelDesc(0, &m_TexDesc);
     }
 
-    IDirect3DTexture9* CTexture::GetTexture() const
+    IDirect3DTexture9* Texture::GetTexture() const
     {
       return m_pTexture;
     }
 
-    void CTexture::SetAlpha(BYTE Alpha)
+    void Texture::SetAlpha(BYTE Alpha)
     {
       m_Alpha = Alpha;
     }
 
-    void CTexture::Draw(CPos MyPos, int Width, int Height)
+    void Texture::Draw(Pos MyPos, int Width, int Height)
     {
       D3DXMATRIX MainMat;
 
@@ -83,7 +83,7 @@ namespace Hades
       m_pSprite->End();
     }
 
-    void CTexture::SetSprite(ID3DXSprite* pSprite)
+    void Texture::SetSprite(ID3DXSprite* pSprite)
     {
       m_pSprite = pSprite;
     }

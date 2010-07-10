@@ -34,7 +34,7 @@ namespace Hades
 {
   namespace GUI
   {
-    CFont::CFont(CGUI& Gui, IDirect3DDevice9* pDevice, int Height, 
+    Font::Font(GUI& Gui, IDirect3DDevice9* pDevice, int Height, 
       std::string const& FaceName)
       : m_Gui(Gui), 
       m_pFont()
@@ -56,7 +56,7 @@ namespace Hades
       if (FAILED(Result))
       {
         BOOST_THROW_EXCEPTION(HadesGuiError() << 
-          ErrorFunction("CFont::CFont") << 
+          ErrorFunction("Font::Font") << 
           ErrorString("Could not create font.") << 
           ErrorCodeWin(Result));
       }
@@ -64,17 +64,47 @@ namespace Hades
       m_pFont->PreloadCharacters(0, 255);
     }
 
-    void CFont::OnLostDevice()
+    Font::Font(GUI& Gui, IDirect3DDevice9* pDevice, int Height, 
+      std::wstring const& FaceName)
+      : m_Gui(Gui), 
+      m_pFont()
+    {
+      HRESULT Result = D3DXCreateFontW(
+        pDevice, 
+        -MulDiv(Height, GetDeviceCaps(GetDC(0), LOGPIXELSY), 72), 
+        0, 
+        FW_NORMAL, 
+        0, 
+        0, 
+        DEFAULT_CHARSET, 
+        OUT_DEFAULT_PRECIS, 
+        DEFAULT_QUALITY, 
+        DEFAULT_PITCH | FF_DONTCARE, 
+        FaceName.c_str(), 
+        &m_pFont);
+
+      if (FAILED(Result))
+      {
+        BOOST_THROW_EXCEPTION(HadesGuiError() << 
+          ErrorFunction("Font::Font") << 
+          ErrorString("Could not create font.") << 
+          ErrorCodeWin(Result));
+      }
+
+      m_pFont->PreloadCharacters(0, 255);
+    }
+
+    void Font::OnLostDevice()
     {
       m_pFont->OnLostDevice();
     }
 
-    void CFont::OnResetDevice(IDirect3DDevice9 * /*pDevice*/)
+    void Font::OnResetDevice(IDirect3DDevice9 * /*pDevice*/)
     {
       m_pFont->OnResetDevice();
     }
 
-    void CFont::DrawString(int X, int Y, DWORD Flags, CColor* pColor, 
+    void Font::DrawString(int X, int Y, DWORD Flags, Colour* pColor, 
       std::string const& MyString, int /*Width*/)
     {
       m_Gui.GetSprite()->Begin(D3DXSPRITE_ALPHABLEND | 
@@ -94,7 +124,27 @@ namespace Hades
       m_Gui.GetSprite()->End();
     }
 
-    int CFont::GetStringWidth(std::string const& MyString) const
+    void Font::DrawString(int X, int Y, DWORD Flags, Colour* pColor, 
+      std::wstring const& MyString, int /*Width*/)
+    {
+      m_Gui.GetSprite()->Begin(D3DXSPRITE_ALPHABLEND | 
+        D3DXSPRITE_SORT_TEXTURE);
+
+      D3DXMATRIX Matrix;
+      D3DXMatrixTranslation(&Matrix, static_cast<float>(X), 
+        static_cast<float>(Y), 0);
+      m_Gui.GetSprite()->SetTransform(&Matrix);
+
+      RECT DrawRect = { 0 };
+      DWORD DrawFlags = DT_NOCLIP | ((Flags & FT_CENTER) ? DT_CENTER : 0) | 
+        ((Flags & FT_VCENTER) ? DT_VCENTER : 0);
+      m_pFont->DrawTextW(m_Gui.GetSprite(), MyString.c_str(), -1, &DrawRect, 
+        DrawFlags, pColor->GetD3DColor());
+
+      m_Gui.GetSprite()->End();
+    }
+
+    int Font::GetStringWidth(std::string const& MyString) const
     {
       std::string NewString;
       NewString.reserve(MyString.size());
@@ -111,15 +161,32 @@ namespace Hades
       return MyRect.right - MyRect.left;
     }
 
-    int CFont::GetStringHeight() const
+    int Font::GetStringWidth(std::wstring const& MyString) const
+    {
+      std::wstring NewString;
+      NewString.reserve(MyString.size());
+      std::transform(MyString.begin(), MyString.end(), 
+        std::back_inserter(NewString), 
+        [] (wchar_t Current)
+      {
+        return (Current == ' ') ? '.' : Current;
+      });
+
+      RECT MyRect = { 0 };
+      m_pFont->DrawTextW(0, NewString.c_str(), -1, &MyRect, DT_CALCRECT, 0);
+
+      return MyRect.right - MyRect.left;
+    }
+
+    int Font::GetStringHeight() const
     {
       RECT rRect = { 0 };
-      m_pFont->DrawTextA(0, "Y", -1, &rRect, DT_CALCRECT, 0);
+      m_pFont->DrawTextW(0, L"Y", -1, &rRect, DT_CALCRECT, 0);
 
       return rRect.bottom - rRect.top;
     }
 
-    void CFont::CutString(int MaxWidth, std::string& MyString) const
+    void Font::CutString(int MaxWidth, std::string& MyString) const
     {
       int Index = 0;
       std::size_t Length = MyString.size();
@@ -127,13 +194,31 @@ namespace Hades
       for(int Width = 0; Index < Length && Width + 10 < MaxWidth; )
       {
         char Current[2] = { MyString.c_str()[Index], 0 };
-        Width += m_Gui.GetFont()->GetStringWidth(Current);
+        Width += m_Gui.GetFont().GetStringWidth(Current);
         ++Index;
       }
 
       if (Index < Length)
       {
         MyString[Index - 1] = '\0';
+      }
+    }
+
+    void Font::CutString(int MaxWidth, std::wstring& MyString) const
+    {
+      int Index = 0;
+      std::size_t Length = MyString.size();
+
+      for(int Width = 0; Index < Length && Width + 10 < MaxWidth; )
+      {
+        wchar_t Current[2] = { MyString.c_str()[Index], 0 };
+        Width += m_Gui.GetFont().GetStringWidth(Current);
+        ++Index;
+      }
+
+      if (Index < Length)
+      {
+        MyString[Index - 1] = L'\0';
       }
     }
   }

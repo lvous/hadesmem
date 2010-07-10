@@ -36,7 +36,7 @@ namespace Hades
       return m_bDragged;
     }
 
-    CHelperSlider::CHelperSlider(CGUI& Gui, CPos relPos, int iHeight)
+    CHelperSlider::CHelperSlider(GUI& Gui, Pos relPos, int iHeight)
       : CHorizontalSliderBar(Gui)
     {
       SetRelPos(relPos);
@@ -64,20 +64,20 @@ namespace Hades
         SetElementState("Norm", 1);
     }
 
-    void CHelperSlider::Draw(CPos basePos)
+    void CHelperSlider::Draw(Pos basePos)
     {
-      CPos Pos = basePos + *GetRelPos();
+      Pos MyPos = basePos + GetRelPos();
 
-      m_Gui.DrawOutlinedBox(Pos.GetX(), Pos.GetY(), HELPERSLIDER_WIDTH, GetHeight(), pInner->GetD3DColor(), pBorder->GetD3DColor());
+      m_Gui.DrawOutlinedBox(MyPos.GetX(), MyPos.GetY(), HELPERSLIDER_WIDTH, GetHeight(), pInner->GetD3DColor(), pBorder->GetD3DColor());
 
-      pUpArrow->Draw(CPos(Pos.GetX() + 1, Pos.GetY() + 1), HELPERSLIDER_WIDTH - 2, HELPERSLIDER_WIDTH - 2);
+      pUpArrow->Draw(Pos(MyPos.GetX() + 1, MyPos.GetY() + 1), HELPERSLIDER_WIDTH - 2, HELPERSLIDER_WIDTH - 2);
 
-      pDownArrow->Draw(CPos(Pos.GetX() + 1, Pos.GetY() + 1 + GetHeight() - HELPERSLIDER_WIDTH), HELPERSLIDER_WIDTH - 2, HELPERSLIDER_WIDTH - 2);
+      pDownArrow->Draw(Pos(MyPos.GetX() + 1, MyPos.GetY() + 1 + GetHeight() - HELPERSLIDER_WIDTH), HELPERSLIDER_WIDTH - 2, HELPERSLIDER_WIDTH - 2);
 
       if (GetMaxValue() < 2)
         return;
 
-      pSlider->Draw(CPos(Pos.GetX() + 1, Pos.GetY() - 1 + HELPERSLIDER_WIDTH + static_cast<int>(floor(static_cast<float>((GetHeight() - ((HELPERSLIDER_WIDTH - 2) * 3))) / GetMaxValue() * GetValue()))), HELPERSLIDER_WIDTH - 2, HELPERSLIDER_WIDTH - 2);
+      pSlider->Draw(Pos(MyPos.GetX() + 1, MyPos.GetY() - 1 + HELPERSLIDER_WIDTH + static_cast<int>(floor(static_cast<float>((GetHeight() - ((HELPERSLIDER_WIDTH - 2) * 3))) / GetMaxValue() * GetValue()))), HELPERSLIDER_WIDTH - 2, HELPERSLIDER_WIDTH - 2);
     }
 
     void CHelperSlider::PreDraw()
@@ -94,31 +94,31 @@ namespace Hades
       }
     }
 
-    void CHelperSlider::MouseMove(CPos basePos, CMouse & pMouse)
+    void CHelperSlider::MouseMove(Pos basePos, Mouse & pMouse)
     {
-      CPos Pos = basePos + *GetRelPos();
+      Pos MyPos = basePos + GetRelPos();
 
-      SetElementState(((m_bMouseOver[ 0 ]	= pMouse.InArea(Pos.GetX() + 1, Pos.GetY() + 1, HELPERSLIDER_WIDTH - 2, HELPERSLIDER_WIDTH - 2)) != 0)?"MouseOver":"Norm");
-      SetElementState(((m_bMouseOver[ 1 ]	= pMouse.InArea(Pos.GetX() + 1, Pos.GetY() + 1 + GetHeight() - HELPERSLIDER_WIDTH, HELPERSLIDER_WIDTH - 2, HELPERSLIDER_WIDTH - 2)) != 0)?"MouseOver":"Norm", 2);
+      SetElementState(((m_bMouseOver[ 0 ]	= pMouse.InArea(MyPos.GetX() + 1, MyPos.GetY() + 1, HELPERSLIDER_WIDTH - 2, HELPERSLIDER_WIDTH - 2)) != 0)?"MouseOver":"Norm");
+      SetElementState(((m_bMouseOver[ 1 ]	= pMouse.InArea(MyPos.GetX() + 1, MyPos.GetY() + 1 + GetHeight() - HELPERSLIDER_WIDTH, HELPERSLIDER_WIDTH - 2, HELPERSLIDER_WIDTH - 2)) != 0)?"MouseOver":"Norm", 2);
 
       if (GetMaxValue() < 2)
         return;
 
       if (GetDragged())
       {
-        CPos mPos = pMouse.GetPos();
+        Pos mPos = pMouse.GetPos();
 
         if (mPos.GetX() == -1 && mPos.GetY() == -1)
           mPos = pMouse.GetSavedPos();
 
-        if (mPos.GetY() < Pos.GetY() + HELPERSLIDER_WIDTH)
+        if (mPos.GetY() < MyPos.GetY() + HELPERSLIDER_WIDTH)
           SetValue(GetMinValue());
-        else if (mPos.GetY() > Pos.GetY() + GetHeight() - HELPERSLIDER_WIDTH)
+        else if (mPos.GetY() > MyPos.GetY() + GetHeight() - HELPERSLIDER_WIDTH)
           SetValue(GetMaxValue());
         else
           for(int i = GetMinValue(); i <= GetMaxValue(); i++)
           {
-            int iY = Pos.GetY() - 1 + HELPERSLIDER_WIDTH + static_cast<int>(floor(static_cast<float>((GetHeight() - ((HELPERSLIDER_WIDTH - 2) * 3))) / GetMaxValue() * i));
+            int iY = MyPos.GetY() - 1 + HELPERSLIDER_WIDTH + static_cast<int>(floor(static_cast<float>((GetHeight() - ((HELPERSLIDER_WIDTH - 2) * 3))) / GetMaxValue() * i));
             if (mPos.GetY() >= iY && mPos.GetY() <= iY + HELPERSLIDER_WIDTH / 2)
             {
               SetValue(i);
@@ -127,12 +127,12 @@ namespace Hades
           }
       }
       else
-        SetElementState(((m_bMouseOver[ 2 ]	= pMouse.InArea(Pos.GetX(),  Pos.GetY() + HELPERSLIDER_WIDTH + static_cast<int>(floor(static_cast<float>((GetHeight() - (HELPERSLIDER_WIDTH * 3))) / GetMaxValue() * GetValue())), HELPERSLIDER_WIDTH, HELPERSLIDER_WIDTH)) != 0)?"MouseOver":"Norm", 1);
+        SetElementState(((m_bMouseOver[ 2 ]	= pMouse.InArea(MyPos.GetX(),  MyPos.GetY() + HELPERSLIDER_WIDTH + static_cast<int>(floor(static_cast<float>((GetHeight() - (HELPERSLIDER_WIDTH * 3))) / GetMaxValue() * GetValue())), HELPERSLIDER_WIDTH, HELPERSLIDER_WIDTH)) != 0)?"MouseOver":"Norm", 1);
     }
 
-    bool CHelperSlider::KeyEvent(CPos basePos, SKey sKey)
+    bool CHelperSlider::KeyEvent(Pos basePos, SKey sKey)
     {
-      CPos Pos = basePos + *GetRelPos();
+      Pos Pos = basePos + GetRelPos();
 
       if (!sKey.m_Key)
       {

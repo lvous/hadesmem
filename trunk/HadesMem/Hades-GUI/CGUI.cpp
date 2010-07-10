@@ -27,26 +27,25 @@ namespace Hades
   namespace GUI
   {
     // Constructor
-    CGUI::CGUI(IDirect3DDevice9* pDevice) 
-      : m_bVisible(false), 
-      m_bReload(false), 
+    GUI::GUI(IDirect3DDevice9* pDevice) 
+      : m_Visible(false), 
       m_pMouse(), 
       m_pKeyboard(), 
       m_pFont(), 
       m_pDevice(pDevice), 
       m_pSprite(), 
       m_pLine(), 
-      m_tPreDrawTimer(), 
-      m_vWindows(), 
-      m_sCurTheme(), 
-      m_mThemes(), 
-      m_mCallbacks()
+      m_PreDrawTimer(), 
+      m_Windows(), 
+      m_CurTheme(), 
+      m_Themes(), 
+      m_Callbacks()
     {
       // Ensure device is valid
       if (!m_pDevice)
       {
         BOOST_THROW_EXCEPTION(HadesGuiError() << 
-          ErrorFunction("CGUI::CGUI") << 
+          ErrorFunction("GUI::GUI") << 
           ErrorString("Invalid device."));
       }
 
@@ -55,7 +54,7 @@ namespace Hades
       if (FAILED(SpriteResult))
       {
         BOOST_THROW_EXCEPTION(HadesGuiError() << 
-          ErrorFunction("CGUI::CGUI") << 
+          ErrorFunction("GUI::GUI") << 
           ErrorString("Could not create sprite.") << 
           ErrorCodeWin(SpriteResult));
       }
@@ -65,16 +64,16 @@ namespace Hades
       if (FAILED(LineResult))
       {
         BOOST_THROW_EXCEPTION(HadesGuiError() << 
-          ErrorFunction("CGUI::CGUI") << 
+          ErrorFunction("GUI::GUI") << 
           ErrorString("Could not create line.") << 
           ErrorCodeWin(LineResult));
       }
 
       // Create mouse manager
-      m_pMouse.reset(new CMouse(*this, pDevice));
+      m_pMouse.reset(new Mouse(*this, pDevice));
 
       // Create keyboard manager
-      m_pKeyboard.reset(new CKeyboard(*this));
+      m_pKeyboard.reset(new Keyboard(*this));
 
       // Add default callbacks
       AddCallback("Value", SliderValue);
@@ -83,10 +82,10 @@ namespace Hades
     }
 
     // Destructor
-    CGUI::~CGUI()
+    GUI::~GUI()
     {
       // Delete all windows
-      std::for_each(m_vWindows.begin(), m_vWindows.end(), 
+      std::for_each(m_Windows.begin(), m_Windows.end(), 
         [] (CWindow* pWindow)
       {
         delete pWindow;
@@ -94,7 +93,7 @@ namespace Hades
     }
 
     // Load interface data from file
-    void CGUI::LoadInterfaceFromFile(std::string const& Path)
+    void GUI::LoadInterfaceFromFile(std::string const& Path)
     {
       // Create XML doc
       TiXmlDocument Document;
@@ -106,7 +105,7 @@ namespace Hades
         ErrorMsg << "XML error \"" << Document.ErrorDesc() << "\".";
 
         BOOST_THROW_EXCEPTION(HadesGuiError() << 
-          ErrorFunction("CGUI::LoadInterfaceFromFile") << 
+          ErrorFunction("GUI::LoadInterfaceFromFile") << 
           ErrorString(ErrorMsg.str()));
       }
 
@@ -121,26 +120,24 @@ namespace Hades
       }
 
       // Set font if specified
-      TiXmlElement* pFontElement = pGUI->FirstChildElement("Font");
-      if (pFontElement)
+      if (TiXmlElement* pFontElement = pGUI->FirstChildElement("Font"))
       {
         int FontSize = 0;
         pFontElement->QueryIntAttribute("size", &FontSize);
 
         char const* FontFace = pFontElement->Attribute("face");
 
-        m_pFont.reset(new CFont(*this, GetDevice(), FontSize, FontFace));
+        m_pFont.reset(new Font(*this, GetDevice(), FontSize, FontFace));
       }
 
       // Initialize theme data if specified
-      TiXmlElement* pColorThemes = pGUI->FirstChildElement("ColorThemes");
-      if (pColorThemes)
+      if (TiXmlElement* pColorThemes = pGUI->FirstChildElement("ColorThemes"))
       {
         // Set default theme if specified
         const char* pszDefaultTheme = pColorThemes->Attribute("default");
         if (pszDefaultTheme)
         {
-          m_sCurTheme = pszDefaultTheme;
+          m_CurTheme = pszDefaultTheme;
         }
 
         // Loop over all themes
@@ -193,7 +190,7 @@ namespace Hades
                 }
 
                 // Create colour for element
-                pState->m_Colours[pszString] = new CColor(pColourElem);
+                pState->m_Colours[pszString] = new Colour(pColourElem);
               }
 
               // Loop over all state textures
@@ -207,8 +204,8 @@ namespace Hades
                   Attribute("path");
 
                 // Create texture for element
-                CTexture* pTexture = pState->m_Textures[pTexElem->
-                  Attribute("string")] = new CTexture(GetSprite(), 
+                Texture* pTexture = pState->m_Textures[pTexElem->
+                  Attribute("string")] = new Texture(m_pSprite, 
                   TexPath.str().c_str());
 
                 // Set texture alpha if specified
@@ -221,15 +218,14 @@ namespace Hades
               }
 
               // Store theme elem
-              m_mThemes[pThemeElem->Value()][pElemElem->Value()] = CurElem;
+              m_Themes[pThemeElem->Value()][pElemElem->Value()] = CurElem;
             }
           }
         }
       }
 
       // Create windows if specified
-      TiXmlElement* pWindows = pGUI->FirstChildElement("Windows");
-      if (pWindows)
+      if (TiXmlElement* pWindows = pGUI->FirstChildElement("Windows"))
       {
         for(TiXmlElement* pWindowElem = pWindows->FirstChildElement(); 
           pWindowElem; pWindowElem = pWindowElem->NextSiblingElement())
@@ -239,12 +235,14 @@ namespace Hades
       }
     }
 
-    void CGUI::FillArea(int X, int Y, int Width, int Height, D3DCOLOR MyColour)
+    // Fill area on screen
+    void GUI::FillArea(int X, int Y, int Width, int Height, D3DCOLOR MyColour)
     {
       DrawLine(X + Width / 2, Y, X + Width / 2, Y + Height, Width, MyColour);
     }
 
-    void CGUI::DrawLine(int StartX, int StartY, int EndX, int EndY, int Width, 
+    // Draw line on screen
+    void GUI::DrawLine(int StartX, int StartY, int EndX, int EndY, int Width, 
       D3DCOLOR D3DColour)
     {
       m_pLine->SetWidth(static_cast<float>(Width));
@@ -260,7 +258,8 @@ namespace Hades
       m_pLine->End();
     }
 
-    void CGUI::DrawOutlinedBox(int X, int Y, int Width, int Height, 
+    // Draw outlined box on screen
+    void GUI::DrawOutlinedBox(int X, int Y, int Width, int Height, 
       D3DCOLOR InnerColour, D3DCOLOR BorderColour)
     {
       FillArea(X + 1, Y + 1, Width - 2, Height - 2, InnerColour);
@@ -272,29 +271,32 @@ namespace Hades
       DrawLine(X + Width - 1,	Y, X + Width - 1,	Y + Height, 1, BorderColour);
     }
 
-    CWindow* CGUI::AddWindow(CWindow* pWindow) 
+    // Add new window
+    CWindow* GUI::AddWindow(CWindow* pWindow) 
     {
-      m_vWindows.push_back(pWindow);
+      m_Windows.push_back(pWindow);
       return pWindow;
     }
 
-    void CGUI::BringToTop(CWindow* pWindow)
+    // Bring window to top
+    void GUI::BringToTop(CWindow* pWindow)
     {
-      m_vWindows.erase(std::remove(m_vWindows.begin(), m_vWindows.end(), 
-        pWindow), m_vWindows.end());
-      m_vWindows.push_back(pWindow);
+      m_Windows.erase(std::remove(m_Windows.begin(), m_Windows.end(), 
+        pWindow), m_Windows.end());
+      m_Windows.push_back(pWindow);
     }
 
-    void CGUI::Draw()
+    // Draw
+    void GUI::Draw()
     {
-      if (!IsVisible())
+      if (!m_Visible)
       {
         return;
       }
 
       PreDraw();
 
-      std::for_each(m_vWindows.begin(), m_vWindows.end(), 
+      std::for_each(m_Windows.begin(), m_Windows.end(), 
         [] (CWindow* pWindow)
       {
         if (pWindow->IsVisible())
@@ -306,11 +308,12 @@ namespace Hades
       GetMouse().Draw();
     }
 
-    void CGUI::PreDraw()
+    // Pre-draw
+    void GUI::PreDraw()
     {
-      if (!m_tPreDrawTimer.Running())
+      if (!m_PreDrawTimer.Running())
       {
-        std::for_each(m_vWindows.rbegin(), m_vWindows.rend(), 
+        std::for_each(m_Windows.rbegin(), m_Windows.rend(), 
           [] (CWindow* pWindow)
         {
           if (pWindow->IsVisible())
@@ -319,67 +322,65 @@ namespace Hades
           }
         });
 
-        m_tPreDrawTimer.Start(0.1f);
+        m_PreDrawTimer.Start(0.1f);
       }
     }
 
-    void CGUI::MouseMove(CMouse & MyMouse)
+    // Notify of mouse movement
+    void GUI::MouseMove(Mouse& MyMouse)
     {
-      CElement* pDragging = GetMouse().GetDragging();
-      if (!pDragging)
-      {
-        bool GotWindow = false;
-
-        std::for_each(m_vWindows.rbegin(), m_vWindows.rend(), 
-          [&] (CWindow* pWindow)
-        {
-          if (!pWindow->IsVisible())
-          {
-            return;
-          }
-
-          int Height = 0;
-          if (!pWindow->GetMaximized())
-          {
-            Height = TITLEBAR_HEIGHT;
-          }
-
-          if (!GotWindow && GetMouse().InArea(pWindow, Height))
-          {
-            pWindow->MouseMove(MyMouse);
-            GotWindow = true;
-          }
-          else
-          {
-            MyMouse.SavePos();
-            MyMouse.SetPos(-1, -1);
-            pWindow->MouseMove(MyMouse);
-            MyMouse.LoadPos();
-          }
-        });
-      }
-      else
+      if (CElement* pDragging = GetMouse().GetDragging())
       {
         pDragging->MouseMove(MyMouse);
+        return;
       }
+
+      bool GotWindow = false;
+
+      std::for_each(m_Windows.rbegin(), m_Windows.rend(), 
+        [&] (CWindow* pWindow)
+      {
+        if (!pWindow->IsVisible())
+        {
+          return;
+        }
+
+        int Height = 0;
+        if (!pWindow->GetMaximized())
+        {
+          Height = TITLEBAR_HEIGHT;
+        }
+
+        if (!GotWindow && GetMouse().InArea(pWindow, Height))
+        {
+          pWindow->MouseMove(MyMouse);
+          GotWindow = true;
+        }
+        else
+        {
+          MyMouse.SavePos();
+          MyMouse.SetPos(-1, -1);
+          pWindow->MouseMove(MyMouse);
+          MyMouse.LoadPos();
+        }
+      });
     }
 
-    bool CGUI::KeyEvent(SKey MyKey)
+    // Notify of key event
+    bool GUI::KeyEvent(SKey MyKey)
     {
       bool Top = false;
 
-      if (!MyKey.m_Key && (MyKey.m_Down || (GetMouse().GetWheel() && 
+      if (!MyKey.m_Key && (MyKey.m_Down || (m_pMouse->GetWheel() && 
         !MyKey.m_Down)))
       {
-        CMouse& MyMouse = GetMouse();
-
         std::vector<CWindow*> Repeat;
 
         // Note: Cannot use iterators as CWindow::KeyEvent calls 
-        // CGUI::BringToTop which in turn modifies the container
-        for (std::size_t i = m_vWindows.size(); i && i--; )
+        // GUI::BringToTop which in turn modifies the container
+        for (std::size_t i = m_Windows.size(); i && i--; )
         {
-          CWindow* pWindow = m_vWindows[i];
+          CWindow* pWindow = m_Windows[i];
 
           if (!pWindow->IsVisible())
           {
@@ -394,7 +395,7 @@ namespace Hades
               Height = TITLEBAR_HEIGHT;
             }
 
-            if (MyMouse.InArea(pWindow, Height) && !Top)
+            if (m_pMouse->InArea(pWindow, Height) && !Top)
             {
               pWindow->KeyEvent(MyKey);
               Top = true;
@@ -406,27 +407,27 @@ namespace Hades
           }
           else
           {
-            MyMouse.SavePos();
-            MyMouse.SetPos(CPos(-1, -1));
+            m_pMouse->SavePos();
+            m_pMouse->SetPos(Pos(-1, -1));
             pWindow->KeyEvent(MyKey);
-            MyMouse.LoadPos();
+            m_pMouse->LoadPos();
           }
         }
 
         std::for_each(Repeat.begin(), Repeat.end(), 
           [&] (CWindow* pRepeat)
         {
-          MyMouse.SavePos();
-          MyMouse.SetPos(CPos(-1, -1));
+          m_pMouse->SavePos();
+          m_pMouse->SetPos(Pos(-1, -1));
           pRepeat->KeyEvent(MyKey);
-          MyMouse.LoadPos();
+          m_pMouse->LoadPos();
         });
       }
       else
       {
         Top = false;
 
-        std::for_each(m_vWindows.rbegin(), m_vWindows.rend(), 
+        std::for_each(m_Windows.rbegin(), m_Windows.rend(), 
           [&] (CWindow* pWindow)
         {
           if (pWindow->IsVisible())
@@ -449,99 +450,113 @@ namespace Hades
       return Top;
     }
 
-    void CGUI::OnLostDevice()
+    // Notify of lost device
+    void GUI::OnLostDevice()
     {
-      m_pDevice = 0;
+      m_pDevice = nullptr;
 
-      if (GetFont())
-      {
-        GetFont()->OnLostDevice();
-      }
-      GetSprite()->OnLostDevice();
+      m_pFont->OnLostDevice();
+
+      m_pSprite->OnLostDevice();
 
       m_pLine->OnLostDevice();
     }
 
-    void CGUI::OnResetDevice(IDirect3DDevice9 * pDevice)
+    // Notify of reset device
+    void GUI::OnResetDevice(IDirect3DDevice9* pDevice)
     {
       m_pDevice = pDevice;
 
-      if (GetFont())
-      {
-        GetFont()->OnResetDevice(pDevice);
-      }
-      GetSprite()->OnResetDevice();
+      m_pFont->OnResetDevice(pDevice);
+
+      m_pSprite->OnResetDevice();
 
       m_pLine->OnResetDevice();
     }
 
-    CMouse & CGUI::GetMouse() const
+    // Get mouse
+    Mouse& GUI::GetMouse() const
     {
       return *m_pMouse;
     }
 
-    CKeyboard * CGUI::GetKeyboard() const
+    // Get keyboard
+    Keyboard& GUI::GetKeyboard() const
     {
-      return &*m_pKeyboard;
+      return *m_pKeyboard;
     }
 
-    IDirect3DDevice9 * CGUI::GetDevice() const
+    // Get D3D device
+    IDirect3DDevice9* GUI::GetDevice() const
     {
       return m_pDevice;
     }
 
-    CFont * CGUI::GetFont() const
+    // Get font
+    Font& GUI::GetFont() const
     {
-      return &*m_pFont;
+      return *m_pFont;
     }
 
-    ID3DXSprite * CGUI::GetSprite() const
+    // Get sprite
+    CComPtr<ID3DXSprite> GUI::GetSprite() const
     {
       return m_pSprite;
     }
 
-    CWindow* CGUI::GetWindowByString(std::string const& MyString, int Index)
+    // Get window by string
+    CWindow* GUI::GetWindowByString(std::string const& MyString, int Index)
     {
-      auto Iter = std::find_if(m_vWindows.begin(), m_vWindows.end(), 
-        [&] (CWindow* pWindow)
-      {
-        return pWindow->GetString(false, Index) == MyString;
-      });
+      auto Iter = std::find_if(m_Windows.begin(), m_Windows.end(), 
+        std::bind(std::equal_to<std::string>(), 
+        std::bind(&CWindow::GetString, std::placeholders::_1, false, Index), 
+        MyString));
 
-      return Iter != m_vWindows.end() ? *Iter : nullptr;
+      return Iter != m_Windows.end() ? *Iter : nullptr;
     }
 
-    SElement* CGUI::GetThemeElement(std::string const& sElement) const
+    // Get theme element by name
+    SElement* GUI::GetThemeElement(std::string const& Element) const
     {
-      auto Iter = m_mThemes.find(m_sCurTheme);
-
-      tTheme::const_iterator SecondIter;
-      if (Iter != m_mThemes.end())
+      auto Iter = m_Themes.find(m_CurTheme);
+      if (Iter == m_Themes.end())
       {
-        SecondIter = Iter->second.find(sElement);
+        return nullptr;
       }
 
-      return SecondIter->second;
+      auto IterInner = Iter->second.find(Element);
+      return IterInner != Iter->second.end() ? IterInner->second : nullptr;
     }
 
-    void CGUI::SetVisible(bool bVisible)
+    // Set visibility
+    void GUI::SetVisible(bool Visible)
     {
-      m_bVisible = bVisible;
+      m_Visible = Visible;
     }
 
-    bool CGUI::IsVisible() const
+    // Get visibility
+    bool GUI::IsVisible() const
     {
-      return m_bVisible;
+      return m_Visible;
     }
 
-    bool CGUI::ShouldReload() const
+    // Get callback by name
+    Callback GUI::GetCallback(std::string const& Name) const
     {
-      return m_bReload;
+      auto Iter = m_Callbacks.find(Name);
+      return Iter != m_Callbacks.end() ? Iter->second : nullptr;
     }
 
-    void CGUI::Reload()
+    // Add callback
+    void GUI::AddCallback(std::string const& Name, Callback MyCallback)
     {
-      m_bReload = true;
+      m_Callbacks[Name] = MyCallback;
+    }
+
+    // Get all callbacks
+    std::map<std::string, Callback> const& GUI::GetCallbackMap() const
+    {
+      return m_Callbacks;
     }
   }
 }

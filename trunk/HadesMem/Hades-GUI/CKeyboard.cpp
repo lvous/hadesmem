@@ -29,12 +29,12 @@ namespace Hades
 {
   namespace GUI
   {
-    CKeyboard::CKeyboard(CGUI& Gui) 
+    Keyboard::Keyboard(GUI& Gui) 
       : m_Gui(Gui), 
       m_Key()
     { }
 
-    bool CKeyboard::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
+    bool Keyboard::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
     {
       if (!m_Gui.IsVisible() || uMsg < WM_KEYFIRST || uMsg > WM_KEYLAST || 
         m_Gui.GetMouse().GetLeftButton())
@@ -55,12 +55,12 @@ namespace Hades
       return m_Gui.KeyEvent(GetKey());
     }
 
-    void CKeyboard::SetKey(SKey sKey)
+    void Keyboard::SetKey(SKey sKey)
     {
       m_Key = sKey;
     }
 
-    SKey CKeyboard::GetKey()
+    SKey Keyboard::GetKey()
     {
       SKey sRet = m_Key;
       SetKey(SKey(0, false));

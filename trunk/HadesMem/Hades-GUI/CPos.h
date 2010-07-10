@@ -26,12 +26,12 @@ namespace Hades
 {
   namespace GUI
   {
-    class CPos
+    class Pos
     {
     public:
-      CPos();
-      CPos(CPos* pPos);
-      CPos(int X, int Y);
+      Pos();
+      Pos(Pos* pPos);
+      Pos(int X, int Y);
 
       int GetX() const;
       int GetY() const;
@@ -39,8 +39,8 @@ namespace Hades
       void SetX(int X);
       void SetY(int Y);
 
-      const CPos operator + (CPos const& Rhs) const;
-      const CPos operator - (CPos const& Rhs) const;
+      const Pos operator + (Pos const& Rhs) const;
+      const Pos operator - (Pos const& Rhs) const;
 
     private:
       int m_X, m_Y;

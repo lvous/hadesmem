@@ -22,16 +22,13 @@ THE SOFTWARE.
 
 #pragma once
 
+#include "Fwd.h"
 #include "CPos.h"
-
-#include <functional>
 
 namespace Hades
 {
   namespace GUI
   {
-    typedef std::function<std::string (const char* pszArgs, CElement* pElement)> tCallback;
-
     class CElement
     {
       bool m_bHasFocus, m_bMouseOver;
@@ -39,19 +36,19 @@ namespace Hades
       std::string m_sRaw[2], m_sFormatted[2];
       int m_iWidth, m_iHeight;
 
-      CPos m_relPos, m_absPos;
+      Pos m_relPos, m_absPos;
       CWindow * m_pParent;
 
-      tCallback m_pCallback;
+      Callback m_pCallback;
 
       SElement * m_pThemeElement[ 3 ];
       SElementState * m_pElementState[ 3 ];
 
     protected:
-      class CGUI& m_Gui;
+      class GUI& m_Gui;
 
     public:
-      CElement(class CGUI& Gui);
+      CElement(class GUI& Gui);
       virtual ~CElement() { }
 
       void SetElement(TiXmlElement * pElement);
@@ -59,14 +56,14 @@ namespace Hades
       void SetParent(CWindow * pParent);
       CWindow * GetParent() const;
 
-      void SetCallback(tCallback pCallback);
-      tCallback GetCallback() const;
+      void SetCallback(Callback pCallback);
+      Callback GetCallback() const;
 
-      void SetRelPos(CPos relPos);
-      void SetAbsPos(CPos absPos);
+      void SetRelPos(Pos relPos);
+      void SetAbsPos(Pos absPos);
 
-      const CPos * GetRelPos() const;
-      const CPos * GetAbsPos() const;
+      Pos GetRelPos() const;
+      Pos GetAbsPos() const;
 
       void SetWidth(int iWidth);
       void SetHeight(int iHeight);
@@ -93,7 +90,7 @@ namespace Hades
 
       virtual void Draw();
       virtual void PreDraw();
-      virtual void MouseMove(CMouse & pMouse);
+      virtual void MouseMove(Mouse & pMouse);
       virtual bool KeyEvent(SKey sKey);
     };
   }

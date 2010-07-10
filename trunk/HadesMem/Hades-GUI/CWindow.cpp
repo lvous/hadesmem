@@ -26,12 +26,12 @@ namespace Hades
 {
   namespace GUI
   {
-    CWindow::CWindow(CGUI& Gui, TiXmlElement* pElement)
+    CWindow::CWindow(GUI& Gui, TiXmlElement* pElement)
       : CElement(Gui)
     {
       SetMaximized(true);
       SetFocussedElement(0);
-      posDif = CPos();
+      posDif = Pos();
       m_bDragging = false;
       SetMouseOver(false);
       SetElement(pElement);
@@ -93,7 +93,7 @@ namespace Hades
 
     void CWindow::AddElement(CElement * pElement)
     {
-      pElement->SetRelPos(*pElement->GetRelPos() + CPos(0, TITLEBAR_HEIGHT));
+      pElement->SetRelPos(pElement->GetRelPos() + Pos(0, TITLEBAR_HEIGHT));
       pElement->SetParent(this);
 
       m_vElements.push_back(pElement);
@@ -101,13 +101,13 @@ namespace Hades
 
     void CWindow::Draw()
     {	
-      pTitlebar->Draw(*GetAbsPos(), GetWidth(), TITLEBAR_HEIGHT);
-      m_Gui.GetFont()->DrawString(GetAbsPos()->GetX() + 5, GetAbsPos()->GetY() + 5, 0, pTitle, GetFormatted());
-      pButton->Draw(CPos(GetAbsPos()->GetX() + GetWidth() - BUTTON_HEIGHT - 2, GetAbsPos()->GetY() + 2), BUTTON_HEIGHT, BUTTON_HEIGHT);
+      pTitlebar->Draw(GetAbsPos(), GetWidth(), TITLEBAR_HEIGHT);
+      m_Gui.GetFont().DrawString(GetAbsPos().GetX() + 5, GetAbsPos().GetY() + 5, 0, pTitle, GetFormatted());
+      pButton->Draw(Pos(GetAbsPos().GetX() + GetWidth() - BUTTON_HEIGHT - 2, GetAbsPos().GetY() + 2), BUTTON_HEIGHT, BUTTON_HEIGHT);
 
       if (GetMaximized())
       {
-        m_Gui.DrawOutlinedBox(GetAbsPos()->GetX(), GetAbsPos()->GetY() + TITLEBAR_HEIGHT, GetWidth(), GetHeight() - TITLEBAR_HEIGHT + 1,  pBodyInner->GetD3DColor(), pBodyBorder->GetD3DColor());
+        m_Gui.DrawOutlinedBox(GetAbsPos().GetX(), GetAbsPos().GetY() + TITLEBAR_HEIGHT, GetWidth(), GetHeight() - TITLEBAR_HEIGHT + 1,  pBodyInner->GetD3DColor(), pBodyBorder->GetD3DColor());
 
         for each(CElement * pElement in m_vElements)
           pElement->Draw();
@@ -123,15 +123,15 @@ namespace Hades
           pElement->PreDraw();
     }
 
-    void CWindow::MouseMove(CMouse & pMouse)
+    void CWindow::MouseMove(Mouse & pMouse)
     {
       if (GetDragging())
       {
         if (!posDif.GetX())
-          posDif = *GetAbsPos() - pMouse.GetPos();
+          posDif = GetAbsPos() - pMouse.GetPos();
         else
         {
-          CPos mPos = pMouse.GetPos();
+          Pos mPos = pMouse.GetPos();
 
           if (mPos.GetX() == -1 && mPos.GetY() == -1)
             mPos = pMouse.GetSavedPos();
@@ -141,7 +141,7 @@ namespace Hades
       }
 
       if (GetCloseButton())
-        SetElementState(SetMouseOver(pMouse.InArea(GetAbsPos()->GetX() + GetWidth() - BUTTON_HEIGHT - 2, GetAbsPos()->GetY() + 2, BUTTON_HEIGHT, BUTTON_HEIGHT))?"MouseOver":"Norm", 1);
+        SetElementState(SetMouseOver(pMouse.InArea(GetAbsPos().GetX() + GetWidth() - BUTTON_HEIGHT - 2, GetAbsPos().GetY() + 2, BUTTON_HEIGHT, BUTTON_HEIGHT))?"MouseOver":"Norm", 1);
 
       if (GetMaximized())
         for each(CElement * pElement in m_vElements)
@@ -150,7 +150,7 @@ namespace Hades
 
     bool CWindow::KeyEvent(SKey sKey)
     {
-      CMouse & Mouse = m_Gui.GetMouse();
+      Mouse & Mouse = m_Gui.GetMouse();
 
       if (Mouse.GetLeftButton())
       {
@@ -158,7 +158,7 @@ namespace Hades
 
         if (GetMouseOver() && m_bCloseButtonEnabled)
           this->SetVisible(false);
-        else if (Mouse.InArea(GetAbsPos()->GetX(), GetAbsPos()->GetY(), GetWidth(), TITLEBAR_HEIGHT))
+        else if (Mouse.InArea(GetAbsPos().GetX(), GetAbsPos().GetY(), GetWidth(), TITLEBAR_HEIGHT))
         {
           if (!Mouse.GetDragging())
           {
@@ -181,7 +181,7 @@ namespace Hades
             }
           }
         }
-        else if (Mouse.InArea(GetAbsPos()->GetX(), GetAbsPos()->GetY(), GetWidth(), GetHeight()))
+        else if (Mouse.InArea(GetAbsPos().GetX(), GetAbsPos().GetY(), GetWidth(), GetHeight()))
           m_Gui.BringToTop(this);
       }
       else

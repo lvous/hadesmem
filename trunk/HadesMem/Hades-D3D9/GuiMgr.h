@@ -85,7 +85,7 @@ namespace Hades
       void ToggleVisible();
 
       // GUI instance
-      GUI::CGUI* m_pGui;
+      GUI::GUI* m_pGui;
 
       // Kernel instance
       Kernel::Kernel* m_pKernel;

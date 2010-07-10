@@ -29,13 +29,13 @@ namespace Hades
   {
     class CVerticalSliderBar : public CHorizontalSliderBar
     {
-      CColor * pLines, * pString;
-      CTexture * pSlider;
+      Colour * pLines, * pString;
+      Texture * pSlider;
     public:
-      CVerticalSliderBar(class CGUI& Gui, TiXmlElement* pElement);
+      CVerticalSliderBar(class GUI& Gui, TiXmlElement* pElement);
 
       void Draw();
-      void MouseMove(CMouse & pMouse);
+      void MouseMove(Mouse & pMouse);
 
       void UpdateTheme(int iIndex);
     };

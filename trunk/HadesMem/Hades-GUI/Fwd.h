@@ -22,43 +22,30 @@ THE SOFTWARE.
 
 #pragma once
 
-#include "CGUI.h"
+// C++ Standard Library
+#include <functional>
 
 namespace Hades
 {
   namespace GUI
   {
-    class CDropDown : public CElement
-    {
-      bool m_bDropped;
-      int m_iMouseOverIndex, m_iSelected;
+    // Forward declarations
+    class Texture;
+    class Timer;
+    class Pos;
+    class Colour;
+    class Mouse;
+    class Keyboard;
+    class CElement;
+    class CWindow;
+    class CButton;
+    class CCheckBox;
+    class CProgressBar;
+    class CTextBox;
+    class CListBox;
 
-      struct SEntry
-      {
-        std::string m_sString, m_sValue;
-
-        SEntry(std::string sString, std::string sValue)
-        {
-          m_sString = sString;
-          m_sValue = sValue;
-        }
-      };
-      std::vector<SEntry> m_vEntrys;
-
-      Colour * pInner, * pBorder, * pString, * pSelectedInner, * pSelectedString;
-      Texture * pButton;
-
-    public:
-      CDropDown(class GUI& Gui, TiXmlElement* pElement);
-
-      void Draw();
-      void MouseMove(Mouse & pMouse);
-      bool KeyEvent(SKey sKey);
-
-      void AddElement(std::string sElem, std::string sValue);
-      std::string GetValue() const;
-
-      void UpdateTheme(int iIndex);
-    };
+    // Callback type
+    typedef std::function<std::string (const char* pszArgs, 
+      CElement* pElement)> Callback;
   }
 }

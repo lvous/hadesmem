@@ -36,13 +36,13 @@ namespace Hades
 
       std::vector<std::string> m_vRows;
 
-      CColor * pInner, * pBorder, * pString, * pMouseOverString;
+      Colour * pInner, * pBorder, * pString, * pMouseOverString;
     public:
-      CListBox(class CGUI& Gui, TiXmlElement* pElement);
+      CListBox(class GUI& Gui, TiXmlElement* pElement);
 
       void Draw();
       void PreDraw();
-      void MouseMove(CMouse & pMouse);
+      void MouseMove(Mouse & pMouse);
       bool KeyEvent(SKey sKey);
 
       void AddRow(std::string sString);

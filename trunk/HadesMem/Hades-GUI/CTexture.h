@@ -36,10 +36,10 @@ namespace Hades
 {
   namespace GUI
   {
-    class CTexture
+    class Texture
     {
     public:
-      CTexture(ID3DXSprite* pSprite, std::string const& Path);
+      Texture(ID3DXSprite* pSprite, std::string const& Path);
 
       void SetSprite(ID3DXSprite * pSprite);
 
@@ -47,7 +47,7 @@ namespace Hades
 
       void SetAlpha(BYTE bAlpha);
 
-      void Draw(class CPos cpPos, int iWidth, int iHeight);
+      void Draw(class Pos cpPos, int iWidth, int iHeight);
 
     private:
       CComPtr<IDirect3DTexture9> m_pTexture;

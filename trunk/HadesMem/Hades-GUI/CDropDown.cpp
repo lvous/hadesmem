@@ -26,7 +26,7 @@ namespace Hades
 {
   namespace GUI
   {
-    CDropDown::CDropDown(CGUI& Gui, TiXmlElement* pElement)
+    CDropDown::CDropDown(GUI& Gui, TiXmlElement* pElement)
       : CElement(Gui)
     {
       SetElement(pElement);
@@ -48,40 +48,40 @@ namespace Hades
 
     void CDropDown::Draw()
     {
-      CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
+      Pos MyPos = GetParent()->GetAbsPos() + GetRelPos();
 
       SElementState * pState = GetElementState();
 
       if (pState)
       {
-        m_Gui.DrawOutlinedBox(Pos.GetX(), Pos.GetY(), GetWidth(), GetHeight(), pInner->GetD3DColor(), pBorder->GetD3DColor());
-        m_Gui.DrawLine(Pos.GetX() + GetWidth() - 20, Pos.GetY() + 1, Pos.GetX() + GetWidth() - 20, Pos.GetY() + GetHeight() - 1, 1, pBorder->GetD3DColor());
+        m_Gui.DrawOutlinedBox(MyPos.GetX(), MyPos.GetY(), GetWidth(), GetHeight(), pInner->GetD3DColor(), pBorder->GetD3DColor());
+        m_Gui.DrawLine(MyPos.GetX() + GetWidth() - 20, MyPos.GetY() + 1, MyPos.GetX() + GetWidth() - 20, MyPos.GetY() + GetHeight() - 1, 1, pBorder->GetD3DColor());
 
-        m_Gui.GetFont()->DrawString(Pos.GetX() + 3, Pos.GetY() + GetHeight() / 2, FT_VCENTER, pString, m_vEntrys[ m_iSelected ].m_sString.c_str());
+        m_Gui.GetFont().DrawString(MyPos.GetX() + 3, MyPos.GetY() + GetHeight() / 2, FT_VCENTER, pString, m_vEntrys[ m_iSelected ].m_sString.c_str());
 
         if (m_bDropped && m_vEntrys.size())
         {
-          m_Gui.DrawOutlinedBox(Pos.GetX(), Pos.GetY() + GetHeight(), GetWidth(), GetHeight() * m_vEntrys.size(), pInner->GetD3DColor(), pBorder->GetD3DColor());
+          m_Gui.DrawOutlinedBox(MyPos.GetX(), MyPos.GetY() + GetHeight(), GetWidth(), GetHeight() * m_vEntrys.size(), pInner->GetD3DColor(), pBorder->GetD3DColor());
 
           for(int iIndex = 0; iIndex < static_cast<int>(m_vEntrys.size()); iIndex++)
           {
             if (iIndex == m_iMouseOverIndex)
             {
-              m_Gui.FillArea(Pos.GetX() + 1, Pos.GetY() + GetHeight() * (iIndex + 1), GetWidth() - 2, GetHeight(),pSelectedInner->GetD3DColor());
-              m_Gui.GetFont()->DrawString(Pos.GetX() + 3, Pos.GetY() + GetHeight() * (iIndex + 1) + GetHeight() / 2, FT_VCENTER, pSelectedString, m_vEntrys[ iIndex ].m_sString.c_str());
+              m_Gui.FillArea(MyPos.GetX() + 1, MyPos.GetY() + GetHeight() * (iIndex + 1), GetWidth() - 2, GetHeight(),pSelectedInner->GetD3DColor());
+              m_Gui.GetFont().DrawString(MyPos.GetX() + 3, MyPos.GetY() + GetHeight() * (iIndex + 1) + GetHeight() / 2, FT_VCENTER, pSelectedString, m_vEntrys[ iIndex ].m_sString.c_str());
             }
             else
-              m_Gui.GetFont()->DrawString(Pos.GetX() + 3, Pos.GetY() + GetHeight() * (iIndex + 1) + GetHeight() / 2, FT_VCENTER, pString, m_vEntrys[ iIndex ].m_sString.c_str());
+              m_Gui.GetFont().DrawString(MyPos.GetX() + 3, MyPos.GetY() + GetHeight() * (iIndex + 1) + GetHeight() / 2, FT_VCENTER, pString, m_vEntrys[ iIndex ].m_sString.c_str());
           }
         }
 
-        pButton->Draw(CPos(Pos.GetX() + GetWidth() - 19, Pos.GetY() + 1), 18, 18);
+        pButton->Draw(Pos(MyPos.GetX() + GetWidth() - 19, MyPos.GetY() + 1), 18, 18);
       }
     }
 
-    void CDropDown::MouseMove(CMouse & pMouse)
+    void CDropDown::MouseMove(Mouse & pMouse)
     {
-      CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos(), mPos = m_Gui.GetMouse().GetPos();
+      Pos Pos = GetParent()->GetAbsPos() + GetRelPos(), mPos = m_Gui.GetMouse().GetPos();
 
       int iHeight = 0;
       if (m_bDropped)

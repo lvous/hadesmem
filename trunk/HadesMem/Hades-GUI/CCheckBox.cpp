@@ -26,7 +26,7 @@ namespace Hades
 {
   namespace GUI
   {
-    CCheckBox::CCheckBox(CGUI& Gui, TiXmlElement * pElement)
+    CCheckBox::CCheckBox(GUI& Gui, TiXmlElement * pElement)
       : CElement(Gui)
     {
       SetElement(pElement);
@@ -55,10 +55,10 @@ namespace Hades
 
     void CCheckBox::Draw()
     {
-      CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
+      Pos Pos = GetParent()->GetAbsPos() + GetRelPos();
 
       m_Gui.DrawOutlinedBox(Pos.GetX(), Pos.GetY(), 15, 15, pInner->GetD3DColor(), pBorder->GetD3DColor());
-      m_Gui.GetFont()->DrawString(Pos.GetX() + 20, Pos.GetY(), 0, pString, GetFormatted());
+      m_Gui.GetFont().DrawString(Pos.GetX() + 20, Pos.GetY(), 0, pString, GetFormatted());
 
       if (GetChecked())
       {
@@ -74,11 +74,11 @@ namespace Hades
       GetString(true);
     }
 
-    void CCheckBox::MouseMove(CMouse & pMouse)
+    void CCheckBox::MouseMove(Mouse & pMouse)
     {
-      CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
+      Pos Pos = GetParent()->GetAbsPos() + GetRelPos();
 
-      SetElementState(SetMouseOver(pMouse.InArea(Pos.GetX(), Pos.GetY(), m_Gui.GetFont()->GetStringWidth(GetFormatted().c_str()) + 20, m_Gui.GetFont()->GetStringHeight()))?"MouseOver":"Norm");
+      SetElementState(SetMouseOver(pMouse.InArea(Pos.GetX(), Pos.GetY(), m_Gui.GetFont().GetStringWidth(GetFormatted().c_str()) + 20, m_Gui.GetFont().GetStringHeight()))?"MouseOver":"Norm");
     }
 
     bool CCheckBox::KeyEvent(SKey sKey)

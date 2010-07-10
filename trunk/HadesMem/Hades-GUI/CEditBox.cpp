@@ -26,7 +26,7 @@ namespace Hades
 {
   namespace GUI
   {
-    CEditBox::CEditBox(CGUI& Gui, TiXmlElement * pElement)
+    CEditBox::CEditBox(GUI& Gui, TiXmlElement * pElement)
       : CElement(Gui)
     {
       SetElement(pElement);
@@ -56,7 +56,7 @@ namespace Hades
 
     void CEditBox::Draw()
     {
-      CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
+      Pos Pos = GetParent()->GetAbsPos() + GetRelPos();
 
       SElementState * pState = GetElementState();
       if (pState)
@@ -66,9 +66,9 @@ namespace Hades
         std::string sTemp(GetStart() < GetString().size() ? 
           &GetString()[ GetStart() ] : "");
 
-        m_Gui.GetFont()->CutString(GetWidth(), sTemp);
+        m_Gui.GetFont().CutString(GetWidth(), sTemp);
 
-        m_Gui.GetFont()->DrawString(Pos.GetX() + 4, Pos.GetY() + GetHeight() / 2, FT_VCENTER, pString, sTemp);
+        m_Gui.GetFont().DrawString(Pos.GetX() + 4, Pos.GetY() + GetHeight() / 2, FT_VCENTER, pString, sTemp);
 
         if (m_bCursorState)
         {
@@ -86,9 +86,9 @@ namespace Hades
       }
     }
 
-    void CEditBox::MouseMove(CMouse & pMouse)
+    void CEditBox::MouseMove(Mouse & pMouse)
     {
-      CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
+      Pos Pos = GetParent()->GetAbsPos() + GetRelPos();
 
       SetMouseOver(pMouse.InArea(Pos.GetX(), Pos.GetY(), GetWidth(), GetHeight()));
     }
@@ -102,12 +102,12 @@ namespace Hades
           if (GetMouseOver())
           {
             int iX = m_Gui.GetMouse().GetPos().GetX();
-            int iAbsX = (*GetParent()->GetAbsPos() + *GetRelPos()).GetX();
+            int iAbsX = (GetParent()->GetAbsPos() + GetRelPos()).GetX();
 
             std::string sString(GetStart() < GetString().size() ? 
               &GetString()[ GetStart() ] : "");
 
-            if (iX >= iAbsX + m_Gui.GetFont()->GetStringWidth(sString.c_str()))
+            if (iX >= iAbsX + m_Gui.GetFont().GetStringWidth(sString.c_str()))
             {
               SetIndex(sString.length());
             }
@@ -115,13 +115,13 @@ namespace Hades
             {
               for(int i = 0; i <= static_cast<int>(sString.length()); i++)
               {
-                if (iX <= iAbsX + m_Gui.GetFont()->GetStringWidth(sString.c_str()))
+                if (iX <= iAbsX + m_Gui.GetFont().GetStringWidth(sString.c_str()))
                 {
                   if (i < sString.size())
                   {
                     sString[ i ] = 0;
                   }
-                  if (iX > iAbsX + m_Gui.GetFont()->GetStringWidth(sString.c_str()))
+                  if (iX > iAbsX + m_Gui.GetFont().GetStringWidth(sString.c_str()))
                   {
                     SetIndex(i);
                   }
@@ -145,7 +145,7 @@ namespace Hades
 
             SetIndex(strlen(&sString[ GetStart() ]));
 
-            while(m_Gui.GetFont()->GetStringWidth(&sString.c_str()[ GetStart() ]) > GetWidth() - 5 || m_iCursorX > GetWidth() - 5)
+            while(m_Gui.GetFont().GetStringWidth(&sString.c_str()[ GetStart() ]) > GetWidth() - 5 || m_iCursorX > GetWidth() - 5)
             {
               SetStart(GetStart() + 1);
               SetIndex(GetIndex() - 1);
@@ -205,7 +205,7 @@ namespace Hades
             std::string sString = GetString();
             sString[ GetIndex() ] = 0;
 
-            while(m_Gui.GetFont()->GetStringWidth(&sString.c_str()[ GetStart() ]) > GetWidth() - 5 || m_iCursorX > GetWidth() - 5)
+            while(m_Gui.GetFont().GetStringWidth(&sString.c_str()[ GetStart() ]) > GetWidth() - 5 || m_iCursorX > GetWidth() - 5)
             {
               SetStart(GetStart() + 1);
               SetIndex(GetIndex() - 1);
@@ -217,7 +217,7 @@ namespace Hades
           {
             GetParent()->SetFocussedElement(0);
 
-            tCallback pAction = GetCallback();
+            Callback pAction = GetCallback();
 
             if (pAction)
               pAction(GetString().c_str(), this);
@@ -273,7 +273,7 @@ namespace Hades
               SetIndex(GetIndex() + sString.length() - iPrevLen);
             }
 
-            while(m_Gui.GetFont()->GetStringWidth(&GetString().c_str()[ GetStart() ]) > GetWidth() - 5)
+            while(m_Gui.GetFont().GetStringWidth(&GetString().c_str()[ GetStart() ]) > GetWidth() - 5)
             {
               SetStart(GetStart() + 1);
               SetIndex(GetIndex() - 1);
@@ -307,7 +307,7 @@ namespace Hades
         sString[ iIndex ] = 0;
       }
 
-      m_iCursorX = m_Gui.GetFont()->GetStringWidth(sString.c_str());
+      m_iCursorX = m_Gui.GetFont().GetStringWidth(sString.c_str());
 
       m_iIndex = iIndex;
     }

@@ -45,7 +45,7 @@ bool g_Running = true;
 IDirect3DDevice9* g_pDevice = nullptr;
 D3DPRESENT_PARAMETERS D3DPresentParams;
 int g_MenuSize = 0;
-Hades::GUI::CGUI* gpGui = nullptr;
+Hades::GUI::GUI* gpGui = nullptr;
 bool bReset = false;
 HWND SandboxWnd = 0;
 const int WndWidth = 800, WndHeight = 600;
@@ -74,7 +74,7 @@ void AddMainMenuItem(Hades::GUI::CWindow* pWindow, const char* pszLabel,
   auto pButton = new Hades::GUI::CButton(*gpGui, 0);
   pButton->SetHeight(BUTTON_HEIGHT);
   pButton->SetWidth(100);
-  pButton->SetRelPos(Hades::GUI::CPos(15, g_MenuSize * 25 + 10));
+  pButton->SetRelPos(Hades::GUI::Pos(15, g_MenuSize * 25 + 10));
   pButton->SetString(pszLabel);
   pButton->SetString(pszWindow, 1);
   pButton->SetCallback(MainMenuCallback);
@@ -112,7 +112,7 @@ Hades::GUI::CWindow* CreateMainMenu()
 void LoadGUI(IDirect3DDevice9* pDevice)
 {
   // Create GUI
-  gpGui = new Hades::GUI::CGUI(pDevice);
+  gpGui = new Hades::GUI::GUI(pDevice);
 
   // Get current working directory
   std::wstring CurDir;
@@ -168,7 +168,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
   // If GUI handled message then there's nothing left to do
   if(gpGui && (gpGui->GetMouse().HandleMessage(uMsg, wParam, lParam) || 
-    gpGui->GetKeyboard()->HandleMessage(uMsg, wParam, lParam)))
+    gpGui->GetKeyboard().HandleMessage(uMsg, wParam, lParam)))
   {
     return 0;
   }

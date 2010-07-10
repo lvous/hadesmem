@@ -26,7 +26,7 @@ namespace Hades
 {
   namespace GUI
   {
-    CProgressBar::CProgressBar(CGUI& Gui, TiXmlElement * pElement)
+    CProgressBar::CProgressBar(GUI& Gui, TiXmlElement * pElement)
       : CElement(Gui)
     {
       SetElement(pElement);
@@ -45,14 +45,14 @@ namespace Hades
 
     void CProgressBar::Draw()
     {
-      CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
+      Pos MyPos = GetParent()->GetAbsPos() + GetRelPos();
 
-      m_Gui.DrawOutlinedBox(Pos.GetX(), Pos.GetY(), GetWidth(), GetHeight(), pInner->GetD3DColor(), pBorder->GetD3DColor());
+      m_Gui.DrawOutlinedBox(MyPos.GetX(), MyPos.GetY(), GetWidth(), GetHeight(), pInner->GetD3DColor(), pBorder->GetD3DColor());
 
       if (GetProgress())
-        pProgressBar->Draw(CPos(Pos.GetX() + 2, Pos.GetY() + 2), static_cast<int>((static_cast<float>(GetWidth()) - 4) / 100 * GetProgress()), GetHeight() - 4);
+        pProgressBar->Draw(Pos(MyPos.GetX() + 2, MyPos.GetY() + 2), static_cast<int>((static_cast<float>(GetWidth()) - 4) / 100 * GetProgress()), GetHeight() - 4);
 
-      m_Gui.GetFont()->DrawString(Pos.GetX() + GetWidth() / 2, Pos.GetY() + GetHeight() / 2, FT_CENTER|FT_VCENTER, pString, m_sBuf);
+      m_Gui.GetFont().DrawString(MyPos.GetX() + GetWidth() / 2, MyPos.GetY() + GetHeight() / 2, FT_CENTER|FT_VCENTER, pString, m_sBuf);
     }
 
     int CProgressBar::GetProgress() const
@@ -73,8 +73,8 @@ namespace Hades
       sStream << GetProgress() << static_cast<char>(37);
       m_sBuf = sStream.str();
 
-      m_iStrWidth = m_Gui.GetFont()->GetStringWidth(m_sBuf.c_str()) / 2;
-      m_iStrHeight = m_Gui.GetFont()->GetStringHeight() / 2;
+      m_iStrWidth = m_Gui.GetFont().GetStringWidth(m_sBuf.c_str()) / 2;
+      m_iStrHeight = m_Gui.GetFont().GetStringHeight() / 2;
     }
 
     void CProgressBar::UpdateTheme(int iIndex)

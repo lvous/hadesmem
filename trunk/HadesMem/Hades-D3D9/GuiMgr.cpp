@@ -88,7 +88,7 @@ namespace Hades
       m_pDevice = pDevice;
 
       // Create new GUI instance
-      m_pGui = new GUI::CGUI(pDevice);
+      m_pGui = new GUI::GUI(pDevice);
 
       // Get current working directory
       std::wstring CurDir;
@@ -192,9 +192,9 @@ namespace Hades
       pHelper->DrawBox(TopLeft, BottomRight, 2, D3DCOLOR_ARGB(255, 0, 255, 0));
 
       // Draw test string
-      GUI::CColor MyColor(255, 0, 0, 255);
-      m_pGui->GetFont()->DrawString(Viewport.X + 10, Viewport.Y + 10, 0, 
-        &MyColor, "Hades");
+      GUI::Colour MyColor(255, 0, 0, 255);
+      m_pGui->GetFont().DrawString(Viewport.X + 10, Viewport.Y + 10, 0, 
+        &MyColor, L"Hades");
     }
 
     // D3D9Mgr OnLostDevice callback
@@ -272,7 +272,7 @@ namespace Hades
 
       // Notify GUI of input events
       m_pGui->GetMouse().HandleMessage(uMsg, wParam, lParam);
-      m_pGui->GetKeyboard()->HandleMessage(uMsg, wParam, lParam);
+      m_pGui->GetKeyboard().HandleMessage(uMsg, wParam, lParam);
 
       // Block input when GUI is visible
       return !((m_pGui->IsVisible() || GuiToggled) && 

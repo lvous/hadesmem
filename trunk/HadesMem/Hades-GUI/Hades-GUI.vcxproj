@@ -69,6 +69,7 @@
     <ClInclude Include="CWindow.h" />
     <ClInclude Include="D3D9.h" />
     <ClInclude Include="Error.h" />
+    <ClInclude Include="Fwd.h" />
     <ClInclude Include="TinyXML\tinystr.h" />
     <ClInclude Include="TinyXML\tinyxml.h" />
   </ItemGroup>

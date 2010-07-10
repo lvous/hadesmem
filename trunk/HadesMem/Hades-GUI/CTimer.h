@@ -30,10 +30,10 @@ namespace Hades
 {
   namespace GUI
   {
-    class CTimer
+    class Timer
     {
     public:
-      CTimer();
+      Timer();
 
       void Start(float Seconds);
 

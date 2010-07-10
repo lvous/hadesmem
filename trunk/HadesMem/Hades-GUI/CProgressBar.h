@@ -33,10 +33,10 @@ namespace Hades
       int m_iProgress, m_iStrWidth, m_iStrHeight;
       std::string m_sBuf;
 
-      CColor * pInner, * pBorder, * pString;
-      CTexture * pProgressBar;
+      Colour * pInner, * pBorder, * pString;
+      Texture * pProgressBar;
     public:
-      CProgressBar(class CGUI& Gui, TiXmlElement* pElement);
+      CProgressBar(class GUI& Gui, TiXmlElement* pElement);
 
       void Draw();
 

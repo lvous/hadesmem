@@ -26,7 +26,7 @@ namespace Hades
 {
   namespace GUI
   {
-    CHorizontalSliderBar::CHorizontalSliderBar(CGUI& Gui) 
+    CHorizontalSliderBar::CHorizontalSliderBar(GUI& Gui) 
       : CElement(Gui)
     {
       SetDragged(false);
@@ -34,7 +34,7 @@ namespace Hades
       m_iMinValue = 0, m_iMaxValue = 0, m_iValue = 0;
     }
 
-    CHorizontalSliderBar::CHorizontalSliderBar(CGUI& Gui, TiXmlElement* pElement)
+    CHorizontalSliderBar::CHorizontalSliderBar(GUI& Gui, TiXmlElement* pElement)
       : CElement(Gui)
     {
       SetDragged(false);
@@ -100,21 +100,21 @@ namespace Hades
 
     void CHorizontalSliderBar::Draw()
     {
-      CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
+      Pos MyPos = GetParent()->GetAbsPos() + GetRelPos();
 
       SElementState * pState = GetElementState();
       if (pState)
       {
         D3DCOLOR d3dLineColor = pLines->GetD3DColor();
 
-        m_Gui.DrawLine(Pos.GetX(),					Pos.GetY() + TITLEBAR_HEIGHT / 2,Pos.GetX() + GetWidth(),		Pos.GetY() + TITLEBAR_HEIGHT / 2,		1, d3dLineColor);
-        m_Gui.DrawLine(Pos.GetX(),					Pos.GetY() + TITLEBAR_HEIGHT / 4, Pos.GetX(),					Pos.GetY() + TITLEBAR_HEIGHT / 4 * 3,	1, d3dLineColor);
-        m_Gui.DrawLine(Pos.GetX() + GetWidth(),		Pos.GetY() + TITLEBAR_HEIGHT / 4, Pos.GetX() + GetWidth(),		Pos.GetY() + TITLEBAR_HEIGHT / 4 * 3,	1, d3dLineColor);
-        m_Gui.DrawLine(Pos.GetX() + GetWidth() / 2,	Pos.GetY() + TITLEBAR_HEIGHT / 4, Pos.GetX() + GetWidth() / 2,	Pos.GetY() + TITLEBAR_HEIGHT / 4 * 3,	1, d3dLineColor);
+        m_Gui.DrawLine(MyPos.GetX(),					MyPos.GetY() + TITLEBAR_HEIGHT / 2,MyPos.GetX() + GetWidth(),		MyPos.GetY() + TITLEBAR_HEIGHT / 2,		1, d3dLineColor);
+        m_Gui.DrawLine(MyPos.GetX(),					MyPos.GetY() + TITLEBAR_HEIGHT / 4, MyPos.GetX(),					MyPos.GetY() + TITLEBAR_HEIGHT / 4 * 3,	1, d3dLineColor);
+        m_Gui.DrawLine(MyPos.GetX() + GetWidth(),		MyPos.GetY() + TITLEBAR_HEIGHT / 4, MyPos.GetX() + GetWidth(),		MyPos.GetY() + TITLEBAR_HEIGHT / 4 * 3,	1, d3dLineColor);
+        m_Gui.DrawLine(MyPos.GetX() + GetWidth() / 2,	MyPos.GetY() + TITLEBAR_HEIGHT / 4, MyPos.GetX() + GetWidth() / 2,	MyPos.GetY() + TITLEBAR_HEIGHT / 4 * 3,	1, d3dLineColor);
 
-        pSlider->Draw(CPos(Pos.GetX() + static_cast<int>(floor(static_cast<float>(GetWidth()) / (GetMaxValue() - GetMinValue()) * (GetValue() - GetMinValue()))) - 5, Pos.GetY() + 2), 10, TITLEBAR_HEIGHT - 4);
+        pSlider->Draw(Pos(MyPos.GetX() + static_cast<int>(floor(static_cast<float>(GetWidth()) / (GetMaxValue() - GetMinValue()) * (GetValue() - GetMinValue()))) - 5, MyPos.GetY() + 2), 10, TITLEBAR_HEIGHT - 4);
 
-        m_Gui.GetFont()->DrawString(Pos.GetX() + GetWidth() / 2, Pos.GetY() - 15, FT_CENTER, pString, GetFormatted());
+        m_Gui.GetFont().DrawString(MyPos.GetX() + GetWidth() / 2, MyPos.GetY() - 15, FT_CENTER, pString, GetFormatted());
       }
     }
 
@@ -127,25 +127,25 @@ namespace Hades
         m_pUpdater(reinterpret_cast<const char*>(GetValue()), this);
     }
 
-    void CHorizontalSliderBar::MouseMove(CMouse & pMouse)
+    void CHorizontalSliderBar::MouseMove(Mouse & pMouse)
     {
-      CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
+      Pos MyPos = GetParent()->GetAbsPos() + GetRelPos();
 
       if (GetDragged())
       {
-        CPos mousePos = pMouse.GetPos();
+        Pos mousePos = pMouse.GetPos();
 
         if (mousePos.GetX() == -1 && mousePos.GetY() == -1)
           mousePos = pMouse.GetSavedPos();
 
-        if (mousePos.GetX() < Pos.GetX())
+        if (mousePos.GetX() < MyPos.GetX())
           SetValue(GetMinValue());
-        else if (mousePos.GetX() > Pos.GetX() + GetWidth())
+        else if (mousePos.GetX() > MyPos.GetX() + GetWidth())
           SetValue(GetMaxValue());
         else
         {
           for(int iIndex = GetMinValue(); iIndex < GetMaxValue(); iIndex++)
-            if (mousePos.GetX() >= Pos.GetX() + floor(static_cast<float>(GetWidth()) / (GetMaxValue() - GetMinValue()) * (iIndex - GetMinValue())) && mousePos.GetX() <= Pos.GetX() + floor(static_cast<float>(GetWidth()) / (GetMaxValue() - GetMinValue()) * (iIndex + 1 - GetMinValue())))
+            if (mousePos.GetX() >= MyPos.GetX() + floor(static_cast<float>(GetWidth()) / (GetMaxValue() - GetMinValue()) * (iIndex - GetMinValue())) && mousePos.GetX() <= MyPos.GetX() + floor(static_cast<float>(GetWidth()) / (GetMaxValue() - GetMinValue()) * (iIndex + 1 - GetMinValue())))
             {
               SetValue(iIndex);
               break;
@@ -156,7 +156,7 @@ namespace Hades
           GetCallback()(reinterpret_cast<const char*>(GetValue()), this);
       }
       else
-        SetElementState(SetMouseOver(m_Gui.GetMouse().InArea(Pos.GetX(), Pos.GetY(), GetWidth(), TITLEBAR_HEIGHT))?"MouseOver":"Norm");
+        SetElementState(SetMouseOver(m_Gui.GetMouse().InArea(MyPos.GetX(), MyPos.GetY(), GetWidth(), TITLEBAR_HEIGHT))?"MouseOver":"Norm");
     }
 
     bool CHorizontalSliderBar::KeyEvent(SKey sKey)

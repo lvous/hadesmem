@@ -26,7 +26,7 @@ namespace Hades
 {
   namespace GUI
   {
-    CText::CText(CGUI& Gui, TiXmlElement* pElement)
+    CText::CText(GUI& Gui, TiXmlElement* pElement)
       : CElement(Gui)
     {
       SetElement(pElement);
@@ -41,9 +41,9 @@ namespace Hades
 
     void CText::Draw()
     {
-      CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
+      Pos Pos = GetParent()->GetAbsPos() + GetRelPos();
 
-      m_Gui.GetFont()->DrawString(Pos.GetX(), Pos.GetY(), 0, pString, GetFormatted(), GetWidth());
+      m_Gui.GetFont().DrawString(Pos.GetX(), Pos.GetY(), 0, pString, GetFormatted(), GetWidth());
     }
 
     void CText::PreDraw()
@@ -51,11 +51,11 @@ namespace Hades
       GetString(true);
     }
 
-    void CText::MouseMove(CMouse & pMouse)
+    void CText::MouseMove(Mouse & pMouse)
     {
-      CPos Pos = *GetParent()->GetAbsPos() + *GetRelPos();
+      Pos Pos = GetParent()->GetAbsPos() + GetRelPos();
 
-      SetElementState(SetMouseOver(pMouse.InArea(Pos.GetX(), Pos.GetY(), m_Gui.GetFont()->GetStringWidth(GetFormatted().c_str()), m_Gui.GetFont()->GetStringHeight()))?"MouseOver":"Norm");
+      SetElementState(SetMouseOver(pMouse.InArea(Pos.GetX(), Pos.GetY(), m_Gui.GetFont().GetStringWidth(GetFormatted().c_str()), m_Gui.GetFont().GetStringHeight()))?"MouseOver":"Norm");
     }
 
     void CText::UpdateTheme(int iIndex)

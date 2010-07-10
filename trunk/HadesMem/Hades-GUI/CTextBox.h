@@ -33,20 +33,20 @@ namespace Hades
       int m_iStart;
 
       bool m_bUpArrow_MouseOver, m_bDownArrow_MouseOver, m_bSlider_MouseOver, m_bDragging;
-      CTimer m_tUpArrow, m_tDownArrow;
+      Timer m_tUpArrow, m_tDownArrow;
 
       CHelperSlider * pSlider;
 
       std::vector<std::string> m_vStrings;
 
-      CColor * pString, * pInner, * pBorder;
+      Colour * pString, * pInner, * pBorder;
 
     public:
-      CTextBox(class CGUI& Gui, TiXmlElement* pElement);
+      CTextBox(class GUI& Gui, TiXmlElement* pElement);
 
       void Draw();
       void PreDraw();
-      void MouseMove(CMouse & pMouse);
+      void MouseMove(Mouse & pMouse);
       bool KeyEvent(SKey sKey);
 
       void AddString(std::string sString);
