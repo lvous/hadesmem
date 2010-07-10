@@ -11,4 +11,6 @@
 	<Hook Name="d3d9.dll!IDirect3DDevice9::Release" Enabled="1"/>
 	
 	<Hook Name="kernel32.dll!CreateProcessInternalW" Enabled="1"/>
+	
+	<Hook Name="kernel32.dll!QueryPerformanceCounter" Enabled="1"/>
 </Hooks>
