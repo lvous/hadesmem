@@ -60,10 +60,10 @@ namespace Hades
       ~LuaState();
 
       // Implicitly act as a lua_State pointer
-      operator lua_State*() const;
+      virtual operator lua_State*() const;
 
       // Implicitly act as a lua_State pointer
-      operator lua_State*();
+      virtual operator lua_State*();
 
     protected:
       // Constructor
@@ -85,16 +85,16 @@ namespace Hades
       LuaMgr();
 
       // Get LUA state
-      const LuaState& GetState() const;
+      virtual const LuaState& GetState() const;
 
       // Run a LUA script on disk
-      void RunFile(std::string const& Path) const;
+      virtual void RunFile(std::string const& Path) const;
 
       // Run a LUA script from a string
-      std::vector<std::string> RunString(std::string const& Script) const;
+      virtual std::vector<std::string> RunString(std::string const& Script) const;
 
       // Reports an error to the console
-      void ReportError(int Status) const;
+      virtual void ReportError(int Status) const;
 
     private:
       // Lua state

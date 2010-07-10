@@ -33,6 +33,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #pragma warning(pop)
 
 // Hades
+#include "Speeder.h"
 #include "Hades-Kernel/Kernel.h"
 
 // Initialize Hades-Input
@@ -70,6 +71,9 @@ extern "C" __declspec(dllexport) DWORD __stdcall Initialize(
     // Debug output
     std::wcout << boost::wformat(L"Hades-HXGenHack::Initialize: Kernel = %p.") 
       %pKernel << std::endl;
+
+    // Initialize speedhack
+    Hades::HXGenHack::Speeder::Startup(pKernel);
   }
   catch (boost::exception const& e)
   {

@@ -392,7 +392,7 @@ namespace Hades
       if (!ConfigFile)
       {
         BOOST_THROW_EXCEPTION(KernelError() << 
-          ErrorFunction("Loader::LoadHookConfig") << 
+          ErrorFunction("Kernel::LoadHookConfig") << 
           ErrorString("Could not open config file."));
       }
 
@@ -429,7 +429,7 @@ namespace Hades
         if (Name.empty() || Enabled.empty())
         {
           BOOST_THROW_EXCEPTION(KernelError() << 
-            ErrorFunction("Loader::LoadHookConfig") << 
+            ErrorFunction("Kernel::LoadHookConfig") << 
             ErrorString("Invalid hook attributes."));
         }
 
@@ -443,9 +443,13 @@ namespace Hades
         catch (boost::bad_lexical_cast const& /*e*/)
         {
           BOOST_THROW_EXCEPTION(KernelError() << 
-            ErrorFunction("Loader::LoadHookConfig") << 
+            ErrorFunction("Kernel::LoadHookConfig") << 
             ErrorString("Invalid hook attributes."));
         }
+        
+        // Debug output
+        std::wcout << boost::wformat(L"Kernel::LoadHookConfig: Name = "
+          L"\"%ls\", Enabled = %ls.") %Name %EnabledReal << std::endl;
 
         // Add current hook data
         m_HookConfig[Name] = EnabledReal;
@@ -460,7 +464,7 @@ namespace Hades
       if (Iter == m_HookConfig.end())
       {
         BOOST_THROW_EXCEPTION(KernelError() << 
-          ErrorFunction("Loader::IsHookEnabled") << 
+          ErrorFunction("Kernel::IsHookEnabled") << 
           ErrorString("Invalid hook name."));
       }
       return Iter->second;
@@ -477,6 +481,12 @@ namespace Hades
     {
       return L"Hades [Session " + boost::lexical_cast<std::wstring>(
         GetSessionId()) + L"]";
+    }
+
+    // Get lua manager
+    LuaMgr& Kernel::GetLuaMgr()
+    {
+      return m_LuaMgr;
     }
   }
 }

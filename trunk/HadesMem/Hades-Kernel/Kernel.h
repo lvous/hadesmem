@@ -108,6 +108,9 @@ namespace Hades
       // Get session name
       virtual std::wstring GetSessionName();
 
+      // Get lua manager
+      virtual LuaMgr& GetLuaMgr();
+
       // Get static Kernel instance
       static Kernel* GetKernelInstance();
 
