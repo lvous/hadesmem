@@ -12,5 +12,6 @@
 	
 	<Hook Name="kernel32.dll!CreateProcessInternalW" Enabled="1"/>
 	
+	<Hook Name="kernel32.dll!GetTickCount" Enabled="1"/>
 	<Hook Name="kernel32.dll!QueryPerformanceCounter" Enabled="1"/>
 </Hooks>

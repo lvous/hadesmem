@@ -42,15 +42,18 @@ namespace Hades
       static void Startup(Kernel::Kernel* pKernel);
 
       // Get speed multiplier
-      static DWORD GetSpeed() { return m_Multiplier; }
+      static DWORD GetSpeed();
 
       // Set speed multiplier
-      static void SetSpeed(DWORD Multiplier) { m_Multiplier = Multiplier; }
+      static void SetSpeed(DWORD Multiplier);
 
     private:
-      // API hook function implementation
+      // QueryPerformanceCounter hook function
       static BOOL WINAPI QueryPerformanceCounter_Hook(
         LARGE_INTEGER* lpPerformanceCount);
+
+      // GetTickCount hook function
+      static DWORD WINAPI GetTickCount_Hook();
 
       // Speed multiplier
       static DWORD m_Multiplier;
@@ -58,6 +61,9 @@ namespace Hades
       // QueryPerformanceCounter hook
       static std::shared_ptr<Hades::Memory::PatchDetour> 
         m_pQueryPerformanceCounterHk;
+
+      // GetTickCount hook
+      static std::shared_ptr<Hades::Memory::PatchDetour> m_pGetTickCountHk;
     };
   }
 }

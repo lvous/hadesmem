@@ -39,6 +39,9 @@ namespace Hades
     std::shared_ptr<Hades::Memory::PatchDetour> Speeder::
       m_pQueryPerformanceCounterHk;
 
+    // GetTickCount hook
+    std::shared_ptr<Hades::Memory::PatchDetour> Speeder::m_pGetTickCountHk;
+
     // Constructor
     void Speeder::Startup(Kernel::Kernel* pKernel)
     {
@@ -53,6 +56,37 @@ namespace Hades
           ErrorFunction("Speeder::Startup") << 
           ErrorString("Could not load Kernel32.") << 
           ErrorCodeWin(LastError));
+      }
+
+      // Hook if required
+      if (!m_pGetTickCountHk && pKernel->IsHookEnabled(
+        L"kernel32.dll!GetTickCount"))
+      {
+        // Get address of GetTickCount
+        FARPROC pGetTickCount = GetProcAddress(Kernel32Mod, "GetTickCount");
+        if (!pGetTickCount)
+        {
+          DWORD LastError = GetLastError();
+          BOOST_THROW_EXCEPTION(SpeederError() << 
+            ErrorFunction("Speeder::Startup") << 
+            ErrorString("Could not get address of GetTickCount.") << 
+            ErrorCodeWin(LastError));
+        }
+
+        // Target and detour pointer
+        PBYTE Target = reinterpret_cast<PBYTE>(pGetTickCount);
+        PBYTE Detour = reinterpret_cast<PBYTE>(&GetTickCount_Hook);
+
+        // Debug output
+        std::wcout << "Speeder::Startup: Hooking kernel32.dll!GetTickCount." 
+          << std::endl;
+        std::wcout << boost::wformat(L"Speeder::Startup: Target = %p, "
+          L"Detour = %p.") %Target %Detour << std::endl;
+
+        // Hook kernel32.dll!GetTickCount
+        m_pGetTickCountHk.reset(new Hades::Memory::PatchDetour(
+          *pKernel->GetMemoryMgr(), Target, Detour));
+        m_pGetTickCountHk->Apply();
       }
 
       // Hook if required
@@ -81,7 +115,7 @@ namespace Hades
         std::wcout << boost::wformat(L"Speeder::Startup: Target = %p, "
           L"Detour = %p.") %Target %Detour << std::endl;
 
-        // Hook user32.dll!SetCursor
+        // Hook kernel32.dll!QueryPerformanceCounter
         m_pQueryPerformanceCounterHk.reset(new Hades::Memory::PatchDetour(
           *pKernel->GetMemoryMgr(), Target, Detour));
         m_pQueryPerformanceCounterHk->Apply();
@@ -108,7 +142,7 @@ namespace Hades
       auto pQueryPerformanceCounter = 
         reinterpret_cast<tQueryPerformanceCounter>(
         m_pQueryPerformanceCounterHk->GetTrampoline());
-      DWORD Result = pQueryPerformanceCounter(lpPerformanceCount);
+      BOOL Result = pQueryPerformanceCounter(lpPerformanceCount);
 
       // Sanity check
       if (!lpPerformanceCount)
@@ -148,6 +182,60 @@ namespace Hades
 
       // Return
       return Result;
+    }
+
+    // GetTickCount hook function
+    DWORD WINAPI Speeder::GetTickCount_Hook()
+    {
+      // Call original func
+      typedef DWORD (WINAPI* tGetTickCount)();
+      auto pGetTickCount = reinterpret_cast<tGetTickCount>(
+        m_pGetTickCountHk->GetTrampoline());
+      DWORD Result = pGetTickCount();
+
+      // Use TLS for vales from last call
+      static boost::thread_specific_ptr<DWORD> LastFake;
+      static boost::thread_specific_ptr<DWORD> LastReal;
+      if (!LastFake.get())
+      {
+        LastFake.reset(new DWORD(0));
+      }
+      if (!LastReal.get())
+      {
+        LastReal.reset(new DWORD(0));
+      }
+
+      // Initialize timing variables if they are not already
+      if(*LastFake == 0 || *LastReal == 0)
+      {
+        *LastFake = Result;
+        *LastReal = Result;
+      }
+
+      // Manipulate the timing value using the multiplier supplied
+      DWORD NewVal = *LastFake + ((Result - *LastReal) * GetSpeed());
+
+      // Save old values
+      *LastReal = Result;
+      *LastFake = NewVal;
+
+      // Overwrite with new values
+      Result = NewVal;
+
+      // Return
+      return Result;
+    }
+
+    // Get speed multiplier
+    DWORD Speeder::GetSpeed()
+    {
+      return m_Multiplier;
+    }
+
+    // Set speed multiplier
+    void Speeder::SetSpeed(DWORD Multiplier)
+    {
+      m_Multiplier = Multiplier;
     }
   }
 }
