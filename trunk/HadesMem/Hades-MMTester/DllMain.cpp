@@ -29,64 +29,58 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Boost
 #pragma warning(push, 1)
 #include <boost/format.hpp>
+#include <boost/thread/tss.hpp>
+#include <boost/thread/thread.hpp>
 #include <boost/exception/all.hpp>
 #pragma warning(pop)
 
 // Hades
 #include "Hades-Common/Logger.h"
 
-extern "C" __declspec(dllexport) DWORD __stdcall Initialize(HMODULE Module)
+// Using a VEH to do exception dispatching. Necessary when the target 
+// has DEP enabled.
+LONG CALLBACK MyVectoredHandler(__in  PEXCEPTION_POINTERS /*ExceptionInfo*/)
 {
+  return EXCEPTION_CONTINUE_SEARCH;
+}
+
+extern "C" __declspec(dllexport) DWORD __stdcall Initialize(HMODULE /*Module*/)
+{
+  // Break to debugger if present
+  if (IsDebuggerPresent())
+  {
+    DebugBreak();
+  }
+  
+  // Register VEH
+  if (!AddVectoredExceptionHandler(1, &MyVectoredHandler))
+  {
+    MessageBox(nullptr, L"AddVEH failed!", L"Hades-MMTester", MB_OK);
+  }
+
+  // Test TLS callbacks
+  boost::thread_specific_ptr<DWORD> TlsTest;
+  if (!TlsTest.get())
+  {
+    TlsTest.reset(new DWORD(0));
+  }
+  *TlsTest = 1022;
+
+  // Test EH
   try
   {
-    // Break to debugger if present
-    if (IsDebuggerPresent())
-    {
-      DebugBreak();
-    }
-
-    // Set up locale
-    std::locale::global(std::locale(""));
-
-    // Initialize logger
-    Hades::Util::InitLogger(L"Hades-MemHackDll-Log", 
-      L"Hades-MemHackDll-Debug");
-
-    // Hades version number
-    std::wstring const VerNum(L"TRUNK");
-
-    // Version and copyright output
-#if defined(_M_X64)
-    std::wcout << "Hades-MemHackDll AMD64 [Version " << VerNum << "]\n";
-#elif defined(_M_IX86)
-    std::wcout << "Hades-MemHackDll IA32 [Version " << VerNum << "]\n";
-#else
-#error Unsupported platform!
-#endif
-    std::wcout << "Copyright (C) 2010 Cypherjb. All rights reserved." << 
-      std::endl;
-    std::wcout << "Website: http://www.cypherjb.com/, "
-      "Email: cypher.jb@gmail.com." << std::endl;
-    std::wcout << "Built on " << __DATE__ << " at " << __TIME__ << "." << 
-      std::endl << std::endl;
-
-    // Debug output
-    std::wcout << boost::wformat(L"Initialize: Module = %p.") %Module 
-      << std::endl;
-  }
-  catch (boost::exception const& e)
-  {
-    // Dump error information
-    MessageBoxA(NULL, boost::diagnostic_information(e).c_str(), 
-      "Hades-MemHackDll", MB_OK);
+    throw std::exception("Test EH!");
   }
   catch (std::exception const& e)
   {
-    // Dump error information
-    MessageBoxA(NULL, e.what(), "Hades-MemHackDll", MB_OK);
+    // Test imports
+    MessageBoxA(nullptr, e.what(), "Hades-MMTester", MB_OK);
   }
 
-  // Success
+  // Test imports
+  MessageBox(nullptr, L"Test IAT", L"Hades-MMTester", MB_OK);
+
+  // Test return values
   return 0;
 }
 

@@ -92,6 +92,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hades-DotNetTest", "Hades-D
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hades-AD", "Hades-AD\Hades-AD.csproj", "{6E149A9B-7739-463E-B50F-AFB5EA06727E}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Hades-MMTester", "Hades-MMTester\Hades-MMTester.vcxproj", "{A1D45EE3-7144-4657-869E-4A2415A59839}"
+EndProject
 Global
 	GlobalSection(SubversionScc) = preSolution
 		Svn-Managed = True
@@ -248,6 +250,14 @@ Global
 		{6E149A9B-7739-463E-B50F-AFB5EA06727E}.Release|Win32.Build.0 = Release|Any CPU
 		{6E149A9B-7739-463E-B50F-AFB5EA06727E}.Release|x64.ActiveCfg = Release|Any CPU
 		{6E149A9B-7739-463E-B50F-AFB5EA06727E}.Release|x64.Build.0 = Release|Any CPU
+		{A1D45EE3-7144-4657-869E-4A2415A59839}.Debug|Win32.ActiveCfg = Debug|Win32
+		{A1D45EE3-7144-4657-869E-4A2415A59839}.Debug|Win32.Build.0 = Debug|Win32
+		{A1D45EE3-7144-4657-869E-4A2415A59839}.Debug|x64.ActiveCfg = Debug|x64
+		{A1D45EE3-7144-4657-869E-4A2415A59839}.Debug|x64.Build.0 = Debug|x64
+		{A1D45EE3-7144-4657-869E-4A2415A59839}.Release|Win32.ActiveCfg = Release|Win32
+		{A1D45EE3-7144-4657-869E-4A2415A59839}.Release|Win32.Build.0 = Release|Win32
+		{A1D45EE3-7144-4657-869E-4A2415A59839}.Release|x64.ActiveCfg = Release|x64
+		{A1D45EE3-7144-4657-869E-4A2415A59839}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

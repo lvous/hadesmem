@@ -105,6 +105,7 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <AdditionalOptions>/D _WIN32_WINNT=0x0502 /D _SCL_SECURE_NO_WARNINGS /D BEA_ENGINE_STATIC %(AdditionalOptions)</AdditionalOptions>
       <DisableSpecificWarnings>4503;4251;</DisableSpecificWarnings>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -130,6 +131,7 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <AdditionalOptions>/D _WIN32_WINNT=0x0502 /D _SCL_SECURE_NO_WARNINGS /D BEA_ENGINE_STATIC %(AdditionalOptions)</AdditionalOptions>
       <DisableSpecificWarnings>4503;4251;</DisableSpecificWarnings>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -157,6 +159,7 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <AdditionalOptions>/D _WIN32_WINNT=0x0502 /D _SCL_SECURE_NO_WARNINGS /D BEA_ENGINE_STATIC %(AdditionalOptions)</AdditionalOptions>
       <DisableSpecificWarnings>4503;4251;</DisableSpecificWarnings>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -186,6 +189,7 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <AdditionalOptions>/D _WIN32_WINNT=0x0502 /D _SCL_SECURE_NO_WARNINGS /D BEA_ENGINE_STATIC %(AdditionalOptions)</AdditionalOptions>
       <DisableSpecificWarnings>4503;4251;</DisableSpecificWarnings>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
