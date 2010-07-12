@@ -1,4 +1,4 @@
-MyMem = HadesMem.CreateMemoryMgr("Steam.exe");
+MyMem = HadesMem.CreateMemoryMgr("Taskmgr.exe");
 
 HadesMem.WriteLn("Process ID: " .. MyMem:GetProcessID());
 
