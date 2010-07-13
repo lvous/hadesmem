@@ -20,6 +20,8 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Windows API
 #include <crtdbg.h>
 #include <Windows.h>
+#include <Winternl.h>
+#include <WinNT.h>
 
 // C++ Standard Library
 #include <string>
@@ -41,6 +43,8 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // has DEP enabled.
 LONG CALLBACK MyVectoredHandler(__in  PEXCEPTION_POINTERS /*ExceptionInfo*/)
 {
+  PVOID pTeb = NtCurrentTeb();
+  pTeb;
   return EXCEPTION_CONTINUE_SEARCH;
 }
 

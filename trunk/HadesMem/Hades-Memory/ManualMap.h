@@ -85,7 +85,7 @@ namespace Hades
       : m_Memory(MyMemory)
     { }
 
-    // Manually map MyJitFunc DLL
+    // Manually map DLL
     PVOID ManualMap::Map(std::wstring const& Path, std::string const& Export, 
       bool InjectHelper) const
     {
@@ -104,7 +104,7 @@ namespace Hades
       std::vector<BYTE> ModuleFileBuf((std::istreambuf_iterator<char>(
         ModuleFile)), std::istreambuf_iterator<char>());
 
-      // Ensure file is MyJitFunc valid PE file
+      // Ensure file is a valid PE file
       std::wcout << "Performing PE file format validation." << std::endl;
       auto pBase = &ModuleFileBuf[0];
       auto const pDosHeader = reinterpret_cast<PIMAGE_DOS_HEADER>(pBase);
