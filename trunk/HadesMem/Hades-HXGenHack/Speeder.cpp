@@ -17,9 +17,6 @@ You should have received a copy of the GNU General Public License
 along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-// Hades
-#include "Speeder.h"
-
 // C++ Standard Library
 #include <iostream>
 
@@ -27,6 +24,9 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #pragma warning(push, 1)
 #include <boost/thread.hpp>
 #pragma warning(pop)
+
+// Hades
+#include "Speeder.h"
 
 namespace Hades
 {
