@@ -105,7 +105,8 @@ namespace Hades
       }
 
       // Set new working directory to GUI library folder
-      std::wstring GuiPath((Windows::GetSelfDirPath() / L"/Gui/").file_string());
+      std::wstring GuiPath((Windows::GetSelfDirPath() / L"/Gui/").
+        file_string());
       if (!SetCurrentDirectory(GuiPath.c_str()))
       {
         DWORD LastError = GetLastError();
@@ -131,8 +132,8 @@ namespace Hades
         }
         else
         {
-          std::wcout << "GuiMgr::OnInitialize: Warning! Could not find console "
-            "input box." << std::endl;
+          std::wcout << "GuiMgr::OnInitialize: Warning! Could not find "
+            "console input box." << std::endl;
         }
       }
       else
@@ -251,8 +252,8 @@ namespace Hades
         auto pConsole = m_pGui->GetWindowByString("HADES_CONSOLE_WINDOW", 1);
         if (!pConsole)
         {
-          std::wcout << "GuiMgr::Print: Warning! Could not find console window." 
-            << std::endl;
+          std::wcout << "GuiMgr::Print: Warning! Could not find console "
+            "window." << std::endl;
         }
         else
         {
@@ -260,8 +261,8 @@ namespace Hades
           auto pInBox = pConsole->GetElementByString("HADES_CONSOLE_INPUT", 1);
           if (!pInBox)
           {
-            std::wcout << "GuiMgr::Print: Warning! Could not find console input "
-              "box." << std::endl;
+            std::wcout << "GuiMgr::Print: Warning! Could not find console "
+              "input box." << std::endl;
           }
           else
           {
@@ -454,6 +455,10 @@ namespace Hades
       m_ConsoleHistory.push_back(pszArgs);
       m_HistoryPos = static_cast<long>(m_ConsoleHistory.size());
 
+      // Debug output
+      std::cout << "GuiMgr::OnConsoleInput: Input = \"" << pszArgs << "\"." << 
+        std::endl;
+
       // Forced return value
       return std::string();
     }
@@ -465,8 +470,8 @@ namespace Hades
       auto pConsole = m_pGui->GetWindowByString("HADES_CONSOLE_WINDOW", 1);
       if (!pConsole)
       {
-        std::wcout << "GuiMgr::Print: Warning! Could not find console window." << 
-          std::endl;
+        std::wcout << "GuiMgr::Print: Warning! Could not find console "
+          "window." << std::endl;
         return;
       }
 
@@ -482,6 +487,10 @@ namespace Hades
       // Add output
       auto pOutBoxReal = dynamic_cast<GUI::CTextBox*>(pOutBox);
       pOutBoxReal->AddString(Output);
+
+      // Debug output
+      std::cout << "GuiMgr::Print: Output = \"" << Output << "\"." << 
+        std::endl;
     }
 
     // Register callback for OnConsoleInput event
