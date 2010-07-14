@@ -136,6 +136,10 @@ namespace Hades
           AppName = L"<None>";
         }
 
+        // If suspended process is requested by caller don't automatically 
+        // resume.
+        bool ResumeProc = !(dwCreationFlags & CREATE_SUSPENDED);
+
         // Call original API
         BOOL RetVal = pCreateProcessW(
           Unknown1, 
@@ -151,8 +155,9 @@ namespace Hades
           lpProcessInformation, 
           Unknown2);
 
-        // Make sure thread is resumed
-        Windows::EnsureResumeThread ProcThread(lpProcessInformation->hThread);
+        // Ensure thread is resumed if required
+        Windows::EnsureResumeThread ProcThread(ResumeProc ? 
+          lpProcessInformation->hThread : nullptr);
 
         // Debug output
         std::wcout << boost::wformat(L"Loader::CreateProcessInternalW_Hook: "
