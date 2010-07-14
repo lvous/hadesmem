@@ -102,6 +102,12 @@ namespace Hades
 
       // GUI mutex
       boost::mutex m_GuiMutex;
+
+      // Console history
+      std::vector<std::string> m_ConsoleHistory;
+
+      // Console history index
+      long m_HistoryPos;
     };
   }
 }

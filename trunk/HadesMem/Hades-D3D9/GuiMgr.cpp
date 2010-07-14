@@ -43,7 +43,9 @@ namespace Hades
       m_CursorX(0), 
       m_CursorY(0), 
       m_CallsOnConsoleInput(), 
-      m_GuiMutex()
+      m_GuiMutex(), 
+      m_ConsoleHistory(), 
+      m_HistoryPos(0)
     {
       // Register for D3D events
       D3D9Mgr::RegisterOnInitialize(std::bind(&GuiMgr::OnInitialize, this, 
@@ -270,6 +272,80 @@ namespace Hades
         }
       }
 
+      // Check for Up/Down keys for console history support
+      if (uMsg == WM_KEYDOWN && (wParam == VK_UP || wParam == VK_DOWN))
+      {
+        // Get console window
+        auto pConsole = m_pGui->GetWindowByString("HADES_CONSOLE_WINDOW", 1);
+        if (!pConsole)
+        {
+          std::wcout << "GuiMgr::Print: Warning! Could not find console "
+            "window." << std::endl;
+        }
+        else
+        {
+          // Get input box
+          auto pInBox = pConsole->GetElementByString("HADES_CONSOLE_INPUT", 1);
+          if (!pInBox)
+          {
+            std::wcout << "GuiMgr::Print: Warning! Could not find console "
+              "input box." << std::endl;
+          }
+          else
+          {
+            // Check if input box is focused element
+            auto pInBoxReal = dynamic_cast<GUI::CEditBox*>(pInBox);
+            if (pInBoxReal == pConsole->GetFocussedElement())
+            {
+              // Handle up key
+              if (wParam == VK_UP)
+              {
+                // Get new history position
+                m_HistoryPos = std::max<long>(m_HistoryPos - 1, 
+                  static_cast<long>(-1));
+
+                // If history position is valid display target history entry, 
+                // otherwise clear the input box
+                if (m_HistoryPos >= 0)
+                {
+                  pInBoxReal->SetString(m_ConsoleHistory[m_HistoryPos]);
+                  pInBoxReal->SetStart(0);
+                  pInBoxReal->SetIndex(0);
+                }
+                else
+                {
+                  pInBoxReal->SetString("");
+                  pInBoxReal->SetStart(0);
+                  pInBoxReal->SetIndex(0);
+                }
+              }
+              // Handle down key
+              else if (wParam == VK_DOWN)
+              {
+                // Get new history position
+                m_HistoryPos = std::min<long>(m_HistoryPos + 1, 
+                  static_cast<long>(m_ConsoleHistory.size()));
+
+                // If history position is valid display target history entry, 
+                // otherwise clear the input box
+                if (m_HistoryPos < static_cast<long>(m_ConsoleHistory.size()))
+                {
+                  pInBoxReal->SetString(m_ConsoleHistory[m_HistoryPos]);
+                  pInBoxReal->SetStart(0);
+                  pInBoxReal->SetIndex(0);
+                }
+                else
+                {
+                  pInBoxReal->SetString("");
+                  pInBoxReal->SetStart(0);
+                  pInBoxReal->SetIndex(0);
+                }
+              }
+            }
+          }
+        }
+      }
+
       // Notify GUI of input events
       m_pGui->GetMouse().HandleMessage(uMsg, wParam, lParam);
       m_pGui->GetKeyboard().HandleMessage(uMsg, wParam, lParam);
@@ -373,6 +449,10 @@ namespace Hades
       pEditBox->SetStart(0);
       pEditBox->SetIndex(0);
       pEditBox->GetParent()->SetFocussedElement(pElement);
+
+      // Add current entry to history
+      m_ConsoleHistory.push_back(pszArgs);
+      m_HistoryPos = static_cast<long>(m_ConsoleHistory.size());
 
       // Forced return value
       return std::string();
