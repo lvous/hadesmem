@@ -140,6 +140,8 @@ namespace Hades
     MakeCleanupClass(EnsureFreeResource, HGLOBAL, FreeResource);
     MakeCleanupClass(EnsureDeleteDc, HDC, DeleteDC);
     MakeCleanupClass(EnsureDeleteObject, HBITMAP, DeleteObject);
+    MakeCleanupClass(EnsureDestroyIcon, HICON, DestroyIcon);
+    MakeCleanupClass(EnsureDestroyMenu, HMENU, DestroyMenu);
 
     // Special class for ensuring COM is uninitialized
     class EnsureCoUninitialize
