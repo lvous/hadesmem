@@ -49,21 +49,54 @@ namespace Hades
     LRESULT LoaderWindow::OnCreate( UINT /*nMsg*/, WPARAM /*wParam*/, 
       LPARAM /*lParam*/, BOOL& /*bHandled*/ )
     {
-      // Load Hades icon from resources
-      m_HadesIcon = static_cast<HICON>(LoadImage(GetModuleHandle(NULL), 
-        MAKEINTRESOURCE(IDI_ICON_LOGO), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE));
-      if (!m_HadesIcon)
+      try
       {
-        DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(HadesError() << 
-          ErrorFunction("wWinMain") << 
-          ErrorString("Could not load Hades icon.") << 
-          ErrorCodeWin(LastError));
-      }
+        // Resize window
+        if (!ResizeClient(1280, 720))
+        {
+          BOOST_THROW_EXCEPTION(Hades::HadesError() << 
+            Hades::ErrorFunction("LoaderWindow::OnCreate") << 
+            Hades::ErrorString("Could not resize loader window."));
+        }
 
-      // Set window icon as Hades icon
-      SetIcon(m_HadesIcon, TRUE);
-      SetIcon(m_HadesIcon, FALSE);
+        // Show window
+        ShowWindow(SW_SHOW);
+
+        // Center window
+        if (!CenterWindow())
+        {
+          BOOST_THROW_EXCEPTION(Hades::HadesError() << 
+            Hades::ErrorFunction("LoaderWindow::OnCreate") << 
+            Hades::ErrorString("Could not center loader window."));
+        }
+
+        // Load Hades icon from resources
+        m_HadesIcon = static_cast<HICON>(LoadImage(GetModuleHandle(NULL), 
+          MAKEINTRESOURCE(IDI_ICON_LOGO), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE));
+        if (!m_HadesIcon)
+        {
+          DWORD LastError = GetLastError();
+          BOOST_THROW_EXCEPTION(HadesError() << 
+            ErrorFunction("LoaderWindow::OnCreate") << 
+            ErrorString("Could not load Hades icon.") << 
+            ErrorCodeWin(LastError));
+        }
+
+        // Set window icon as Hades icon
+        SetIcon(m_HadesIcon, TRUE);
+        SetIcon(m_HadesIcon, FALSE);
+      }
+      catch (boost::exception const& e)
+      {
+        // Dump error information
+        MessageBoxA(NULL, boost::diagnostic_information(e).c_str(), 
+          "Hades-Loader", MB_OK);
+      }
+      catch (std::exception const& e)
+      {
+        // Dump error information
+        MessageBoxA(NULL, e.what(), "Hades-Loader", MB_OK);
+      }
 
       return 0;
     }
@@ -72,11 +105,25 @@ namespace Hades
     LRESULT CALLBACK LoaderWindow::WindowProc(HWND hWnd, UINT uMsg, 
       WPARAM wParam, LPARAM lParam)
     {
-      // Notify GUI library of message
-      if(m_pGui && (m_pGui->GetMouse().HandleMessage(uMsg, wParam, lParam) || 
-        m_pGui->GetKeyboard().HandleMessage(uMsg, wParam, lParam)))
+      try
       {
-        return 0;
+        // Notify GUI library of message
+        if(m_pGui && (m_pGui->GetMouse().HandleMessage(uMsg, wParam, lParam) || 
+          m_pGui->GetKeyboard().HandleMessage(uMsg, wParam, lParam)))
+        {
+          return 0;
+        }
+      }
+      catch (boost::exception const& e)
+      {
+        // Dump error information
+        MessageBoxA(NULL, boost::diagnostic_information(e).c_str(), 
+          "Hades-Loader", MB_OK);
+      }
+      catch (std::exception const& e)
+      {
+        // Dump error information
+        MessageBoxA(NULL, e.what(), "Hades-Loader", MB_OK);
       }
 
       // Call 'default' window procedure

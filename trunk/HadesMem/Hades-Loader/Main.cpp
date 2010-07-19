@@ -40,7 +40,7 @@ int CALLBACK wWinMain(
   __in  HINSTANCE /*hInstance*/,
   __in  HINSTANCE /*hPrevInstance*/,
   __in  LPWSTR /*lpCmdLine*/,
-  __in  int nCmdShow)
+  __in  int /*nCmdShow*/)
 {
   try
   {
@@ -87,25 +87,6 @@ int CALLBACK wWinMain(
       BOOST_THROW_EXCEPTION(Hades::HadesError() << 
         Hades::ErrorFunction("wWinMain") << 
         Hades::ErrorString("Could not create loader window."));
-    }
-
-    // Resize window
-    if (!MainWindow.ResizeClient(1280, 720))
-    {
-      BOOST_THROW_EXCEPTION(Hades::HadesError() << 
-        Hades::ErrorFunction("wWinMain") << 
-        Hades::ErrorString("Could not resize loader window."));
-    }
-
-    // Show window
-    MainWindow.ShowWindow(nCmdShow);
-
-    // Center window
-    if (!MainWindow.CenterWindow())
-    {
-      BOOST_THROW_EXCEPTION(Hades::HadesError() << 
-        Hades::ErrorFunction("wWinMain") << 
-        Hades::ErrorString("Could not center loader window."));
     }
 
     // Initialize D3D
