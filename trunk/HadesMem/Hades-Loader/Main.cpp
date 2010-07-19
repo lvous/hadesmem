@@ -19,12 +19,20 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 // C++ Standard Library
 #include <string>
+#include <memory>
 #include <iostream>
 
 // Windows
 #include <Windows.h>
+#include <atlbase.h>
+#include <atlwin.h>
+
+// DirectX
+#include <d3d9.h>
+#include <d3dx9.h>
 
 // Hades
+#include "Window.h"
 #include "Hades-Common/Error.h"
 #include "Hades-Common/Logger.h"
 
@@ -32,10 +40,22 @@ int CALLBACK wWinMain(
   __in  HINSTANCE /*hInstance*/,
   __in  HINSTANCE /*hPrevInstance*/,
   __in  LPWSTR /*lpCmdLine*/,
-  __in  int /*nCmdShow*/)
+  __in  int nCmdShow)
 {
   try
   {
+    // Initialize COM
+    HRESULT CoInitResult = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+    if (FAILED(CoInitResult))
+    {
+      DWORD LastError = GetLastError();
+      BOOST_THROW_EXCEPTION(Hades::HadesError() << 
+        Hades::ErrorFunction("wWinMain") << 
+        Hades::ErrorString("Could not initialize COM.") << 
+        Hades::ErrorCodeWin(LastError));
+    }
+    Hades::Windows::EnsureCoUninitialize MyEnsureCoUninitalize;
+
     // Initialize logger
     Hades::Util::InitLogger(L"Hades-Loader-Log", L"Hades-Loader-Debug");
 
@@ -56,6 +76,67 @@ int CALLBACK wWinMain(
       "cypher.jb@gmail.com." << std::endl;
     std::wcout << "Built on " << __DATE__ << " at " << __TIME__ << "." << 
       std::endl;
+
+    // Create loader window manager
+    Hades::Loader::LoaderWindow MainWindow;
+
+    // Create window
+    if (!MainWindow.Create(GetDesktopWindow(), NULL, L"Hades Loader", 
+      WS_OVERLAPPEDWINDOW))
+    {
+      BOOST_THROW_EXCEPTION(Hades::HadesError() << 
+        Hades::ErrorFunction("wWinMain") << 
+        Hades::ErrorString("Could not create loader window."));
+    }
+
+    // Resize window
+    if (!MainWindow.ResizeClient(1280, 720))
+    {
+      BOOST_THROW_EXCEPTION(Hades::HadesError() << 
+        Hades::ErrorFunction("wWinMain") << 
+        Hades::ErrorString("Could not resize loader window."));
+    }
+
+    // Show window
+    MainWindow.ShowWindow(nCmdShow);
+
+    // Center window
+    if (!MainWindow.CenterWindow())
+    {
+      BOOST_THROW_EXCEPTION(Hades::HadesError() << 
+        Hades::ErrorFunction("wWinMain") << 
+        Hades::ErrorString("Could not center loader window."));
+    }
+
+    // Initialize D3D
+    MainWindow.InitD3D();
+    
+    // Load GUI
+    MainWindow.LoadGUI();
+
+    // Standard message loop
+    MSG CurMsg;
+    for (;;)
+    {
+      // More standard message loop stuff
+      while (PeekMessage(&CurMsg, NULL, 0, 0, PM_REMOVE))
+      {
+        TranslateMessage(&CurMsg);
+        DispatchMessage(&CurMsg);
+      }
+
+      // Break out of message loop on quit request
+      if(CurMsg.message == WM_QUIT)
+      {
+        break;
+      }
+
+      // Perform rendering
+      MainWindow.RenderFrame();
+    }
+
+    // Return exit code from PostQuitMessage
+    return static_cast<int>(CurMsg.wParam);
   }
   catch (boost::exception const& e)
   {

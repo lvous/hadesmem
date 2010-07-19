@@ -139,7 +139,7 @@
       <AdditionalIncludeDirectories>"../";"../BeaEngine/";</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalOptions>/D _WIN32_WINNT=0x0502 /D _SCL_SECURE_NO_WARNINGS /D BEA_ENGINE_STATIC %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/D NTDDI_VERSION=NTDDI_WIN7 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BEA_ENGINE_STATIC %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -156,7 +156,7 @@
       <AdditionalIncludeDirectories>"../";"../BeaEngine/";</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalOptions>/D _WIN32_WINNT=0x0502 /D _SCL_SECURE_NO_WARNINGS /D BEA_ENGINE_STATIC %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/D NTDDI_VERSION=NTDDI_WIN7 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BEA_ENGINE_STATIC %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -175,7 +175,7 @@
       <AdditionalIncludeDirectories>"../";"../BeaEngine/";</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalOptions>/D _WIN32_WINNT=0x0502 /D _SCL_SECURE_NO_WARNINGS /D BEA_ENGINE_STATIC %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/D NTDDI_VERSION=NTDDI_WIN7 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BEA_ENGINE_STATIC %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -196,7 +196,7 @@
       <AdditionalIncludeDirectories>"../";"../BeaEngine/";</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalOptions>/D _WIN32_WINNT=0x0502 /D _SCL_SECURE_NO_WARNINGS /D BEA_ENGINE_STATIC %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/D NTDDI_VERSION=NTDDI_WIN7 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BEA_ENGINE_STATIC %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

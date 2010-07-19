@@ -104,13 +104,13 @@
       <AdditionalIncludeDirectories>"../";"../Lua/";</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalOptions>/D _WIN32_WINNT=0x0502 /D _SCL_SECURE_NO_WARNINGS /D BEA_ENGINE_STATIC %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/D NTDDI_VERSION=NTDDI_WIN7 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BEA_ENGINE_STATIC %(AdditionalOptions)</AdditionalOptions>
       <DisableSpecificWarnings>4503;4251;</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>Hades-GUI.lib;AsmJit.lib;BeaEngine.lib;Lua.lib;LuaBind.lib;d3d9.lib;d3dx9.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d9.lib;d3dx9.lib;Hades-GUI.lib;AsmJit.lib;BeaEngine.lib;Lua.lib;LuaBind.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)Binaries\$(Configuration)-$(Platform)\</AdditionalLibraryDirectories>
     </Link>
     <ProjectReference>
@@ -130,13 +130,13 @@
       <AdditionalIncludeDirectories>"../";"../Lua/";</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalOptions>/D _WIN32_WINNT=0x0502 /D _SCL_SECURE_NO_WARNINGS /D BEA_ENGINE_STATIC %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/D NTDDI_VERSION=NTDDI_WIN7 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BEA_ENGINE_STATIC %(AdditionalOptions)</AdditionalOptions>
       <DisableSpecificWarnings>4503;4251;</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>Hades-GUI.lib;AsmJit.lib;BeaEngine.lib;Lua.lib;LuaBind.lib;d3d9.lib;d3dx9.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d9.lib;d3dx9.lib;Hades-GUI.lib;AsmJit.lib;BeaEngine.lib;Lua.lib;LuaBind.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)Binaries\$(Configuration)-$(Platform)\</AdditionalLibraryDirectories>
     </Link>
     <ProjectReference>
@@ -158,7 +158,7 @@
       <AdditionalIncludeDirectories>"../";"../Lua/";</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalOptions>/D _WIN32_WINNT=0x0502 /D _SCL_SECURE_NO_WARNINGS /D BEA_ENGINE_STATIC %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/D NTDDI_VERSION=NTDDI_WIN7 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BEA_ENGINE_STATIC %(AdditionalOptions)</AdditionalOptions>
       <DisableSpecificWarnings>4503;4251;</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -166,7 +166,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>Hades-GUI.lib;AsmJit.lib;BeaEngine.lib;Lua.lib;LuaBind.lib;d3d9.lib;d3dx9.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d9.lib;d3dx9.lib;Hades-GUI.lib;AsmJit.lib;BeaEngine.lib;Lua.lib;LuaBind.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)Binaries\$(Configuration)-$(Platform)\</AdditionalLibraryDirectories>
     </Link>
     <ProjectReference>
@@ -188,7 +188,7 @@
       <AdditionalIncludeDirectories>"../";"../Lua/";</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalOptions>/D _WIN32_WINNT=0x0502 /D _SCL_SECURE_NO_WARNINGS /D BEA_ENGINE_STATIC %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/D NTDDI_VERSION=NTDDI_WIN7 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BEA_ENGINE_STATIC %(AdditionalOptions)</AdditionalOptions>
       <DisableSpecificWarnings>4503;4251;</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -196,7 +196,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>Hades-GUI.lib;AsmJit.lib;BeaEngine.lib;Lua.lib;LuaBind.lib;d3d9.lib;d3dx9.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d9.lib;d3dx9.lib;Hades-GUI.lib;AsmJit.lib;BeaEngine.lib;Lua.lib;LuaBind.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)Binaries\$(Configuration)-$(Platform)\</AdditionalLibraryDirectories>
     </Link>
     <ProjectReference>
