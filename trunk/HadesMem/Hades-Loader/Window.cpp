@@ -95,6 +95,8 @@ namespace Hades
             ErrorCodeWin(LastError));
         }
 
+        m_hWndClient = CreateClient();
+
         // Get menu for window
         CMenuHandle MainMenu(GetMenu());
         if (MainMenu.IsNull())
@@ -134,6 +136,17 @@ namespace Hades
             BOOST_THROW_EXCEPTION(HadesError() << 
               ErrorFunction("LoaderWindow::OnCreate") << 
               ErrorString("Could not append game to game menu.") << 
+              ErrorCodeWin(LastError));
+          }
+
+          CTreeItem TreeItem(m_GameTree.InsertItem(Current->Name.c_str(), 
+            TVI_ROOT, TVI_LAST));
+          if (TreeItem.IsNull())
+          {
+            DWORD LastError = GetLastError();
+            BOOST_THROW_EXCEPTION(HadesError() << 
+              ErrorFunction("LoaderWindow::OnCreate") << 
+              ErrorString("Could not append game to game tree.") << 
               ErrorCodeWin(LastError));
           }
         });
@@ -188,6 +201,118 @@ namespace Hades
     {
       AboutDialog MyAboutDialog;
       MyAboutDialog.DoModal();
+      return 0;
+    }
+
+    HWND LoaderWindow::CreateClient()
+    {
+      CRect ClientRect;
+      if (!GetClientRect(&ClientRect))
+      {
+        DWORD LastError = GetLastError();
+        BOOST_THROW_EXCEPTION(HadesError() << 
+          ErrorFunction("LoaderWindow::CreateClient") << 
+          ErrorString("Could not get client rect.") << 
+          ErrorCodeWin(LastError));
+      }
+
+      if (!m_Splitter.Create(m_hWnd, ClientRect, NULL, WS_CHILD | WS_VISIBLE | 
+        WS_CLIPSIBLINGS | WS_CLIPCHILDREN))
+      {
+        DWORD LastError = GetLastError();
+        BOOST_THROW_EXCEPTION(HadesError() << 
+          ErrorFunction("LoaderWindow::CreateClient") << 
+          ErrorString("Could not get create splitter.") << 
+          ErrorCodeWin(LastError));
+      }
+
+      if (!m_Splitter.SetSplitterPos(200))
+      {
+        DWORD LastError = GetLastError();
+        BOOST_THROW_EXCEPTION(HadesError() << 
+          ErrorFunction("LoaderWindow::CreateClient") << 
+          ErrorString("Could not set splitter pos.") << 
+          ErrorCodeWin(LastError));
+      }
+
+      m_Splitter.SetSplitterExtendedStyle(SPLIT_NONINTERACTIVE);
+
+      if (!m_LeftPane.Create(m_Splitter.m_hWnd))
+      {
+        DWORD LastError = GetLastError();
+        BOOST_THROW_EXCEPTION(HadesError() << 
+          ErrorFunction("LoaderWindow::CreateClient") << 
+          ErrorString("Could not get client rect.") << 
+          ErrorCodeWin(LastError));
+      }
+
+      if (!m_LeftPane.SetTitle(L"Game List"))
+      {
+        DWORD LastError = GetLastError();
+        BOOST_THROW_EXCEPTION(HadesError() << 
+          ErrorFunction("LoaderWindow::CreateClient") << 
+          ErrorString("Could not get client rect.") << 
+          ErrorCodeWin(LastError));
+      }
+
+      m_LeftPane.SetPaneContainerExtendedStyle(PANECNT_NOCLOSEBUTTON);
+
+      if (!m_Splitter.SetSplitterPane(0, m_LeftPane))
+      {
+        DWORD LastError = GetLastError();
+        BOOST_THROW_EXCEPTION(HadesError() << 
+          ErrorFunction("LoaderWindow::CreateClient") << 
+          ErrorString("Could not get client rect.") << 
+          ErrorCodeWin(LastError));
+      }
+
+      if (!m_RightPane.Create(m_Splitter.m_hWnd))
+      {
+        DWORD LastError = GetLastError();
+        BOOST_THROW_EXCEPTION(HadesError() << 
+          ErrorFunction("LoaderWindow::CreateClient") << 
+          ErrorString("Could not get client rect.") << 
+          ErrorCodeWin(LastError));
+      }
+
+      if (!m_RightPane.SetTitle(L"Top Pane -- no Close button"))
+      {
+        DWORD LastError = GetLastError();
+        BOOST_THROW_EXCEPTION(HadesError() << 
+          ErrorFunction("LoaderWindow::CreateClient") << 
+          ErrorString("Could not get client rect.") << 
+          ErrorCodeWin(LastError));
+      }
+
+      m_RightPane.SetPaneContainerExtendedStyle(PANECNT_NOCLOSEBUTTON);
+
+      if (!m_GameTree.Create(m_LeftPane.m_hWnd, rcDefault, NULL, WS_CHILD | 
+        WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, WS_EX_CLIENTEDGE))
+      {
+        DWORD LastError = GetLastError();
+        BOOST_THROW_EXCEPTION(HadesError() << 
+          ErrorFunction("LoaderWindow::CreateClient") << 
+          ErrorString("Could not get client rect.") << 
+          ErrorCodeWin(LastError));
+      }
+
+      m_LeftPane.SetClient(m_GameTree.m_hWnd);
+
+      return m_Splitter.m_hWnd;
+    }
+
+    LRESULT LoaderWindow::OnTVSelChanged(int /*idCtrl*/, LPNMHDR pnmh, 
+      BOOL& /*bHandled*/)
+    {
+      if (pnmh->hwndFrom == m_GameTree)
+      {
+        auto lpTV = reinterpret_cast<LPNMTREEVIEW>(pnmh);
+        CTreeItem Selection(lpTV->itemNew.hItem, &m_GameTree);
+        CString SelectionText;
+        Selection.GetText(SelectionText);
+        MessageBoxW(SelectionText, L"Hades Loader");
+      }
+
       return 0;
     }
   }

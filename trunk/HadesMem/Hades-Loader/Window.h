@@ -29,10 +29,14 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 // WTL
 #include <atlapp.h>
+#include <atlddx.h>
 #include <atluser.h>
 #include <atlmisc.h>
 #include <atlframe.h>
 #include <atlcrack.h>
+#include <atlctrls.h>
+#include <atlsplit.h>
+#include <atlctrlx.h>
 
 // Hades
 #include "Game.h"
@@ -66,16 +70,29 @@ namespace Hades
       LRESULT OnHelpAbout(WORD wNotifyCode, WORD wID, HWND hWndCtl, 
         BOOL& bHandled);
 
+      LRESULT OnTVSelChanged(int idCtrl, LPNMHDR pnmh, BOOL& bHandled);
+
       BEGIN_MSG_MAP(LoaderWindow)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
         MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
         COMMAND_ID_HANDLER(ID_HELP_ABOUT, OnHelpAbout)
         COMMAND_ID_HANDLER(ID_FILE_EXIT, OnFileExit)
         MESSAGE_HANDLER(WM_COMMAND, OnCommand)
+        NOTIFY_CODE_HANDLER(TVN_SELCHANGED, OnTVSelChanged)
+        CHAIN_MSG_MAP(CFrameWindowImpl<LoaderWindow>)
       END_MSG_MAP()
+
+      HWND CreateClient();
 
     private:
       GameMgr m_GameMgr;
+
+      CSplitterWindow m_Splitter;
+
+      CPaneContainer m_LeftPane;
+      CPaneContainer m_RightPane;
+
+      CTreeViewCtrlEx m_GameTree;
     };
   }
 }

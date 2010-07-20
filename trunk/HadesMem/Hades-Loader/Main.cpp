@@ -29,10 +29,12 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 // WTL
 #include <atlapp.h>
+#include <atlddx.h>
 #include <atluser.h>
 #include <atlmisc.h>
 #include <atlframe.h>
 #include <atlcrack.h>
+#include <atlctrls.h>
 
 // Hades
 #include "Window.h"
