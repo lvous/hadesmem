@@ -27,20 +27,21 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include <atlbase.h>
 #include <atlwin.h>
 
-// DirectX
-#include <d3d9.h>
-#include <d3dx9.h>
+// WTL
+#include <atlapp.h>
+#include <atluser.h>
 
 // Hades
 #include "Window.h"
 #include "Hades-Common/Error.h"
 #include "Hades-Common/Logger.h"
+#include "Hades-Common/EnsureCleanup.h"
 
 int CALLBACK wWinMain(
-  __in  HINSTANCE /*hInstance*/,
+  __in  HINSTANCE hInstance,
   __in  HINSTANCE /*hPrevInstance*/,
   __in  LPWSTR /*lpCmdLine*/,
-  __in  int /*nCmdShow*/)
+  __in  int nCmdShow)
 {
   try
   {
@@ -77,47 +78,60 @@ int CALLBACK wWinMain(
     std::wcout << "Built on " << __DATE__ << " at " << __TIME__ << "." << 
       std::endl;
 
-    // Create loader window manager
-    Hades::Loader::LoaderWindow MainWindow;
-
-    // Create window
-    if (!MainWindow.Create(GetDesktopWindow(), NULL, L"Hades Loader", 
-      WS_OVERLAPPEDWINDOW))
+    // Initialize common controls
+    if (!AtlInitCommonControls(ICC_BAR_CLASSES))
     {
       BOOST_THROW_EXCEPTION(Hades::HadesError() << 
         Hades::ErrorFunction("wWinMain") << 
-        Hades::ErrorString("Could not create loader window."));
+        Hades::ErrorString("Could not initialize common controls."));
     }
 
-    // Initialize D3D
-    MainWindow.InitD3D();
-    
-    // Load GUI
-    MainWindow.LoadGUI();
-
-    // Standard message loop
-    MSG CurMsg;
-    for (;;)
+    // Initialize app module
+    CAppModule MyAppModule;
+    HRESULT InitAppModResult = MyAppModule.Init(NULL, hInstance);
+    if (FAILED(InitAppModResult))
     {
-      // More standard message loop stuff
-      while (PeekMessage(&CurMsg, NULL, 0, 0, PM_REMOVE))
-      {
-        TranslateMessage(&CurMsg);
-        DispatchMessage(&CurMsg);
-      }
-
-      // Break out of message loop on quit request
-      if(CurMsg.message == WM_QUIT)
-      {
-        break;
-      }
-
-      // Perform rendering
-      MainWindow.RenderFrame();
+      BOOST_THROW_EXCEPTION(Hades::HadesError() << 
+        Hades::ErrorFunction("wWinMain") << 
+        Hades::ErrorString("Could not initialize app module."));
     }
 
-    // Return exit code from PostQuitMessage
-    return static_cast<int>(CurMsg.wParam);
+    // Add message loop
+    CMessageLoop MyMessageLoop;
+    if (!MyAppModule.AddMessageLoop(&MyMessageLoop))
+    {
+      BOOST_THROW_EXCEPTION(Hades::HadesError() << 
+        Hades::ErrorFunction("wWinMain") << 
+        Hades::ErrorString("Could not add message loop."));
+    }
+
+    // Message loop result
+    int Result = 0;
+
+    {
+      // Create loader window manager
+      Hades::Loader::LoaderWindow MainWindow;
+
+      // Create window
+      if (!MainWindow.CreateEx())
+      {
+        BOOST_THROW_EXCEPTION(Hades::HadesError() << 
+          Hades::ErrorFunction("wWinMain") << 
+          Hades::ErrorString("Could not create loader window."));
+      }
+
+      // Show window
+      MainWindow.ShowWindow(nCmdShow);
+
+      // Run message loop
+      Result = MyMessageLoop.Run();
+    }
+    
+    // Terminate app module
+    MyAppModule.Term();
+
+    // Return exit code from message loop
+    return Result;
   }
   catch (boost::exception const& e)
   {

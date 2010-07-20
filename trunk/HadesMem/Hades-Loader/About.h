@@ -19,9 +19,6 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-// C++ Standard Library
-#include <memory>
-
 // Windows
 #include <Windows.h>
 #include <atlbase.h>
@@ -35,46 +32,25 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Hades
 #include "Resource.h"
 
-#define WM_CUSTOM_FILE_EXIT (WM_USER + 1)
-
 namespace Hades
 {
   namespace Loader
   {
-    class LoaderWindow : public CFrameWindowImpl<LoaderWindow>
+    class AboutDialog : public CDialogImpl<AboutDialog>
     {
     public:
-      // Specify window class name
-      DECLARE_FRAME_WND_CLASS(L"HadesLoaderWndClass", IDR_LOADERWINDOW)
+      enum { IDD = IDD_ABOUT };
 
-      // WM_DESTROY message callback
-      LRESULT OnDestroy(UINT nMsg, WPARAM wParam, LPARAM lParam, 
+      LRESULT OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, 
         BOOL& bHandled);
 
-      // WM_CREATE message callback
-      LRESULT OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, 
+      LRESULT OnCloseCmd(WORD wNotifyCode, WORD wID, HWND hWndCtl, 
         BOOL& bHandled);
 
-      LRESULT OnFileExit(WORD wNotifyCode, WORD wID, HWND hWndCtl, 
-        BOOL& bHandled);
-
-      LRESULT OnHelpAbout(WORD wNotifyCode, WORD wID, HWND hWndCtl, 
-        BOOL& bHandled);
-
-      BEGIN_MSG_MAP(LoaderWindow)
-        MESSAGE_HANDLER(WM_CREATE, OnCreate)
-        MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
-        COMMAND_ID_HANDLER(ID_HELP_ABOUT, OnHelpAbout)
-        COMMAND_ID_HANDLER(ID_FILE_EXIT, OnFileExit)
+      BEGIN_MSG_MAP(AboutDialog)
+        MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
+        COMMAND_ID_HANDLER(ID_BUTTON_OK, OnCloseCmd)
       END_MSG_MAP()
-
-    private:
-      // Main menu
-      CMenu m_MainMenu;
-      // File menu
-      CMenu m_FileMenu;
-      // Games menu
-      CMenu m_GamesMenu;
     };
   }
 }

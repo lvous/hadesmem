@@ -203,10 +203,14 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="About.cpp" />
+    <ClCompile Include="Game.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="About.h" />
+    <ClInclude Include="Game.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Window.h" />
   </ItemGroup>
@@ -214,6 +218,7 @@
     <ResourceCompile Include="Resources.rc" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Resources\CharizardLogo.png" />
     <None Include="Resources\HadesLogo.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
