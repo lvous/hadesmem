@@ -147,11 +147,11 @@ namespace Hades
 
       // Debug output
       std::wcout << boost::wformat(L"GameMgr::LaunchGame: Path = \"%ls\", "
-        L"Args = \"%ls\", Module = %p, Export = \"%ls\".") %Data.Path 
+        L"Args = \"%ls\", Module = \"%ls\", Export = \"%ls\".") %Data.Path 
         %Data.Args %Data.Module %boost::lexical_cast<std::wstring>(
         Data.Export) << std::endl;
       std::wcout << boost::wformat(L"GameMgr::LaunchGame: Module Base = "
-        L"\"%ls\", Export Ret = \"%ls\".") %ModuleBase %ExportRet << std::endl;
+        L"%p, Export Ret = %u.") %ModuleBase %ExportRet << std::endl;
 
       // Return memory manager instance
       return MyMemory;
