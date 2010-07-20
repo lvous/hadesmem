@@ -46,7 +46,14 @@ namespace Hades
 {
   namespace Loader
   {
-    class LoaderWindow : public CFrameWindowImpl<LoaderWindow>
+    template <typename T>
+    class CFrameWindowCustom : 
+      public CFrameWindowImpl<T, CWindow, 
+      CWinTraits<WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_DLGFRAME, 
+      WS_EX_APPWINDOW | WS_EX_WINDOWEDGE>>
+    { };
+
+    class LoaderWindow : public CFrameWindowCustom<LoaderWindow>
     {
     public:
       // Specify window class name
@@ -79,7 +86,7 @@ namespace Hades
         COMMAND_ID_HANDLER(ID_FILE_EXIT, OnFileExit)
         MESSAGE_HANDLER(WM_COMMAND, OnCommand)
         NOTIFY_CODE_HANDLER(TVN_SELCHANGED, OnTVSelChanged)
-        CHAIN_MSG_MAP(CFrameWindowImpl<LoaderWindow>)
+        CHAIN_MSG_MAP(CFrameWindowCustom<LoaderWindow>)
       END_MSG_MAP()
 
       HWND CreateClient();
