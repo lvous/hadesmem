@@ -310,7 +310,9 @@ namespace Hades
         CTreeItem Selection(lpTV->itemNew.hItem, &m_GameTree);
         CString SelectionText;
         Selection.GetText(SelectionText);
-        MessageBoxW(SelectionText, L"Hades Loader");
+        auto pData(m_GameMgr.GetDataForName(static_cast<LPCWSTR>(
+          SelectionText)));
+        m_GameMgr.LaunchGame(*pData);
       }
 
       return 0;

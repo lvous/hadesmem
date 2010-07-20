@@ -49,7 +49,7 @@ namespace Hades
     template <typename T>
     class CFrameWindowCustom : 
       public CFrameWindowImpl<T, CWindow, 
-      CWinTraits<WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_DLGFRAME, 
+      CWinTraits<WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, 
       WS_EX_APPWINDOW | WS_EX_WINDOWEDGE>>
     { };
 
