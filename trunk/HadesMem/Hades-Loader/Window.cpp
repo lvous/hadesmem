@@ -35,9 +35,43 @@ namespace Hades
       return 0;
     }
 
+    // WM_COMMAND message callback
+    LRESULT LoaderWindow::OnCommand(UINT /*nMsg*/, WPARAM wParam, 
+      LPARAM /*lParam*/, BOOL& /*bHandled*/)
+    {
+      try
+      {
+        // Get message ID
+        WORD MsgId = LOWORD(wParam);
+
+        // Get game data for message id
+        auto pGameData(m_GameMgr.GetDataForMessageId(MsgId));
+
+        // If entry existed attempt to launch
+        if (pGameData)
+        {
+          // Launch game
+          m_GameMgr.LaunchGame(*pGameData);
+        }
+      }
+      catch (boost::exception const& e)
+      {
+        // Dump error information
+        MessageBoxA(NULL, boost::diagnostic_information(e).c_str(), 
+          "Hades-Loader", MB_OK);
+      }
+      catch (std::exception const& e)
+      {
+        // Dump error information
+        MessageBoxA(NULL, e.what(), "Hades-Loader", MB_OK);
+      }
+
+      return 0;
+    }
+
     // WM_CREATE message callback
-    LRESULT LoaderWindow::OnCreate( UINT /*nMsg*/, WPARAM /*wParam*/, 
-      LPARAM /*lParam*/, BOOL& /*bHandled*/ )
+    LRESULT LoaderWindow::OnCreate(UINT /*nMsg*/, WPARAM /*wParam*/, 
+      LPARAM /*lParam*/, BOOL& /*bHandled*/)
     {
       try
       {
@@ -54,10 +88,55 @@ namespace Hades
         // Center window
         if (!CenterWindow())
         {
+          DWORD LastError = GetLastError();
           BOOST_THROW_EXCEPTION(HadesError() << 
             ErrorFunction("LoaderWindow::OnCreate") << 
-            ErrorString("Could not center loader window."));
+            ErrorString("Could not center loader window.") << 
+            ErrorCodeWin(LastError));
         }
+
+        // Get menu for window
+        CMenuHandle MainMenu(GetMenu());
+        if (MainMenu.IsNull())
+        {
+          DWORD LastError = GetLastError();
+          BOOST_THROW_EXCEPTION(HadesError() << 
+            ErrorFunction("LoaderWindow::OnCreate") << 
+            ErrorString("Could not get main menu.") << 
+            ErrorCodeWin(LastError));
+        }
+
+        // Get game menu
+        CMenuHandle GameMenu(MainMenu.GetSubMenu(1));
+        if (MainMenu.IsNull())
+        {
+          DWORD LastError = GetLastError();
+          BOOST_THROW_EXCEPTION(HadesError() << 
+            ErrorFunction("LoaderWindow::OnCreate") << 
+            ErrorString("Could not get game menu.") << 
+            ErrorCodeWin(LastError));
+        }
+
+        // Load game list
+        m_GameMgr.LoadConfigDefault();
+
+        // Get game list
+        auto GameList(m_GameMgr.GetAllData());
+
+        // Add all games to menu
+        std::for_each(GameList.begin(), GameList.end(), 
+          [&] (std::shared_ptr<GameMgr::MenuData> Current)
+        {
+          if (!GameMenu.AppendMenuW(MF_STRING, Current->MessageId, 
+            Current->Name.c_str()))
+          {
+            DWORD LastError = GetLastError();
+            BOOST_THROW_EXCEPTION(HadesError() << 
+              ErrorFunction("LoaderWindow::OnCreate") << 
+              ErrorString("Could not append game to game menu.") << 
+              ErrorCodeWin(LastError));
+          }
+        });
       }
       catch (boost::exception const& e)
       {

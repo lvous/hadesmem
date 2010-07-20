@@ -30,12 +30,13 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // WTL
 #include <atlapp.h>
 #include <atluser.h>
+#include <atlmisc.h>
 #include <atlframe.h>
+#include <atlcrack.h>
 
 // Hades
+#include "Game.h"
 #include "Resource.h"
-
-#define WM_CUSTOM_FILE_EXIT (WM_USER + 1)
 
 namespace Hades
 {
@@ -55,6 +56,10 @@ namespace Hades
       LRESULT OnCreate(UINT nMsg, WPARAM wParam, LPARAM lParam, 
         BOOL& bHandled);
 
+      // WM_COMMAND message callback
+      LRESULT OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, 
+        BOOL& bHandled);
+
       LRESULT OnFileExit(WORD wNotifyCode, WORD wID, HWND hWndCtl, 
         BOOL& bHandled);
 
@@ -66,15 +71,11 @@ namespace Hades
         MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
         COMMAND_ID_HANDLER(ID_HELP_ABOUT, OnHelpAbout)
         COMMAND_ID_HANDLER(ID_FILE_EXIT, OnFileExit)
+        MESSAGE_HANDLER(WM_COMMAND, OnCommand)
       END_MSG_MAP()
 
     private:
-      // Main menu
-      CMenu m_MainMenu;
-      // File menu
-      CMenu m_FileMenu;
-      // Games menu
-      CMenu m_GamesMenu;
+      GameMgr m_GameMgr;
     };
   }
 }
