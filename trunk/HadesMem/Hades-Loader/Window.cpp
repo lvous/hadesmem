@@ -138,17 +138,6 @@ namespace Hades
               ErrorString("Could not append game to game menu.") << 
               ErrorCodeWin(LastError));
           }
-
-          CTreeItem TreeItem(m_GameTree.InsertItem(Current->Name.c_str(), 
-            TVI_ROOT, TVI_LAST));
-          if (TreeItem.IsNull())
-          {
-            DWORD LastError = GetLastError();
-            BOOST_THROW_EXCEPTION(HadesError() << 
-              ErrorFunction("LoaderWindow::OnCreate") << 
-              ErrorString("Could not append game to game tree.") << 
-              ErrorCodeWin(LastError));
-          }
         });
       }
       catch (boost::exception const& e)
@@ -166,6 +155,7 @@ namespace Hades
       return 0;
     }
 
+    // ID_FILE_EXIT command callback
     LRESULT LoaderWindow::OnFileExit(WORD /*wNotifyCode*/, WORD /*wID*/, 
       HWND /*hWndCtl*/, BOOL& /*bHandled*/)
     {
@@ -196,16 +186,22 @@ namespace Hades
       return 0;
     }
 
+    // ID_HELP_ABOUT command callback
     LRESULT LoaderWindow::OnHelpAbout(WORD /*wNotifyCode*/, WORD /*wID*/, 
       HWND /*hWndCtl*/, BOOL& /*bHandled*/)
     {
+      // Create about dialog
       AboutDialog MyAboutDialog;
+      // Show about dialog (modal)
       MyAboutDialog.DoModal();
+
       return 0;
     }
 
+    // Create client area of window
     HWND LoaderWindow::CreateClient()
     {
+      // Get client rect
       CRect ClientRect;
       if (!GetClientRect(&ClientRect))
       {
@@ -216,6 +212,7 @@ namespace Hades
           ErrorCodeWin(LastError));
       }
 
+      // Create vertical splitter
       if (!m_Splitter.Create(m_hWnd, ClientRect, NULL, WS_CHILD | WS_VISIBLE | 
         WS_CLIPSIBLINGS | WS_CLIPCHILDREN))
       {
@@ -226,6 +223,7 @@ namespace Hades
           ErrorCodeWin(LastError));
       }
 
+      // Set splitter pos
       if (!m_Splitter.SetSplitterPos(200))
       {
         DWORD LastError = GetLastError();
@@ -235,84 +233,135 @@ namespace Hades
           ErrorCodeWin(LastError));
       }
 
+      // Disable resizing of splitter
       m_Splitter.SetSplitterExtendedStyle(SPLIT_NONINTERACTIVE);
 
+      // Create left pane
       if (!m_LeftPane.Create(m_Splitter.m_hWnd))
       {
         DWORD LastError = GetLastError();
         BOOST_THROW_EXCEPTION(HadesError() << 
           ErrorFunction("LoaderWindow::CreateClient") << 
-          ErrorString("Could not get client rect.") << 
+          ErrorString("Could not create left pane.") << 
           ErrorCodeWin(LastError));
       }
 
-      if (!m_LeftPane.SetTitle(L"Game List"))
+      // Set left pane title
+      if (!m_LeftPane.SetTitle(L"Navigation"))
       {
         DWORD LastError = GetLastError();
         BOOST_THROW_EXCEPTION(HadesError() << 
           ErrorFunction("LoaderWindow::CreateClient") << 
-          ErrorString("Could not get client rect.") << 
+          ErrorString("Could not set left pane title.") << 
           ErrorCodeWin(LastError));
       }
 
+      // Disable left pane close button
       m_LeftPane.SetPaneContainerExtendedStyle(PANECNT_NOCLOSEBUTTON);
 
+      // Attach left pane to left of splitter
       if (!m_Splitter.SetSplitterPane(0, m_LeftPane))
       {
         DWORD LastError = GetLastError();
         BOOST_THROW_EXCEPTION(HadesError() << 
           ErrorFunction("LoaderWindow::CreateClient") << 
-          ErrorString("Could not get client rect.") << 
+          ErrorString("Could not attach left pane to splitter.") << 
           ErrorCodeWin(LastError));
       }
 
+      // Create right pane
       if (!m_RightPane.Create(m_Splitter.m_hWnd))
       {
         DWORD LastError = GetLastError();
         BOOST_THROW_EXCEPTION(HadesError() << 
           ErrorFunction("LoaderWindow::CreateClient") << 
-          ErrorString("Could not get client rect.") << 
+          ErrorString("Could not create right pane.") << 
           ErrorCodeWin(LastError));
       }
 
-      if (!m_RightPane.SetTitle(L"Top Pane -- no Close button"))
+      // Set right pane title
+      if (!m_RightPane.SetTitle(L"Test"))
       {
         DWORD LastError = GetLastError();
         BOOST_THROW_EXCEPTION(HadesError() << 
           ErrorFunction("LoaderWindow::CreateClient") << 
-          ErrorString("Could not get client rect.") << 
+          ErrorString("Could not set right pane title.") << 
           ErrorCodeWin(LastError));
       }
 
+      // Disable right pane close button
       m_RightPane.SetPaneContainerExtendedStyle(PANECNT_NOCLOSEBUTTON);
 
-      if (!m_GameTree.Create(m_LeftPane.m_hWnd, rcDefault, NULL, WS_CHILD | 
+
+      // Attach right pane to right of splitter
+      if (!m_Splitter.SetSplitterPane(1, m_RightPane))
+      {
+        DWORD LastError = GetLastError();
+        BOOST_THROW_EXCEPTION(HadesError() << 
+          ErrorFunction("LoaderWindow::CreateClient") << 
+          ErrorString("Could not attach right pane to splitter.") << 
+          ErrorCodeWin(LastError));
+      }
+
+      // Create navigation tree
+      if (!m_NavTree.Create(m_LeftPane.m_hWnd, rcDefault, NULL, WS_CHILD | 
         WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, WS_EX_CLIENTEDGE))
       {
         DWORD LastError = GetLastError();
         BOOST_THROW_EXCEPTION(HadesError() << 
           ErrorFunction("LoaderWindow::CreateClient") << 
-          ErrorString("Could not get client rect.") << 
+          ErrorString("Could not create nav tree.") << 
           ErrorCodeWin(LastError));
       }
 
-      m_LeftPane.SetClient(m_GameTree.m_hWnd);
+      // Set up navigation tree
+      CTreeItem HadesNode(m_NavTree.InsertItem(L"Hades", TVI_ROOT, TVI_LAST));
+      m_NavTreeMap[HadesNode.AddHead(L"Foo", 0)] = CreateFooWindow();
+      m_NavTreeMap[HadesNode.AddHead(L"Bar", 0)] = CreateBarWindow();
 
+      // Expand hades node
+      m_NavTree.Expand(HadesNode);
+
+      // Set left pane client as navigation tree
+      m_LeftPane.SetClient(m_NavTree.m_hWnd);
+
+      // Return splitter handle as client
       return m_Splitter.m_hWnd;
     }
-
+    
+    // TVN_SELCHANGED notification callback
     LRESULT LoaderWindow::OnTVSelChanged(int /*idCtrl*/, LPNMHDR pnmh, 
       BOOL& /*bHandled*/)
     {
-      if (pnmh->hwndFrom == m_GameTree)
+      try
       {
-        auto lpTV = reinterpret_cast<LPNMTREEVIEW>(pnmh);
-        CTreeItem Selection(lpTV->itemNew.hItem, &m_GameTree);
-        CString SelectionText;
-        Selection.GetText(SelectionText);
-        auto pData(m_GameMgr.GetDataForName(static_cast<LPCWSTR>(
-          SelectionText)));
-        m_GameMgr.LaunchGame(*pData);
+        // Handle messages for nav tree
+        if (pnmh->hwndFrom == m_NavTree)
+        {
+          // Get tree view data
+          auto lpTV = reinterpret_cast<LPNMTREEVIEW>(pnmh);
+
+          // Get selection
+          CTreeItem Selection(lpTV->itemNew.hItem, &m_NavTree);
+
+          // Set window from nav tree map
+          auto Iter = m_NavTreeMap.find(Selection);
+          if (Iter != m_NavTreeMap.end())
+          {
+            m_RightPane.SetClient(Iter->second);
+          }
+        }
+      }
+      catch (boost::exception const& e)
+      {
+        // Dump error information
+        MessageBoxA(NULL, boost::diagnostic_information(e).c_str(), 
+          "Hades-Loader", MB_OK);
+      }
+      catch (std::exception const& e)
+      {
+        // Dump error information
+        MessageBoxA(NULL, e.what(), "Hades-Loader", MB_OK);
       }
 
       return 0;

@@ -46,17 +46,19 @@ namespace Hades
 {
   namespace Loader
   {
+    // Loader window type
     template <typename T>
-    class CFrameWindowCustom : 
+    class LoaderWindowT : 
       public CFrameWindowImpl<T, CWindow, 
       CWinTraits<WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, 
       WS_EX_APPWINDOW | WS_EX_WINDOWEDGE>>
     { };
 
-    class LoaderWindow : public CFrameWindowCustom<LoaderWindow>
+    // Loader window manager
+    class LoaderWindow : public LoaderWindowT<LoaderWindow>
     {
     public:
-      // Specify window class name
+      // Specify window class name and resource id
       DECLARE_FRAME_WND_CLASS(L"HadesLoaderWndClass", IDR_LOADERWINDOW)
 
       // WM_DESTROY message callback
@@ -71,14 +73,21 @@ namespace Hades
       LRESULT OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, 
         BOOL& bHandled);
 
+      // ID_FILE_EXIT command callback
       LRESULT OnFileExit(WORD wNotifyCode, WORD wID, HWND hWndCtl, 
         BOOL& bHandled);
 
+      // ID_HELP_ABOUT command callback
       LRESULT OnHelpAbout(WORD wNotifyCode, WORD wID, HWND hWndCtl, 
         BOOL& bHandled);
 
+      // TVN_SELCHANGED notification callback
       LRESULT OnTVSelChanged(int idCtrl, LPNMHDR pnmh, BOOL& bHandled);
 
+      // Create client area of window
+      HWND CreateClient();
+
+      // ATL message map
       BEGIN_MSG_MAP(LoaderWindow)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
         MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
@@ -86,20 +95,68 @@ namespace Hades
         COMMAND_ID_HANDLER(ID_FILE_EXIT, OnFileExit)
         MESSAGE_HANDLER(WM_COMMAND, OnCommand)
         NOTIFY_CODE_HANDLER(TVN_SELCHANGED, OnTVSelChanged)
-        CHAIN_MSG_MAP(CFrameWindowCustom<LoaderWindow>)
+        CHAIN_MSG_MAP(LoaderWindowT<LoaderWindow>)
       END_MSG_MAP()
 
-      HWND CreateClient();
+      CWindow CreateFooWindow() 
+      {
+        // Create test tree
+        if (!m_FooTree.Create(m_RightPane.m_hWnd, rcDefault, NULL, WS_CHILD | 
+          WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, WS_EX_CLIENTEDGE))
+        {
+          DWORD LastError = GetLastError();
+          BOOST_THROW_EXCEPTION(HadesError() << 
+            ErrorFunction("LoaderWindow::CreateTestWindow") << 
+            ErrorString("Could not get create test tree.") << 
+            ErrorCodeWin(LastError));
+        }
+
+        // Insert test item
+        m_FooTree.InsertItem(L"Foo", TVI_ROOT, TVI_LAST);
+
+        return m_FooTree;
+      }
+
+      CWindow CreateBarWindow() 
+      {
+        // Create test tree
+        if (!m_BarTree.Create(m_RightPane.m_hWnd, rcDefault, NULL, WS_CHILD | 
+          WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, WS_EX_CLIENTEDGE))
+        {
+          DWORD LastError = GetLastError();
+          BOOST_THROW_EXCEPTION(HadesError() << 
+            ErrorFunction("LoaderWindow::CreateTestWindow") << 
+            ErrorString("Could not get create test tree.") << 
+            ErrorCodeWin(LastError));
+        }
+
+        // Insert test item
+        m_BarTree.InsertItem(L"Bar", TVI_ROOT, TVI_LAST);
+
+        return m_BarTree;
+      }
 
     private:
+      // Game manager
       GameMgr m_GameMgr;
 
+      // Splitter window
       CSplitterWindow m_Splitter;
 
+      // Left splitter pane
       CPaneContainer m_LeftPane;
+      // Right splitter pane
       CPaneContainer m_RightPane;
 
-      CTreeViewCtrlEx m_GameTree;
+      // Navigation tree (for left pane)
+      CTreeViewCtrlEx m_NavTree;
+
+      // Test tree (for right pane)
+      CTreeViewCtrlEx m_FooTree;
+      CTreeViewCtrlEx m_BarTree;
+      
+      // Navigation tree window map
+      std::map<HTREEITEM, CWindow> m_NavTreeMap;
     };
   }
 }
