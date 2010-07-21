@@ -348,7 +348,9 @@ namespace Hades
           auto Iter = m_NavTreeMap.find(Selection);
           if (Iter != m_NavTreeMap.end())
           {
-            m_RightPane.SetClient(Iter->second);
+            CWindow NewClient(Iter->second);
+            m_RightPane.SetClient(NewClient);
+            NewClient.BringWindowToTop();
           }
         }
       }
