@@ -51,7 +51,7 @@ int CALLBACK wWinMain(
   try
   {
     // Initialize COM
-    HRESULT CoInitResult = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+    HRESULT CoInitResult = CoInitializeEx(NULL, COINIT_MULTITHREADED);
     if (FAILED(CoInitResult))
     {
       DWORD LastError = GetLastError();
