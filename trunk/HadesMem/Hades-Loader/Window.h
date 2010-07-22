@@ -94,6 +94,10 @@ namespace Hades
       LRESULT OnHelpAbout(WORD wNotifyCode, WORD wID, HWND hWndCtl, 
         BOOL& bHandled);
 
+      // Menu command callback for features that are unavailable
+      LRESULT OnMenuNotImpl(WORD wNotifyCode, WORD wID, HWND hWndCtl, 
+        BOOL& bHandled);
+
       // TVN_SELCHANGED notification callback
       LRESULT OnTVSelChanged(int idCtrl, LPNMHDR pnmh, BOOL& bHandled);
 
@@ -111,6 +115,8 @@ namespace Hades
         MESSAGE_HANDLER(WM_COMMAND, OnCommand)
         COMMAND_ID_HANDLER(ID_FILE_EXIT, OnFileExit)
         COMMAND_ID_HANDLER(ID_HELP_ABOUT, OnHelpAbout)
+        COMMAND_ID_HANDLER(ID_GAMES_ADDGAME, OnMenuNotImpl)
+        COMMAND_ID_HANDLER(ID_GAMES_REMOVEGAME, OnMenuNotImpl)
         COMMAND_ID_HANDLER(ID_VIEW_STATUS_BAR, OnViewStatusBar)
         NOTIFY_CODE_HANDLER(TVN_SELCHANGED, OnTVSelChanged)
         CHAIN_MSG_MAP(CUpdateUI<LoaderWindow>)

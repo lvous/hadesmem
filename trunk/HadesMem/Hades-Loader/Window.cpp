@@ -482,5 +482,13 @@ namespace Hades
 
       return 0;
     }
+
+    // Menu command callback for features that are unavailable
+    LRESULT LoaderWindow::OnMenuNotImpl(WORD /*wNotifyCode*/, WORD /*wID*/, 
+      HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+    {
+      MessageBox(L"This feature is currently unavailable.", L"Hades-Loader");
+      return 0;
+    }
   }
 }
