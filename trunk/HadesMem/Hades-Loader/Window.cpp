@@ -28,10 +28,39 @@ namespace Hades
   namespace Loader
   {
     // WM_DESTROY message callback
-    LRESULT LoaderWindow::OnDestroy( UINT /*nMsg*/, WPARAM /*wParam*/, 
-      LPARAM /*lParam*/, BOOL& /*bHandled*/ )
+    LRESULT LoaderWindow::OnDestroy(UINT /*nMsg*/, WPARAM /*wParam*/, 
+      LPARAM /*lParam*/, BOOL& bHandled)
     {
-      PostQuitMessage(0);
+      try
+      {
+        // Get message loop
+        CMessageLoop* pLoop = m_pAppModule->GetMessageLoop();
+        if (!pLoop)
+        {
+          BOOST_THROW_EXCEPTION(HadesError() << 
+            ErrorFunction("LoaderWindow::OnCreate") << 
+            ErrorString("Could not get message loop."));
+        }
+
+        // Register for message filtering and idle updates
+        pLoop->RemoveMessageFilter(this);
+        pLoop->RemoveIdleHandler(this);
+
+        // Mark as unhandled so next in chain is called
+        bHandled = FALSE;
+      }
+      catch (boost::exception const& e)
+      {
+        // Dump error information
+        MessageBoxA(NULL, boost::diagnostic_information(e).c_str(), 
+          "Hades-Loader", MB_OK);
+      }
+      catch (std::exception const& e)
+      {
+        // Dump error information
+        MessageBoxA(NULL, e.what(), "Hades-Loader", MB_OK);
+      }
+
       return 0;
     }
 
@@ -95,7 +124,34 @@ namespace Hades
             ErrorCodeWin(LastError));
         }
 
+        // Create status bar
+        if (!CreateSimpleStatusBar())
+        {
+          DWORD LastError = GetLastError();
+          BOOST_THROW_EXCEPTION(HadesError() << 
+            ErrorFunction("LoaderWindow::OnCreate") << 
+            ErrorString("Could not create status bar.") << 
+            ErrorCodeWin(LastError));
+        }
+
+        // Create window client area
         m_hWndClient = CreateClient();
+        
+        // Set status bar check
+        UISetCheck(ID_VIEW_STATUS_BAR, 1);
+
+        // Get message loop
+        CMessageLoop* pLoop = m_pAppModule->GetMessageLoop();
+        if (!pLoop)
+        {
+          BOOST_THROW_EXCEPTION(HadesError() << 
+            ErrorFunction("LoaderWindow::OnCreate") << 
+            ErrorString("Could not get message loop."));
+        }
+
+        // Register for message filtering and idle updates
+        pLoop->AddMessageFilter(this);
+        pLoop->AddIdleHandler(this);
 
         // Get menu for window
         CMenuHandle MainMenu(GetMenu());
@@ -162,7 +218,7 @@ namespace Hades
       try
       {
         // Send close request
-        if (!PostMessage(WM_CLOSE, 0, 0))
+        if (!PostMessage(WM_CLOSE))
         {
           DWORD LastError = GetLastError();
           BOOST_THROW_EXCEPTION(HadesError() << 
@@ -353,6 +409,58 @@ namespace Hades
             NewClient.BringWindowToTop();
           }
         }
+      }
+      catch (boost::exception const& e)
+      {
+        // Dump error information
+        MessageBoxA(NULL, boost::diagnostic_information(e).c_str(), 
+          "Hades-Loader", MB_OK);
+      }
+      catch (std::exception const& e)
+      {
+        // Dump error information
+        MessageBoxA(NULL, e.what(), "Hades-Loader", MB_OK);
+      }
+
+      return 0;
+    }
+
+    // PreTranslateMessage handler (CMessageFilter)
+    BOOL LoaderWindow::PreTranslateMessage(MSG* pMsg)
+    {
+      return LoaderWindowT<LoaderWindow>::PreTranslateMessage(pMsg);
+    }
+
+    // Idle handler (CIdleHandler)
+    BOOL LoaderWindow::OnIdle()
+    {
+      return FALSE;
+    }
+
+    // Constructor
+    LoaderWindow::LoaderWindow(CAppModule* pAppModule) 
+      : m_pAppModule(pAppModule), 
+      m_GameMgr(), 
+      m_Splitter(), 
+      m_LeftPane(), 
+      m_RightPane(), 
+      m_NavTree(), 
+      m_FooTree(), 
+      m_BarTree(), 
+      m_NavTreeMap()
+    { }
+
+    // ID_VIEW_STATUS_BAR command callback
+    LRESULT LoaderWindow::OnViewStatusBar(WORD /*wNotifyCode*/, WORD /*wID*/, 
+      HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+    {
+      try
+      {
+        CWindow StatusBarWnd(m_hWndStatusBar);
+        BOOL bVisible = !StatusBarWnd.IsWindowVisible();
+        StatusBarWnd.ShowWindow(bVisible ? SW_SHOWNOACTIVATE : SW_HIDE);
+        UISetCheck(ID_VIEW_STATUS_BAR, bVisible);
+        UpdateLayout();
       }
       catch (boost::exception const& e)
       {

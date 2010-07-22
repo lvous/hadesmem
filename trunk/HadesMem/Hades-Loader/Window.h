@@ -55,11 +55,24 @@ namespace Hades
     { };
 
     // Loader window manager
-    class LoaderWindow : public LoaderWindowT<LoaderWindow>
+    class LoaderWindow : 
+      public LoaderWindowT<LoaderWindow>, 
+      public CUpdateUI<LoaderWindow>, 
+      public CMessageFilter, 
+      public CIdleHandler
     {
     public:
       // Specify window class name and resource id
       DECLARE_FRAME_WND_CLASS(L"HadesLoaderWndClass", IDR_LOADERWINDOW)
+
+      // Constructor
+      LoaderWindow(CAppModule* pAppModule);
+
+      // PreTranslateMessage handler (CMessageFilter)
+      virtual BOOL PreTranslateMessage(MSG* pMsg);
+
+      // Idle handler (CIdleHandler)
+      virtual BOOL OnIdle();
 
       // WM_DESTROY message callback
       LRESULT OnDestroy(UINT nMsg, WPARAM wParam, LPARAM lParam, 
@@ -84,6 +97,10 @@ namespace Hades
       // TVN_SELCHANGED notification callback
       LRESULT OnTVSelChanged(int idCtrl, LPNMHDR pnmh, BOOL& bHandled);
 
+      // ID_VIEW_STATUS_BAR command callback
+      LRESULT OnViewStatusBar(WORD wNotifyCode, WORD wID, HWND hWndCtl, 
+        BOOL& bHandled);
+
       // Create client area of window
       HWND CreateClient();
 
@@ -91,12 +108,18 @@ namespace Hades
       BEGIN_MSG_MAP(LoaderWindow)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
         MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
-        COMMAND_ID_HANDLER(ID_HELP_ABOUT, OnHelpAbout)
-        COMMAND_ID_HANDLER(ID_FILE_EXIT, OnFileExit)
         MESSAGE_HANDLER(WM_COMMAND, OnCommand)
+        COMMAND_ID_HANDLER(ID_FILE_EXIT, OnFileExit)
+        COMMAND_ID_HANDLER(ID_HELP_ABOUT, OnHelpAbout)
+        COMMAND_ID_HANDLER(ID_VIEW_STATUS_BAR, OnViewStatusBar)
         NOTIFY_CODE_HANDLER(TVN_SELCHANGED, OnTVSelChanged)
+        CHAIN_MSG_MAP(CUpdateUI<LoaderWindow>)
         CHAIN_MSG_MAP(LoaderWindowT<LoaderWindow>)
       END_MSG_MAP()
+
+      BEGIN_UPDATE_UI_MAP(LoaderWindow)
+        UPDATE_ELEMENT(ID_VIEW_STATUS_BAR, UPDUI_MENUPOPUP)
+      END_UPDATE_UI_MAP()
 
       CWindow CreateFooWindow() 
       {
@@ -137,6 +160,9 @@ namespace Hades
       }
 
     private:
+      // App module
+      CAppModule* m_pAppModule;
+
       // Game manager
       GameMgr m_GameMgr;
 

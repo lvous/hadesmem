@@ -115,7 +115,7 @@ int CALLBACK wWinMain(
 
     {
       // Create loader window manager
-      Hades::Loader::LoaderWindow MainWindow;
+      Hades::Loader::LoaderWindow MainWindow(&MyAppModule);
 
       // Create window
       if (!MainWindow.CreateEx())
