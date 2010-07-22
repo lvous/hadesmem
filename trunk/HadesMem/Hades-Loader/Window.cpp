@@ -66,10 +66,13 @@ namespace Hades
 
     // WM_COMMAND message callback
     LRESULT LoaderWindow::OnCommand(UINT /*nMsg*/, WPARAM wParam, 
-      LPARAM /*lParam*/, BOOL& /*bHandled*/)
+      LPARAM /*lParam*/, BOOL& bHandled)
     {
       try
       {
+        // Unhandled by default
+        bHandled = FALSE;
+
         // Get message ID
         WORD MsgId = LOWORD(wParam);
 
@@ -79,6 +82,9 @@ namespace Hades
         // If entry existed attempt to launch
         if (pGameData)
         {
+          // Message handled
+          bHandled = TRUE;
+
           // Launch game
           m_GameMgr.LaunchGame(*pGameData);
         }
