@@ -117,10 +117,12 @@ namespace Hades
         CHAIN_MSG_MAP(LoaderWindowT<LoaderWindow>)
       END_MSG_MAP()
 
+      // ATL UI update map
       BEGIN_UPDATE_UI_MAP(LoaderWindow)
         UPDATE_ELEMENT(ID_VIEW_STATUS_BAR, UPDUI_MENUPOPUP)
       END_UPDATE_UI_MAP()
 
+      // Create test window
       CWindow CreateFooWindow() 
       {
         // Create test tree
@@ -140,6 +142,7 @@ namespace Hades
         return m_FooTree;
       }
 
+      // Create test window
       CWindow CreateBarWindow() 
       {
         // Create test tree
