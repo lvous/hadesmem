@@ -114,25 +114,6 @@ namespace Hades
       LoadModule(m_PathToSelfDir + L"\\" + InputModName);
       LoadModule(m_PathToSelfDir + L"\\" + D3D9ModName);
 
-      // Attempt to load Hades-HXStealth
-#if defined(_M_X64)
-      std::wstring const HXStealthMod(L"Hades-HXStealth_AMD64.dll");
-#elif defined(_M_IX86)
-      std::wstring const HXStealthMod(L"Hades-HXStealth_IA32.dll");
-#else
-#error Unsupported platform!
-#endif
-      try
-      {
-        LoadExtension(HXStealthMod);
-      }
-      catch (boost::exception const& /*e*/)
-      {
-        // Todo: Output this to console
-        std::wcout << "Kernel::Initialize: Warning! Could not load "
-          "Hades-HXStealth." << std::endl;
-      }
-
       // Initialize .NET
       m_pDotNetMgr.reset(new DotNetMgr(this, m_PathToSelfDir + 
         L"/Config/DotNet.xml"));
