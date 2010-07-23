@@ -38,6 +38,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 // Hades
 #include "Window.h"
+#include "GameLoop.h"
 #include "Hades-Common/Error.h"
 #include "Hades-Common/Logger.h"
 #include "Hades-Common/EnsureCleanup.h"
@@ -105,7 +106,7 @@ int CALLBACK wWinMain(
     }
 
     // Add message loop
-    CMessageLoop MyMessageLoop;
+    Hades::GUISandbox::GameLoop MyMessageLoop;
     if (!MyAppModule.AddMessageLoop(&MyMessageLoop))
     {
       BOOST_THROW_EXCEPTION(Hades::HadesError() << 

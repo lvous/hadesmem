@@ -109,13 +109,16 @@ namespace Hades
         UISetCheck(ID_VIEW_STATUS_BAR, 1);
 
         // Get message loop
-        CMessageLoop* pLoop = m_pAppModule->GetMessageLoop();
+        auto pLoop = dynamic_cast<GameLoop*>(m_pAppModule->GetMessageLoop());
         if (!pLoop)
         {
           BOOST_THROW_EXCEPTION(HadesError() << 
             ErrorFunction("SandboxWindow::OnCreate") << 
             ErrorString("Could not get message loop."));
         }
+
+        // Set game handler
+        pLoop->SetGameHandler(&m_GameHandler);
 
         // Register for message filtering and idle updates
         pLoop->AddMessageFilter(this);
@@ -182,9 +185,6 @@ namespace Hades
     // PreTranslateMessage handler (CMessageFilter)
     BOOL SandboxWindow::PreTranslateMessage(MSG* pMsg)
     {
-      // Render GUI
-      RenderScreen();
-
       // Get message params
       UINT uMsg = pMsg->message;
       WPARAM wParam = pMsg->wParam;
@@ -209,7 +209,8 @@ namespace Hades
 
     // Constructor
     SandboxWindow::SandboxWindow(CAppModule* pAppModule) 
-      : m_pAppModule(pAppModule), 
+      : m_GameHandler(this), 
+      m_pAppModule(pAppModule), 
       m_D3DPresentParams(), 
       m_pD3D(), 
       m_pDevice(), 
@@ -547,6 +548,46 @@ namespace Hades
       }
 
       return std::string();
+    }
+
+    // Constructor
+    SandboxGameHandler::SandboxGameHandler(SandboxWindow* pSandboxWindow) 
+      : m_pSandboxWindow(pSandboxWindow)
+    { }
+
+    // Whether sandbox is currently paused
+    // TODO: Implement this
+    BOOL SandboxGameHandler::IsPaused()
+    {
+      return FALSE;
+    }
+
+    // OnFrame callback for GameLoop. Calls RenderScreen for sandbox 
+    // window.
+    HRESULT SandboxGameHandler::OnUpdateFrame()
+    {
+      try
+      {
+        // Render screen
+        m_pSandboxWindow->RenderScreen();
+
+        // Success
+        return S_OK;
+      }
+      catch (boost::exception const& e)
+      {
+        // Dump error information
+        MessageBoxA(NULL, boost::diagnostic_information(e).c_str(), 
+          "Hades-GUISandbox", MB_OK);
+      }
+      catch (std::exception const& e)
+      {
+        // Dump error information
+        MessageBoxA(NULL, e.what(), "Hades-GUISandbox", MB_OK);
+      }
+
+      // Something went wrong
+      return S_FALSE;
     }
   }
 }

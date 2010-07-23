@@ -44,12 +44,34 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 // Hades
 #include "Resource.h"
+#include "GameLoop.h"
 #include "Hades-GUI/CGUI.h"
 
 namespace Hades
 {
   namespace GUISandbox
   {
+    // Forward declaration
+    class SandboxWindow;
+
+    // GUI sandbox game handler for GameLoop
+    class SandboxGameHandler : public GameHandler
+    {
+    public:
+      // Constructor
+      SandboxGameHandler(SandboxWindow* pSandboxWindow);
+
+      // Whether sandbox is currently paused
+      virtual BOOL IsPaused();
+
+      // OnFrame callback for GameLoop
+      virtual HRESULT OnUpdateFrame();
+
+    private:
+      // Sandbox window
+      SandboxWindow* m_pSandboxWindow;
+    };
+
     // GUI sandbox window manager
     class SandboxWindow : 
       public CFrameWindowImpl<SandboxWindow>, 
@@ -69,6 +91,9 @@ namespace Hades
 
       // Load GUI
       void LoadGUI();
+
+      // Render D3D screen
+      void RenderScreen();
 
     private:
       // PreTranslateMessage handler (CMessageFilter)
@@ -119,9 +144,6 @@ namespace Hades
       // Create client area of window
       HWND CreateClient();
 
-      // Render D3D screen
-      void RenderScreen();
-
       // Create GUI menu
       GUI::CWindow* CreateMainMenu();
 
@@ -149,6 +171,9 @@ namespace Hades
       BEGIN_UPDATE_UI_MAP(SandboxWindow)
         UPDATE_ELEMENT(ID_VIEW_STATUS_BAR, UPDUI_MENUPOPUP)
       END_UPDATE_UI_MAP()
+
+      // Game handler
+      SandboxGameHandler m_GameHandler;
 
       // App module
       CAppModule* m_pAppModule;
