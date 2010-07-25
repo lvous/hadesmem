@@ -28,7 +28,7 @@ namespace Hades
 {
   namespace GUI
   {
-    class CEditBox : public Element
+    class EditBox : public Element
     {
       int m_iStart, m_iIndex;
       int m_iCursorX;
@@ -38,7 +38,7 @@ namespace Hades
       Colour * pInner, * pBorder, * pString, * pCursor;
 
     public:
-      CEditBox(class GUI& Gui, TiXmlElement* pElement);
+      EditBox(class GUI& Gui, TiXmlElement* pElement);
 
       void Draw();
 

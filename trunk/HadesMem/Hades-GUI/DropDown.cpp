@@ -26,7 +26,7 @@ namespace Hades
 {
   namespace GUI
   {
-    CDropDown::CDropDown(GUI& Gui, TiXmlElement* pElement)
+    DropDown::DropDown(GUI& Gui, TiXmlElement* pElement)
       : Element(Gui)
     {
       SetElement(pElement);
@@ -46,7 +46,7 @@ namespace Hades
         SetElementState("Norm");
     }
 
-    void CDropDown::Draw()
+    void DropDown::Draw()
     {
       Pos MyPos = GetParent()->GetAbsPos() + GetRelPos();
 
@@ -79,7 +79,7 @@ namespace Hades
       }
     }
 
-    void CDropDown::MouseMove(Mouse & pMouse)
+    void DropDown::MouseMove(Mouse & pMouse)
     {
       Pos Pos = GetParent()->GetAbsPos() + GetRelPos(), mPos = m_Gui.GetMouse().GetPos();
 
@@ -107,7 +107,7 @@ namespace Hades
           pMouse.SetPos(mPos);
     }
 
-    bool CDropDown::KeyEvent(Key Key)
+    bool DropDown::KeyEvent(Key Key)
     {
       if (!Key.m_Key)
       {
@@ -142,17 +142,17 @@ namespace Hades
       return !GetMouseOver();
     }
 
-    void CDropDown::AddElement(std::string sElem, std::string sValue)
+    void DropDown::AddElement(std::string sElem, std::string sValue)
     {
       m_vEntrys.push_back(SEntry(sElem, sValue));
     }
 
-    std::string CDropDown::GetValue() const
+    std::string DropDown::GetValue() const
     {
       return m_vEntrys[ m_iSelected ].m_sValue;
     }
 
-    void CDropDown::UpdateTheme(int iIndex)
+    void DropDown::UpdateTheme(int iIndex)
     {
       SElementState * pState = GetElementState(iIndex);
 

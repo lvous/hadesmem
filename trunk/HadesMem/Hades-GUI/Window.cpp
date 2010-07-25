@@ -47,15 +47,15 @@ namespace Hades
   AddElement(new Class(Gui, pElementElement));
 
       LOAD_ELEMENTS(Button, "Button")
-        LOAD_ELEMENTS(CText, "Text")
+        LOAD_ELEMENTS(Text, "Text")
         LOAD_ELEMENTS(ProgressBar, "ProgressBar")
         LOAD_ELEMENTS(CheckBox, "CheckBox")
-        LOAD_ELEMENTS(CEditBox, "EditBox")
+        LOAD_ELEMENTS(EditBox, "EditBox")
         LOAD_ELEMENTS(HorizontalSliderBar, "HorizontalSliderBar")
         LOAD_ELEMENTS(VerticalSliderBar, "VerticalSliderBar")
         LOAD_ELEMENTS(TextBox, "TextBox")
         LOAD_ELEMENTS(ListBox, "ListBox")
-        LOAD_ELEMENTS(CDropDown, "DropDown")
+        LOAD_ELEMENTS(DropDown, "DropDown")
 
         SetThemeElement(m_Gui.GetThemeElement("Window"));
 

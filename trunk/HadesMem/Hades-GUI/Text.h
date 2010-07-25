@@ -28,11 +28,11 @@ namespace Hades
 {
   namespace GUI
   {
-    class CText : public Element
+    class Text : public Element
     {
       Colour * pString;
     public:
-      CText(class GUI& Gui, TiXmlElement* pElement);
+      Text(class GUI& Gui, TiXmlElement* pElement);
 
       void Draw();
       void PreDraw();

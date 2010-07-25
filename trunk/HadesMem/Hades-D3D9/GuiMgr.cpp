@@ -267,7 +267,7 @@ namespace Hades
           else
           {
             // Set input box as focused element
-            auto pInBoxReal = dynamic_cast<GUI::CEditBox*>(pInBox);
+            auto pInBoxReal = dynamic_cast<GUI::EditBox*>(pInBox);
             pInBoxReal->GetParent()->SetFocussedElement(pInBoxReal);
           }
         }
@@ -295,7 +295,7 @@ namespace Hades
           else
           {
             // Check if input box is focused element
-            auto pInBoxReal = dynamic_cast<GUI::CEditBox*>(pInBox);
+            auto pInBoxReal = dynamic_cast<GUI::EditBox*>(pInBox);
             if (pInBoxReal == pConsole->GetFocussedElement())
             {
               // Handle up key
@@ -445,7 +445,7 @@ namespace Hades
       m_CallsOnConsoleInput(Input);
 
       // Clear input box and refocus
-      auto pEditBox = dynamic_cast<GUI::CEditBox*>(pElement);
+      auto pEditBox = dynamic_cast<GUI::EditBox*>(pElement);
       pEditBox->SetString("");
       pEditBox->SetStart(0);
       pEditBox->SetIndex(0);

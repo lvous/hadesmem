@@ -28,7 +28,7 @@ namespace Hades
 {
   namespace GUI
   {
-    class CDropDown : public Element
+    class DropDown : public Element
     {
       bool m_bDropped;
       int m_iMouseOverIndex, m_iSelected;
@@ -49,7 +49,7 @@ namespace Hades
       Texture * pButton;
 
     public:
-      CDropDown(class GUI& Gui, TiXmlElement* pElement);
+      DropDown(class GUI& Gui, TiXmlElement* pElement);
 
       void Draw();
       void MouseMove(Mouse & pMouse);

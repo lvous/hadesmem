@@ -26,7 +26,7 @@ namespace Hades
 {
   namespace GUI
   {
-    CEditBox::CEditBox(GUI& Gui, TiXmlElement * pElement)
+    EditBox::EditBox(GUI& Gui, TiXmlElement * pElement)
       : Element(Gui)
     {
       SetElement(pElement);
@@ -54,7 +54,7 @@ namespace Hades
         SetElementState("Norm");
     }
 
-    void CEditBox::Draw()
+    void EditBox::Draw()
     {
       Pos Pos = GetParent()->GetAbsPos() + GetRelPos();
 
@@ -77,7 +77,7 @@ namespace Hades
       }
     }
 
-    void CEditBox::PreDraw()
+    void EditBox::PreDraw()
     {
       if (!m_tCursorTimer.Running() && (HasFocus() || m_bCursorState))
       {
@@ -86,14 +86,14 @@ namespace Hades
       }
     }
 
-    void CEditBox::MouseMove(Mouse & pMouse)
+    void EditBox::MouseMove(Mouse & pMouse)
     {
       Pos Pos = GetParent()->GetAbsPos() + GetRelPos();
 
       SetMouseOver(pMouse.InArea(Pos.GetX(), Pos.GetY(), GetWidth(), GetHeight()));
     }
 
-    bool CEditBox::KeyEvent(Key Key)
+    bool EditBox::KeyEvent(Key Key)
     {
       if (!Key.m_Key)
       {
@@ -287,12 +287,12 @@ namespace Hades
       return true;
     }
 
-    int CEditBox::GetIndex() const
+    int EditBox::GetIndex() const
     {
       return m_iIndex;
     }
 
-    void CEditBox::SetIndex(int iIndex)
+    void EditBox::SetIndex(int iIndex)
     {
       std::string sString(GetStart() < GetString().size() ? 
         &GetString()[ GetStart() ] : "");
@@ -312,17 +312,17 @@ namespace Hades
       m_iIndex = iIndex;
     }
 
-    int CEditBox::GetStart() const
+    int EditBox::GetStart() const
     {
       return m_iStart;
     }
 
-    void CEditBox::SetStart(int iStart)
+    void EditBox::SetStart(int iStart)
     {
       m_iStart = iStart;
     }
 
-    void CEditBox::UpdateTheme(int iIndex)
+    void EditBox::UpdateTheme(int iIndex)
     {
       SElementState * pState = GetElementState(iIndex);
 

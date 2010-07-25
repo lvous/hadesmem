@@ -26,7 +26,7 @@ namespace Hades
 {
   namespace GUI
   {
-    CText::CText(GUI& Gui, TiXmlElement* pElement)
+    Text::Text(GUI& Gui, TiXmlElement* pElement)
       : Element(Gui)
     {
       SetElement(pElement);
@@ -39,26 +39,26 @@ namespace Hades
         SetElementState("Norm");
     }
 
-    void CText::Draw()
+    void Text::Draw()
     {
       Pos Pos = GetParent()->GetAbsPos() + GetRelPos();
 
       m_Gui.GetFont().DrawString(Pos.GetX(), Pos.GetY(), 0, pString, GetFormatted(), GetWidth());
     }
 
-    void CText::PreDraw()
+    void Text::PreDraw()
     {
       GetString(true);
     }
 
-    void CText::MouseMove(Mouse & pMouse)
+    void Text::MouseMove(Mouse & pMouse)
     {
       Pos Pos = GetParent()->GetAbsPos() + GetRelPos();
 
       SetElementState(SetMouseOver(pMouse.InArea(Pos.GetX(), Pos.GetY(), m_Gui.GetFont().GetStringWidth(GetFormatted().c_str()), m_Gui.GetFont().GetStringHeight()))?"MouseOver":"Norm");
     }
 
-    void CText::UpdateTheme(int iIndex)
+    void Text::UpdateTheme(int iIndex)
     {
       SElementState * pState = GetElementState(iIndex);
 
