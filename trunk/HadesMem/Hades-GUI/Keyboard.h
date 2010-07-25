@@ -22,33 +22,39 @@ THE SOFTWARE.
 
 #pragma once
 
-// C++ Standard Library
-#include <functional>
+// Windows API
+#include <Windows.h>
 
 namespace Hades
 {
   namespace GUI
   {
-    // Forward declarations
-    class Pos;
-    class Timer;
-    class Mouse;
-    class Colour;
-    class Window;
-    class Button;
-    class Texture;
-    class Element;
-    class ListBox;
-    class TextBox;
-    class Keyboard;
-    class CheckBox;
-    class ProgressBar;
-    class HelperSlider;
-    class VerticalSliderBar;
-    class HorizontalSliderBar;
+    struct Key
+    {
+      explicit Key(char Key = 0, bool Down = false, LPARAM lParam = 0)
+        : m_Key(Key), 
+        m_Down(Down), 
+        m_lParam(lParam)
+      { }
 
-    // Callback type
-    typedef std::function<std::string (const char* pszArgs, 
-      Element* pElement)> Callback;
+      char m_Key;
+      bool m_Down;
+      LPARAM m_lParam;
+    };
+
+    class Keyboard
+    {
+    public:
+      Keyboard(class GUI& Gui);
+
+      bool HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+      void SetKey(Key Key);
+      Key GetKey();
+
+    private:
+      class GUI& m_Gui;
+      Key m_Key;
+    };
   }
 }

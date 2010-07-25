@@ -45,9 +45,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="CGUI.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="TinyXML\tinyxmlparser.cpp">
       <Filter>Source Files\TinyXML</Filter>
     </ClCompile>
@@ -60,71 +57,71 @@
     <ClCompile Include="TinyXML\tinyxmlerror.cpp">
       <Filter>Source Files\TinyXML</Filter>
     </ClCompile>
-    <ClCompile Include="CButton.cpp">
+    <ClCompile Include="Button.cpp">
       <Filter>Source Files\Elements</Filter>
     </ClCompile>
-    <ClCompile Include="CCheckBox.cpp">
+    <ClCompile Include="CheckBox.cpp">
       <Filter>Source Files\Elements</Filter>
     </ClCompile>
-    <ClCompile Include="CDropDown.cpp">
+    <ClCompile Include="DropDown.cpp">
       <Filter>Source Files\Elements</Filter>
     </ClCompile>
-    <ClCompile Include="CEditBox.cpp">
+    <ClCompile Include="EditBox.cpp">
       <Filter>Source Files\Elements</Filter>
     </ClCompile>
-    <ClCompile Include="CElement.cpp">
+    <ClCompile Include="Element.cpp">
       <Filter>Source Files\Elements</Filter>
     </ClCompile>
-    <ClCompile Include="CHelperSlider.cpp">
+    <ClCompile Include="HelperSlider.cpp">
       <Filter>Source Files\Elements</Filter>
     </ClCompile>
-    <ClCompile Include="CHorizontalSliderBar.cpp">
+    <ClCompile Include="HorizontalSliderBar.cpp">
       <Filter>Source Files\Elements</Filter>
     </ClCompile>
-    <ClCompile Include="CListBox.cpp">
+    <ClCompile Include="ListBox.cpp">
       <Filter>Source Files\Elements</Filter>
     </ClCompile>
-    <ClCompile Include="CProgressBar.cpp">
+    <ClCompile Include="ProgressBar.cpp">
       <Filter>Source Files\Elements</Filter>
     </ClCompile>
-    <ClCompile Include="CTextBox.cpp">
+    <ClCompile Include="Text.cpp">
       <Filter>Source Files\Elements</Filter>
     </ClCompile>
-    <ClCompile Include="CVerticalSliderBar.cpp">
+    <ClCompile Include="TextBox.cpp">
       <Filter>Source Files\Elements</Filter>
     </ClCompile>
-    <ClCompile Include="CWindow.cpp">
+    <ClCompile Include="VerticalSliderBar.cpp">
       <Filter>Source Files\Elements</Filter>
     </ClCompile>
-    <ClCompile Include="CText.cpp">
+    <ClCompile Include="Window.cpp">
       <Filter>Source Files\Elements</Filter>
     </ClCompile>
-    <ClCompile Include="CKeyboard.cpp">
-      <Filter>Source Files\Input</Filter>
+    <ClCompile Include="GUI.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="CMouse.cpp">
-      <Filter>Source Files\Input</Filter>
-    </ClCompile>
-    <ClCompile Include="CPos.cpp">
+    <ClCompile Include="Timer.cpp">
       <Filter>Source Files\Util</Filter>
     </ClCompile>
-    <ClCompile Include="CTimer.cpp">
+    <ClCompile Include="Pos.cpp">
       <Filter>Source Files\Util</Filter>
     </ClCompile>
-    <ClCompile Include="CTexture.cpp">
+    <ClCompile Include="Texture.cpp">
       <Filter>Source Files\Rendering</Filter>
     </ClCompile>
-    <ClCompile Include="CFont.cpp">
+    <ClCompile Include="Font.cpp">
       <Filter>Source Files\Rendering</Filter>
     </ClCompile>
-    <ClCompile Include="CColor.cpp">
+    <ClCompile Include="Colour.cpp">
       <Filter>Source Files\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Mouse.cpp">
+      <Filter>Source Files\Input</Filter>
+    </ClCompile>
+    <ClCompile Include="Keyboard.cpp">
+      <Filter>Source Files\Input</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="CGUI.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="TinyXML\tinyxml.h">
       <Filter>Header Files\TinyXML</Filter>
     </ClInclude>
@@ -134,70 +131,73 @@
     <ClInclude Include="Error.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CButton.h">
-      <Filter>Header Files\Elements</Filter>
-    </ClInclude>
-    <ClInclude Include="CCheckBox.h">
-      <Filter>Header Files\Elements</Filter>
-    </ClInclude>
-    <ClInclude Include="CDropDown.h">
-      <Filter>Header Files\Elements</Filter>
-    </ClInclude>
-    <ClInclude Include="CEditBox.h">
-      <Filter>Header Files\Elements</Filter>
-    </ClInclude>
-    <ClInclude Include="CElement.h">
-      <Filter>Header Files\Elements</Filter>
-    </ClInclude>
-    <ClInclude Include="CHelperSlider.h">
-      <Filter>Header Files\Elements</Filter>
-    </ClInclude>
-    <ClInclude Include="CHorizontalSliderBar.h">
-      <Filter>Header Files\Elements</Filter>
-    </ClInclude>
-    <ClInclude Include="CListBox.h">
-      <Filter>Header Files\Elements</Filter>
-    </ClInclude>
-    <ClInclude Include="CProgressBar.h">
-      <Filter>Header Files\Elements</Filter>
-    </ClInclude>
-    <ClInclude Include="CText.h">
-      <Filter>Header Files\Elements</Filter>
-    </ClInclude>
-    <ClInclude Include="CTextBox.h">
-      <Filter>Header Files\Elements</Filter>
-    </ClInclude>
-    <ClInclude Include="CVerticalSliderBar.h">
-      <Filter>Header Files\Elements</Filter>
-    </ClInclude>
-    <ClInclude Include="CWindow.h">
-      <Filter>Header Files\Elements</Filter>
-    </ClInclude>
-    <ClInclude Include="CFont.h">
-      <Filter>Header Files\Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="CPos.h">
-      <Filter>Header Files\Util</Filter>
-    </ClInclude>
-    <ClInclude Include="CMouse.h">
-      <Filter>Header Files\Input</Filter>
-    </ClInclude>
-    <ClInclude Include="CKeyboard.h">
-      <Filter>Header Files\Input</Filter>
-    </ClInclude>
-    <ClInclude Include="CTimer.h">
-      <Filter>Header Files\Util</Filter>
-    </ClInclude>
-    <ClInclude Include="CTexture.h">
-      <Filter>Header Files\Rendering</Filter>
-    </ClInclude>
     <ClInclude Include="D3D9.h">
       <Filter>Header Files\Rendering</Filter>
     </ClInclude>
-    <ClInclude Include="CColor.h">
+    <ClInclude Include="Fwd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Button.h">
+      <Filter>Header Files\Elements</Filter>
+    </ClInclude>
+    <ClInclude Include="CheckBox.h">
+      <Filter>Header Files\Elements</Filter>
+    </ClInclude>
+    <ClInclude Include="DropDown.h">
+      <Filter>Header Files\Elements</Filter>
+    </ClInclude>
+    <ClInclude Include="EditBox.h">
+      <Filter>Header Files\Elements</Filter>
+    </ClInclude>
+    <ClInclude Include="Element.h">
+      <Filter>Header Files\Elements</Filter>
+    </ClInclude>
+    <ClInclude Include="HelperSlider.h">
+      <Filter>Header Files\Elements</Filter>
+    </ClInclude>
+    <ClInclude Include="HorizontalSliderBar.h">
+      <Filter>Header Files\Elements</Filter>
+    </ClInclude>
+    <ClInclude Include="ListBox.h">
+      <Filter>Header Files\Elements</Filter>
+    </ClInclude>
+    <ClInclude Include="ProgressBar.h">
+      <Filter>Header Files\Elements</Filter>
+    </ClInclude>
+    <ClInclude Include="Text.h">
+      <Filter>Header Files\Elements</Filter>
+    </ClInclude>
+    <ClInclude Include="TextBox.h">
+      <Filter>Header Files\Elements</Filter>
+    </ClInclude>
+    <ClInclude Include="VerticalSliderBar.h">
+      <Filter>Header Files\Elements</Filter>
+    </ClInclude>
+    <ClInclude Include="Window.h">
+      <Filter>Header Files\Elements</Filter>
+    </ClInclude>
+    <ClInclude Include="Keyboard.h">
+      <Filter>Header Files\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="Mouse.h">
+      <Filter>Header Files\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="Colour.h">
       <Filter>Header Files\Rendering</Filter>
     </ClInclude>
-    <ClInclude Include="Fwd.h">
+    <ClInclude Include="Font.h">
+      <Filter>Header Files\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Texture.h">
+      <Filter>Header Files\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Pos.h">
+      <Filter>Header Files\Util</Filter>
+    </ClInclude>
+    <ClInclude Include="Timer.h">
+      <Filter>Header Files\Util</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

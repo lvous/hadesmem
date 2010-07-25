@@ -20,35 +20,39 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#pragma once
-
-// C++ Standard Library
-#include <functional>
+#include "GUI.h"
 
 namespace Hades
 {
   namespace GUI
   {
-    // Forward declarations
-    class Pos;
-    class Timer;
-    class Mouse;
-    class Colour;
-    class Window;
-    class Button;
-    class Texture;
-    class Element;
-    class ListBox;
-    class TextBox;
-    class Keyboard;
-    class CheckBox;
-    class ProgressBar;
-    class HelperSlider;
-    class VerticalSliderBar;
-    class HorizontalSliderBar;
+    Timer::Timer()
+      : m_StopTime(0)
+    { }
 
-    // Callback type
-    typedef std::function<std::string (const char* pszArgs, 
-      Element* pElement)> Callback;
+    void Timer::Start(float Seconds)
+    {
+      m_StopTime = static_cast<DWORD>(Seconds * 1000) + timeGetTime();
+    }
+
+    void Timer::Stop()
+    {
+      m_StopTime = 0;
+    }
+
+    float Timer::TimeLeft()
+    {
+      if (Running())
+      {
+        return static_cast<float>(m_StopTime - timeGetTime()) / 1000;
+      }
+
+      return 0.f; 
+    }
+
+    bool Timer::Running()
+    {
+      return m_StopTime > timeGetTime();
+    }
   }
 }

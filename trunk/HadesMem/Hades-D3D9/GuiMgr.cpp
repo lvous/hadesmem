@@ -436,7 +436,7 @@ namespace Hades
 
     // GUI library callback for console input
     std::string GuiMgr::OnConsoleInput(char const* pszArgs, 
-      GUI::CElement* pElement)
+      GUI::Element* pElement)
     {
       // Get input
       std::string const Input(pszArgs);
@@ -485,7 +485,7 @@ namespace Hades
       }
 
       // Add output
-      auto pOutBoxReal = dynamic_cast<GUI::CTextBox*>(pOutBox);
+      auto pOutBoxReal = dynamic_cast<GUI::TextBox*>(pOutBox);
       pOutBoxReal->AddString(Output);
 
       // Debug output

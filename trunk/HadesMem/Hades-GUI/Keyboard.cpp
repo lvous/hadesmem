@@ -20,35 +20,51 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#pragma once
-
-// C++ Standard Library
-#include <functional>
+// Hades
+#include "GUI.h"
+#include "Mouse.h"
+#include "Keyboard.h"
 
 namespace Hades
 {
   namespace GUI
   {
-    // Forward declarations
-    class Pos;
-    class Timer;
-    class Mouse;
-    class Colour;
-    class Window;
-    class Button;
-    class Texture;
-    class Element;
-    class ListBox;
-    class TextBox;
-    class Keyboard;
-    class CheckBox;
-    class ProgressBar;
-    class HelperSlider;
-    class VerticalSliderBar;
-    class HorizontalSliderBar;
+    Keyboard::Keyboard(GUI& Gui) 
+      : m_Gui(Gui), 
+      m_Key()
+    { }
 
-    // Callback type
-    typedef std::function<std::string (const char* pszArgs, 
-      Element* pElement)> Callback;
+    bool Keyboard::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
+    {
+      if (!m_Gui.IsVisible() || uMsg < WM_KEYFIRST || uMsg > WM_KEYLAST || 
+        m_Gui.GetMouse().GetLeftButton())
+      {
+        return false;
+      }
+
+      switch(uMsg)
+      {
+      case WM_KEYDOWN:
+        SetKey(Key(static_cast<char>(wParam), true, lParam));
+        break;
+      case WM_KEYUP:
+        SetKey(Key(static_cast<char>(wParam), false, lParam));
+        break;
+      }
+
+      return m_Gui.KeyEvent(GetKey());
+    }
+
+    void Keyboard::SetKey(Key Key)
+    {
+      m_Key = Key;
+    }
+
+    Key Keyboard::GetKey()
+    {
+      Key sRet = m_Key;
+      SetKey(Key(0, false));
+      return sRet;
+    }
   }
 }

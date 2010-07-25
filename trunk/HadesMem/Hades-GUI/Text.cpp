@@ -20,35 +20,49 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#pragma once
-
-// C++ Standard Library
-#include <functional>
+#include "GUI.h"
 
 namespace Hades
 {
   namespace GUI
   {
-    // Forward declarations
-    class Pos;
-    class Timer;
-    class Mouse;
-    class Colour;
-    class Window;
-    class Button;
-    class Texture;
-    class Element;
-    class ListBox;
-    class TextBox;
-    class Keyboard;
-    class CheckBox;
-    class ProgressBar;
-    class HelperSlider;
-    class VerticalSliderBar;
-    class HorizontalSliderBar;
+    CText::CText(GUI& Gui, TiXmlElement* pElement)
+      : Element(Gui)
+    {
+      SetElement(pElement);
 
-    // Callback type
-    typedef std::function<std::string (const char* pszArgs, 
-      Element* pElement)> Callback;
+      SetThemeElement(m_Gui.GetThemeElement("Text"));
+
+      if (!GetThemeElement())
+        MessageBoxA(0, "Theme element invalid.", "Text", 0);
+      else
+        SetElementState("Norm");
+    }
+
+    void CText::Draw()
+    {
+      Pos Pos = GetParent()->GetAbsPos() + GetRelPos();
+
+      m_Gui.GetFont().DrawString(Pos.GetX(), Pos.GetY(), 0, pString, GetFormatted(), GetWidth());
+    }
+
+    void CText::PreDraw()
+    {
+      GetString(true);
+    }
+
+    void CText::MouseMove(Mouse & pMouse)
+    {
+      Pos Pos = GetParent()->GetAbsPos() + GetRelPos();
+
+      SetElementState(SetMouseOver(pMouse.InArea(Pos.GetX(), Pos.GetY(), m_Gui.GetFont().GetStringWidth(GetFormatted().c_str()), m_Gui.GetFont().GetStringHeight()))?"MouseOver":"Norm");
+    }
+
+    void CText::UpdateTheme(int iIndex)
+    {
+      SElementState * pState = GetElementState(iIndex);
+
+      pString = pState->GetColor("String");
+    }
   }
 }

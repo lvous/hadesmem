@@ -22,33 +22,30 @@ THE SOFTWARE.
 
 #pragma once
 
-// C++ Standard Library
-#include <functional>
+#include "GUI.h"
 
 namespace Hades
 {
   namespace GUI
   {
-    // Forward declarations
-    class Pos;
-    class Timer;
-    class Mouse;
-    class Colour;
-    class Window;
-    class Button;
-    class Texture;
-    class Element;
-    class ListBox;
-    class TextBox;
-    class Keyboard;
-    class CheckBox;
-    class ProgressBar;
-    class HelperSlider;
-    class VerticalSliderBar;
-    class HorizontalSliderBar;
+    class CheckBox : public Element
+    {
+      bool m_bChecked;
 
-    // Callback type
-    typedef std::function<std::string (const char* pszArgs, 
-      Element* pElement)> Callback;
+      Colour * pInner, * pBorder, * pString, * pCross;
+
+    public:
+      CheckBox(class GUI& Gui, TiXmlElement* pElement);
+
+      bool GetChecked() const;
+      void SetChecked(bool bChecked);
+
+      void Draw();
+      void PreDraw();
+      void MouseMove(Mouse & pMouse);
+      bool KeyEvent(Key Key);
+
+      void UpdateTheme(int iIndex);
+    };
   }
 }

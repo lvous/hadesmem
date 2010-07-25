@@ -488,7 +488,7 @@ namespace Hades
     }
 
     // Create GUI menu
-    GUI::CWindow* SandboxWindow::CreateMainMenu()
+    GUI::Window* SandboxWindow::CreateMainMenu()
     {
       // Create XML element to initialize GUI element
       auto pElement(std::make_shared<TiXmlElement>("Window"));
@@ -505,21 +505,21 @@ namespace Hades
       m_MenuSize = 0;
 
       // Create main menu window
-      auto pWindow = m_pGUI->AddWindow(new GUI::CWindow(*m_pGUI, &*pElement));
+      auto pWindow = m_pGUI->AddWindow(new GUI::Window(*m_pGUI, &*pElement));
 
       // Return pointer to window
       return pWindow;
     }
 
     // Add item to GUI menu
-    void SandboxWindow::AddMainMenuItem(GUI::CWindow* pWindow, 
+    void SandboxWindow::AddMainMenuItem(GUI::Window* pWindow, 
       std::string const& Label, std::string const& Window)
     {
       // Increase menu size
       pWindow->SetHeight(pWindow->GetHeight() + 25);
 
       // Create new menu button
-      auto pButton = new Hades::GUI::CButton(*m_pGUI, 0);
+      auto pButton = new Hades::GUI::Button(*m_pGUI, 0);
       pButton->SetHeight(BUTTON_HEIGHT);
       pButton->SetWidth(100);
       pButton->SetRelPos(Hades::GUI::Pos(15, m_MenuSize * 25 + 10));
@@ -537,7 +537,7 @@ namespace Hades
 
     // GUI menu callback
     std::string SandboxWindow::MainMenuCallback(const char* /*pArgs*/, 
-      GUI::CElement* pElement )
+      GUI::Element* pElement )
     {
       // Get window corresponding to selected menu item
       if(auto pWindow = m_pGUI->GetWindowByString(pElement->GetString(false, 

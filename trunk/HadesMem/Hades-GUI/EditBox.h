@@ -22,33 +22,37 @@ THE SOFTWARE.
 
 #pragma once
 
-// C++ Standard Library
-#include <functional>
+#include "GUI.h"
 
 namespace Hades
 {
   namespace GUI
   {
-    // Forward declarations
-    class Pos;
-    class Timer;
-    class Mouse;
-    class Colour;
-    class Window;
-    class Button;
-    class Texture;
-    class Element;
-    class ListBox;
-    class TextBox;
-    class Keyboard;
-    class CheckBox;
-    class ProgressBar;
-    class HelperSlider;
-    class VerticalSliderBar;
-    class HorizontalSliderBar;
+    class CEditBox : public Element
+    {
+      int m_iStart, m_iIndex;
+      int m_iCursorX;
+      Timer m_tCursorTimer;
+      bool m_bCursorState;
 
-    // Callback type
-    typedef std::function<std::string (const char* pszArgs, 
-      Element* pElement)> Callback;
+      Colour * pInner, * pBorder, * pString, * pCursor;
+
+    public:
+      CEditBox(class GUI& Gui, TiXmlElement* pElement);
+
+      void Draw();
+
+      void PreDraw();
+      void MouseMove(Mouse & pMouse);
+      bool KeyEvent(Key Key);
+
+      int GetIndex() const;
+      void SetIndex(int iIndex);
+
+      int GetStart() const;
+      void SetStart(int iStart);
+
+      void UpdateTheme(int iIndex);
+    };
   }
 }

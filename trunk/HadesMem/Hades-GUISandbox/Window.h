@@ -45,7 +45,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Hades
 #include "Resource.h"
 #include "GameLoop.h"
-#include "Hades-GUI/CGUI.h"
+#include "Hades-GUI/GUI.h"
 
 namespace Hades
 {
@@ -145,14 +145,14 @@ namespace Hades
       HWND CreateClient();
 
       // Create GUI menu
-      GUI::CWindow* CreateMainMenu();
+      GUI::Window* CreateMainMenu();
 
       // Add item to GUI menu
-      void AddMainMenuItem(GUI::CWindow* pWindow, std::string const& Label, 
+      void AddMainMenuItem(GUI::Window* pWindow, std::string const& Label, 
         std::string const& Window);
 
       // GUI menu callback
-      std::string MainMenuCallback(const char * pArgs, GUI::CElement* pElement);
+      std::string MainMenuCallback(const char * pArgs, GUI::Element* pElement);
 
       // ATL message map
       BEGIN_MSG_MAP(SandboxWindow)

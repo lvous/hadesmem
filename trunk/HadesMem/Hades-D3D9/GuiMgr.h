@@ -31,7 +31,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 // Hades
 #include "D3D9Helper.h"
-#include "Hades-GUI/CGUI.h"
+#include "Hades-GUI/GUI.h"
 #include "Hades-Common/Error.h"
 #include "Hades-Kernel/Kernel.h"
 
@@ -66,7 +66,7 @@ namespace Hades
 
     private:
       // Callback on input
-      std::string OnConsoleInput(char const* pszArgs, GUI::CElement* pElement);
+      std::string OnConsoleInput(char const* pszArgs, GUI::Element* pElement);
 
       // Input callbacks
       bool OnInputMsg(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);

@@ -20,35 +20,56 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#pragma once
-
-// C++ Standard Library
-#include <functional>
+// Hades
+#include "Pos.h"
 
 namespace Hades
 {
   namespace GUI
   {
-    // Forward declarations
-    class Pos;
-    class Timer;
-    class Mouse;
-    class Colour;
-    class Window;
-    class Button;
-    class Texture;
-    class Element;
-    class ListBox;
-    class TextBox;
-    class Keyboard;
-    class CheckBox;
-    class ProgressBar;
-    class HelperSlider;
-    class VerticalSliderBar;
-    class HorizontalSliderBar;
+    Pos::Pos(Pos* pPos)
+      : m_X(pPos->GetX()), 
+      m_Y(pPos->GetY())
+    { }
 
-    // Callback type
-    typedef std::function<std::string (const char* pszArgs, 
-      Element* pElement)> Callback;
+    Pos::Pos(int X, int Y)
+      : m_X(X), 
+      m_Y(Y)
+    { }
+
+    Pos::Pos()
+      : m_X(0), 
+      m_Y(0)
+    { }
+
+    int Pos::GetX() const
+    {
+      return m_X;
+    }
+
+    int Pos::GetY() const
+    {
+      return m_Y;
+    }
+
+    void Pos::SetX(int X)
+    {
+      m_X = X;
+    }
+
+    void Pos::SetY(int Y)
+    {
+      m_Y = Y;
+    }
+
+    const Pos Pos::operator + (Pos const& Rhs) const
+    {
+      return Pos(GetX() + Rhs.GetX(), GetY() + Rhs.GetY());
+    }
+
+    const Pos Pos::operator - (Pos const& Rhs) const
+    {
+      return Pos(GetX() - Rhs.GetX(), GetY() - Rhs.GetY());
+    }
   }
 }
