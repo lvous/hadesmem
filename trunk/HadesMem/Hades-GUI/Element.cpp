@@ -20,123 +20,169 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+// Hades
+#include "Element.h"
+
 #include "GUI.h"
 
 namespace Hades
 {
   namespace GUI
   {
-    void Element::SetElement(TiXmlElement * pElement)
+    Element::Element(GUI& Gui) 
+      : m_Gui(Gui), 
+      m_MouseOver(false), 
+      m_RawStr(), 
+      m_FormattedStr(), 
+      m_Width(0), 
+      m_Height(0), 
+      m_RelPos(), 
+      m_AbsPos(), 
+      m_pParent(nullptr), 
+      m_Callback(), 
+      m_ThemeElements(), 
+      m_ElementStates()
     {
+      m_RawStr.assign(std::string());
+      m_FormattedStr.assign(std::string());
+
+      m_ThemeElements.assign(nullptr);
+      m_ElementStates.assign(nullptr);
+    }
+
+    Element::~Element()
+    { }
+
+    void Element::SetElement(TiXmlElement* pElement)
+    {
+      if (!pElement)
+      {
+        return;
+      }
+
       SetMouseOver(false);
 
-      if (!pElement)
-        return;
+      int TempX = 0, TempY = 0;
 
-      int iTempX = 0, iTempY = 0;
+      if (pElement->QueryIntAttribute("relX", &TempX) == TIXML_NO_ATTRIBUTE)
+      {
+        TempX = 0;
+      }
+      if (pElement->QueryIntAttribute("relY", &TempY) == TIXML_NO_ATTRIBUTE)
+      {
+        TempY = 0;
+      }
 
-      if (pElement->QueryIntAttribute("relX", &iTempX) == TIXML_NO_ATTRIBUTE)
-        iTempX = 0;
-      if (pElement->QueryIntAttribute("relY", &iTempY) == TIXML_NO_ATTRIBUTE)
-        iTempY = 0;
+      SetRelPos(Pos(TempX, TempY));
 
-      SetRelPos(Pos(iTempX, iTempY));
+      if (pElement->QueryIntAttribute("absX", &TempX) == TIXML_NO_ATTRIBUTE)
+      {
+        TempX = 0;
+      }
+      if (pElement->QueryIntAttribute("absY", &TempY) == TIXML_NO_ATTRIBUTE)
+      {
+        TempY = 0;
+      }
 
-      if (pElement->QueryIntAttribute("absX", &iTempX) == TIXML_NO_ATTRIBUTE)
-        iTempX = 0;
-      if (pElement->QueryIntAttribute("absY", &iTempY) == TIXML_NO_ATTRIBUTE)
-        iTempY = 0;
+      SetAbsPos(Pos(TempX, TempY));
 
-      SetAbsPos(Pos(iTempX, iTempY));
+      if (pElement->QueryIntAttribute("width", &TempX) == TIXML_NO_ATTRIBUTE)
+      {
+        TempX = 0;
+      }
+      if (pElement->QueryIntAttribute("height", &TempY) == TIXML_NO_ATTRIBUTE)
+      {
+        TempY = 0;
+      }
 
-      if (pElement->QueryIntAttribute("width", &iTempX) == TIXML_NO_ATTRIBUTE)
-        iTempX = 0;
-      if (pElement->QueryIntAttribute("height", &iTempY) == TIXML_NO_ATTRIBUTE)
-        iTempY = 0;
+      SetWidth(TempX);
+      SetHeight(TempY);
 
-      SetWidth(iTempX);
-      SetHeight(iTempY);
-
-      const char * pszString = pElement->Attribute("string");
-      if (pszString)
+      if (const char* pszString = pElement->Attribute("string"))
+      {
         SetString(pszString);
+      }
 
-      pszString = pElement->Attribute("string2");
-      if (pszString)
+      if (const char* pszString = pElement->Attribute("string2"))
+      {
         SetString(pszString, 1);
+      }
 
-      const char * pszCallback = pElement->Attribute("callback");
-      if (pszCallback)
+      if (const char* pszCallback = pElement->Attribute("callback"))
       {
         SetCallback(m_Gui.GetCallback(pszCallback));
 
-        if (!GetCallback())
-          MessageBoxA(0, "Callback invalid", pszCallback, 0);
+        if (!m_Callback)
+        {
+          BOOST_THROW_EXCEPTION(HadesGuiError() << 
+            ErrorFunction("Element::SetElement") << 
+            ErrorString("Invalid callback."));
+        }
       }
       else
-        SetCallback(0);
-
-      SetMouseOver(false);
+      {
+        SetCallback(nullptr);
+      }
     }
 
-    void Element::SetParent(Window * pParent)
+    void Element::SetParent(Window* pParent)
     {
       m_pParent = pParent;
     }
 
-    Window * Element::GetParent() const
+    Window* Element::GetParent() const
     {
       return m_pParent;
     }
 
-    void Element::SetCallback(Callback pCallback)
+    void Element::SetCallback(Callback MyCallback)
     {
-      m_pCallback = pCallback;
+      m_Callback = MyCallback;
     }
 
     Callback Element::GetCallback() const
     {
-      return m_pCallback;
+      return m_Callback;
     }
 
-    void Element::SetRelPos(Pos relPos)
+    void Element::SetRelPos(Pos RelPos)
     {
-      m_relPos = relPos;
+      m_RelPos = RelPos;
     }
 
     Pos Element::GetRelPos() const
     {
-      return m_relPos;
+      return m_RelPos;
     }
 
-    void Element::SetAbsPos(Pos absPos)
+    void Element::SetAbsPos(Pos AbsPos)
     {
-      m_absPos = absPos;
+      m_AbsPos = AbsPos;
     }
 
     Pos Element::GetAbsPos() const
     {
-      return m_absPos;
+      return m_AbsPos;
     }
 
-    void Element::SetWidth(int iWidth)
+    void Element::SetWidth(int Width)
     {
-      m_iWidth = iWidth;
+      m_Width = Width;
     }
 
     int Element::GetWidth() const
     {
-      return m_iWidth;
+      return m_Width;
     }
 
-    void Element::SetHeight(int iHeight)
+    void Element::SetHeight(int Height)
     {
-      m_iHeight = iHeight;
+      m_Height = Height;
     }
 
     int Element::GetHeight() const
     {
-      return m_iHeight;
+      return m_Height;
     }
 
     bool Element::HasFocus() const
@@ -144,106 +190,113 @@ namespace Hades
       return GetParent()->GetFocussedElement() == this;
     }
 
-    void Element::SetString(std::string sString, int iIndex)
+    void Element::SetString(std::string const& MyString, int Index)
     {
-      if (static_cast<int>(sString.length()) > 255)
-        return;
-
-      m_sRaw[ iIndex ] = sString;
-    }
-
-    std::string Element::GetString(bool bReplaceVars, int iIndex)
-    {
-      std::string & sFormatted = m_sFormatted[ iIndex ] = m_sRaw[ iIndex ];
-
-      if (bReplaceVars)
+      if (MyString.length() > 255)
       {
-        std::string::size_type sPos = 0;
-        while((sPos = sFormatted.find("$", sPos)) != std::string::npos)
-        {
-          for(std::map<std::string,Callback>::const_reverse_iterator iIter = m_Gui.GetCallbackMap().rbegin(); iIter != m_Gui.GetCallbackMap().rend(); iIter++)
-          {
-            const std::string & sName = iIter->first;
-
-            if (!sFormatted.compare(sPos, sName.length(), sName))
-            {
-              sFormatted = sFormatted.replace(sPos, sName.length(), iIter->second(0, this));
-              break;
-            }
-          }
-          sPos++;
-        }
-
-        return sFormatted;
+        return;
       }
 
-      return m_sRaw[ iIndex ];
+      if (Index >= m_RawStr.size())
+      {
+        BOOST_THROW_EXCEPTION(HadesGuiError() << 
+          ErrorFunction("Element::SetString") << 
+          ErrorString("Invalid index."));
+      }
+
+      m_RawStr[Index] = MyString;
     }
 
-    std::string Element::GetFormatted(int iIndex) const
+    std::string Element::GetString(bool ReplaceVars, int Index)
     {
-      return m_sFormatted[ iIndex ];
+      if (!ReplaceVars)
+      {
+        return m_RawStr[Index];
+      }
+
+      std::size_t StrPos = 0;
+      std::string& FormattedStr = m_FormattedStr[Index] = m_RawStr[Index];
+
+      while((StrPos = FormattedStr.find("$", StrPos)) != std::string::npos)
+      {
+        for(auto Iter = m_Gui.GetCallbackMap().rbegin(); 
+          Iter != m_Gui.GetCallbackMap().rend(); ++Iter)
+        {
+          std::string const& CallbackName = Iter->first;
+
+          if (!FormattedStr.compare(StrPos, CallbackName.length(), 
+            CallbackName))
+          {
+            FormattedStr = FormattedStr.replace(StrPos, CallbackName.length(), 
+              Iter->second(0, this));
+            break;
+          }
+        }
+
+        ++StrPos;
+      }
+
+      return FormattedStr;
+    }
+
+    std::string Element::GetFormatted(int Index) const
+    {
+      return m_FormattedStr[Index];
     }
 
     bool Element::GetMouseOver() const
     {
-      return m_bMouseOver;
+      return m_MouseOver;
     }
 
-    bool Element::SetMouseOver(bool bMouseOver)
+    bool Element::SetMouseOver(bool MouseOver)
     {
-      return m_bMouseOver = bMouseOver;
+      return m_MouseOver = MouseOver;
     }
 
-    SElement * Element::SetThemeElement(SElement * pThemeElement, int iIndex)
+    SElement * Element::SetThemeElement(SElement* pThemeElement, int Index)
     {
-      return m_pThemeElement[ iIndex ] = pThemeElement;
+      return m_ThemeElements[Index] = pThemeElement;
     }
 
-    SElement * Element::GetThemeElement(int iIndex) const
+    SElement * Element::GetThemeElement(int Index) const
     {
-      return m_pThemeElement[ iIndex ];
+      return m_ThemeElements[Index];
     }
 
-    void Element::SetElementState(std::string sState, int iIndex)
+    void Element::SetElementState(std::string const& State, int Index)
     {
-      m_pElementState[ iIndex ] = GetThemeElement(iIndex)->m_States[ sState ];
+      m_ElementStates[Index] = GetThemeElement(Index)->m_States[State];
 
-      if (!m_pElementState)
-        m_pElementState[ iIndex ] = GetThemeElement(iIndex)->m_States[ GetThemeElement(iIndex)->sDefaultState ];
+      if (!m_ElementStates.data())
+      {
+        m_ElementStates[Index] = GetThemeElement(Index)->m_States[
+          GetThemeElement(Index)->sDefaultState];
+      }
 
-      UpdateTheme(iIndex);
+      UpdateTheme(Index);
     }
 
-    SElementState * Element::GetElementState(int iIndex) const
+    SElementState * Element::GetElementState(int Index) const
     {
-      return m_pElementState[ iIndex ];
+      return m_ElementStates[ Index ];
     }
 
-    void Element::UpdateTheme(int)
-    {
-    }
+    void Element::UpdateTheme(int /*Index*/)
+    { }
 
     void Element::Draw()
-    {
-    }
+    { }
 
     void Element::PreDraw()
-    {
-    }
+    { }
 
-    void Element::MouseMove(Mouse &)
-    {
-    }
+    void Element::MouseMove(Mouse& /*MyMouse*/)
+    { }
 
-    bool Element::KeyEvent(Key)
+    bool Element::KeyEvent(Key /*MyKey*/)
     {
       return true;
-    }
-
-    Element::Element(GUI& Gui) 
-      : m_Gui(Gui)
-    {
     }
   }
 }

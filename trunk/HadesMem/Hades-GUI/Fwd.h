@@ -31,6 +31,7 @@ namespace Hades
   {
     // Forward declarations
     class Pos;
+    struct Key;
     class Timer;
     class Mouse;
     class Colour;
@@ -42,8 +43,10 @@ namespace Hades
     class TextBox;
     class Keyboard;
     class CheckBox;
+    struct SElement;
     class ProgressBar;
     class HelperSlider;
+    struct SElementState;
     class VerticalSliderBar;
     class HorizontalSliderBar;
 
