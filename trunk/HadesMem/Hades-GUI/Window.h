@@ -40,6 +40,17 @@ namespace Hades
 
       Colour * pTitle, * pBodyInner, * pBodyBorder;
       Texture * pTitlebar, * pButton;
+
+      template <typename T>
+      void LoadElement(std::string const& Name)
+      {
+        for(TiXmlElement* pElement = pElement->FirstChildElement(Name); 
+          pElement; pElement = pElement->NextSiblingElement(Name))
+        {
+          AddElement(new T(m_Gui, pElement));
+        }
+      }
+
     public:
       Window(class GUI& Gui, TiXmlElement* pElement);
       ~Window();

@@ -42,22 +42,18 @@ namespace Hades
       else
         SetVisible(true);
 
-#define LOAD_ELEMENTS(Class, String) \
-  for(TiXmlElement * pElementElement = pElement->FirstChildElement(String); pElementElement; pElementElement = pElementElement->NextSiblingElement(String)) \
-  AddElement(new Class(Gui, pElementElement));
+      LoadElement<Text>("Text");
+      LoadElement<Button>("Button");
+      LoadElement<ListBox>("ListBox");
+      LoadElement<EditBox>("EditBox");
+      LoadElement<TextBox>("TextBox");
+      LoadElement<CheckBox>("CheckBox");
+      LoadElement<DropDown>("DropDown");
+      LoadElement<ProgressBar>("ProgressBar");
+      LoadElement<VerticalSliderBar>("VerticalSliderBar");
+      LoadElement<HorizontalSliderBar>("HorizontalSliderBar");
 
-      LOAD_ELEMENTS(Button, "Button")
-        LOAD_ELEMENTS(Text, "Text")
-        LOAD_ELEMENTS(ProgressBar, "ProgressBar")
-        LOAD_ELEMENTS(CheckBox, "CheckBox")
-        LOAD_ELEMENTS(EditBox, "EditBox")
-        LOAD_ELEMENTS(HorizontalSliderBar, "HorizontalSliderBar")
-        LOAD_ELEMENTS(VerticalSliderBar, "VerticalSliderBar")
-        LOAD_ELEMENTS(TextBox, "TextBox")
-        LOAD_ELEMENTS(ListBox, "ListBox")
-        LOAD_ELEMENTS(DropDown, "DropDown")
-
-        SetThemeElement(m_Gui.GetThemeElement("Window"));
+      SetThemeElement(m_Gui.GetThemeElement("Window"));
 
       if (!GetThemeElement())
         MessageBoxA(0, "Theme element invalid.", "Window", 0);
