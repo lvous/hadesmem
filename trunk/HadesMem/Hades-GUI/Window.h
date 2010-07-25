@@ -30,27 +30,6 @@ namespace Hades
   {
     class Window : public Element
     {
-      bool m_bMaximized, m_bDragging, m_bVisible;
-      Pos posDif;
-      std::vector<Element*> m_vElements;
-      Element * m_pFocussedElement;
-
-      bool m_bCloseButtonEnabled;
-      Timer m_tCloseButtonPressed;
-
-      Colour * pTitle, * pBodyInner, * pBodyBorder;
-      Texture * pTitlebar, * pButton;
-
-      template <typename T>
-      void LoadElement(std::string const& Name)
-      {
-        for(TiXmlElement* pElement = pElement->FirstChildElement(Name); 
-          pElement; pElement = pElement->NextSiblingElement(Name))
-        {
-          AddElement(new T(m_Gui, pElement));
-        }
-      }
-
     public:
       Window(class GUI& Gui, TiXmlElement* pElement);
       ~Window();
@@ -82,6 +61,31 @@ namespace Hades
       void BringToTop(Element * pElement);
 
       void UpdateTheme(int iIndex);
+
+    private:
+      template <typename T>
+      void LoadElement(std::string const& Name)
+      {
+        for(TiXmlElement* pElement = pElement->FirstChildElement(Name); 
+          pElement; pElement = pElement->NextSiblingElement(Name))
+        {
+          AddElement(new T(m_Gui, pElement));
+        }
+      }
+
+      bool m_bMaximized, m_bDragging, m_bVisible;
+      Pos posDif;
+      std::vector<Element*> m_vElements;
+      Element * m_pFocussedElement;
+
+      bool m_bCloseButtonEnabled;
+      Timer m_tCloseButtonPressed;
+
+      Colour* m_pTitle;
+      Colour* m_pBodyInner;
+      Colour* m_pBodyBorder;
+      Texture* m_pTitlebar;
+      Texture* m_pButton;
     };
   }
 }

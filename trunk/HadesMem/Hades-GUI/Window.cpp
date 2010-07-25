@@ -97,13 +97,13 @@ namespace Hades
 
     void Window::Draw()
     {	
-      pTitlebar->Draw(GetAbsPos(), GetWidth(), TITLEBAR_HEIGHT);
-      m_Gui.GetFont().DrawString(GetAbsPos().GetX() + 5, GetAbsPos().GetY() + 5, 0, pTitle, GetFormatted());
-      pButton->Draw(Pos(GetAbsPos().GetX() + GetWidth() - BUTTON_HEIGHT - 2, GetAbsPos().GetY() + 2), BUTTON_HEIGHT, BUTTON_HEIGHT);
+      m_pTitlebar->Draw(GetAbsPos(), GetWidth(), TITLEBAR_HEIGHT);
+      m_Gui.GetFont().DrawString(GetAbsPos().GetX() + 5, GetAbsPos().GetY() + 5, 0, m_pTitle, GetFormatted());
+      m_pButton->Draw(Pos(GetAbsPos().GetX() + GetWidth() - BUTTON_HEIGHT - 2, GetAbsPos().GetY() + 2), BUTTON_HEIGHT, BUTTON_HEIGHT);
 
       if (GetMaximized())
       {
-        m_Gui.DrawOutlinedBox(GetAbsPos().GetX(), GetAbsPos().GetY() + TITLEBAR_HEIGHT, GetWidth(), GetHeight() - TITLEBAR_HEIGHT + 1,  pBodyInner->GetD3DColor(), pBodyBorder->GetD3DColor());
+        m_Gui.DrawOutlinedBox(GetAbsPos().GetX(), GetAbsPos().GetY() + TITLEBAR_HEIGHT, GetWidth(), GetHeight() - TITLEBAR_HEIGHT + 1,  m_pBodyInner->GetD3DColor(), m_pBodyBorder->GetD3DColor());
 
         for each(Element * pElement in m_vElements)
           pElement->Draw();
@@ -274,14 +274,14 @@ namespace Hades
       SElementState * pState = GetElementState(iIndex);
       if (!iIndex)
       {
-        pTitle = pState->GetColor("Title");
-        pBodyInner = pState->GetColor("BodyInner");
-        pBodyBorder = pState->GetColor("BodyBorder");
+        m_pTitle = pState->GetColor("Title");
+        m_pBodyInner = pState->GetColor("BodyInner");
+        m_pBodyBorder = pState->GetColor("BodyBorder");
 
-        pTitlebar = pState->GetTexture("Titlebar");
+        m_pTitlebar = pState->GetTexture("Titlebar");
       }
       else
-        pButton = pState->GetTexture("Button");
+        m_pButton = pState->GetTexture("Button");
     }
   }
 }
