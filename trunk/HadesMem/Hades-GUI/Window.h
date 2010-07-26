@@ -64,9 +64,9 @@ namespace Hades
 
     private:
       template <typename T>
-      void LoadElement(std::string const& Name)
+      void LoadElement(TiXmlElement* pElementOuter, std::string const& Name)
       {
-        for(TiXmlElement* pElement = pElement->FirstChildElement(Name); 
+        for(TiXmlElement* pElement = pElementOuter->FirstChildElement(Name); 
           pElement; pElement = pElement->NextSiblingElement(Name))
         {
           AddElement(new T(m_Gui, pElement));

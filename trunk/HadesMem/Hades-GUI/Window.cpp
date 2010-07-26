@@ -42,16 +42,16 @@ namespace Hades
       else
         SetVisible(true);
 
-      LoadElement<Text>("Text");
-      LoadElement<Button>("Button");
-      LoadElement<ListBox>("ListBox");
-      LoadElement<EditBox>("EditBox");
-      LoadElement<TextBox>("TextBox");
-      LoadElement<CheckBox>("CheckBox");
-      LoadElement<DropDown>("DropDown");
-      LoadElement<ProgressBar>("ProgressBar");
-      LoadElement<VerticalSliderBar>("VerticalSliderBar");
-      LoadElement<HorizontalSliderBar>("HorizontalSliderBar");
+      LoadElement<Text>(pElement, "Text");
+      LoadElement<Button>(pElement, "Button");
+      LoadElement<ListBox>(pElement, "ListBox");
+      LoadElement<EditBox>(pElement, "EditBox");
+      LoadElement<TextBox>(pElement, "TextBox");
+      LoadElement<CheckBox>(pElement, "CheckBox");
+      LoadElement<DropDown>(pElement, "DropDown");
+      LoadElement<ProgressBar>(pElement, "ProgressBar");
+      LoadElement<VerticalSliderBar>(pElement, "VerticalSliderBar");
+      LoadElement<HorizontalSliderBar>(pElement, "HorizontalSliderBar");
 
       SetThemeElement(m_Gui.GetThemeElement("Window"));
 
