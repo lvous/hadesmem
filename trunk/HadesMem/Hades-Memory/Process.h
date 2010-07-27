@@ -60,9 +60,6 @@ namespace Hades
       inline explicit Process(std::wstring const& WindowName, 
         std::wstring const* const ClassName);
 
-      // Destructor
-      inline ~Process();
-
       // Get process handle
       inline HANDLE GetHandle() const;
       
@@ -186,13 +183,6 @@ namespace Hades
 
       // Open process
       Open(m_ID);
-    }
-
-    // Destructor
-    Process::~Process()
-    {
-      // Close opened handle
-      CloseHandle(m_Handle);
     }
 
     // Open process given process id
