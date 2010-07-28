@@ -27,20 +27,26 @@ namespace Hades
   namespace GUI
   {
     Window::Window(GUI& Gui, TiXmlElement* pElement)
-      : Element(Gui)
+      : Element(Gui), 
+      m_Maximized(true), 
+      m_Dragging(false), 
+      m_Visible(true), 
+      m_PosDiff(), 
+      m_Elements(), 
+      m_pFocussedElement(nullptr), 
+      m_CloseButtonEnabled(true), 
+      m_pTitle(nullptr), 
+      m_pBodyInner(nullptr), 
+      m_pBodyBorder(nullptr), 
+      m_pTitlebar(nullptr), 
+      m_pButton(nullptr)
     {
-      SetMaximized(true);
-      SetFocussedElement(0);
-      posDif = Pos();
-      m_bDragging = false;
-      SetMouseOver(false);
       SetElement(pElement);
 
-      const char * pszVisible = pElement->Attribute("hidden");
-      if (pszVisible)
+      if (const char* pszVisible = pElement->Attribute("hidden"))
+      {
         SetVisible(pszVisible[ 0 ] != '1');
-      else
-        SetVisible(true);
+      }
 
       LoadElement<Text>(pElement, "Text");
       LoadElement<Button>(pElement, "Button");
@@ -56,23 +62,28 @@ namespace Hades
       SetThemeElement(m_Gui.GetThemeElement("Window"));
 
       if (!GetThemeElement())
+      {
         MessageBoxA(0, "Theme element invalid.", "Window", 0);
+      }
       else
+      {
         SetElementState("Norm");
+      }
 
       SetThemeElement(m_Gui.GetThemeElement("CloseButton"), 1);
 
       if (!GetThemeElement(1))
+      {
         MessageBoxA(0, "Theme element invalid.", "CloseButton", 0);
+      }
       else
       {
         SetElementState("Norm", 1);
 
-        pszVisible = pElement->Attribute("closebutton");
-        if (pszVisible)
+        if (const char* pszVisible = pElement->Attribute("closebutton"))
+        {
           SetCloseButton(pszVisible[ 0 ] == '1');
-        else
-          SetCloseButton(true);
+        }
 
         MouseMove(m_Gui.GetMouse());
       }
@@ -80,19 +91,19 @@ namespace Hades
 
     Window::~Window()
     {
-      std::for_each(m_vElements.begin(), m_vElements.end(), 
+      std::for_each(m_Elements.begin(), m_Elements.end(), 
         [] (Element* pElement) 
       {
         delete pElement;
       });
     }
 
-    void Window::AddElement(Element * pElement)
+    void Window::AddElement(Element* pElement)
     {
       pElement->SetRelPos(pElement->GetRelPos() + Pos(0, TITLEBAR_HEIGHT));
       pElement->SetParent(this);
 
-      m_vElements.push_back(pElement);
+      m_Elements.push_back(pElement);
     }
 
     void Window::Draw()
@@ -105,7 +116,7 @@ namespace Hades
       {
         m_Gui.DrawOutlinedBox(GetAbsPos().GetX(), GetAbsPos().GetY() + TITLEBAR_HEIGHT, GetWidth(), GetHeight() - TITLEBAR_HEIGHT + 1,  m_pBodyInner->GetD3DColor(), m_pBodyBorder->GetD3DColor());
 
-        for each(Element * pElement in m_vElements)
+        for each(Element * pElement in m_Elements)
           pElement->Draw();
       }
     }
@@ -115,7 +126,7 @@ namespace Hades
       GetString(true);
 
       if (GetMaximized())
-        for each(Element * pElement in m_vElements)
+        for each(Element * pElement in m_Elements)
           pElement->PreDraw();
     }
 
@@ -123,8 +134,8 @@ namespace Hades
     {
       if (GetDragging())
       {
-        if (!posDif.GetX())
-          posDif = GetAbsPos() - pMouse.GetPos();
+        if (!m_PosDiff.GetX())
+          m_PosDiff = GetAbsPos() - pMouse.GetPos();
         else
         {
           Pos mPos = pMouse.GetPos();
@@ -132,7 +143,7 @@ namespace Hades
           if (mPos.GetX() == -1 && mPos.GetY() == -1)
             mPos = pMouse.GetSavedPos();
 
-          SetAbsPos(mPos + posDif);
+          SetAbsPos(mPos + m_PosDiff);
         }
       }
 
@@ -140,7 +151,7 @@ namespace Hades
         SetElementState(SetMouseOver(pMouse.InArea(GetAbsPos().GetX() + GetWidth() - BUTTON_HEIGHT - 2, GetAbsPos().GetY() + 2, BUTTON_HEIGHT, BUTTON_HEIGHT))?"MouseOver":"Norm", 1);
 
       if (GetMaximized())
-        for each(Element * pElement in m_vElements)
+        for each(Element * pElement in m_Elements)
           pElement->MouseMove(pMouse);
     }
 
@@ -152,7 +163,7 @@ namespace Hades
       {
         SetFocussedElement(0);
 
-        if (GetMouseOver() && m_bCloseButtonEnabled)
+        if (GetMouseOver() && m_CloseButtonEnabled)
           this->SetVisible(false);
         else if (Mouse.InArea(GetAbsPos().GetX(), GetAbsPos().GetY(), GetWidth(), TITLEBAR_HEIGHT))
         {
@@ -182,7 +193,7 @@ namespace Hades
       }
       else
       {
-        posDif.SetX(0);
+        m_PosDiff.SetX(0);
 
         Mouse.SetDragging(0);
         SetDragging(false);
@@ -191,88 +202,94 @@ namespace Hades
       }
 
       if (GetMaximized())
-        for(int iIndex = static_cast<int>(m_vElements.size()) - 1; iIndex >= 0; iIndex--)
-          if (!m_vElements[ iIndex ]->KeyEvent(Key))
+        for(int iIndex = static_cast<int>(m_Elements.size()) - 1; iIndex >= 0; iIndex--)
+          if (!m_Elements[ iIndex ]->KeyEvent(Key))
             return false;
       return true;
     }
 
-    void Window::SetMaximized(bool bMaximized)
+    void Window::SetMaximized(bool Maximized)
     {
-      m_bMaximized = bMaximized;
+      m_Maximized = Maximized;
     }
 
     bool Window::GetMaximized()
     {
-      return m_bMaximized;
+      return m_Maximized;
     }
 
-    void Window::SetVisible(bool bVisible)
+    void Window::SetVisible(bool Visible)
     {
-      m_bVisible = bVisible;
+      m_Visible = Visible;
     }
 
     bool Window::IsVisible()
     {
-      return m_bVisible;
+      return m_Visible;
     }
 
-    void Window::SetDragging(bool bDragging)
+    void Window::SetDragging(bool Dragging)
     {
-      m_bDragging = bDragging;
+      m_Dragging = Dragging;
     }
 
     bool Window::GetDragging()
     {
-      return m_bDragging;
+      return m_Dragging;
     }
 
     void Window::SetCloseButton(bool bEnabled)
     {
-      m_bCloseButtonEnabled = bEnabled;
+      m_CloseButtonEnabled = bEnabled;
 
       if (GetCloseButton())
+      {
         SetElementState("Disabled", 1);
+      }
     }
 
     bool Window::GetCloseButton()
     {
-      return m_bCloseButtonEnabled;
+      return m_CloseButtonEnabled;
     }
 
-    void Window::SetFocussedElement(Element * pElement)
+    void Window::SetFocussedElement(Element* pElement)
     {
       m_pFocussedElement = pElement;
 
       if (pElement)
+      {
         BringToTop(pElement);
+      }
     }
 
-    Element * Window::GetFocussedElement()
+    Element* Window::GetFocussedElement()
     {
       return m_pFocussedElement;
     }
 
-    Element * Window::GetElementByString(const char * pszString, int iIndex)
+    Element* Window::GetElementByString(std::string const& MyString, int Index)
     {
-      for each(Element * pElement in m_vElements)
-        if (pElement->GetString(false, iIndex) == pszString)
-          return pElement;
-      return 0;
+      auto Iter = std::find_if(m_Elements.begin(), m_Elements.end(), 
+        [&] (Element* pElement)
+      {
+        return pElement->GetString(false, Index) == MyString;
+      });
+
+      return Iter != m_Elements.end() ? *Iter : nullptr;
     }
 
-    void Window::BringToTop(Element * pElement)
+    void Window::BringToTop(Element* pElement)
     {
-      for(int i = 0; i < static_cast<int>(m_vElements.size()); i++)
-        if (m_vElements[i] == pElement)
-          m_vElements.erase(m_vElements.begin() + i);
-      m_vElements.insert(m_vElements.end(), pElement);
+      m_Elements.erase(std::remove(m_Elements.begin(), m_Elements.end(), 
+        pElement), m_Elements.end());
+      m_Elements.push_back(pElement);
     }
 
-    void Window::UpdateTheme(int iIndex)
+    void Window::UpdateTheme(int Index)
     {
-      SElementState * pState = GetElementState(iIndex);
-      if (!iIndex)
+      SElementState* pState = GetElementState(Index);
+      if (!Index)
       {
         m_pTitle = pState->GetColor("Title");
         m_pBodyInner = pState->GetColor("BodyInner");
@@ -281,7 +298,9 @@ namespace Hades
         m_pTitlebar = pState->GetTexture("Titlebar");
       }
       else
+      {
         m_pButton = pState->GetTexture("Button");
+      }
     }
   }
 }

@@ -34,33 +34,33 @@ namespace Hades
       Window(class GUI& Gui, TiXmlElement* pElement);
       ~Window();
 
-      void AddElement(Element * pElement);
+      void AddElement(Element* pElement);
 
       void Draw();
       void PreDraw();
-      void MouseMove(Mouse & pMouse);
-      bool KeyEvent(Key Key);
+      void MouseMove(Mouse& MyMouse);
+      bool KeyEvent(Key MyKey);
 
-      void SetMaximized(bool bMaximized);
+      void SetMaximized(bool Maximized);
       bool GetMaximized();
 
-      void SetVisible(bool bVisible);
+      void SetVisible(bool Visible);
       bool IsVisible();
 
-      void SetDragging(bool bDragging);
+      void SetDragging(bool Dragging);
       bool GetDragging();
 
-      void SetCloseButton(bool bEnabled);
+      void SetCloseButton(bool Enabled);
       bool GetCloseButton();
 
-      void SetFocussedElement(Element * pElement);
-      Element * GetFocussedElement();
+      void SetFocussedElement(Element* pElement);
+      Element* GetFocussedElement();
 
-      Element * GetElementByString(const char * pszString, int iIndex = 0);
+      Element* GetElementByString(std::string const& MyString, int Index = 0);
 
-      void BringToTop(Element * pElement);
+      void BringToTop(Element* pElement);
 
-      void UpdateTheme(int iIndex);
+      void UpdateTheme(int Index);
 
     private:
       template <typename T>
@@ -73,14 +73,13 @@ namespace Hades
         }
       }
 
-      bool m_bMaximized, m_bDragging, m_bVisible;
-      Pos posDif;
-      std::vector<Element*> m_vElements;
-      Element * m_pFocussedElement;
-
-      bool m_bCloseButtonEnabled;
-      Timer m_tCloseButtonPressed;
-
+      bool m_Maximized;
+      bool m_Dragging;
+      bool m_Visible;
+      Pos m_PosDiff;
+      std::vector<Element*> m_Elements;
+      Element* m_pFocussedElement;
+      bool m_CloseButtonEnabled;
       Colour* m_pTitle;
       Colour* m_pBodyInner;
       Colour* m_pBodyBorder;
