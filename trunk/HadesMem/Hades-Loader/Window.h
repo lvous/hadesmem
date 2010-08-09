@@ -98,9 +98,6 @@ namespace Hades
       LRESULT OnMenuNotImpl(WORD wNotifyCode, WORD wID, HWND hWndCtl, 
         BOOL& bHandled);
 
-      // TVN_SELCHANGED notification callback
-      LRESULT OnTVSelChanged(int idCtrl, LPNMHDR pnmh, BOOL& bHandled);
-
       // ID_VIEW_STATUS_BAR command callback
       LRESULT OnViewStatusBar(WORD wNotifyCode, WORD wID, HWND hWndCtl, 
         BOOL& bHandled);
@@ -118,7 +115,6 @@ namespace Hades
         COMMAND_ID_HANDLER(ID_GAMES_ADDGAME, OnMenuNotImpl)
         COMMAND_ID_HANDLER(ID_GAMES_REMOVEGAME, OnMenuNotImpl)
         COMMAND_ID_HANDLER(ID_VIEW_STATUS_BAR, OnViewStatusBar)
-        NOTIFY_CODE_HANDLER(TVN_SELCHANGED, OnTVSelChanged)
         CHAIN_MSG_MAP(CUpdateUI<LoaderWindow>)
         CHAIN_MSG_MAP(LoaderWindowT<LoaderWindow>)
       END_MSG_MAP()
@@ -132,7 +128,7 @@ namespace Hades
       CWindow CreateFooWindow() 
       {
         // Create test tree
-        if (!m_FooTree.Create(m_RightPane.m_hWnd, rcDefault, NULL, WS_CHILD | 
+        if (!m_FooTree.Create(m_TabView.m_hWnd, rcDefault, NULL, WS_CHILD | 
           WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, WS_EX_CLIENTEDGE))
         {
           DWORD LastError = GetLastError();
@@ -152,7 +148,7 @@ namespace Hades
       CWindow CreateBarWindow() 
       {
         // Create test tree
-        if (!m_BarTree.Create(m_RightPane.m_hWnd, rcDefault, NULL, WS_CHILD | 
+        if (!m_BarTree.Create(m_TabView.m_hWnd, rcDefault, NULL, WS_CHILD | 
           WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, WS_EX_CLIENTEDGE))
         {
           DWORD LastError = GetLastError();
@@ -175,23 +171,12 @@ namespace Hades
       // Game manager
       GameMgr m_GameMgr;
 
-      // Splitter window
-      CSplitterWindow m_Splitter;
+      // Tab view
+      CTabView m_TabView;
 
-      // Left splitter pane
-      CPaneContainer m_LeftPane;
-      // Right splitter pane
-      CPaneContainer m_RightPane;
-
-      // Navigation tree (for left pane)
-      CTreeViewCtrlEx m_NavTree;
-
-      // Test tree (for right pane)
+      // Test trees
       CTreeViewCtrlEx m_FooTree;
       CTreeViewCtrlEx m_BarTree;
-      
-      // Navigation tree window map
-      std::map<HTREEITEM, CWindow> m_NavTreeMap;
     };
   }
 }
