@@ -129,7 +129,7 @@ namespace Hades
       }
 
       // Hook if required
-      if (!m_pSetCursorHk && m_pKernel->IsHookEnabled(
+      if (!m_pSetCursorPosHk && m_pKernel->IsHookEnabled(
         L"user32.dll!SetCursorPos"))
       {
         // Get address of SetCursorPos
