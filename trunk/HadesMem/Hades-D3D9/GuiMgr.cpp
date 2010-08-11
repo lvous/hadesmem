@@ -45,7 +45,8 @@ namespace Hades
       m_CallsOnConsoleInput(), 
       m_GuiMutex(), 
       m_ConsoleHistory(), 
-      m_HistoryPos(0)
+      m_HistoryPos(0), 
+      m_Watermark(true)
     {
       // Register for D3D events
       D3D9Mgr::RegisterOnInitialize(std::bind(&GuiMgr::OnInitialize, this, 
@@ -184,20 +185,24 @@ namespace Hades
         m_pGui->Draw();
       }
 
-      // Get viewport
-      D3DVIEWPORT9 Viewport;
-      pDevice->GetViewport(&Viewport);
+      // Watermark if enabled
+      if (m_Watermark)
+      {
+        // Get viewport
+        D3DVIEWPORT9 Viewport;
+        pDevice->GetViewport(&Viewport);
 
-      // Draw box on viewport border
-      Hades::Math::Vec2f const TopLeft(0,0);
-      Hades::Math::Vec2f const BottomRight(static_cast<float>(Viewport.Width), 
-        static_cast<float>(Viewport.Height));
-      pHelper->DrawBox(TopLeft, BottomRight, 2, D3DCOLOR_ARGB(255, 0, 255, 0));
+        // Draw box on viewport border
+        Hades::Math::Vec2f const TopLeft(0,0);
+        Hades::Math::Vec2f const BottomRight(static_cast<float>(Viewport.Width), 
+          static_cast<float>(Viewport.Height));
+        pHelper->DrawBox(TopLeft, BottomRight, 2, D3DCOLOR_ARGB(255, 0, 255, 0));
 
-      // Draw test string
-      GUI::Colour MyColor(255, 0, 0, 255);
-      m_pGui->GetFont().DrawString(Viewport.X + 10, Viewport.Y + 10, 0, 
-        &MyColor, L"Hades");
+        // Draw test string
+        GUI::Colour MyColor(255, 0, 0, 255);
+        m_pGui->GetFont().DrawString(Viewport.X + 10, Viewport.Y + 10, 0, 
+          &MyColor, L"Hades");
+      }
     }
 
     // D3D9Mgr OnLostDevice callback
@@ -504,6 +509,18 @@ namespace Hades
     boost::mutex& GuiMgr::GetGuiMutex()
     {
       return m_GuiMutex;
+    }
+
+    // Enable watermark
+    void GuiMgr::EnableWatermark()
+    {
+      m_Watermark = true;
+    }
+
+    // Disable watermark
+    void GuiMgr::DisableWatermark()
+    {
+      m_Watermark = false;
     }
   }
 }

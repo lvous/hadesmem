@@ -50,7 +50,7 @@ namespace Hades
       public:
         explicit WriteLn(Kernel* pKernel);
 
-        void operator() (std::string const& Input) const;
+        void operator()(std::string const& Input) const;
 
       private:
         Kernel* m_pKernel;
@@ -61,7 +61,7 @@ namespace Hades
       public:
         explicit LoadExt(Kernel* pKernel);
 
-        void operator() (std::string const& LoadExt) const;
+        void operator()(std::string const& LoadExt) const;
 
       private:
         Kernel* m_pKernel;
@@ -83,7 +83,7 @@ namespace Hades
       class Exit
       {
       public:
-        void operator() () const;
+        void operator()() const;
       };
 
       class SessionId
@@ -93,7 +93,7 @@ namespace Hades
 
         void operator() (unsigned int MySessionId) const;
 
-        unsigned int operator() () const;
+        unsigned int operator()() const;
 
       private:
         Kernel* m_pKernel;
@@ -104,7 +104,29 @@ namespace Hades
       public:
         SessionName(Kernel* pKernel);
 
-        std::string operator() () const;
+        std::string operator()() const;
+
+      private:
+        Kernel* m_pKernel;
+      };
+
+      class EnableWatermark
+      {
+      public:
+        EnableWatermark(Kernel* pKernel);
+
+        void operator()() const;
+
+      private:
+        Kernel* m_pKernel;
+      };
+
+      class DisableWatermark
+      {
+      public:
+        DisableWatermark(Kernel* pKernel);
+
+        void operator()() const;
 
       private:
         Kernel* m_pKernel;

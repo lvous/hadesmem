@@ -135,6 +135,10 @@ namespace Hades
           (unsigned int)>(Wrappers::SessionId(this)))
         ,luabind::def("GetSessionName", luabind::tag_function<std::string ()>(
           Wrappers::SessionName(this)))
+        ,luabind::def("EnableWatermark", luabind::tag_function<void ()>(
+          Wrappers::EnableWatermark(this)))
+        ,luabind::def("DisableWatermark", luabind::tag_function<void ()>(
+          Wrappers::DisableWatermark(this)))
       ];
 
       // Debug output

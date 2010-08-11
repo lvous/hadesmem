@@ -94,6 +94,24 @@ namespace Hades
       {
         return boost::lexical_cast<std::string>(m_pKernel->GetSessionName());
       }
+
+      EnableWatermark::EnableWatermark(Kernel* pKernel) 
+        : m_pKernel(pKernel)
+      { }
+
+      void EnableWatermark::operator()() const
+      {
+        m_pKernel->GetGuiMgr()->EnableWatermark();
+      }
+
+      DisableWatermark::DisableWatermark(Kernel* pKernel) 
+        : m_pKernel(pKernel)
+      { }
+
+      void DisableWatermark::operator()() const
+      {
+        m_pKernel->GetGuiMgr()->DisableWatermark();
+      }
     }
   }
 }

@@ -64,6 +64,12 @@ namespace Hades
       // Get GUI mutex
       virtual boost::mutex& GetGuiMutex();
 
+      // Enable watermark
+      virtual void EnableWatermark();
+
+      // Disable watermark
+      virtual void DisableWatermark();
+
     private:
       // Callback on input
       std::string OnConsoleInput(char const* pszArgs, GUI::Element* pElement);
@@ -108,6 +114,9 @@ namespace Hades
 
       // Console history index
       long m_HistoryPos;
+
+      // Whether watermark is enabled
+      bool m_Watermark;
     };
   }
 }
