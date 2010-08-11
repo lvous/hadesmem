@@ -42,25 +42,76 @@ namespace Hades
     {
     public:
       // Constructor
-      D3D9Helper();
+      D3D9Helper()
+        : m_pLine(nullptr) 
+      { }
 
       // OnLostDevice callback
-      void OnLostDevice(IDirect3DDevice9* pDevice, D3D9HelperPtr pHelper);
+      void OnLostDevice(IDirect3DDevice9* /*pDevice*/, 
+        D3D9HelperPtr /*pHelper*/)
+      {
+        m_pLine->OnLostDevice();
+      }
+
       // OnResetDevice callback
-      void OnResetDevice(IDirect3DDevice9* pDevice, D3D9HelperPtr pHelper);
+      void OnResetDevice(IDirect3DDevice9* /*pDevice*/, 
+        D3D9HelperPtr /*pHelper*/)
+      {
+        m_pLine->OnResetDevice();
+      }
+
       // OnInitialize callback
-      void OnInitialize(IDirect3DDevice9* pDevice, D3D9HelperPtr pHelper);
+      void OnInitialize(IDirect3DDevice9* pDevice, D3D9HelperPtr /*pHelper*/)
+      {
+        D3DXCreateLine(pDevice, &m_pLine);
+      }
 
       // Draw line
       void DrawLine(Math::Vec2f const& Start, Math::Vec2f const& End, 
-        float Width, D3DCOLOR Color);
+        float Width, D3DCOLOR Color)
+      {
+        m_pLine->SetWidth(Width);
+
+        D3DXVECTOR2 D3DXVec[2] = 
+        { 
+          D3DXVECTOR2(Start[0], Start[1]), 
+          D3DXVECTOR2(End[0], End[1]) 
+        };
+
+        m_pLine->Begin();
+        m_pLine->Draw(D3DXVec, 2, Color);
+        m_pLine->End();
+      }
 
       // Draw box
       void DrawBox(Math::Vec2f const& BottomLeft, Math::Vec2f const& TopRight, 
-        float LineWidth, D3DCOLOR Color);
+        float LineWidth, D3DCOLOR Color)
+      {
+        // Width of box
+        float Width = TopRight[0] - BottomLeft[0];
+        // Height of box
+        float Height = TopRight[1] - BottomLeft[1];
+
+        // Top left corner of box
+        Math::Vec2f TopLeft(TopRight[0] - Width, TopRight[1]);
+        // Bottom right corner of box
+        Math::Vec2f BottomRight(TopRight[0], TopRight[1] - Height);
+
+        // Bottom left to top left
+        DrawLine(BottomLeft, TopLeft, LineWidth, Color);
+        // Bottom left to bottom right
+        DrawLine(BottomLeft, BottomRight, LineWidth, Color);
+        // Bottom right to top right
+        DrawLine(BottomRight, TopRight, LineWidth, Color);
+        // Top left to top right
+        DrawLine(TopLeft, TopRight, LineWidth, Color);
+      }
 
       // Get D3D line
-      ID3DXLine* GetLine();
+      ID3DXLine* GetLine()
+      {
+        return m_pLine;
+      }
 
     private:
       // D3D line

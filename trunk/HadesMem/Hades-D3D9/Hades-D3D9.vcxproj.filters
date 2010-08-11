@@ -30,9 +30,6 @@
     <ClCompile Include="DllMain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="D3D9Helper.cpp">
-      <Filter>Source Files\D3D9</Filter>
-    </ClCompile>
     <ClCompile Include="D3D9Mgr.cpp">
       <Filter>Source Files\D3D9</Filter>
     </ClCompile>

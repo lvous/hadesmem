@@ -203,10 +203,12 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Crosshair.cpp" />
     <ClCompile Include="DllMain.cpp" />
     <ClCompile Include="Speeder.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Crosshair.h" />
     <ClInclude Include="Speeder.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

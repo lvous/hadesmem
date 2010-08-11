@@ -207,7 +207,6 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="D3D9Helper.cpp" />
     <ClCompile Include="D3D9Mgr.cpp" />
     <ClCompile Include="DllMain.cpp" />
     <ClCompile Include="GuiMgr.cpp" />

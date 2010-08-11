@@ -34,6 +34,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 // Hades
 #include "Speeder.h"
+#include "Crosshair.h"
 #include "Hades-Kernel/Kernel.h"
 
 // Initialize Hades-Input
@@ -74,6 +75,9 @@ extern "C" __declspec(dllexport) DWORD __stdcall Initialize(
 
     // Initialize speedhack
     Hades::HXGenHack::Speeder::Startup(pKernel);
+
+    // Initialize crosshair
+    Hades::HXGenHack::Crosshair::Startup(pKernel);
   }
   catch (boost::exception const& e)
   {
