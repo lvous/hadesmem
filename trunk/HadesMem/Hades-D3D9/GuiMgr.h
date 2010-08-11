@@ -69,6 +69,9 @@ namespace Hades
 
       // Disable watermark
       virtual void DisableWatermark();
+      
+      // Get GUI instance
+      virtual GUI::GUI* GetGui();
 
     private:
       // Callback on input

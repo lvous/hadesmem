@@ -522,5 +522,11 @@ namespace Hades
     {
       m_Watermark = false;
     }
+
+    // Get GUI instance
+    GUI::GUI* GuiMgr::GetGui()
+    {
+      return m_pGui;
+    }
   }
 }

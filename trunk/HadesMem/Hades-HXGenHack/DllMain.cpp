@@ -35,7 +35,10 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Hades
 #include "Speeder.h"
 #include "Crosshair.h"
+#include "Hades-D3D9/GuiMgr.h"
 #include "Hades-Kernel/Kernel.h"
+#include "Hades-Common/Filesystem.h"
+#include "Hades-Common/StringBuffer.h"
 
 // Initialize Hades-Input
 extern "C" __declspec(dllexport) DWORD __stdcall Initialize(
@@ -78,6 +81,43 @@ extern "C" __declspec(dllexport) DWORD __stdcall Initialize(
 
     // Initialize crosshair
     Hades::HXGenHack::Crosshair::Startup(pKernel);
+
+    // Get current working directory
+    std::wstring CurDir;
+    if (!GetCurrentDirectory(MAX_PATH, Hades::Util::MakeStringBuffer(CurDir, 
+      MAX_PATH)))
+    {
+      DWORD LastError = GetLastError();
+      BOOST_THROW_EXCEPTION(Hades::HadesError() << 
+        Hades::ErrorFunction("Hades-HXGenHack::Initialize") << 
+        Hades::ErrorString("Could not get current directory.") << 
+        Hades::ErrorCodeWin(LastError));
+    }
+
+    // Set new working directory to GUI library folder
+    std::wstring GuiPath((Hades::Windows::GetSelfDirPath() / L"/../Gui/").
+      file_string());
+    if (!SetCurrentDirectory(GuiPath.c_str()))
+    {
+      DWORD LastError = GetLastError();
+      BOOST_THROW_EXCEPTION(Hades::HadesError() << 
+        Hades::ErrorFunction("Hades-HXGenHack::Initialize") << 
+        Hades::ErrorString("Could not set current directory.") << 
+        Hades::ErrorCodeWin(LastError));
+    }
+
+    // Load GUI
+    pKernel->GetGuiMgr()->GetGui()->LoadInterfaceFromFile("HXGenHack.xml");
+
+    // Restore old working directory
+    if (!SetCurrentDirectory(CurDir.c_str()))
+    {
+      DWORD LastError = GetLastError();
+      BOOST_THROW_EXCEPTION(Hades::HadesError() << 
+        Hades::ErrorFunction("Hades-HXGenHack::Initialize") << 
+        Hades::ErrorString("Could not restore current directory.") << 
+        Hades::ErrorCodeWin(LastError));
+    }
   }
   catch (boost::exception const& e)
   {
