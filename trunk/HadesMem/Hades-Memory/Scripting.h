@@ -47,6 +47,7 @@ extern "C"
 #pragma warning(push, 1)
 #include "LuaBind/luabind.hpp"
 #include "luabind/iterator_policy.hpp"
+#include "luabind/exception_handler.hpp"
 #pragma warning(pop)
 
 // Hades
@@ -60,61 +61,42 @@ extern "C"
 #include "Disassembler.h"
 #include "Hades-Common/I18n.h"
 
-#define HADESMEM_SCRIPTING_TRYCATCH_BEGIN \
-  try\
-{
-
-#define HADESMEM_SCRIPTING_TRYCATCH_END \
-}\
-  catch (boost::exception const& e)\
-{\
-  throw std::exception(boost::diagnostic_information(e).c_str());\
-}
-
 // Wrapper function generator for MemoryMgr::Read
 #define HADESMEM_SCRIPTING_GEN_READ(x) \
-  inline Types::x Memory_Read##x(MemoryMgr const& MyMemory, DWORD_PTR Address)\
+inline Types::x Memory_Read##x(MemoryMgr const& MyMemory, DWORD_PTR Address)\
 {\
-  HADESMEM_SCRIPTING_TRYCATCH_BEGIN\
   return MyMemory.Read<Types::x>(reinterpret_cast<PVOID>(Address));\
-  HADESMEM_SCRIPTING_TRYCATCH_END\
 }
 
 // Wrapper function generator for MemoryMgr::Write
 #define HADESMEM_SCRIPTING_GEN_WRITE(x) \
-  inline void Memory_Write##x(MemoryMgr const& MyMemory, DWORD_PTR Address, \
+inline void Memory_Write##x(MemoryMgr const& MyMemory, DWORD_PTR Address, \
   Types::x Data)\
 {\
-  HADESMEM_SCRIPTING_TRYCATCH_BEGIN\
   MyMemory.Write<Types::x>(reinterpret_cast<PVOID>(Address), Data);\
-  HADESMEM_SCRIPTING_TRYCATCH_END\
 }
 
 // Wrapper function generator for MyScanner::Find
 #define HADESMEM_SCRIPTING_GEN_FIND(x) \
-  inline DWORD_PTR Scanner_Find##x(Scanner const& MyScanner, Types::x Data)\
+inline DWORD_PTR Scanner_Find##x(Scanner const& MyScanner, Types::x Data)\
 {\
-  HADESMEM_SCRIPTING_TRYCATCH_BEGIN\
   return reinterpret_cast<DWORD_PTR>(MyScanner.Find(Data));\
-  HADESMEM_SCRIPTING_TRYCATCH_END\
 }
 
 // Wrapper function generator for MyScanner::Find
 #define HADESMEM_SCRIPTING_GEN_FIND_ALL(x) \
 inline DwordPtrList Scanner_FindAll##x(Scanner const& MyScanner, Types::x Data)\
 {\
-  HADESMEM_SCRIPTING_TRYCATCH_BEGIN\
   auto AddrList = MyScanner.FindAll(Data);\
   DwordPtrList NewList;\
   NewList.List.reserve(AddrList.size());\
   std::transform(AddrList.begin(), AddrList.end(), std::back_inserter(\
-    NewList.List), \
-    [] (PVOID Current)\
-  {\
-    return reinterpret_cast<DWORD_PTR>(Current);\
-  });\
+  NewList.List), \
+  [] (PVOID Current)\
+{\
+  return reinterpret_cast<DWORD_PTR>(Current);\
+});\
   return NewList;\
-  HADESMEM_SCRIPTING_TRYCATCH_END\
 }
 
 namespace Hades
@@ -153,92 +135,72 @@ namespace Hades
       // MemoryMgr::MemoryMgr wrappers
       inline boost::shared_ptr<MemoryMgr> Memory_CreateMemoryMgr(DWORD ProcId)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          return boost::make_shared<MemoryMgr>(ProcId);
-        HADESMEM_SCRIPTING_TRYCATCH_END
+        return boost::make_shared<MemoryMgr>(ProcId);
       }
       inline boost::shared_ptr<MemoryMgr> Memory_CreateMemoryMgr(
         std::string const& ProcName)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          return boost::make_shared<MemoryMgr>(boost::
-          lexical_cast<std::wstring>(ProcName));
-        HADESMEM_SCRIPTING_TRYCATCH_END
+        return boost::make_shared<MemoryMgr>(boost::lexical_cast<std::wstring>(
+          ProcName));
       }
       inline boost::shared_ptr<MemoryMgr> Memory_CreateMemoryMgr(
-        std::string const& WindowName, 
-        std::string const& ClassName)
+        std::string const& WindowName, std::string const& ClassName)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          std::wstring ClassNameW(!ClassName.empty() ? boost::
-          lexical_cast<std::wstring>(ClassName) : L"");
+        std::wstring ClassNameW(!ClassName.empty() ? 
+          boost::lexical_cast<std::wstring>(ClassName) : L"");
         return boost::make_shared<MemoryMgr>(boost::lexical_cast<std::wstring>(
           WindowName), !ClassName.empty() ? &ClassNameW : nullptr);
-        HADESMEM_SCRIPTING_TRYCATCH_END
       }
 
       // MemoryMgr::CanRead wrapper
       inline bool Memory_CanRead(MemoryMgr const& MyMemory, DWORD_PTR Address)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          return MyMemory.CanRead(reinterpret_cast<PVOID>(Address));
-        HADESMEM_SCRIPTING_TRYCATCH_END
+        return MyMemory.CanRead(reinterpret_cast<PVOID>(Address));
       }
 
       // MemoryMgr::CanWrite wrapper
       inline bool Memory_CanWrite(MemoryMgr const& MyMemory, DWORD_PTR Address)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          return MyMemory.CanWrite(reinterpret_cast<PVOID>(Address));
-        HADESMEM_SCRIPTING_TRYCATCH_END
+        return MyMemory.CanWrite(reinterpret_cast<PVOID>(Address));
       }
 
       // MemoryMgr::Call wrapper
       inline DWORD Memory_Call(MemoryMgr const& MyMemory, DWORD_PTR Address, 
         std::vector<DWORD_PTR> const& Args, MemoryMgr::CallConv CallConv)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          std::vector<PVOID> ArgsNew;
+        std::vector<PVOID> ArgsNew;
         std::transform(Args.begin(), Args.end(), std::back_inserter(ArgsNew), 
           [] (DWORD_PTR Arg)
         {
           return reinterpret_cast<PVOID>(Arg);
         });
+
         return MyMemory.Call(reinterpret_cast<PVOID>(Address), ArgsNew, 
           CallConv);
-        HADESMEM_SCRIPTING_TRYCATCH_END
       }
 
       // MemoryMgr::Alloc wrapper
       inline DWORD_PTR Memory_Alloc(MemoryMgr const& MyMem, SIZE_T Size)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          return reinterpret_cast<DWORD_PTR>(MyMem.Alloc(Size));
-        HADESMEM_SCRIPTING_TRYCATCH_END
+        return reinterpret_cast<DWORD_PTR>(MyMem.Alloc(Size));
       }
 
       // MemoryMgr::Free wrapper
       inline void Memory_Free(MemoryMgr const& MyMem, DWORD_PTR Address)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          return MyMem.Free(reinterpret_cast<PVOID>(Address));
-        HADESMEM_SCRIPTING_TRYCATCH_END
+        return MyMem.Free(reinterpret_cast<PVOID>(Address));
       }
 
       // MemoryMgr::GetProcessID wrapper
       inline DWORD Memory_GetProcessID(MemoryMgr const& MyMem)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          return MyMem.GetProcessID();
-        HADESMEM_SCRIPTING_TRYCATCH_END
+        return MyMem.GetProcessID();
       }
 
       // MemoryMgr::GetProcessHandle wrapper
       inline DWORD_PTR Memory_GetProcessHandle(MemoryMgr const& MyMem)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          return reinterpret_cast<DWORD_PTR>(MyMem.GetProcessHandle());
-        HADESMEM_SCRIPTING_TRYCATCH_END
+        return reinterpret_cast<DWORD_PTR>(MyMem.GetProcessHandle());
       }
 
       // MemoryMgr::GetRemoteProcAddress wrapper
@@ -246,11 +208,10 @@ namespace Hades
         DWORD_PTR RemoteMod, std::string const& Module, 
         std::string const& Function)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          return reinterpret_cast<DWORD_PTR>(MyMem.GetRemoteProcAddress(
+        return reinterpret_cast<DWORD_PTR>(MyMem.GetRemoteProcAddress(
           reinterpret_cast<HMODULE>(RemoteMod), 
-          boost::lexical_cast<std::wstring>(Module), Function.c_str()));
-        HADESMEM_SCRIPTING_TRYCATCH_END
+          boost::lexical_cast<std::wstring>(Module), 
+          Function.c_str()));
       }
 
       // MemoryMgr::GetRemoteProcAddress wrapper
@@ -258,201 +219,167 @@ namespace Hades
         DWORD_PTR RemoteMod, std::string const& Module, 
         WORD Ordinal)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          return reinterpret_cast<DWORD_PTR>(MyMem.GetRemoteProcAddress(
+        return reinterpret_cast<DWORD_PTR>(MyMem.GetRemoteProcAddress(
           reinterpret_cast<HMODULE>(RemoteMod), 
-          boost::lexical_cast<std::wstring>(Module), reinterpret_cast<LPCSTR>(
-          MAKELONG(Ordinal, 0))));
-        HADESMEM_SCRIPTING_TRYCATCH_END
+          boost::lexical_cast<std::wstring>(Module), 
+          reinterpret_cast<LPCSTR>(MAKELONG(Ordinal, 0))));
       }
 
       // MemoryMgr::FlushCache wrapper
       inline void Memory_FlushCache(MemoryMgr const& MyMem, DWORD_PTR Address, 
         SIZE_T Size)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          return MyMem.FlushCache(reinterpret_cast<LPCVOID>(Address), Size);
-        HADESMEM_SCRIPTING_TRYCATCH_END
+        return MyMem.FlushCache(reinterpret_cast<LPCVOID>(Address), Size);
       }
 
       // MemoryMgr::Read<T> wrappers
       HADESMEM_SCRIPTING_GEN_READ(Int8)
       HADESMEM_SCRIPTING_GEN_READ(UInt8)
-        HADESMEM_SCRIPTING_GEN_READ(Int16)
-        HADESMEM_SCRIPTING_GEN_READ(UInt16)
-        HADESMEM_SCRIPTING_GEN_READ(Int32)
-        HADESMEM_SCRIPTING_GEN_READ(UInt32)
-        HADESMEM_SCRIPTING_GEN_READ(Int64)
-        HADESMEM_SCRIPTING_GEN_READ(UInt64)
-        HADESMEM_SCRIPTING_GEN_READ(Float)
-        HADESMEM_SCRIPTING_GEN_READ(Double)
-        HADESMEM_SCRIPTING_GEN_READ(StrNarrow)
+      HADESMEM_SCRIPTING_GEN_READ(Int16)
+      HADESMEM_SCRIPTING_GEN_READ(UInt16)
+      HADESMEM_SCRIPTING_GEN_READ(Int32)
+      HADESMEM_SCRIPTING_GEN_READ(UInt32)
+      HADESMEM_SCRIPTING_GEN_READ(Int64)
+      HADESMEM_SCRIPTING_GEN_READ(UInt64)
+      HADESMEM_SCRIPTING_GEN_READ(Float)
+      HADESMEM_SCRIPTING_GEN_READ(Double)
+      HADESMEM_SCRIPTING_GEN_READ(StrNarrow)
 
         // Wrapper function generator for MemoryMgr::ReadCharNarrow
       inline std::string Memory_ReadCharNarrow(MemoryMgr const& MyMemory, 
         DWORD_PTR Address)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
         std::string MyStr;
         MyStr += MyMemory.Read<Types::CharNarrow>(reinterpret_cast<PVOID>(
           Address));
         return MyStr;
-        HADESMEM_SCRIPTING_TRYCATCH_END
       }
 
       // Wrapper function generator for MemoryMgr::ReadCharWide
       inline std::string Memory_ReadCharWide(MemoryMgr const& MyMemory, 
         DWORD_PTR Address)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
         std::wstring MyStr;
         MyStr += MyMemory.Read<Types::CharWide>(reinterpret_cast<PVOID>(
           Address));
         return boost::lexical_cast<std::string>(MyStr);
-        HADESMEM_SCRIPTING_TRYCATCH_END
       }
 
       // Wrapper function generator for MemoryMgr::ReadStrWide
       inline std::string Memory_ReadStrWide(MemoryMgr const& MyMemory, 
         DWORD_PTR Address)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          return boost::lexical_cast<std::string>(MyMemory.Read<Types::StrWide>(
+        return boost::lexical_cast<std::string>(MyMemory.Read<Types::StrWide>(
           reinterpret_cast<PVOID>(Address)));
-        HADESMEM_SCRIPTING_TRYCATCH_END
       }
 
       // Wrapper function generator for MemoryMgr::ReadPointer
       inline DWORD_PTR Memory_ReadPointer(MemoryMgr const& MyMemory, 
         DWORD_PTR Address)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          return reinterpret_cast<DWORD_PTR>(MyMemory.Read<Types::Pointer>(
+        return reinterpret_cast<DWORD_PTR>(MyMemory.Read<Types::Pointer>(
           reinterpret_cast<PVOID>(Address)));
-        HADESMEM_SCRIPTING_TRYCATCH_END
       }
 
-        // MemoryMgr::Write<T> wrappers
-        HADESMEM_SCRIPTING_GEN_WRITE(Int8)
-        HADESMEM_SCRIPTING_GEN_WRITE(UInt8)
-        HADESMEM_SCRIPTING_GEN_WRITE(Int16)
-        HADESMEM_SCRIPTING_GEN_WRITE(UInt16)
-        HADESMEM_SCRIPTING_GEN_WRITE(Int32)
-        HADESMEM_SCRIPTING_GEN_WRITE(UInt32)
-        HADESMEM_SCRIPTING_GEN_WRITE(Int64)
-        HADESMEM_SCRIPTING_GEN_WRITE(UInt64)
-        HADESMEM_SCRIPTING_GEN_WRITE(Float)
-        HADESMEM_SCRIPTING_GEN_WRITE(Double)
-        HADESMEM_SCRIPTING_GEN_WRITE(StrNarrow)
+      // MemoryMgr::Write<T> wrappers
+      HADESMEM_SCRIPTING_GEN_WRITE(Int8)
+      HADESMEM_SCRIPTING_GEN_WRITE(UInt8)
+      HADESMEM_SCRIPTING_GEN_WRITE(Int16)
+      HADESMEM_SCRIPTING_GEN_WRITE(UInt16)
+      HADESMEM_SCRIPTING_GEN_WRITE(Int32)
+      HADESMEM_SCRIPTING_GEN_WRITE(UInt32)
+      HADESMEM_SCRIPTING_GEN_WRITE(Int64)
+      HADESMEM_SCRIPTING_GEN_WRITE(UInt64)
+      HADESMEM_SCRIPTING_GEN_WRITE(Float)
+      HADESMEM_SCRIPTING_GEN_WRITE(Double)
+      HADESMEM_SCRIPTING_GEN_WRITE(StrNarrow)
 
         // Wrapper function generator for MemoryMgr::WriteCharNarrow
-        inline void Memory_WriteCharNarrow(MemoryMgr const& MyMemory, 
+      inline void Memory_WriteCharNarrow(MemoryMgr const& MyMemory, 
         DWORD_PTR Address, std::string const& Value)
+      {
+        if (Value.size() != 1)
         {
-          HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          if (Value.size() != 1)
-          {
-            BOOST_THROW_EXCEPTION(HadesMemError() << 
-              ErrorFunction("Memory_WriteCharNarrow") << 
-              ErrorString("Value invalid (must be a single character)."));
-          }
-          MyMemory.Write(reinterpret_cast<PVOID>(Address), Value[0]);
-          HADESMEM_SCRIPTING_TRYCATCH_END
+          BOOST_THROW_EXCEPTION(HadesMemError() << 
+            ErrorFunction("Memory_WriteCharNarrow") << 
+            ErrorString("Value invalid (must be a single character)."));
         }
+        MyMemory.Write(reinterpret_cast<PVOID>(Address), Value[0]);
+      }
 
-        // Wrapper function generator for MemoryMgr::WriteCharWide
-        inline void Memory_WriteCharWide(MemoryMgr const& MyMemory, 
-          DWORD_PTR Address, std::string const& Value)
+      // Wrapper function generator for MemoryMgr::WriteCharWide
+      inline void Memory_WriteCharWide(MemoryMgr const& MyMemory, 
+        DWORD_PTR Address, std::string const& Value)
+      {
+        if (Value.size() != 1)
         {
-          HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          if (Value.size() != 1)
-          {
-            BOOST_THROW_EXCEPTION(HadesMemError() << 
-              ErrorFunction("Memory_WriteCharWide") << 
-              ErrorString("Value invalid (must be a single character)."));
-          }
-          MyMemory.Write(reinterpret_cast<PVOID>(Address), 
-            boost::lexical_cast<std::wstring>(Value)[0]);
-          HADESMEM_SCRIPTING_TRYCATCH_END
+          BOOST_THROW_EXCEPTION(HadesMemError() << 
+            ErrorFunction("Memory_WriteCharWide") << 
+            ErrorString("Value invalid (must be a single character)."));
         }
+        MyMemory.Write(reinterpret_cast<PVOID>(Address), 
+          boost::lexical_cast<std::wstring>(Value)[0]);
+      }
 
-        // Wrapper function generator for MemoryMgr::ReadStrWide
-        inline void Memory_WriteStrWide(MemoryMgr const& MyMemory, 
-          DWORD_PTR Address, std::string const& Value)
-        {
-          HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          MyMemory.Write(reinterpret_cast<PVOID>(Address), 
+      // Wrapper function generator for MemoryMgr::ReadStrWide
+      inline void Memory_WriteStrWide(MemoryMgr const& MyMemory, 
+        DWORD_PTR Address, std::string const& Value)
+      {
+        MyMemory.Write(reinterpret_cast<PVOID>(Address), 
           boost::lexical_cast<std::wstring>(Value));
-          HADESMEM_SCRIPTING_TRYCATCH_END
-        }
+      }
 
-        // Wrapper function generator for MemoryMgr::ReadPointer
-        inline void Memory_WritePointer(MemoryMgr const& MyMemory, 
-          DWORD_PTR Address, DWORD_PTR Value)
-        {
-          HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          MyMemory.Write(reinterpret_cast<PVOID>(Address), 
+      // Wrapper function generator for MemoryMgr::ReadPointer
+      inline void Memory_WritePointer(MemoryMgr const& MyMemory, 
+        DWORD_PTR Address, DWORD_PTR Value)
+      {
+        MyMemory.Write(reinterpret_cast<PVOID>(Address), 
           reinterpret_cast<Types::Pointer>(Value));
-          HADESMEM_SCRIPTING_TRYCATCH_END
-        }
+      }
 
-        // Module::Module wrappers
-        inline Module Module_CreateModule(
+      // Module::Module wrappers
+      inline Module Module_CreateModule(
         MemoryMgr const& MyMemory, DWORD_PTR Handle)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          return Module(MyMemory, reinterpret_cast<HMODULE>(Handle));
-        HADESMEM_SCRIPTING_TRYCATCH_END
+        return Module(MyMemory, reinterpret_cast<HMODULE>(Handle));
       }
       inline Module Module_CreateModule(MemoryMgr const& MyMemory, 
         std::string const& ModuleName)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          return Module(MyMemory, boost::lexical_cast<std::wstring>(
+        return Module(MyMemory, boost::lexical_cast<std::wstring>(
           ModuleName));
-        HADESMEM_SCRIPTING_TRYCATCH_END
       }
 
       // Module::GetBase wrapper
       inline DWORD_PTR Module_GetBase(Module const& MyModule)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          return reinterpret_cast<DWORD_PTR>(MyModule.GetBase());
-        HADESMEM_SCRIPTING_TRYCATCH_END
+        return reinterpret_cast<DWORD_PTR>(MyModule.GetBase());
       }
 
       // Module::GetSize wrapper
       inline DWORD Module_GetSize(Module const& MyModule)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          return MyModule.GetSize();
-        HADESMEM_SCRIPTING_TRYCATCH_END
+        return MyModule.GetSize();
       }
 
       // Module::GetName wrapper
       inline std::string Module_GetName(Module const& MyModule)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          return boost::lexical_cast<std::string>(MyModule.GetName());
-        HADESMEM_SCRIPTING_TRYCATCH_END
+        return boost::lexical_cast<std::string>(MyModule.GetName());
       }
 
       // Module::GetPath wrapper
       inline std::string Module_GetPath(Module const& MyModule)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          return boost::lexical_cast<std::string>(MyModule.GetPath());
-        HADESMEM_SCRIPTING_TRYCATCH_END
+        return boost::lexical_cast<std::string>(MyModule.GetPath());
       }
 
       // Module::Found wrapper
       inline bool Module_Found(Module const& MyModule)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          return MyModule.Found();
-        HADESMEM_SCRIPTING_TRYCATCH_END
+        return MyModule.Found();
       }
-      
+
       // Module list wrapper
       struct ModuleList
       {
@@ -462,76 +389,58 @@ namespace Hades
       // GetModuleList wrapper
       inline ModuleList Module_GetModuleList(MemoryMgr const& MyMemory)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          ModuleList MyModuleList;
+        ModuleList MyModuleList;
         MyModuleList.List = GetModuleList(MyMemory);
         return MyModuleList;
-        HADESMEM_SCRIPTING_TRYCATCH_END
       }
 
       // Region::Region wrappers
       inline Region Region_CreateRegion(MemoryMgr const& MyMemory, 
         DWORD_PTR Address)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          return Region(MyMemory, reinterpret_cast<PVOID>(Address));
-        HADESMEM_SCRIPTING_TRYCATCH_END
+        return Region(MyMemory, reinterpret_cast<PVOID>(Address));
       }
 
       // Region::GetBase wrapper
       inline DWORD_PTR Region_GetBaseAddress(Region const& MyRegion)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          return reinterpret_cast<DWORD_PTR>(MyRegion.GetBase());
-        HADESMEM_SCRIPTING_TRYCATCH_END
+        return reinterpret_cast<DWORD_PTR>(MyRegion.GetBase());
       }
 
       // Region::GetAllocBase wrapper
       inline DWORD_PTR Region_GetAllocationBase(Region const& MyRegion)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          return reinterpret_cast<DWORD_PTR>(MyRegion.GetAllocBase());
-        HADESMEM_SCRIPTING_TRYCATCH_END
+        return reinterpret_cast<DWORD_PTR>(MyRegion.GetAllocBase());
       }
 
       // Region::GetAllocProtect wrapper
       inline DWORD Region_GetAllocationProtect(Region const& MyRegion)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          return MyRegion.GetAllocProtect();
-        HADESMEM_SCRIPTING_TRYCATCH_END
+        return MyRegion.GetAllocProtect();
       }
 
       // Region::GetSize wrapper
       inline SIZE_T Region_GetRegionSize(Region const& MyRegion)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          return MyRegion.GetSize();
-        HADESMEM_SCRIPTING_TRYCATCH_END
+        return MyRegion.GetSize();
       }
 
       // Region::GetState wrapper
       inline DWORD Region_GetState(Region const& MyRegion)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          return MyRegion.GetState();
-        HADESMEM_SCRIPTING_TRYCATCH_END
+        return MyRegion.GetState();
       }
 
       // Region::GetProtect wrapper
       inline DWORD Region_GetProtect(Region const& MyRegion)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          return MyRegion.GetProtect();
-        HADESMEM_SCRIPTING_TRYCATCH_END
+        return MyRegion.GetProtect();
       }
 
       // Region::GetType wrapper
       inline DWORD Region_GetType(Region const& MyRegion)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          return MyRegion.GetType();
-        HADESMEM_SCRIPTING_TRYCATCH_END
+        return MyRegion.GetType();
       }
 
       // Module list wrapper
@@ -543,29 +452,23 @@ namespace Hades
       // GetRegionList wrapper
       inline RegionList Region_GetRegionList(MemoryMgr const& MyMemory)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          RegionList MyRegionList;
-          MyRegionList.List = GetMemoryRegionList(MyMemory);
-          return MyRegionList;
-        HADESMEM_SCRIPTING_TRYCATCH_END
+        RegionList MyRegionList;
+        MyRegionList.List = GetMemoryRegionList(MyMemory);
+        return MyRegionList;
       }
 
       // Injector::Injector wrappers
       inline Injector Injector_CreateInjector(MemoryMgr const& MyMemory)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          return Injector(MyMemory);
-        HADESMEM_SCRIPTING_TRYCATCH_END
+        return Injector(MyMemory);
       }
 
       // Injector::InjectDll wrapper
       inline DWORD_PTR Injector_InjectDll(Injector const& MyInjector, 
         std::string const& Path, bool PathResolution)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          return reinterpret_cast<DWORD_PTR>(MyInjector.InjectDll(
+        return reinterpret_cast<DWORD_PTR>(MyInjector.InjectDll(
           boost::lexical_cast<std::wstring>(Path), PathResolution));
-        HADESMEM_SCRIPTING_TRYCATCH_END
       }
 
       // Injector::CallExport wrapper
@@ -573,11 +476,9 @@ namespace Hades
         std::string const& ModulePath, DWORD_PTR ModuleRemote, 
         std::string const& Export)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          return MyInjector.CallExport(boost::lexical_cast<std::wstring>(
+        return MyInjector.CallExport(boost::lexical_cast<std::wstring>(
           ModulePath), reinterpret_cast<HMODULE>(ModuleRemote), 
           Export);
-        HADESMEM_SCRIPTING_TRYCATCH_END
       }
 
       struct CreateAndInjectInfo
@@ -592,7 +493,6 @@ namespace Hades
         std::string const& Path, std::string const& Args, 
         std::string const& Module, std::string const& Export)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
         HMODULE ModBase = nullptr;
         DWORD ExportRet = 0;
         auto MyMemory = CreateAndInject(
@@ -609,16 +509,13 @@ namespace Hades
         MyInfo.ExportRet = ExportRet;
 
         return MyInfo;
-        HADESMEM_SCRIPTING_TRYCATCH_END
       }
 
       // Disassembler::Disassembler wrappers
       inline Disassembler Disassembler_CreateDisassembler(
         MemoryMgr const& MyMemory)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          return Disassembler(MyMemory);
-        HADESMEM_SCRIPTING_TRYCATCH_END
+        return Disassembler(MyMemory);
       }
 
       // String list wrapper
@@ -632,118 +529,98 @@ namespace Hades
         Disassembler const& MyDisassembler, DWORD_PTR Address, 
         DWORD_PTR NumInstructions)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          StringList MyStringList;
-          MyStringList.List =  MyDisassembler.DisassembleToStr(
-            reinterpret_cast<PVOID>(Address), NumInstructions);
-          return MyStringList;
-        HADESMEM_SCRIPTING_TRYCATCH_END
+        StringList MyStringList;
+        MyStringList.List =  MyDisassembler.DisassembleToStr(
+          reinterpret_cast<PVOID>(Address), NumInstructions);
+        return MyStringList;
       }
 
       // Scanner::Scanner wrappers
       inline Scanner Scanner_CreateScanner(MemoryMgr const& MyMemory)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          return Scanner(MyMemory);
-        HADESMEM_SCRIPTING_TRYCATCH_END
+        return Scanner(MyMemory);
       }
       inline Scanner Scanner_CreateScanner(MemoryMgr const& MyMemory, 
         DWORD_PTR Module)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          return Scanner(MyMemory, reinterpret_cast<HMODULE>(Module));
-        HADESMEM_SCRIPTING_TRYCATCH_END
+        return Scanner(MyMemory, reinterpret_cast<HMODULE>(Module));
       }
       inline Scanner Scanner_CreateScanner(MemoryMgr const& MyMemory, 
         DWORD_PTR Start, DWORD_PTR End)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          return Scanner(MyMemory, reinterpret_cast<PVOID>(Start), 
+        return Scanner(MyMemory, reinterpret_cast<PVOID>(Start), 
           reinterpret_cast<PVOID>(End));
-        HADESMEM_SCRIPTING_TRYCATCH_END
       }
 
       // Scanner::LoadFromXML wrapper
       inline void Scanner_LoadFromXML(Scanner& MyScanner, 
         std::string const& Path)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          MyScanner.LoadFromXML(boost::lexical_cast<std::wstring>(Path));
-        HADESMEM_SCRIPTING_TRYCATCH_END
+        MyScanner.LoadFromXML(boost::lexical_cast<std::wstring>(Path));
       }
 
       // Scanner::operator[] wrapper
       inline DWORD_PTR Scanner_GetAddress(Scanner const& MyScanner, 
         std::string const& Name)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
         return reinterpret_cast<DWORD_PTR>(MyScanner[
           boost::lexical_cast<std::wstring>(Name)]);
-        HADESMEM_SCRIPTING_TRYCATCH_END
       }
 
       // Scanner::Find<T> wrappers
       HADESMEM_SCRIPTING_GEN_FIND(Int8)
-        HADESMEM_SCRIPTING_GEN_FIND(UInt8)
-        HADESMEM_SCRIPTING_GEN_FIND(Int16)
-        HADESMEM_SCRIPTING_GEN_FIND(UInt16)
-        HADESMEM_SCRIPTING_GEN_FIND(Int32)
-        HADESMEM_SCRIPTING_GEN_FIND(UInt32)
-        HADESMEM_SCRIPTING_GEN_FIND(Int64)
-        HADESMEM_SCRIPTING_GEN_FIND(UInt64)
-        HADESMEM_SCRIPTING_GEN_FIND(Float)
-        HADESMEM_SCRIPTING_GEN_FIND(Double)
-        HADESMEM_SCRIPTING_GEN_FIND(StrNarrow)
+      HADESMEM_SCRIPTING_GEN_FIND(UInt8)
+      HADESMEM_SCRIPTING_GEN_FIND(Int16)
+      HADESMEM_SCRIPTING_GEN_FIND(UInt16)
+      HADESMEM_SCRIPTING_GEN_FIND(Int32)
+      HADESMEM_SCRIPTING_GEN_FIND(UInt32)
+      HADESMEM_SCRIPTING_GEN_FIND(Int64)
+      HADESMEM_SCRIPTING_GEN_FIND(UInt64)
+      HADESMEM_SCRIPTING_GEN_FIND(Float)
+      HADESMEM_SCRIPTING_GEN_FIND(Double)
+      HADESMEM_SCRIPTING_GEN_FIND(StrNarrow)
 
         // Wrapper function for Scanner::FindCharNarrow
-        inline DWORD_PTR Scanner_FindCharNarrow(Scanner const& MyScanner, 
+      inline DWORD_PTR Scanner_FindCharNarrow(Scanner const& MyScanner, 
         std::string const& Data)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          if (Data.size() != 1)
-          {
-            BOOST_THROW_EXCEPTION(HadesMemError() << 
-              ErrorFunction("Scanner_FindCharNarrow") << 
-              ErrorString("Value invalid (must be a single character)."));
-          }
-          return reinterpret_cast<DWORD_PTR>(MyScanner.Find(Data[0]));
-          HADESMEM_SCRIPTING_TRYCATCH_END
+        if (Data.size() != 1)
+        {
+          BOOST_THROW_EXCEPTION(HadesMemError() << 
+            ErrorFunction("Scanner_FindCharNarrow") << 
+            ErrorString("Value invalid (must be a single character)."));
+        }
+        return reinterpret_cast<DWORD_PTR>(MyScanner.Find(Data[0]));
       }
 
       // Wrapper function for Scanner::FindCharWide
       inline DWORD_PTR Scanner_FindCharWide(Scanner const& MyScanner, 
         std::string const& Data)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          if (Data.size() != 1)
-          {
-            BOOST_THROW_EXCEPTION(HadesMemError() << 
-              ErrorFunction("Scanner_FindCharNarrow") << 
-              ErrorString("Value invalid (must be a single character)."));
-          }
-          return reinterpret_cast<DWORD_PTR>(MyScanner.Find(
-            boost::lexical_cast<Types::StrWide>(Data[0])));
-          HADESMEM_SCRIPTING_TRYCATCH_END
+        if (Data.size() != 1)
+        {
+          BOOST_THROW_EXCEPTION(HadesMemError() << 
+            ErrorFunction("Scanner_FindCharNarrow") << 
+            ErrorString("Value invalid (must be a single character)."));
+        }
+        return reinterpret_cast<DWORD_PTR>(MyScanner.Find(
+          boost::lexical_cast<Types::StrWide>(Data[0])));
       }
 
       // Wrapper function for Scanner::FindStrWide
       inline DWORD_PTR Scanner_FindStrWide(Scanner const& MyScanner, 
         std::string const& Data)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          return reinterpret_cast<DWORD_PTR>(MyScanner.Find(
+        return reinterpret_cast<DWORD_PTR>(MyScanner.Find(
           boost::lexical_cast<Types::StrWide>(Data)));
-        HADESMEM_SCRIPTING_TRYCATCH_END
       }
 
       // Wrapper function for MemoryMgr::ReadPointer
       inline DWORD_PTR Scanner_FindPointer(Scanner const& MyScanner, 
         DWORD_PTR Data)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          return reinterpret_cast<DWORD_PTR>(MyScanner.Find(
+        return reinterpret_cast<DWORD_PTR>(MyScanner.Find(
           reinterpret_cast<Types::Pointer>(Data)));
-        HADESMEM_SCRIPTING_TRYCATCH_END
       }
 
       // Dword pointer list wrapper
@@ -754,73 +631,68 @@ namespace Hades
 
       // Scanner::FindAll<T> wrappers
       HADESMEM_SCRIPTING_GEN_FIND_ALL(Int8)
-        HADESMEM_SCRIPTING_GEN_FIND_ALL(UInt8)
-        HADESMEM_SCRIPTING_GEN_FIND_ALL(Int16)
-        HADESMEM_SCRIPTING_GEN_FIND_ALL(UInt16)
-        HADESMEM_SCRIPTING_GEN_FIND_ALL(Int32)
-        HADESMEM_SCRIPTING_GEN_FIND_ALL(UInt32)
-        HADESMEM_SCRIPTING_GEN_FIND_ALL(Int64)
-        HADESMEM_SCRIPTING_GEN_FIND_ALL(UInt64)
-        HADESMEM_SCRIPTING_GEN_FIND_ALL(Float)
-        HADESMEM_SCRIPTING_GEN_FIND_ALL(Double)
-        HADESMEM_SCRIPTING_GEN_FIND_ALL(StrNarrow)
+      HADESMEM_SCRIPTING_GEN_FIND_ALL(UInt8)
+      HADESMEM_SCRIPTING_GEN_FIND_ALL(Int16)
+      HADESMEM_SCRIPTING_GEN_FIND_ALL(UInt16)
+      HADESMEM_SCRIPTING_GEN_FIND_ALL(Int32)
+      HADESMEM_SCRIPTING_GEN_FIND_ALL(UInt32)
+      HADESMEM_SCRIPTING_GEN_FIND_ALL(Int64)
+      HADESMEM_SCRIPTING_GEN_FIND_ALL(UInt64)
+      HADESMEM_SCRIPTING_GEN_FIND_ALL(Float)
+      HADESMEM_SCRIPTING_GEN_FIND_ALL(Double)
+      HADESMEM_SCRIPTING_GEN_FIND_ALL(StrNarrow)
 
 
         // Wrapper function for Scanner::FindAllCharNarrow
-        inline DwordPtrList Scanner_FindAllCharNarrow(Scanner const& MyScanner, 
+      inline DwordPtrList Scanner_FindAllCharNarrow(Scanner const& MyScanner, 
         std::string const& Data)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          if (Data.size() != 1)
-          {
-            BOOST_THROW_EXCEPTION(HadesMemError() << 
-              ErrorFunction("Scanner_FindAllCharNarrow") << 
-              ErrorString("Value invalid (must be a single character)."));
-          }
-          auto AddrList = MyScanner.FindAll(Data[0]);
-          DwordPtrList NewList;
-          NewList.List.reserve(AddrList.size());
-          std::transform(AddrList.begin(), AddrList.end(), std::back_inserter(
-            NewList.List), 
-            [] (PVOID Current)
-          {
-            return reinterpret_cast<DWORD_PTR>(Current);
-          });
-          return NewList;
-          HADESMEM_SCRIPTING_TRYCATCH_END
+        if (Data.size() != 1)
+        {
+          BOOST_THROW_EXCEPTION(HadesMemError() << 
+            ErrorFunction("Scanner_FindAllCharNarrow") << 
+            ErrorString("Value invalid (must be a single character)."));
+        }
+        auto AddrList = MyScanner.FindAll(Data[0]);
+        DwordPtrList NewList;
+        NewList.List.reserve(AddrList.size());
+        std::transform(AddrList.begin(), AddrList.end(), std::back_inserter(
+          NewList.List), 
+          [] (PVOID Current)
+        {
+          return reinterpret_cast<DWORD_PTR>(Current);
+        });
+        return NewList;
       }
 
       // Wrapper function for Scanner::FindAllCharWide
       inline DwordPtrList Scanner_FindAllCharWide(Scanner const& MyScanner, 
         std::string const& Data)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          if (Data.size() != 1)
-          {
-            BOOST_THROW_EXCEPTION(HadesMemError() << 
-              ErrorFunction("Scanner_FindAllCharWide") << 
-              ErrorString("Value invalid (must be a single character)."));
-          }
-          auto AddrList = MyScanner.FindAll(boost::lexical_cast<Types::StrWide>(
-            Data[0]));
-          DwordPtrList NewList;
-          NewList.List.reserve(AddrList.size());
-          std::transform(AddrList.begin(), AddrList.end(), std::back_inserter(
-            NewList.List), 
-            [] (PVOID Current)
-          {
-            return reinterpret_cast<DWORD_PTR>(Current);
-          });
-          return NewList;
-          HADESMEM_SCRIPTING_TRYCATCH_END
+        if (Data.size() != 1)
+        {
+          BOOST_THROW_EXCEPTION(HadesMemError() << 
+            ErrorFunction("Scanner_FindAllCharWide") << 
+            ErrorString("Value invalid (must be a single character)."));
+        }
+        auto AddrList = MyScanner.FindAll(boost::lexical_cast<Types::StrWide>(
+          Data[0]));
+        DwordPtrList NewList;
+        NewList.List.reserve(AddrList.size());
+        std::transform(AddrList.begin(), AddrList.end(), std::back_inserter(
+          NewList.List), 
+          [] (PVOID Current)
+        {
+          return reinterpret_cast<DWORD_PTR>(Current);
+        });
+        return NewList;
       }
 
       // Wrapper function for Scanner::FindAllStrWide
       inline DwordPtrList Scanner_FindAllStrWide(Scanner const& MyScanner, 
         std::string const& Data)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          auto AddrList = MyScanner.FindAll(boost::lexical_cast<Types::StrWide>(
+        auto AddrList = MyScanner.FindAll(boost::lexical_cast<Types::StrWide>(
           Data));
         DwordPtrList NewList;
         NewList.List.reserve(AddrList.size());
@@ -831,15 +703,13 @@ namespace Hades
           return reinterpret_cast<DWORD_PTR>(Current);
         });
         return NewList;
-        HADESMEM_SCRIPTING_TRYCATCH_END
       }
 
       // Wrapper function for Scanner::FindAllPointer
       inline DwordPtrList Scanner_FindAllPointer(Scanner const& MyScanner, 
         DWORD_PTR Data)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
-          auto AddrList = MyScanner.FindAll(reinterpret_cast<Types::Pointer>(
+        auto AddrList = MyScanner.FindAll(reinterpret_cast<Types::Pointer>(
           Data));
         DwordPtrList NewList;
         NewList.List.reserve(AddrList.size());
@@ -850,9 +720,8 @@ namespace Hades
           return reinterpret_cast<DWORD_PTR>(Current);
         });
         return NewList;
-        HADESMEM_SCRIPTING_TRYCATCH_END
       }
-      
+
       // Wrapper function for ManualMap::ManualMap
       inline ManualMap ManualMap_CreateManualMap(MemoryMgr const& MyMemory)
       {
@@ -863,10 +732,8 @@ namespace Hades
       inline DWORD_PTR ManualMap_Map(ManualMap const& MyManualMapper, 
         std::string const& Path, std::string const& Export, bool InjectHelper)
       {
-        HADESMEM_SCRIPTING_TRYCATCH_BEGIN
         return reinterpret_cast<DWORD_PTR>(MyManualMapper.Map(
-        boost::lexical_cast<std::wstring>(Path), Export, InjectHelper));
-        HADESMEM_SCRIPTING_TRYCATCH_END
+          boost::lexical_cast<std::wstring>(Path), Export, InjectHelper));
       }
     }
 
@@ -1000,7 +867,11 @@ namespace Hades
       ScriptMgr() 
         : LuaMgr() 
       {
-        // Register HadesMem API
+        // Register HadesMem exception handler
+        luabind::register_exception_handler<HadesError>(std::bind(
+          &ScriptMgr::TranslateHadesMemException, this, std::placeholders::_1, 
+          std::placeholders::_2));
+
         luabind::module(GetState(), "std")
         [
           luabind::class_<std::vector<DWORD_PTR>>("vector_dwordptr")
@@ -1009,6 +880,7 @@ namespace Hades
           .def(luabind::constructor<std::size_t>())
         ];
 
+        // Register HadesMem API
         luabind::module(GetState(), "HadesMem")
         [
           // Bind console output wrapper
@@ -1022,13 +894,13 @@ namespace Hades
 
           // Bind MemoryMgr::MemoryMgr wrappers
           ,luabind::def("CreateMemoryMgr", static_cast<boost::shared_ptr<
-          MemoryMgr> (*)(DWORD)>(&Wrappers::Memory_CreateMemoryMgr)) 
+            MemoryMgr> (*)(DWORD)>(&Wrappers::Memory_CreateMemoryMgr)) 
           ,luabind::def("CreateMemoryMgr", static_cast<boost::shared_ptr<
-          MemoryMgr> (*)(std::string const&)>(&Wrappers::
-          Memory_CreateMemoryMgr)) 
+            MemoryMgr> (*)(std::string const&)>(&Wrappers::
+            Memory_CreateMemoryMgr)) 
           ,luabind::def("CreateMemoryMgr", static_cast<boost::shared_ptr<
-          MemoryMgr> (*)(std::string const& WindowName, 
-          std::string const& ClassName)>(&Wrappers::Memory_CreateMemoryMgr)) 
+            MemoryMgr> (*)(std::string const& WindowName, 
+            std::string const& ClassName)>(&Wrappers::Memory_CreateMemoryMgr)) 
 
           // Bind MemoryMgr class
           ,luabind::class_<MemoryMgr>("MemoryMgr")
@@ -1038,10 +910,8 @@ namespace Hades
           [
             luabind::value("CallConv_CDECL", MemoryMgr::CallConv_CDECL),
             luabind::value("CallConv_STDCALL", MemoryMgr::CallConv_STDCALL),
-            luabind::value("CallConv_THISCALL", 
-            MemoryMgr::CallConv_THISCALL),
-            luabind::value("CallConv_FASTCALL", 
-            MemoryMgr::CallConv_FASTCALL),
+            luabind::value("CallConv_THISCALL", MemoryMgr::CallConv_THISCALL),
+            luabind::value("CallConv_FASTCALL", MemoryMgr::CallConv_FASTCALL),
             luabind::value("CallConv_X64", MemoryMgr::CallConv_X64),
             luabind::value("CallConv_Default", MemoryMgr::CallConv_Default)
           ]
@@ -1103,21 +973,21 @@ namespace Hades
 
           // Bind MemoryMgr::GetRemoteProcAddress wrappers
           .def("GetRemoteProcAddress", static_cast<DWORD_PTR (*) (
-          MemoryMgr const&, DWORD_PTR, std::string const&, 
-          std::string const&)>(&Wrappers::Memory_GetRemoteProcAddress))
+            MemoryMgr const&, DWORD_PTR, std::string const&, 
+            std::string const&)>(&Wrappers::Memory_GetRemoteProcAddress))
           .def("GetRemoteProcAddress", static_cast<DWORD_PTR (*) (
-          MemoryMgr const&, DWORD_PTR, std::string const&, WORD)>(
-          &Wrappers::Memory_GetRemoteProcAddress))
+            MemoryMgr const&, DWORD_PTR, std::string const&, WORD)>(
+            &Wrappers::Memory_GetRemoteProcAddress))
 
           // Bind MemoryMgr::FlushCache wrapper
           .def("FlushCache", &Wrappers::Memory_FlushCache)
 
           // Bind Module::Module wrappers
           ,luabind::def("CreateModule", static_cast<Module (*)(
-          MemoryMgr const&, DWORD_PTR)>(&Wrappers::Module_CreateModule)) 
+            MemoryMgr const&, DWORD_PTR)>(&Wrappers::Module_CreateModule)) 
           ,luabind::def("CreateModule", static_cast<Module (*)(
-          MemoryMgr const&, std::string const&)>(&Wrappers::
-          Module_CreateModule)) 
+            MemoryMgr const&, std::string const&)>(&Wrappers::
+            Module_CreateModule)) 
 
           // Bind Module class
           ,luabind::class_<Module>("Module")
@@ -1141,7 +1011,7 @@ namespace Hades
           ,luabind::class_<Wrappers::ModuleList>("ModuleList")
           .def(luabind::constructor<>())
           .def_readonly("List", &Wrappers::ModuleList::List, 
-          luabind::return_stl_iterator)
+            luabind::return_stl_iterator)
 
           // Bind GetModuleList function
           ,luabind::def("GetModuleList", &Wrappers::Module_GetModuleList)
@@ -1203,17 +1073,18 @@ namespace Hades
           .def(luabind::constructor<>())
           .def_readonly("Memory", &Wrappers::CreateAndInjectInfo::Memory)
           .def_readonly("ModBase", &Wrappers::CreateAndInjectInfo::ModBase)
-          .def_readonly("ExportRet", &Wrappers::CreateAndInjectInfo::ExportRet)
+          .def_readonly("ExportRet", &Wrappers::CreateAndInjectInfo::
+            ExportRet)
 
           // Bind StringList class
           ,luabind::class_<Wrappers::StringList>("StringList")
           .def(luabind::constructor<>())
           .def_readonly("List", &Wrappers::StringList::List, 
-          luabind::return_stl_iterator)
+            luabind::return_stl_iterator)
 
           // Bind Disassembler::Disassembler wrappers
-          ,luabind::def("CreateDisassembler", 
-          &Wrappers::Disassembler_CreateDisassembler) 
+          ,luabind::def("CreateDisassembler", &Wrappers::
+            Disassembler_CreateDisassembler) 
 
           // Bind Disassembler class
           ,luabind::class_<Disassembler>("Disassembler")
@@ -1223,12 +1094,12 @@ namespace Hades
 
           // Bind Scanner::Scanner wrappers
           ,luabind::def("CreateScanner", static_cast<Scanner (*) 
-          (MemoryMgr const&)>(&Wrappers::Scanner_CreateScanner)) 
+            (MemoryMgr const&)>(&Wrappers::Scanner_CreateScanner)) 
           ,luabind::def("CreateScanner", static_cast<Scanner (*) (
-          MemoryMgr const&, DWORD_PTR)>(&Wrappers::Scanner_CreateScanner)) 
+            MemoryMgr const&, DWORD_PTR)>(&Wrappers::Scanner_CreateScanner)) 
           ,luabind::def("CreateScanner", static_cast<Scanner (*) 
-          (MemoryMgr const&, DWORD_PTR, DWORD_PTR)>(&Wrappers::
-          Scanner_CreateScanner)) 
+            (MemoryMgr const&, DWORD_PTR, DWORD_PTR)>(&Wrappers::
+            Scanner_CreateScanner)) 
 
           // Bind Scanner class
           ,luabind::class_<Scanner>("Scanner")
@@ -1277,11 +1148,11 @@ namespace Hades
           ,luabind::class_<Wrappers::DwordPtrList>("DwordPtrList")
           .def(luabind::constructor<>())
           .def_readonly("List", &Wrappers::DwordPtrList::List, 
-          luabind::return_stl_iterator)
+            luabind::return_stl_iterator)
 
           // Bind ManualMap::ManualMap wrappers
           ,luabind::def("CreateManualMap", &Wrappers::
-          ManualMap_CreateManualMap) 
+            ManualMap_CreateManualMap) 
 
           // Bind ManualMap class
           ,luabind::class_<ManualMap>("ManualMap")
@@ -1289,6 +1160,11 @@ namespace Hades
           // Bind ManualMap::Map wrapper
           .def("Map", &Wrappers::ManualMap_Map)
         ];
+      }
+
+      void TranslateHadesMemException(lua_State* L, HadesError const& Error)
+      {
+        lua_pushstring(L, boost::diagnostic_information(Error).c_str());
       }
     };
   }
