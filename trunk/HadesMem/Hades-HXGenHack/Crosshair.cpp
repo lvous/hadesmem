@@ -88,10 +88,10 @@ namespace Hades
 
         // Draw crosshair
         pHelper->DrawLine(Math::Vec2f(ScreenCenterX - 10.f, ScreenCenterY), 
-          Math::Vec2f(ScreenCenterX + 10.f, ScreenCenterY), 2.f, 
+          Math::Vec2f(ScreenCenterX + 10.f, ScreenCenterY), 1.f, 
           D3DCOLOR_ARGB(255, 255, 0, 0));
         pHelper->DrawLine(Math::Vec2f(ScreenCenterX, ScreenCenterY - 10.f), 
-          Math::Vec2f(ScreenCenterX, ScreenCenterY + 10.f), 2.f, 
+          Math::Vec2f(ScreenCenterX, ScreenCenterY + 10.f), 1.f, 
           D3DCOLOR_ARGB(255, 255, 0, 0));
       }
       catch (boost::exception const& e)
