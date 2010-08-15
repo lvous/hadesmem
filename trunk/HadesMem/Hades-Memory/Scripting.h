@@ -64,72 +64,67 @@ extern "C"
 // LuaBind extensions for 64-bit number support
 namespace luabind
 {
-  namespace detail
+  template <>
+  struct default_converter<unsigned long long>
+    : native_converter_base<unsigned long long>
   {
-    template <>
-    struct default_converter<unsigned long long>
-      : native_converter_base<unsigned long long>
+    int compute_score(lua_State* L, int index)
     {
-      int compute_score(lua_State* L, int index)
-      {
-        return lua_type(L, index) == LUA_TNUMBER ? 0 : -1;
-      };
-
-      unsigned long long from(lua_State* L, int index)
-      {
-        return static_cast<unsigned long long>(BOOST_PP_CAT(lua_to, number)
-          (L, index));
-      }
-
-      void to(lua_State* L, unsigned long long const& value)
-      {
-        BOOST_PP_CAT(lua_push, number)(L, BOOST_PP_CAT(as_lua_, number)
-          (value));
-      }
+      return lua_type(L, index) == LUA_TNUMBER ? 0 : -1;
     };
 
-    template <>
-    struct default_converter<unsigned long long const>
-      : default_converter<unsigned long long>
-    {};
-
-    template <>
-    struct default_converter<unsigned long long const&>
-      : default_converter<unsigned long long>
-    {};
-
-    template <>
-    struct default_converter<signed long long>
-      : native_converter_base<signed long long>
+    unsigned long long from(lua_State* L, int index)
     {
-      int compute_score(lua_State* L, int index)
-      {
-        return lua_type(L, index) == LUA_TNUMBER ? 0 : -1;
-      };
+      return static_cast<unsigned long long>(BOOST_PP_CAT(lua_to, number)
+        (L, index));
+    }
 
-      signed long long from(lua_State* L, int index)
-      {
-        return static_cast<signed long long>(BOOST_PP_CAT(lua_to, number)
-          (L, index));
-      }
+    void to(lua_State* L, unsigned long long const& value)
+    {
+      BOOST_PP_CAT(lua_push, number)(L, BOOST_PP_CAT(as_lua_, number)(value));
+    }
+  };
 
-      void to(lua_State* L, signed long long const& value)
-      {
-        BOOST_PP_CAT(lua_push, number)(L, BOOST_PP_CAT(as_lua_, number)
-          (value));
-      }
+  template <>
+  struct default_converter<unsigned long long const>
+    : default_converter<unsigned long long>
+  {};
+
+  template <>
+  struct default_converter<unsigned long long const&>
+    : default_converter<unsigned long long>
+  {};
+
+  template <>
+  struct default_converter<signed long long>
+    : native_converter_base<signed long long>
+  {
+    int compute_score(lua_State* L, int index)
+    {
+      return lua_type(L, index) == LUA_TNUMBER ? 0 : -1;
     };
 
-    template <>
-    struct default_converter<signed long long const>
-      : default_converter<signed long long>
-    {};
+    signed long long from(lua_State* L, int index)
+    {
+      return static_cast<signed long long>(BOOST_PP_CAT(lua_to, number)
+        (L, index));
+    }
 
-    template <>
-    struct default_converter<signed long long const&>
-      : default_converter<signed long long>
-    {};
-  }
+    void to(lua_State* L, signed long long const& value)
+    {
+      BOOST_PP_CAT(lua_push, number)(L, BOOST_PP_CAT(as_lua_, number)(value));
+    }
+  };
+
+  template <>
+  struct default_converter<signed long long const>
+    : default_converter<signed long long>
+  {};
+
+  template <>
+  struct default_converter<signed long long const&>
+    : default_converter<signed long long>
+  {};
 }
 
 // Wrapper function generator for MemoryMgr::Read
