@@ -132,33 +132,18 @@ int wmain(int argc, wchar_t* argv[], wchar_t* /*envp*/[])
             break;
           }
         }
-        catch (boost::exception const& e)
+        catch (std::exception const& e)
         {
           // Dump error information
           std::cout << boost::diagnostic_information(e);
         }
-        catch (std::exception const& e)
-        {
-          // Dump error information
-          std::wcout << "Error! " << e.what() << std::endl;
-        }
       }
     }
-  }
-  catch (boost::exception const& e)
-  {
-    // Dump error information
-    std::cout << boost::diagnostic_information(e);
-
-    // Stop window from automatically closing
-    std::wcin.clear();
-    std::wcin.sync();
-    std::wcin.get();
   }
   catch (std::exception const& e)
   {
     // Dump error information
-    std::wcout << "Error! " << e.what() << std::endl;
+    std::cout << boost::diagnostic_information(e);
 
     // Stop window from automatically closing
     std::wcin.clear();
