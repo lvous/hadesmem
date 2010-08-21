@@ -19,13 +19,18 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-// HadesMem
+// HadesMem (External)
 #include "Module.h"
 #include "Region.h"
 #include "Process.h"
-#include "Patcher.h"
 #include "Scanner.h"
 #include "Injector.h"
 #include "ManualMap.h"
 #include "MemoryMgr.h"
 #include "Disassembler.h"
+
+// HadesMem (Internal)
+#include "Patcher.h"
+
+// HadesMem (PELib)
+#include "PeFile.h"

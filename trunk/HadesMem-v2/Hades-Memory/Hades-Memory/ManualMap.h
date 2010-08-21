@@ -433,7 +433,7 @@ namespace Hades
       DWORD_PTR const ImageBase = pNtHeaders->OptionalHeader.ImageBase;
 
       // Calcuate module delta
-      DWORD_PTR const Delta = reinterpret_cast<DWORD_PTR>(RemoteBase) - 
+      LONG_PTR const Delta = reinterpret_cast<DWORD_PTR>(RemoteBase) - 
         ImageBase;
 
       // Get local module buffer base

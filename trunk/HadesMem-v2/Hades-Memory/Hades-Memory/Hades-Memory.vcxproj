@@ -23,6 +23,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Disassembler.h" />
+    <ClInclude Include="DosHeader.h" />
     <ClInclude Include="Error.h" />
     <ClInclude Include="Injector.h" />
     <ClInclude Include="ManualMap.h" />
@@ -30,6 +31,7 @@
     <ClInclude Include="MemoryMgr.h" />
     <ClInclude Include="Module.h" />
     <ClInclude Include="Patcher.h" />
+    <ClInclude Include="PeFile.h" />
     <ClInclude Include="Process.h" />
     <ClInclude Include="Region.h" />
     <ClInclude Include="Scanner.h" />

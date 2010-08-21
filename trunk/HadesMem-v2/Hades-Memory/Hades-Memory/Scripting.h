@@ -52,10 +52,12 @@ extern "C"
 
 // Hades
 #include "Types.h"
+#include "PeFile.h"
 #include "Module.h"
 #include "Region.h"
 #include "Scanner.h"
 #include "Injector.h"
+#include "DosHeader.h"
 #include "ManualMap.h"
 #include "MemoryMgr.h"
 #include "Disassembler.h"
@@ -1080,6 +1082,35 @@ namespace Hades
 
           // Bind ManualMap::Map wrapper
           .def("Map", &Wrappers::ManualMap_Map)
+
+          // Bind PeFile class
+          ,luabind::class_<PeFile>("PeFile")
+
+          // Bind PE file types
+          .enum_("PeFileType")
+          [
+            luabind::value("PeFileMem", PeFile::PEFileMem),
+            luabind::value("PeFileDisk", PeFile::PEFileDisk)
+          ]
+
+          // Bind PeFile::PeFile
+          .def(luabind::constructor<MemoryMgr const&, PeFile::PeFileType, 
+            DWORD_PTR>())
+
+          // Bind DosHeader class
+          ,luabind::class_<DosHeader>("DosHeader")
+
+          // Bind DosHeader::DosHeader
+          .def(luabind::constructor<PeFile const&>())
+
+          // Bind DosHeader::IsValid
+          .def("IsValid", &DosHeader::IsValid)
+
+          // Bind DosHeader::GetMagic
+          .def("GetMagic", &DosHeader::GetMagic)
+
+          // Bind DosHeader::SetMagic
+          .def("SetMagic", &DosHeader::SetMagic)
         ];
       }
 
