@@ -165,7 +165,7 @@ namespace Hades
 
       // Check whether we need to convert the path from a relative to 
       // an absolute
-      if (PathResolution && !boost::filesystem::wpath(Path).
+      if (PathResolution && !boost::filesystem::path(Path).
         has_root_directory())
       {
         // Get handle to self
@@ -184,8 +184,8 @@ namespace Hades
         }
 
         // Convert relative path to absolute path
-        PathReal = boost::filesystem::complete(Path, boost::filesystem::wpath(
-          &SelfPath[0]).parent_path()).file_string();
+        PathReal = boost::filesystem::absolute(Path, boost::filesystem::path(
+          &SelfPath[0]).parent_path()).c_str();
       }
 
       // Convert path to lower case
