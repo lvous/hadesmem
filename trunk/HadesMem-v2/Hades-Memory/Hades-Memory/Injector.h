@@ -162,12 +162,11 @@ namespace Hades
       const
     {
       // String to hold 'real' path to module
-      std::wstring PathReal(Path);
+      boost::filesystem::path PathReal(Path);
 
       // Check whether we need to convert the path from a relative to 
       // an absolute
-      if (PathResolution && !boost::filesystem::path(Path).
-        has_root_name())
+      if (PathResolution && boost::filesystem::path(Path).is_relative())
       {
         // Get handle to self
         HMODULE const Self = reinterpret_cast<HMODULE>(&__ImageBase);
@@ -188,9 +187,6 @@ namespace Hades
         PathReal = boost::filesystem::absolute(Path, boost::filesystem::path(
           &SelfPath[0]).parent_path()).c_str();
       }
-
-      // Convert path to lower case
-      boost::to_lower(PathReal);
 
       // Ensure target file exists
       if (PathResolution && !boost::filesystem::exists(PathReal))
@@ -215,7 +211,8 @@ namespace Hades
       }
 
       // Copy the DLL's pathname to the remote process' address space
-      m_Memory.Write(LibFileRemote.GetAddress(), PathReal);
+      m_Memory.Write(LibFileRemote.GetAddress(), static_cast<std::wstring>(
+        PathReal.c_str()));
 
       // Get the real address of LoadLibraryW in Kernel32.dll
       HMODULE const hKernel32 = GetModuleHandleW(L"Kernel32");
@@ -247,6 +244,10 @@ namespace Hades
           ErrorString("Call to LoadLibraryW in remote process failed."));
       }
 
+      // Get path as lowercase string
+      std::wstring const PathRealLower(boost::to_lower_copy(
+        static_cast<std::wstring>(PathReal.c_str())));
+
       // Get module list for remote process
       auto const ModuleList(GetModuleList(m_Memory));
       // Look for target module
@@ -259,8 +260,8 @@ namespace Hades
         }
         else
         {
-          return boost::to_lower_copy(MyModule->GetName()) == PathReal || 
-            boost::to_lower_copy(MyModule->GetPath()) == PathReal;
+          return boost::to_lower_copy(MyModule->GetName()) == PathRealLower || 
+            boost::to_lower_copy(MyModule->GetPath()) == PathRealLower;
         }
       });
       // Ensure target module was found
