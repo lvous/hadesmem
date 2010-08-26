@@ -67,7 +67,7 @@ namespace Hades
       typedef boost::iostreams::stream<Logger<CharT>> Stream;
 
       // Constructor
-      Logger(boost::filesystem::wpath const& LogDirPath, 
+      Logger(boost::filesystem::path const& LogDirPath, 
         std::wstring const& Filename) 
         : m_LogPath(GeneratePath(LogDirPath, Filename))
       { }
@@ -79,7 +79,7 @@ namespace Hades
       }
 
       // Generate path to log file.
-      std::wstring GeneratePath(boost::filesystem::wpath const& LogDirPath, 
+      std::wstring GeneratePath(boost::filesystem::path const& LogDirPath, 
         std::wstring const& Filename)
       {
         // Get local time
@@ -97,7 +97,7 @@ namespace Hades
         auto const LogPath(LogDirPath / LogFile);
 
         // Return path to log file
-        return LogPath.file_string();
+        return LogPath.c_str();
       }
 
       // Writes n characters from s

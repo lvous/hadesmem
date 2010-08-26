@@ -82,7 +82,7 @@ namespace Hades
     }
 
     // Get path to self (directory)
-    inline boost::filesystem::wpath GetSelfDirPath()
+    inline boost::filesystem::path GetSelfDirPath()
     {
       // Get self
       HMODULE const ModMe(reinterpret_cast<HMODULE>(&__ImageBase));
@@ -101,13 +101,13 @@ namespace Hades
       }
 
       // Path to self dir
-      auto const SelfDirPath(boost::filesystem::wpath(SelfFullPath).
+      auto const SelfDirPath(boost::filesystem::path(SelfFullPath).
         parent_path());
       return SelfDirPath;
     }
 
     // Get path to self (directory)
-    inline boost::filesystem::wpath GetSelfPath()
+    inline boost::filesystem::path GetSelfPath()
     {
       // Get self
       HMODULE const ModMe(reinterpret_cast<HMODULE>(&__ImageBase));
@@ -126,7 +126,7 @@ namespace Hades
       }
 
       // Path to self
-      return boost::filesystem::wpath(SelfFullPath);
+      return boost::filesystem::path(SelfFullPath);
     }
   }
 }
