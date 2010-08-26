@@ -23,6 +23,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include <Windows.h>
 
 // C++ Standard Library
+#include <array>
 #include <memory>
 #include <string>
 #include <vector>
@@ -166,13 +167,13 @@ namespace Hades
       // Check whether we need to convert the path from a relative to 
       // an absolute
       if (PathResolution && !boost::filesystem::path(Path).
-        has_root_directory())
+        has_root_name())
       {
         // Get handle to self
         HMODULE const Self = reinterpret_cast<HMODULE>(&__ImageBase);
 
         // Get path to self
-        std::vector<wchar_t> SelfPath(MAX_PATH);
+        std::array<wchar_t, MAX_PATH> SelfPath;
         if (!GetModuleFileName(Self, &SelfPath[0], MAX_PATH) || 
           GetLastError() == ERROR_INSUFFICIENT_BUFFER)
         {
@@ -250,10 +251,17 @@ namespace Hades
       auto const ModuleList(GetModuleList(m_Memory));
       // Look for target module
       auto const Iter = std::find_if(ModuleList.begin(), ModuleList.end(), 
-        [&PathReal] (boost::shared_ptr<Module> const& MyModule) 
+        [&] (boost::shared_ptr<Module> const& MyModule) -> bool
       {
-        return boost::to_lower_copy(MyModule->GetName()) == PathReal || 
-          boost::to_lower_copy(MyModule->GetPath()) == PathReal;
+        if (PathResolution)
+        {
+          return boost::filesystem::equivalent(MyModule->GetPath(), PathReal);
+        }
+        else
+        {
+          return boost::to_lower_copy(MyModule->GetName()) == PathReal || 
+            boost::to_lower_copy(MyModule->GetPath()) == PathReal;
+        }
       });
       // Ensure target module was found
       if (Iter == ModuleList.end())
