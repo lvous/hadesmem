@@ -60,12 +60,9 @@ namespace Hades
       inline explicit MemoryMgr(DWORD ProcID);
 
       // Open process from process name
-      inline explicit MemoryMgr(std::string const& ProcName);
       inline explicit MemoryMgr(std::wstring const& ProcName);
 
       // Open process from window name and class
-      inline MemoryMgr(std::string const& WindowName, 
-        std::string const& ClassName);
       inline MemoryMgr(std::wstring const& WindowName, 
         std::wstring const& ClassName);
 
@@ -212,19 +209,11 @@ namespace Hades
     { }
 
     // Open process from process name
-    MemoryMgr::MemoryMgr(std::string const& ProcName) 
-      : m_Process(boost::lexical_cast<std::wstring>(ProcName)) 
-    { }
     MemoryMgr::MemoryMgr(std::wstring const& ProcName) 
       : m_Process(ProcName) 
     { }
 
     // Open process from window name and class
-    MemoryMgr::MemoryMgr(std::string const& WindowName, 
-      std::string const& ClassName) 
-      : m_Process(boost::lexical_cast<std::wstring>(WindowName), 
-      boost::lexical_cast<std::wstring>(ClassName)) 
-    { }
     MemoryMgr::MemoryMgr(std::wstring const& WindowName, 
       std::wstring const& ClassName) 
       : m_Process(WindowName, ClassName) 

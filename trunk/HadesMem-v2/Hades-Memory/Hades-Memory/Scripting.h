@@ -131,18 +131,19 @@ namespace luabind
 
 // Wrapper function generator for MemoryMgr::Read
 #define HADESMEM_SCRIPTING_GEN_READ(x) \
-inline Types::x Memory_Read##x(MemoryMgr const& MyMemory, DWORD_PTR Address)\
+Types::x Read##x(DWORD_PTR Address)\
 {\
-  return MyMemory.Read<Types::x>(reinterpret_cast<PVOID>(Address));\
-}
+  return MemoryMgr::Read<Types::x>(reinterpret_cast<PVOID>(Address));\
+}\
+
 
 // Wrapper function generator for MemoryMgr::Write
 #define HADESMEM_SCRIPTING_GEN_WRITE(x) \
-inline void Memory_Write##x(MemoryMgr const& MyMemory, DWORD_PTR Address, \
-  Types::x Data)\
+void Write##x(DWORD_PTR Address, Types::x Data)\
 {\
-  MyMemory.Write<Types::x>(reinterpret_cast<PVOID>(Address), Data);\
-}
+  MemoryMgr::Write<Types::x>(reinterpret_cast<PVOID>(Address), Data);\
+}\
+
 
 // Wrapper function generator for MyScanner::Find
 #define HADESMEM_SCRIPTING_GEN_FIND(x) \
@@ -173,6 +174,195 @@ namespace Hades
   {
     namespace Wrappers
     {
+      class MemoryMgrWrappers : public MemoryMgr
+      {
+      public:
+        explicit MemoryMgrWrappers(DWORD ProcID)
+          : MemoryMgr(ProcID)
+        { }
+
+        explicit MemoryMgrWrappers(std::string const& ProcName) 
+          : MemoryMgr(boost::lexical_cast<std::wstring>(ProcName))
+        { }
+
+        explicit MemoryMgrWrappers(std::string const& WindowName, 
+          std::string const& ClassName)
+          : MemoryMgr(boost::lexical_cast<std::wstring>(WindowName), 
+          boost::lexical_cast<std::wstring>(ClassName))
+        { }
+
+        // MemoryMgr::CanRead wrapper
+        bool CanRead(DWORD_PTR Address)
+        {
+          return MemoryMgr::CanRead(reinterpret_cast<PVOID>(Address));
+        }
+
+        // MemoryMgr::CanWrite wrapper
+        bool CanWrite(DWORD_PTR Address)
+        {
+          return MemoryMgr::CanWrite(reinterpret_cast<PVOID>(Address));
+        }
+
+        // MemoryMgr::Call wrapper
+        DWORD Call(DWORD_PTR Address, std::vector<DWORD_PTR> const& Args, 
+          CallConv MyCallConv)
+        {
+          std::vector<PVOID> ArgsNew;
+          std::transform(Args.begin(), Args.end(), std::back_inserter(ArgsNew), 
+            [] (DWORD_PTR Arg)
+          {
+            return reinterpret_cast<PVOID>(Arg);
+          });
+
+          return MemoryMgr::Call(reinterpret_cast<PVOID>(Address), ArgsNew, 
+            MyCallConv);
+        }
+
+        // MemoryMgr::Alloc wrapper
+        DWORD_PTR Alloc(SIZE_T Size)
+        {
+          return reinterpret_cast<DWORD_PTR>(MemoryMgr::Alloc(Size));
+        }
+
+        // MemoryMgr::Free wrapper
+        void Free(DWORD_PTR Address)
+        {
+          return MemoryMgr::Free(reinterpret_cast<PVOID>(Address));
+        }
+
+        // MemoryMgr::GetProcessHandle wrapper
+        DWORD_PTR GetProcessHandle()
+        {
+          return reinterpret_cast<DWORD_PTR>(MemoryMgr::GetProcessHandle());
+        }
+
+        // MemoryMgr::GetRemoteProcAddress wrapper
+        DWORD_PTR GetRemoteProcAddressByOrdinal(DWORD_PTR RemoteMod, 
+          std::string const& Module, WORD Ordinal)
+        {
+          return reinterpret_cast<DWORD_PTR>(MemoryMgr::GetRemoteProcAddress(
+            reinterpret_cast<HMODULE>(RemoteMod), 
+            boost::lexical_cast<std::wstring>(Module), 
+            reinterpret_cast<LPCSTR>(MAKELONG(Ordinal, 0))));
+        }
+
+        // MemoryMgr::GetRemoteProcAddress wrapper
+        DWORD_PTR GetRemoteProcAddressByName(DWORD_PTR RemoteMod, 
+          std::string const& Module, std::string const& Function)
+        {
+          return reinterpret_cast<DWORD_PTR>(MemoryMgr::GetRemoteProcAddress(
+            reinterpret_cast<HMODULE>(RemoteMod), 
+            boost::lexical_cast<std::wstring>(Module), 
+            Function.c_str()));
+        }
+
+        // MemoryMgr::FlushCache wrapper
+        void FlushCache(DWORD_PTR Address, SIZE_T Size)
+        {
+          return MemoryMgr::FlushCache(reinterpret_cast<LPCVOID>(Address), 
+            Size);
+        }
+
+        // MemoryMgr::Read<T> wrappers
+        HADESMEM_SCRIPTING_GEN_READ(Int8)
+        HADESMEM_SCRIPTING_GEN_READ(UInt8)
+        HADESMEM_SCRIPTING_GEN_READ(Int16)
+        HADESMEM_SCRIPTING_GEN_READ(UInt16)
+        HADESMEM_SCRIPTING_GEN_READ(Int32)
+        HADESMEM_SCRIPTING_GEN_READ(UInt32)
+        HADESMEM_SCRIPTING_GEN_READ(Int64)
+        HADESMEM_SCRIPTING_GEN_READ(UInt64)
+        HADESMEM_SCRIPTING_GEN_READ(Float)
+        HADESMEM_SCRIPTING_GEN_READ(Double)
+        HADESMEM_SCRIPTING_GEN_READ(StrNarrow)
+
+        // Wrapper function generator for MemoryMgr::ReadCharNarrow
+        std::string ReadCharNarrow(DWORD_PTR Address)
+        {
+          std::string MyStr;
+          MyStr += MemoryMgr::Read<Types::CharNarrow>(reinterpret_cast<PVOID>(
+            Address));
+          return MyStr;
+        }
+
+        // Wrapper function generator for MemoryMgr::ReadCharWide
+        std::string ReadCharWide(DWORD_PTR Address)
+        {
+          std::wstring MyStr;
+          MyStr += MemoryMgr::Read<Types::CharWide>(reinterpret_cast<PVOID>(
+            Address));
+          return boost::lexical_cast<std::string>(MyStr);
+        }
+
+        // Wrapper function generator for MemoryMgr::ReadStrWide
+        std::string ReadStrWide(DWORD_PTR Address)
+        {
+          return boost::lexical_cast<std::string>(MemoryMgr::Read<Types::
+            StrWide>(reinterpret_cast<PVOID>(Address)));
+        }
+
+        // Wrapper function generator for MemoryMgr::ReadPointer
+        DWORD_PTR ReadPointer(DWORD_PTR Address)
+        {
+          return reinterpret_cast<DWORD_PTR>(MemoryMgr::Read<Types::Pointer>(
+            reinterpret_cast<PVOID>(Address)));
+        }
+
+        // MemoryMgr::Write<T> wrappers
+        HADESMEM_SCRIPTING_GEN_WRITE(Int8)
+        HADESMEM_SCRIPTING_GEN_WRITE(UInt8)
+        HADESMEM_SCRIPTING_GEN_WRITE(Int16)
+        HADESMEM_SCRIPTING_GEN_WRITE(UInt16)
+        HADESMEM_SCRIPTING_GEN_WRITE(Int32)
+        HADESMEM_SCRIPTING_GEN_WRITE(UInt32)
+        HADESMEM_SCRIPTING_GEN_WRITE(Int64)
+        HADESMEM_SCRIPTING_GEN_WRITE(UInt64)
+        HADESMEM_SCRIPTING_GEN_WRITE(Float)
+        HADESMEM_SCRIPTING_GEN_WRITE(Double)
+        HADESMEM_SCRIPTING_GEN_WRITE(StrNarrow)
+
+        // Wrapper function generator for MemoryMgr::WriteCharNarrow
+        void WriteCharNarrow(DWORD_PTR Address, std::string const& Value)
+        {
+          if (Value.size() != 1)
+          {
+            BOOST_THROW_EXCEPTION(HadesMemError() << 
+              ErrorFunction("Memory_WriteCharNarrow") << 
+              ErrorString("Value invalid (must be a single character)."));
+          }
+
+          MemoryMgr::Write(reinterpret_cast<PVOID>(Address), Value[0]);
+        }
+
+        // Wrapper function generator for MemoryMgr::WriteCharWide
+        void WriteCharWide(DWORD_PTR Address, std::string const& Value)
+        {
+          if (Value.size() != 1)
+          {
+            BOOST_THROW_EXCEPTION(HadesMemError() << 
+              ErrorFunction("Memory_WriteCharWide") << 
+              ErrorString("Value invalid (must be a single character)."));
+          }
+
+          MemoryMgr::Write(reinterpret_cast<PVOID>(Address), 
+            boost::lexical_cast<std::wstring>(Value)[0]);
+        }
+
+        // Wrapper function generator for MemoryMgr::ReadStrWide
+        void WriteStrWide(DWORD_PTR Address, std::string const& Value)
+        {
+          MemoryMgr::Write(reinterpret_cast<PVOID>(Address), 
+            boost::lexical_cast<std::wstring>(Value));
+        }
+
+        // Wrapper function generator for MemoryMgr::ReadPointer
+        void WritePointer(DWORD_PTR Address, DWORD_PTR Value)
+        {
+          MemoryMgr::Write(reinterpret_cast<PVOID>(Address), 
+            reinterpret_cast<Types::Pointer>(Value));
+        }
+      };
+
       // Console output wrapper
       inline void WriteLn(std::string const& Data)
       {
@@ -198,187 +388,6 @@ namespace Hades
 #else 
 #error "Unsupported architecture."
 #endif
-      }
-
-      // MemoryMgr::CanRead wrapper
-      inline bool Memory_CanRead(MemoryMgr const& MyMemory, DWORD_PTR Address)
-      {
-        return MyMemory.CanRead(reinterpret_cast<PVOID>(Address));
-      }
-
-      // MemoryMgr::CanWrite wrapper
-      inline bool Memory_CanWrite(MemoryMgr const& MyMemory, DWORD_PTR Address)
-      {
-        return MyMemory.CanWrite(reinterpret_cast<PVOID>(Address));
-      }
-
-      // MemoryMgr::Call wrapper
-      inline DWORD Memory_Call(MemoryMgr const& MyMemory, DWORD_PTR Address, 
-        std::vector<DWORD_PTR> const& Args, MemoryMgr::CallConv CallConv)
-      {
-        std::vector<PVOID> ArgsNew;
-        std::transform(Args.begin(), Args.end(), std::back_inserter(ArgsNew), 
-          [] (DWORD_PTR Arg)
-        {
-          return reinterpret_cast<PVOID>(Arg);
-        });
-
-        return MyMemory.Call(reinterpret_cast<PVOID>(Address), ArgsNew, 
-          CallConv);
-      }
-
-      // MemoryMgr::Alloc wrapper
-      inline DWORD_PTR Memory_Alloc(MemoryMgr const& MyMem, SIZE_T Size)
-      {
-        return reinterpret_cast<DWORD_PTR>(MyMem.Alloc(Size));
-      }
-
-      // MemoryMgr::Free wrapper
-      inline void Memory_Free(MemoryMgr const& MyMem, DWORD_PTR Address)
-      {
-        return MyMem.Free(reinterpret_cast<PVOID>(Address));
-      }
-
-      // MemoryMgr::GetProcessHandle wrapper
-      inline DWORD_PTR Memory_GetProcessHandle(MemoryMgr const& MyMem)
-      {
-        return reinterpret_cast<DWORD_PTR>(MyMem.GetProcessHandle());
-      }
-
-      // MemoryMgr::GetRemoteProcAddress wrapper
-      inline DWORD_PTR Memory_GetRemoteProcAddress(MemoryMgr const& MyMem, 
-        DWORD_PTR RemoteMod, std::string const& Module, 
-        std::string const& Function)
-      {
-        return reinterpret_cast<DWORD_PTR>(MyMem.GetRemoteProcAddress(
-          reinterpret_cast<HMODULE>(RemoteMod), 
-          boost::lexical_cast<std::wstring>(Module), 
-          Function.c_str()));
-      }
-
-      // MemoryMgr::GetRemoteProcAddress wrapper
-      inline DWORD_PTR Memory_GetRemoteProcAddress(MemoryMgr const& MyMem, 
-        DWORD_PTR RemoteMod, std::string const& Module, 
-        WORD Ordinal)
-      {
-        return reinterpret_cast<DWORD_PTR>(MyMem.GetRemoteProcAddress(
-          reinterpret_cast<HMODULE>(RemoteMod), 
-          boost::lexical_cast<std::wstring>(Module), 
-          reinterpret_cast<LPCSTR>(MAKELONG(Ordinal, 0))));
-      }
-
-      // MemoryMgr::FlushCache wrapper
-      inline void Memory_FlushCache(MemoryMgr const& MyMem, DWORD_PTR Address, 
-        SIZE_T Size)
-      {
-        return MyMem.FlushCache(reinterpret_cast<LPCVOID>(Address), Size);
-      }
-
-      // MemoryMgr::Read<T> wrappers
-      HADESMEM_SCRIPTING_GEN_READ(Int8)
-      HADESMEM_SCRIPTING_GEN_READ(UInt8)
-      HADESMEM_SCRIPTING_GEN_READ(Int16)
-      HADESMEM_SCRIPTING_GEN_READ(UInt16)
-      HADESMEM_SCRIPTING_GEN_READ(Int32)
-      HADESMEM_SCRIPTING_GEN_READ(UInt32)
-      HADESMEM_SCRIPTING_GEN_READ(Int64)
-      HADESMEM_SCRIPTING_GEN_READ(UInt64)
-      HADESMEM_SCRIPTING_GEN_READ(Float)
-      HADESMEM_SCRIPTING_GEN_READ(Double)
-      HADESMEM_SCRIPTING_GEN_READ(StrNarrow)
-
-        // Wrapper function generator for MemoryMgr::ReadCharNarrow
-      inline std::string Memory_ReadCharNarrow(MemoryMgr const& MyMemory, 
-        DWORD_PTR Address)
-      {
-        std::string MyStr;
-        MyStr += MyMemory.Read<Types::CharNarrow>(reinterpret_cast<PVOID>(
-          Address));
-        return MyStr;
-      }
-
-      // Wrapper function generator for MemoryMgr::ReadCharWide
-      inline std::string Memory_ReadCharWide(MemoryMgr const& MyMemory, 
-        DWORD_PTR Address)
-      {
-        std::wstring MyStr;
-        MyStr += MyMemory.Read<Types::CharWide>(reinterpret_cast<PVOID>(
-          Address));
-        return boost::lexical_cast<std::string>(MyStr);
-      }
-
-      // Wrapper function generator for MemoryMgr::ReadStrWide
-      inline std::string Memory_ReadStrWide(MemoryMgr const& MyMemory, 
-        DWORD_PTR Address)
-      {
-        return boost::lexical_cast<std::string>(MyMemory.Read<Types::StrWide>(
-          reinterpret_cast<PVOID>(Address)));
-      }
-
-      // Wrapper function generator for MemoryMgr::ReadPointer
-      inline DWORD_PTR Memory_ReadPointer(MemoryMgr const& MyMemory, 
-        DWORD_PTR Address)
-      {
-        return reinterpret_cast<DWORD_PTR>(MyMemory.Read<Types::Pointer>(
-          reinterpret_cast<PVOID>(Address)));
-      }
-
-      // MemoryMgr::Write<T> wrappers
-      HADESMEM_SCRIPTING_GEN_WRITE(Int8)
-      HADESMEM_SCRIPTING_GEN_WRITE(UInt8)
-      HADESMEM_SCRIPTING_GEN_WRITE(Int16)
-      HADESMEM_SCRIPTING_GEN_WRITE(UInt16)
-      HADESMEM_SCRIPTING_GEN_WRITE(Int32)
-      HADESMEM_SCRIPTING_GEN_WRITE(UInt32)
-      HADESMEM_SCRIPTING_GEN_WRITE(Int64)
-      HADESMEM_SCRIPTING_GEN_WRITE(UInt64)
-      HADESMEM_SCRIPTING_GEN_WRITE(Float)
-      HADESMEM_SCRIPTING_GEN_WRITE(Double)
-      HADESMEM_SCRIPTING_GEN_WRITE(StrNarrow)
-
-        // Wrapper function generator for MemoryMgr::WriteCharNarrow
-      inline void Memory_WriteCharNarrow(MemoryMgr const& MyMemory, 
-        DWORD_PTR Address, std::string const& Value)
-      {
-        if (Value.size() != 1)
-        {
-          BOOST_THROW_EXCEPTION(HadesMemError() << 
-            ErrorFunction("Memory_WriteCharNarrow") << 
-            ErrorString("Value invalid (must be a single character)."));
-        }
-
-        MyMemory.Write(reinterpret_cast<PVOID>(Address), Value[0]);
-      }
-
-      // Wrapper function generator for MemoryMgr::WriteCharWide
-      inline void Memory_WriteCharWide(MemoryMgr const& MyMemory, 
-        DWORD_PTR Address, std::string const& Value)
-      {
-        if (Value.size() != 1)
-        {
-          BOOST_THROW_EXCEPTION(HadesMemError() << 
-            ErrorFunction("Memory_WriteCharWide") << 
-            ErrorString("Value invalid (must be a single character)."));
-        }
-
-        MyMemory.Write(reinterpret_cast<PVOID>(Address), 
-          boost::lexical_cast<std::wstring>(Value)[0]);
-      }
-
-      // Wrapper function generator for MemoryMgr::ReadStrWide
-      inline void Memory_WriteStrWide(MemoryMgr const& MyMemory, 
-        DWORD_PTR Address, std::string const& Value)
-      {
-        MyMemory.Write(reinterpret_cast<PVOID>(Address), 
-          boost::lexical_cast<std::wstring>(Value));
-      }
-
-      // Wrapper function generator for MemoryMgr::ReadPointer
-      inline void Memory_WritePointer(MemoryMgr const& MyMemory, 
-        DWORD_PTR Address, DWORD_PTR Value)
-      {
-        MyMemory.Write(reinterpret_cast<PVOID>(Address), 
-          reinterpret_cast<Types::Pointer>(Value));
       }
 
       // Module::GetBase wrapper
@@ -804,8 +813,8 @@ namespace Hades
         : LuaMgr() 
       {
         // Register HadesMem exception handler
-        luabind::register_exception_handler<HadesError>(std::bind(
-          &ScriptMgr::TranslateHadesMemException, this, std::placeholders::_1, 
+        luabind::register_exception_handler<std::exception>(std::bind(
+          &ScriptMgr::TranslateException, this, std::placeholders::_1, 
           std::placeholders::_2));
 
         luabind::module(GetState(), "std")
@@ -830,7 +839,7 @@ namespace Hades
           ,luabind::def("IsAMD64", &Wrappers::IsAMD64)
 
           // Bind MemoryMgr class
-          ,luabind::class_<MemoryMgr>("MemoryMgr")
+          ,luabind::class_<Wrappers::MemoryMgrWrappers>("MemoryMgr")
 
           // Bind MemoryMgr::MemoryMgr
           .def(luabind::constructor<DWORD>())
@@ -849,70 +858,68 @@ namespace Hades
           ]
 
           // Bind MemoryMgr::Call wrapper
-          .def("Call", &Wrappers::Memory_Call) 
+          .def("Call", &Wrappers::MemoryMgrWrappers::Call) 
 
           // Bind MemoryMgr::Read<T> wrappers
-          .def("ReadInt8", &Wrappers::Memory_ReadInt8) 
-          .def("ReadUInt8", &Wrappers::Memory_ReadUInt8) 
-          .def("ReadInt16", &Wrappers::Memory_ReadInt16) 
-          .def("ReadUInt16", &Wrappers::Memory_ReadUInt16)
-          .def("ReadInt32", &Wrappers::Memory_ReadInt32)
-          .def("ReadUInt32", &Wrappers::Memory_ReadUInt32)
-          .def("ReadInt64", &Wrappers::Memory_ReadInt64)
-          .def("ReadUInt64", &Wrappers::Memory_ReadUInt64)
-          .def("ReadFloat", &Wrappers::Memory_ReadFloat)
-          .def("ReadDouble", &Wrappers::Memory_ReadDouble)
-          .def("ReadCharNarrow", &Wrappers::Memory_ReadCharNarrow)
-          .def("ReadCharWide", &Wrappers::Memory_ReadCharWide)
-          .def("ReadStrNarrow", &Wrappers::Memory_ReadStrNarrow)
-          .def("ReadStrWide", &Wrappers::Memory_ReadStrWide)
-          .def("ReadPointer", &Wrappers::Memory_ReadPointer)
+          .def("ReadInt8", &Wrappers::MemoryMgrWrappers::ReadInt8) 
+          .def("ReadUInt8", &Wrappers::MemoryMgrWrappers::ReadUInt8) 
+          .def("ReadInt16", &Wrappers::MemoryMgrWrappers::ReadInt16) 
+          .def("ReadUInt16", &Wrappers::MemoryMgrWrappers::ReadUInt16)
+          .def("ReadInt32", &Wrappers::MemoryMgrWrappers::ReadInt32)
+          .def("ReadUInt32", &Wrappers::MemoryMgrWrappers::ReadUInt32)
+          .def("ReadInt64", &Wrappers::MemoryMgrWrappers::ReadInt64)
+          .def("ReadUInt64", &Wrappers::MemoryMgrWrappers::ReadUInt64)
+          .def("ReadFloat", &Wrappers::MemoryMgrWrappers::ReadFloat)
+          .def("ReadDouble", &Wrappers::MemoryMgrWrappers::ReadDouble)
+          .def("ReadCharNarrow", &Wrappers::MemoryMgrWrappers::ReadCharNarrow)
+          .def("ReadCharWide", &Wrappers::MemoryMgrWrappers::ReadCharWide)
+          .def("ReadStrNarrow", &Wrappers::MemoryMgrWrappers::ReadStrNarrow)
+          .def("ReadStrWide", &Wrappers::MemoryMgrWrappers::ReadStrWide)
+          .def("ReadPointer", &Wrappers::MemoryMgrWrappers::ReadPointer)
 
           // Bind MemoryMgr::Write<T> wrappers
-          .def("WriteInt8", &Wrappers::Memory_WriteInt8) 
-          .def("WriteUInt8", &Wrappers::Memory_WriteUInt8) 
-          .def("WriteInt16", &Wrappers::Memory_WriteInt16) 
-          .def("WriteUInt16", &Wrappers::Memory_WriteUInt16)
-          .def("WriteInt32", &Wrappers::Memory_WriteInt32)
-          .def("WriteUInt32", &Wrappers::Memory_WriteUInt32)
-          .def("WriteInt64", &Wrappers::Memory_WriteInt64)
-          .def("WriteUInt64", &Wrappers::Memory_WriteUInt64)
-          .def("WriteFloat", &Wrappers::Memory_WriteFloat)
-          .def("WriteDouble", &Wrappers::Memory_WriteDouble)
-          .def("WriteCharNarrow", &Wrappers::Memory_WriteCharNarrow)
-          .def("WriteCharWide", &Wrappers::Memory_WriteCharWide)
-          .def("WriteStrNarrow", &Wrappers::Memory_WriteStrNarrow)
-          .def("WriteStrWide", &Wrappers::Memory_WriteStrWide)
-          .def("WritePointer", &Wrappers::Memory_WritePointer)
+          .def("WriteInt8", &Wrappers::MemoryMgrWrappers::WriteInt8) 
+          .def("WriteUInt8", &Wrappers::MemoryMgrWrappers::WriteUInt8) 
+          .def("WriteInt16", &Wrappers::MemoryMgrWrappers::WriteInt16) 
+          .def("WriteUInt16", &Wrappers::MemoryMgrWrappers::WriteUInt16)
+          .def("WriteInt32", &Wrappers::MemoryMgrWrappers::WriteInt32)
+          .def("WriteUInt32", &Wrappers::MemoryMgrWrappers::WriteUInt32)
+          .def("WriteInt64", &Wrappers::MemoryMgrWrappers::WriteInt64)
+          .def("WriteUInt64", &Wrappers::MemoryMgrWrappers::WriteUInt64)
+          .def("WriteFloat", &Wrappers::MemoryMgrWrappers::WriteFloat)
+          .def("WriteDouble", &Wrappers::MemoryMgrWrappers::WriteDouble)
+          .def("WriteCharNarrow", &Wrappers::MemoryMgrWrappers::WriteCharNarrow)
+          .def("WriteCharWide", &Wrappers::MemoryMgrWrappers::WriteCharWide)
+          .def("WriteStrNarrow", &Wrappers::MemoryMgrWrappers::WriteStrNarrow)
+          .def("WriteStrWide", &Wrappers::MemoryMgrWrappers::WriteStrWide)
+          .def("WritePointer", &Wrappers::MemoryMgrWrappers::WritePointer)
 
           // Bind MemoryMgr::CanRead wrapper
-          .def("CanRead", &Wrappers::Memory_CanRead)
+          .def("CanRead", &Wrappers::MemoryMgrWrappers::CanRead)
 
           // Bind MemoryMgr::CanWrite wrapper
-          .def("CanWrite", &Wrappers::Memory_CanWrite)
+          .def("CanWrite", &Wrappers::MemoryMgrWrappers::CanWrite)
 
           // Bind MemoryMgr::Alloc wrapper
-          .def("Alloc", &Wrappers::Memory_Alloc)
+          .def("Alloc", &Wrappers::MemoryMgrWrappers::Alloc)
 
           // Bind MemoryMgr::Free wrapper
-          .def("Free", &Wrappers::Memory_Free)
+          .def("Free", &Wrappers::MemoryMgrWrappers::Free)
 
           // Bind MemoryMgr::GetProcessID wrapper
           .def("GetProcessID", &MemoryMgr::GetProcessID)
 
           // Bind MemoryMgr::GetProcessHandle wrapper
-          .def("GetProcessHandle", &Wrappers::Memory_GetProcessHandle)
+          .def("GetProcessHandle", &Wrappers::MemoryMgrWrappers::GetProcessHandle)
 
           // Bind MemoryMgr::GetRemoteProcAddress wrappers
-          .def("GetRemoteProcAddress", static_cast<DWORD_PTR (*) (
-            MemoryMgr const&, DWORD_PTR, std::string const&, 
-            std::string const&)>(&Wrappers::Memory_GetRemoteProcAddress))
-          .def("GetRemoteProcAddress", static_cast<DWORD_PTR (*) (
-            MemoryMgr const&, DWORD_PTR, std::string const&, WORD)>(
-            &Wrappers::Memory_GetRemoteProcAddress))
+          .def("GetRemoteProcAddress", &Wrappers::MemoryMgrWrappers::
+            GetRemoteProcAddressByOrdinal)
+          .def("GetRemoteProcAddress", &Wrappers::MemoryMgrWrappers::
+            GetRemoteProcAddressByName)
 
           // Bind MemoryMgr::FlushCache wrapper
-          .def("FlushCache", &Wrappers::Memory_FlushCache)
+          .def("FlushCache", &Wrappers::MemoryMgrWrappers::FlushCache)
 
           // Bind Module class
           ,luabind::class_<Module>("Module")
@@ -1114,9 +1121,9 @@ namespace Hades
         ];
       }
 
-      void TranslateHadesMemException(lua_State* L, HadesError const& Error)
+      void TranslateException(lua_State* L, std::exception const& e)
       {
-        lua_pushstring(L, boost::diagnostic_information(Error).c_str());
+        lua_pushstring(L, boost::diagnostic_information(e).c_str());
       }
     };
   }
