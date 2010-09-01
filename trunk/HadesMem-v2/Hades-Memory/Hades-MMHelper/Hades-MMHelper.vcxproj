@@ -75,6 +75,8 @@
     <TargetName>$(ProjectName)_IA32</TargetName>
     <OutDir>$(SolutionDir)Binaries\$(Configuration)-$(Platform)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
@@ -87,6 +89,8 @@
     <TargetName>$(ProjectName)_IA32</TargetName>
     <OutDir>$(SolutionDir)Binaries\$(Configuration)-$(Platform)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -104,6 +108,8 @@
       <AdditionalIncludeDirectories>"../";</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
+      <EnablePREfast>true</EnablePREfast>
+      <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -125,6 +131,7 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
       <AdditionalIncludeDirectories>"../";</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
+      <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -148,6 +155,8 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
       <AdditionalIncludeDirectories>"../";</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
+      <EnablePREfast>true</EnablePREfast>
+      <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -173,6 +182,7 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
       <AdditionalIncludeDirectories>"../";</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
+      <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

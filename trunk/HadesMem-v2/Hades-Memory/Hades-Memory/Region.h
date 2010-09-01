@@ -28,6 +28,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 // Boost
 #pragma warning(push, 1)
+#pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
 #pragma warning(pop)

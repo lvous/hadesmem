@@ -97,6 +97,8 @@
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
     <TargetName>$(ProjectName)</TargetName>
     <TargetExt>.lib</TargetExt>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(SolutionDir)Binaries\$(Configuration)-$(Platform)\</OutDir>
@@ -105,6 +107,8 @@
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
     <TargetName>$(ProjectName)</TargetName>
     <TargetExt>.lib</TargetExt>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(SolutionDir)Binaries\$(Configuration)-$(Platform)\</OutDir>
@@ -133,6 +137,8 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <AdditionalIncludeDirectories>"../";"../Hades-Common/";</AdditionalIncludeDirectories>
       <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
+      <EnablePREfast>true</EnablePREfast>
+      <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -157,6 +163,7 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <AdditionalIncludeDirectories>"../";"../Hades-Common/";</AdditionalIncludeDirectories>
       <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
+      <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -184,6 +191,8 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <AdditionalIncludeDirectories>"../";"../Hades-Common/";</AdditionalIncludeDirectories>
       <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
+      <EnablePREfast>true</EnablePREfast>
+      <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -212,6 +221,7 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <AdditionalIncludeDirectories>"../";"../Hades-Common/";</AdditionalIncludeDirectories>
       <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
+      <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

@@ -30,7 +30,10 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include <sstream>
 
 // RapidXML
+#pragma warning(push, 1)
+#pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
 #include <RapidXML/rapidxml.hpp>
+#pragma warning(pop)
 
 // Hades
 #include "Module.h"
@@ -557,11 +560,11 @@ namespace Hades
       PatFileBuf.push_back(L'\0');
 
       // Open XML document
-      rapidxml::xml_document<wchar_t> AccountsDoc;
-      AccountsDoc.parse<0>(&PatFileBuf[0]);
+      auto AccountsDoc(std::make_shared<rapidxml::xml_document<wchar_t>>());
+      AccountsDoc->parse<0>(&PatFileBuf[0]);
 
       // Ensure pattern tag is found
-      auto PatternsTag = AccountsDoc.first_node(L"Patterns");
+      auto PatternsTag = AccountsDoc->first_node(L"Patterns");
       if (!PatternsTag)
       {
         BOOST_THROW_EXCEPTION(ScannerError() << 

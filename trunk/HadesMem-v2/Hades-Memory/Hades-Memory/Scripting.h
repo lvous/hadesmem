@@ -31,6 +31,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 // Boost
 #pragma warning(push, 1)
+#pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
 #include <boost/format.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/noncopyable.hpp>
@@ -45,6 +46,7 @@ extern "C"
 
 // LuaBind
 #pragma warning(push, 1)
+#pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
 #include <LuaBind/luabind.hpp>
 #include <Luabind/iterator_policy.hpp>
 #include <Luabind/exception_handler.hpp>
