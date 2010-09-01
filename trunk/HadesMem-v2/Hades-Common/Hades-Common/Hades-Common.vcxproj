@@ -87,24 +87,32 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(SolutionDir)Binaries\$(Configuration)-$(Platform)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(SolutionDir)Binaries\$(Configuration)-$(Platform)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(SolutionDir)Binaries\$(Configuration)-$(Platform)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -117,6 +125,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
       <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
+      <EnablePREfast>true</EnablePREfast>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -134,6 +143,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
       <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
+      <EnablePREfast>true</EnablePREfast>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -153,6 +163,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
       <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
+      <EnablePREfast>true</EnablePREfast>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -174,6 +185,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
       <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
+      <EnablePREfast>true</EnablePREfast>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

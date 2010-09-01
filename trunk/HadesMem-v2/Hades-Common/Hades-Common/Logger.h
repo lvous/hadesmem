@@ -29,6 +29,8 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Boost C++ Libraries
 #pragma warning(push, 1)
 #pragma warning(disable: 4702)
+#pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
+#include <boost/thread.hpp>
 #include <boost/format.hpp>
 #include <boost/date_time.hpp>
 #include <boost/filesystem.hpp>
@@ -43,6 +45,13 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include "Error.h"
 #include "Filesystem.h"
 
+#define HADES_LOG_THREAD_SAFE(x)\
+{\
+boost::lock_guard<boost::mutex> MyLock(Hades::Util::Logger<char>::GetMutex());\
+x;\
+}\
+
+
 namespace Hades
 {
   namespace Util
@@ -56,6 +65,13 @@ namespace Hades
     class Logger
     {
     public:
+      // Get logger mutex
+      static boost::mutex& GetMutex()
+      {
+        static boost::mutex MyMutex;
+        return MyMutex;
+      }
+
       // Sink information
       typedef CharT char_type;
       typedef boost::iostreams::sink_tag category;

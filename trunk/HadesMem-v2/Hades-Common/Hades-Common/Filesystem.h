@@ -26,7 +26,10 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include <iterator>
 
 // Boost
+#pragma warning(push)
+#pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
 #include <boost/filesystem.hpp>
+#pragma warning(pop)
 
 // Windows API
 #include <Windows.h>
