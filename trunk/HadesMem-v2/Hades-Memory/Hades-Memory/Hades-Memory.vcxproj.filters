@@ -25,11 +25,11 @@
     <Filter Include="Header Files\Internal">
       <UniqueIdentifier>{f5354ef0-883f-4799-9047-3caef0312ea4}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\PELib">
-      <UniqueIdentifier>{a75eed69-0702-4e0e-89da-75edacd4c485}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\Scripting\Wrappers">
       <UniqueIdentifier>{5df4394a-3100-4d90-8f3d-2f0f47ccdef8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\External\PELib">
+      <UniqueIdentifier>{a75eed69-0702-4e0e-89da-75edacd4c485}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -78,10 +78,10 @@
       <Filter>Header Files\Internal</Filter>
     </ClInclude>
     <ClInclude Include="DosHeader.h">
-      <Filter>Header Files\PELib</Filter>
+      <Filter>Header Files\External\PELib</Filter>
     </ClInclude>
     <ClInclude Include="PeFile.h">
-      <Filter>Header Files\PELib</Filter>
+      <Filter>Header Files\External\PELib</Filter>
     </ClInclude>
     <ClInclude Include="DisassemblerWrap.h">
       <Filter>Header Files\Scripting\Wrappers</Filter>
@@ -103,6 +103,9 @@
     </ClInclude>
     <ClInclude Include="ScannerWrap.h">
       <Filter>Header Files\Scripting\Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="NtHeaders.h">
+      <Filter>Header Files\External\PELib</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

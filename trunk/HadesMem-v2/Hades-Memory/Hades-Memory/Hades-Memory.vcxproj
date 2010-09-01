@@ -35,6 +35,7 @@
     <ClInclude Include="MemoryMgrWrap.h" />
     <ClInclude Include="Module.h" />
     <ClInclude Include="ModuleWrap.h" />
+    <ClInclude Include="NtHeaders.h" />
     <ClInclude Include="Patcher.h" />
     <ClInclude Include="PeFile.h" />
     <ClInclude Include="Process.h" />

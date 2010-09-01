@@ -56,6 +56,7 @@ extern "C"
 #include "Types.h"
 #include "PeFile.h"
 #include "DosHeader.h"
+#include "NtHeaders.h"
 #include "ModuleWrap.h"
 #include "RegionWrap.h"
 #include "ScannerWrap.h"
@@ -589,8 +590,8 @@ namespace Hades
           // Bind DosHeader::DosHeader
           .def(luabind::constructor<PeFile const&>())
 
-          // Bind DosHeader::IsValid
-          .def("IsValid", &DosHeader::IsValid)
+          // Bind DosHeader::IsMagicValid
+          .def("IsMagicValid", &DosHeader::IsMagicValid)
 
           // Bind DosHeader::GetMagic
           .def("GetMagic", &DosHeader::GetMagic)
