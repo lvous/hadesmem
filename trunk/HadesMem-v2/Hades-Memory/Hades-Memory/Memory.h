@@ -34,3 +34,5 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 // HadesMem (PELib)
 #include "PeFile.h"
+#include "DosHeader.h"
+#include "NtHeaders.h"

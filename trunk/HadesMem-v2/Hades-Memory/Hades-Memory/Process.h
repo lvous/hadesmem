@@ -44,14 +44,14 @@ namespace Hades
 {
   namespace Memory
   {
-    // Process exception type
-    class ProcessError : public virtual HadesMemError 
-    { };
-
     // Process managing class
     class Process : private boost::noncopyable
     {
     public:
+      // Process exception type
+      class Error : public virtual HadesMemError 
+      { };
+
       // Open process from process ID
       inline explicit Process(DWORD ProcID);
 
@@ -118,7 +118,7 @@ namespace Hades
       if (Snap == INVALID_HANDLE_VALUE)
       {
         DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(ProcessError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Process::Process") << 
           ErrorString("Could not get process snapshot.") << 
           ErrorCodeWin(LastError));
@@ -144,7 +144,7 @@ namespace Hades
       // Check process was found
       if (!Found)
       {
-        BOOST_THROW_EXCEPTION(ProcessError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Process::Process") << 
           ErrorString("Could not find process."));
       }
@@ -168,7 +168,7 @@ namespace Hades
       if (Snap == INVALID_HANDLE_VALUE)
       {
         DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(ProcessError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Process::Process") << 
           ErrorString("Could not get process snapshot.") << 
           ErrorCodeWin(LastError));
@@ -195,7 +195,7 @@ namespace Hades
       // Check process was found
       if (!Found)
       {
-        BOOST_THROW_EXCEPTION(ProcessError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Process::Process") << 
           ErrorString("Could not find process."));
       }
@@ -219,7 +219,7 @@ namespace Hades
       if (!MyWnd)
       {
         DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(ProcessError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Process::Process") << 
           ErrorString("Could not find window.") << 
           ErrorCodeWin(LastError));
@@ -230,7 +230,7 @@ namespace Hades
       if (!m_ID)
       {
         DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(ProcessError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Process::Process") << 
           ErrorString("Could not get process id from window.") << 
           ErrorCodeWin(LastError));
@@ -256,7 +256,7 @@ namespace Hades
       if (!MyWnd)
       {
         DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(ProcessError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Process::Process") << 
           ErrorString("Could not find window.") << 
           ErrorCodeWin(LastError));
@@ -267,7 +267,7 @@ namespace Hades
       if (!m_ID)
       {
         DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(ProcessError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Process::Process") << 
           ErrorString("Could not get process id from window.") << 
           ErrorCodeWin(LastError));
@@ -291,7 +291,7 @@ namespace Hades
       if (!m_Handle)
       {
         DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(ProcessError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Process::Open") << 
           ErrorString("Could not open process.") << 
           ErrorCodeWin(LastError));
@@ -302,7 +302,7 @@ namespace Hades
       if (!IsWow64Process(GetCurrentProcess(), &IsWoW64Me))
       {
         DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(ProcessError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Process::Open") << 
           ErrorString("Could not detect WoW64 status of current process.") << 
           ErrorCodeWin(LastError));
@@ -319,7 +319,7 @@ namespace Hades
         if (!IsWow64Process(m_Handle, &IsWoW64))
         {
           DWORD LastError = GetLastError();
-          BOOST_THROW_EXCEPTION(ProcessError() << 
+          BOOST_THROW_EXCEPTION(Error() << 
             ErrorFunction("Process::Open") << 
             ErrorString("Could not detect WoW64 status of target process.") << 
             ErrorCodeWin(LastError));
@@ -327,7 +327,7 @@ namespace Hades
 
         if (IsWoW64)
         {
-          BOOST_THROW_EXCEPTION(ProcessError() << 
+          BOOST_THROW_EXCEPTION(Error() << 
             ErrorFunction("Process::Open") << 
             ErrorString("Cross-architecture process manipulation is "
               "currently unsupported."));
@@ -345,7 +345,7 @@ namespace Hades
       if (!RetVal) 
       {
         DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(ProcessError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Process::GetSeDebugPrivilege") << 
           ErrorString("Could not open process token.") << 
           ErrorCodeWin(LastError));
@@ -357,7 +357,7 @@ namespace Hades
       if (!LookupPrivilegeValue(NULL, SE_DEBUG_NAME, &Luid)) 
       {
         DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(ProcessError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Process::GetSeDebugPrivilege") << 
           ErrorString("Could not look up privilege value for SeDebugName.") << 
           ErrorCodeWin(LastError));
@@ -365,7 +365,7 @@ namespace Hades
       if (Luid.LowPart == 0 && Luid.HighPart == 0) 
       {
         DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(ProcessError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Process::GetSeDebugPrivilege") << 
           ErrorString("Could not get LUID for SeDebugName.") << 
           ErrorCodeWin(LastError));
@@ -383,7 +383,7 @@ namespace Hades
         NULL, NULL)) 
       {
         DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(ProcessError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Process::GetSeDebugPrivilege") << 
           ErrorString("Could not adjust token privileges.") << 
           ErrorCodeWin(LastError));

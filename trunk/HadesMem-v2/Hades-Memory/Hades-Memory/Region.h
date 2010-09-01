@@ -40,10 +40,6 @@ namespace Hades
 {
   namespace Memory
   {
-    // MemRegion exception type
-    class RegionError : public virtual HadesMemError 
-    { };
-
     // Get memory region list
     inline std::vector<boost::shared_ptr<class Region>> GetMemoryRegionList(
       MemoryMgr const& MyMemory);
@@ -56,6 +52,10 @@ namespace Hades
     class Region
     {
     public:
+      // MemRegion exception type
+      class Error : public virtual HadesMemError 
+      { };
+
       // Constructor
       inline explicit Region(MemoryMgr const& MyMemory, PVOID Address);
 
@@ -137,7 +137,7 @@ namespace Hades
         &m_RegionInfo, sizeof(m_RegionInfo)))
       {
         DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(RegionError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Region::Region") << 
           ErrorString("Could not query memory region.") << 
           ErrorCodeWin(LastError));

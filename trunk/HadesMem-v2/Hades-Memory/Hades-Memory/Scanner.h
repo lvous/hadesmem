@@ -45,14 +45,14 @@ namespace Hades
 {
   namespace Memory
   {
-    // Scanner exception type
-    class ScannerError : public virtual HadesMemError 
-    { };
-
     // Memory searching class
     class Scanner
     {
     public:
+      // Scanner exception type
+      class Error : public virtual HadesMemError 
+      { };
+
       // Constructor
       inline explicit Scanner(MemoryMgr const& MyMemory);
       inline explicit Scanner(MemoryMgr const& MyMemory, HMODULE Module);
@@ -147,7 +147,7 @@ namespace Hades
       auto DosHeader = MyMemory.Read<IMAGE_DOS_HEADER>(pBase);
       if (DosHeader.e_magic != IMAGE_DOS_SIGNATURE)
       {
-        BOOST_THROW_EXCEPTION(ScannerError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Scanner::Scanner") << 
           ErrorString("Target file is not a valid PE file (DOS)."));
       }
@@ -155,7 +155,7 @@ namespace Hades
         e_lfanew);
       if (NtHeader.Signature != IMAGE_NT_SIGNATURE)
       {
-        BOOST_THROW_EXCEPTION(ScannerError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Scanner::Scanner") << 
           ErrorString("Target file is not a valid PE file (NT)."));
       }
@@ -177,7 +177,7 @@ namespace Hades
       // Ensure range is valid
       if (m_End < m_Start)
       {
-        BOOST_THROW_EXCEPTION(ScannerError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Scanner::Scanner") << 
           ErrorString("Start or end address is invalid."));
       }
@@ -240,7 +240,7 @@ namespace Hades
       // Ensure there is data to process
       if (Data.empty())
       {
-        BOOST_THROW_EXCEPTION(MemoryError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("MemoryMgr::Find") << 
           ErrorString("Mask does not match data."));
       }
@@ -248,7 +248,7 @@ namespace Hades
       // Ensure mask matches data
       if (!Mask.empty() && Mask.size() != Data.size())
       {
-        BOOST_THROW_EXCEPTION(MemoryError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("MemoryMgr::Find") << 
           ErrorString("Mask does not match data."));
       }
@@ -259,7 +259,7 @@ namespace Hades
       PBYTE const EndReal = (Start || End) ? static_cast<PBYTE>(End) : m_End;
       if (EndReal < StartReal)
       {
-        BOOST_THROW_EXCEPTION(ScannerError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Scanner::Find") << 
           ErrorString("Start or end address is invalid."));
       }
@@ -349,7 +349,7 @@ namespace Hades
         // Ignore any memory errors, as there's nothing we can do about them
         // Todo: Detect memory read errors and drop back to a slower but 
         // more reliable implementation.
-        catch (MemoryError const& /*e*/)
+        catch (Error const& /*e*/)
         {
           continue;
         }
@@ -369,7 +369,7 @@ namespace Hades
       // Ensure there is data to process
       if (Data.empty())
       {
-        BOOST_THROW_EXCEPTION(MemoryError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("MemoryMgr::Find") << 
           ErrorString("Mask does not match data."));
       }
@@ -377,7 +377,7 @@ namespace Hades
       // Ensure mask matches data
       if (!Mask.empty() && Mask.size() != Data.size())
       {
-        BOOST_THROW_EXCEPTION(MemoryError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("MemoryMgr::Find") << 
           ErrorString("Mask does not match data."));
       }
@@ -388,7 +388,7 @@ namespace Hades
       PBYTE const EndReal = Start || End ? static_cast<PBYTE>(End) : m_End;
       if (EndReal < StartReal)
       {
-        BOOST_THROW_EXCEPTION(ScannerError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Scanner::Find") << 
           ErrorString("Start or end address is invalid."));
       }
@@ -481,7 +481,7 @@ namespace Hades
         // Ignore any memory errors, as there's nothing we can do about them
         // Todo: Detect memory read errors and drop back to a slower but 
         // more reliable implementation.
-        catch (MemoryError const& /*e*/)
+        catch (Error const& /*e*/)
         {
           continue;
         }
@@ -498,7 +498,7 @@ namespace Hades
       std::wifstream PatternFile(Path.c_str());
       if (!PatternFile)
       {
-        BOOST_THROW_EXCEPTION(ScannerError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Scanner::LoadFromXML") << 
           ErrorString("Could not open pattern file."));
       }
@@ -517,7 +517,7 @@ namespace Hades
       auto PatternsTag = AccountsDoc->first_node(L"Patterns");
       if (!PatternsTag)
       {
-        BOOST_THROW_EXCEPTION(ScannerError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Scanner::LoadFromXML") << 
           ErrorString("Invalid pattern file format."));
       }
@@ -538,7 +538,7 @@ namespace Hades
         // Ensure pattern attributes are valid
         if (Name.empty() || Mask.empty() || Data.empty())
         {
-          BOOST_THROW_EXCEPTION(ScannerError() << 
+          BOOST_THROW_EXCEPTION(Error() << 
             ErrorFunction("Scanner::LoadFromXML") << 
             ErrorString("Invalid pattern attributes."));
         }
@@ -546,7 +546,7 @@ namespace Hades
         // Ensure data is valid
         if (Data.size() % 2)
         {
-          BOOST_THROW_EXCEPTION(ScannerError() << 
+          BOOST_THROW_EXCEPTION(Error() << 
             ErrorFunction("Scanner::LoadFromXML") << 
             ErrorString("Data size invalid."));
         }
@@ -554,7 +554,7 @@ namespace Hades
         // Ensure mask is valid
         if (Mask.size() * 2 != Data.size())
         {
-          BOOST_THROW_EXCEPTION(ScannerError() << 
+          BOOST_THROW_EXCEPTION(Error() << 
             ErrorFunction("Scanner::LoadFromXML") << 
             ErrorString("Mask size invalid."));
         }
@@ -568,7 +568,7 @@ namespace Hades
           int Current = 0;
           if (!(Converter >> std::hex >> Current >> std::dec))
           {
-            BOOST_THROW_EXCEPTION(ScannerError() << 
+            BOOST_THROW_EXCEPTION(Error() << 
               ErrorFunction("Scanner::LoadFromXML") << 
               ErrorString("Invalid data conversion."));
           }
@@ -597,7 +597,7 @@ namespace Hades
               auto ModVal = PatOpts->first_attribute(L"Value");
               if (!ModVal)
               {
-                BOOST_THROW_EXCEPTION(ScannerError() << 
+                BOOST_THROW_EXCEPTION(Error() << 
                   ErrorFunction("Scanner::LoadFromXML") << 
                   ErrorString("No value specified for 'Add' option."));
               }
@@ -607,7 +607,7 @@ namespace Hades
               std::wstringstream Converter(ModVal->value());
               if (!(Converter >> std::hex >> AddValReal >> std::dec))
               {
-                BOOST_THROW_EXCEPTION(ScannerError() << 
+                BOOST_THROW_EXCEPTION(Error() << 
                   ErrorFunction("Scanner::LoadFromXML") << 
                   ErrorString("Invalid conversion for 'Add' option."));
               }
@@ -623,7 +623,7 @@ namespace Hades
               }
               else
               {
-                BOOST_THROW_EXCEPTION(ScannerError() << 
+                BOOST_THROW_EXCEPTION(Error() << 
                   ErrorFunction("Scanner::LoadFromXML") << 
                   ErrorString("Unsupported pattern option."));
               }
@@ -641,7 +641,7 @@ namespace Hades
               auto SizeAttr = PatOpts->first_attribute(L"Size");
               if (!SizeAttr)
               {
-                BOOST_THROW_EXCEPTION(ScannerError() << 
+                BOOST_THROW_EXCEPTION(Error() << 
                   ErrorFunction("Scanner::LoadFromXML") << 
                   ErrorString("No size specified for 'Size' in 'Rel' "
                   "option."));
@@ -652,7 +652,7 @@ namespace Hades
               std::wstringstream SizeConverter(SizeAttr->value());
               if (!(SizeConverter >> std::hex >> Size >> std::dec))
               {
-                BOOST_THROW_EXCEPTION(ScannerError() << 
+                BOOST_THROW_EXCEPTION(Error() << 
                   ErrorFunction("Scanner::LoadFromXML") << 
                   ErrorString("Invalid conversion for 'Size' in 'Rel' "
                   "option."));
@@ -662,7 +662,7 @@ namespace Hades
               auto OffsetAttr = PatOpts->first_attribute(L"Offset");
               if (!OffsetAttr)
               {
-                BOOST_THROW_EXCEPTION(ScannerError() << 
+                BOOST_THROW_EXCEPTION(Error() << 
                   ErrorFunction("Scanner::LoadFromXML") << 
                   ErrorString("No value specified for 'Offset' in 'Rel' "
                   "option."));
@@ -673,7 +673,7 @@ namespace Hades
               std::wstringstream OffsetConverter(OffsetAttr->value());
               if (!(OffsetConverter >> std::hex >> Offset >> std::dec))
               {
-                BOOST_THROW_EXCEPTION(ScannerError() << 
+                BOOST_THROW_EXCEPTION(Error() << 
                   ErrorFunction("Scanner::LoadFromXML") << 
                   ErrorString("Invalid conversion for 'Offset' in 'Rel' "
                   "option."));
@@ -686,7 +686,7 @@ namespace Hades
             else
             {
               // Unknown pattern option
-              BOOST_THROW_EXCEPTION(ScannerError() << 
+              BOOST_THROW_EXCEPTION(Error() << 
                 ErrorFunction("Scanner::LoadFromXML") << 
                 ErrorString("Unknown pattern option."));
             }
@@ -713,7 +713,7 @@ namespace Hades
       // Ensure module list is valid
       if (ModuleList.empty())
       {
-        BOOST_THROW_EXCEPTION(ScannerError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Scanner::Scanner") << 
           ErrorString("Could not get module list."));
       }

@@ -42,10 +42,6 @@ namespace Hades
 {
   namespace Memory
   {
-    // Disassembler exception type
-    class DisassemblerError : public virtual HadesMemError 
-    { };
-
     // Disassembler data
     struct DisasmData
     {
@@ -58,6 +54,10 @@ namespace Hades
     class Disassembler
     {
     public:
+      // Disassembler exception type
+      class Error : public virtual HadesMemError 
+      { };
+
       // Constructor
       inline explicit Disassembler(MemoryMgr const& MyMemory);
 

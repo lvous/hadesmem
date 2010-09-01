@@ -44,6 +44,10 @@ namespace Hades
     class Patch : private boost::noncopyable
     {
     public:
+      // Patch exception type
+      class Error : public virtual HadesMemError
+      { };
+
       // Constructor
       inline Patch(MemoryMgr const& MyMemory);
       // Destructor

@@ -43,10 +43,6 @@ namespace Hades
 {
   namespace Memory
   {
-    // Module exception type
-    class ModuleError : public virtual HadesMemError
-    { };
-
     // Get module list
     inline std::vector<boost::shared_ptr<class Module>> GetModuleList(
       MemoryMgr const& MyMemory);
@@ -59,6 +55,10 @@ namespace Hades
     class Module
     {
     public:
+      // Module exception type
+      class Error : public virtual HadesMemError
+      { };
+
       // Find module by handle
       inline Module(MemoryMgr const& MyMemory, HMODULE Handle);
 
@@ -108,7 +108,7 @@ namespace Hades
       if (Snap == INVALID_HANDLE_VALUE)
       {
         DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(ModuleError() << 
+        BOOST_THROW_EXCEPTION(Module::Error() << 
           ErrorFunction("GetModuleList") << 
           ErrorString("Could not get module snapshot.") << 
           ErrorCodeWin(LastError));
@@ -156,7 +156,7 @@ namespace Hades
       if (Snap == INVALID_HANDLE_VALUE)
       {
         DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(ModuleError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Module::Module") << 
           ErrorString("Could not get module snapshot.") << 
           ErrorCodeWin(LastError));
@@ -208,7 +208,7 @@ namespace Hades
       if (Snap == INVALID_HANDLE_VALUE)
       {
         DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(ModuleError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Module::Module") << 
           ErrorString("Could not get module snapshot.") << 
           ErrorCodeWin(LastError));
@@ -230,7 +230,7 @@ namespace Hades
       // Check process was found
       if (!Found)
       {
-        BOOST_THROW_EXCEPTION(ModuleError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Module::Module") << 
           ErrorString("Could not find module."));
       }

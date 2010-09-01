@@ -47,14 +47,14 @@ namespace Hades
 {
   namespace Memory
   {
-    // Injector exception type
-    class InjectorError : public virtual HadesMemError 
-    { };
-
     // DLL injection class
     class Injector
     {
     public:
+      // Injector exception type
+      class Error : public virtual HadesMemError 
+      { };
+
       // Constructor
       inline Injector(MemoryMgr const& MyMemory);
 
@@ -98,7 +98,7 @@ namespace Hades
         CREATE_SUSPENDED, NULL, NULL, &StartInfo, &ProcInfo))
       {
         DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(InjectorError() << 
+        BOOST_THROW_EXCEPTION(Injector::Error() << 
           ErrorFunction("CreateAndInject") << 
           ErrorString("Could not create process.") << 
           ErrorCodeWin(LastError));
@@ -178,7 +178,7 @@ namespace Hades
           GetLastError() == ERROR_INSUFFICIENT_BUFFER)
         {
           DWORD LastError = GetLastError();
-          BOOST_THROW_EXCEPTION(InjectorError() << 
+          BOOST_THROW_EXCEPTION(Error() << 
             ErrorFunction("Injector::InjectDll") << 
             ErrorString("Could not get path to self.") << 
             ErrorCodeWin(LastError));
@@ -192,7 +192,7 @@ namespace Hades
       // Ensure target file exists
       if (PathResolution && !boost::filesystem::exists(PathReal))
       {
-        BOOST_THROW_EXCEPTION(InjectorError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Injector::InjectDll") << 
           ErrorString("Could not find module file."));
       }
@@ -205,7 +205,7 @@ namespace Hades
       if (!LibFileRemote.GetAddress())
       {
         DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(InjectorError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Injector::InjectDll") << 
           ErrorString("Could not allocate memory.") << 
           ErrorCodeWin(LastError));
@@ -220,7 +220,7 @@ namespace Hades
       if (!hKernel32)
       {
         DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(InjectorError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Injector::InjectDll") << 
           ErrorString("Could not get handle to Kernel32.") << 
           ErrorCodeWin(LastError));
@@ -229,7 +229,7 @@ namespace Hades
       if (!pLoadLibraryW)
       {
         DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(InjectorError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Injector::InjectDll") << 
           ErrorString("Could not get pointer to LoadLibraryW.") << 
           ErrorCodeWin(LastError));
@@ -240,7 +240,7 @@ namespace Hades
       Args.push_back(LibFileRemote.GetAddress());
       if (!m_Memory.Call(pLoadLibraryW, Args))
       {
-        BOOST_THROW_EXCEPTION(InjectorError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Injector::InjectDll") << 
           ErrorString("Call to LoadLibraryW in remote process failed."));
       }
@@ -268,7 +268,7 @@ namespace Hades
       // Ensure target module was found
       if (Iter == ModuleList.end())
       {
-        BOOST_THROW_EXCEPTION(InjectorError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Injector::InjectDll") << 
           ErrorString("Could not find module in remote process."));
       }
@@ -287,7 +287,7 @@ namespace Hades
       if (!MyModule)
       {
         DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(InjectorError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Injector::CallExport") << 
           ErrorString("Could not load module locally.") << 
           ErrorCodeWin(LastError));
@@ -299,7 +299,7 @@ namespace Hades
       // Nothing found, throw exception
       if (!pExportAddr)
       {
-        BOOST_THROW_EXCEPTION(InjectorError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Injector::CallExport") << 
           ErrorString("Could not find export."));
       }

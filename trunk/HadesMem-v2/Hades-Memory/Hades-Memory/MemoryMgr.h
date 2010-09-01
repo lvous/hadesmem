@@ -50,14 +50,14 @@ namespace Hades
 {
   namespace Memory
   {
-    // Memory exception type
-    class MemoryError : public virtual HadesMemError 
-    { };
-
     // Memory managing class
     class MemoryMgr : private boost::noncopyable
     {
     public:
+      // Memory exception type
+      class Error : public virtual HadesMemError 
+      { };
+
       // Open process from process ID
       inline explicit MemoryMgr(DWORD ProcID);
 
@@ -235,7 +235,7 @@ namespace Hades
       // Check calling convention
       if (MyCallConv != CallConv_X64 && MyCallConv != CallConv_Default)
       {
-        BOOST_THROW_EXCEPTION(MemoryError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("MemoryMgr::Call") << 
           ErrorString("Invalid calling convention."));
       }
@@ -292,13 +292,13 @@ namespace Hades
       // Check calling convention
       if (MyCallConv == CallConv_X64)
       {
-        BOOST_THROW_EXCEPTION(MemoryError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("MemoryMgr::Call") << 
           ErrorString("Invalid calling convention."));
       }
       if (MyCallConv == CallConv_FASTCALL)
       {
-        BOOST_THROW_EXCEPTION(MemoryError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("MemoryMgr::Call") << 
           ErrorString("Currently unsupported calling convention."));
       }
@@ -351,7 +351,7 @@ namespace Hades
       // Ensure function creation succeeded
       if (!LoaderStub.Get())
       {
-        BOOST_THROW_EXCEPTION(MemoryError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("MemoryMgr::Call") << 
           ErrorString("Error JIT'ing loader stub."));
       }
@@ -375,7 +375,7 @@ namespace Hades
       if (!MyThread)
       {
         DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(MemoryError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("MemoryMgr::Call") << 
           ErrorString("Could not create remote thread.") << 
           ErrorCodeWin(LastError));
@@ -385,7 +385,7 @@ namespace Hades
       if (WaitForSingleObject(MyThread, INFINITE) != WAIT_OBJECT_0)
       {
         DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(MemoryError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("MemoryMgr::Call") << 
           ErrorString("Could not wait for remote thread.") << 
           ErrorCodeWin(LastError));
@@ -396,7 +396,7 @@ namespace Hades
       if (!GetExitCodeThread(MyThread, &ExitCode))
       {
         DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(MemoryError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("MemoryMgr::Call") << 
           ErrorString("Could not get remote thread exit code.") << 
           ErrorCodeWin(LastError));
@@ -422,7 +422,7 @@ namespace Hades
           PAGE_EXECUTE_READWRITE, &OldProtect))
         {
           DWORD LastError = GetLastError();
-          BOOST_THROW_EXCEPTION(MemoryError() << 
+          BOOST_THROW_EXCEPTION(Error() << 
             ErrorFunction("MemoryMgr::Read") << 
             ErrorString("Could not change process memory protection.") << 
             ErrorCodeWin(LastError));
@@ -443,7 +443,7 @@ namespace Hades
         }
 
         DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(MemoryError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("MemoryMgr::Read") << 
           ErrorString("Could not read process memory.") << 
           ErrorCodeWin(LastError));
@@ -456,7 +456,7 @@ namespace Hades
           OldProtect, &OldProtect))
         {
           DWORD LastError = GetLastError();
-          BOOST_THROW_EXCEPTION(MemoryError() << 
+          BOOST_THROW_EXCEPTION(Error() << 
             ErrorFunction("MemoryMgr::Read") << 
             ErrorString("Could not restore process memory protection.") << 
             ErrorCodeWin(LastError));
@@ -516,7 +516,7 @@ namespace Hades
           PAGE_EXECUTE_READWRITE, &OldProtect))
         {
           DWORD LastError = GetLastError();
-          BOOST_THROW_EXCEPTION(MemoryError() << 
+          BOOST_THROW_EXCEPTION(Error() << 
             ErrorFunction("MemoryMgr::Read") << 
             ErrorString("Could not change process memory protection.") << 
             ErrorCodeWin(LastError));
@@ -536,7 +536,7 @@ namespace Hades
         }
 
         DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(MemoryError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("MemoryMgr::Read") << 
           ErrorString("Could not read process memory.") << 
           ErrorCodeWin(LastError));
@@ -549,7 +549,7 @@ namespace Hades
           OldProtect, &OldProtect))
         {
           DWORD LastError = GetLastError();
-          BOOST_THROW_EXCEPTION(MemoryError() << 
+          BOOST_THROW_EXCEPTION(Error() << 
             ErrorFunction("MemoryMgr::Read") << 
             ErrorString("Could not restore process memory protection.") << 
             ErrorCodeWin(LastError));
@@ -571,7 +571,7 @@ namespace Hades
         PAGE_EXECUTE_READWRITE, &OldProtect))
       {
         DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(MemoryError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("MemoryMgr::Write") << 
           ErrorString("Could not change process memory protection.") << 
           ErrorCodeWin(LastError));
@@ -587,7 +587,7 @@ namespace Hades
           &OldProtect);
 
         DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(MemoryError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("MemoryMgr::Write") << 
           ErrorString("Could not write process memory.") << 
           ErrorCodeWin(LastError));
@@ -598,7 +598,7 @@ namespace Hades
         OldProtect, &OldProtect))
       {
         DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(MemoryError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("MemoryMgr::Write") << 
           ErrorString("Could not restore process memory protection.") << 
           ErrorCodeWin(LastError));
@@ -656,7 +656,7 @@ namespace Hades
         sizeof(MyMemInfo)))
       {
         DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(MemoryError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("MemoryMgr::CanRead") << 
           ErrorString("Could not read process memory protection.") << 
           ErrorCodeWin(LastError));
@@ -680,7 +680,7 @@ namespace Hades
         sizeof(MyMemInfo)))
       {
         DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(MemoryError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("MemoryMgr::Write") << 
           ErrorString("Could not read process memory protection.") << 
           ErrorCodeWin(LastError));
@@ -701,7 +701,7 @@ namespace Hades
       if (!Address)
       {
         DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(MemoryError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("MemoryMgr::Alloc") << 
           ErrorString("Could not allocate memory.") << 
           ErrorCodeWin(LastError));
@@ -716,7 +716,7 @@ namespace Hades
       if (!VirtualFreeEx(m_Process.GetHandle(), Address, 0, MEM_RELEASE))
       {
         DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(MemoryError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("MemoryMgr::Free") << 
           ErrorString("Could not free memory.") << 
           ErrorCodeWin(LastError));
@@ -745,7 +745,7 @@ namespace Hades
       if (!LocalMod)
       {
         DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(MemoryError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("MemoryMgr::GetRemoteProcAddress") << 
           ErrorString("Could not load module locally.") << 
           ErrorCodeWin(LastError));
@@ -780,7 +780,7 @@ namespace Hades
       if (!LocalMod)
       {
         DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(MemoryError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("MemoryMgr::GetRemoteProcAddress") << 
           ErrorString("Could not load module locally.") << 
           ErrorCodeWin(LastError));
@@ -812,7 +812,7 @@ namespace Hades
       if (!FlushInstructionCache(m_Process.GetHandle(), Address, Size))
       {
         DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(MemoryError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("MemoryMgr::FlushInstructionCache") << 
           ErrorString("Could not flush instruction cache.") << 
           ErrorCodeWin(LastError));

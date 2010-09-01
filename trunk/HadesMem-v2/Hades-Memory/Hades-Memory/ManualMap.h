@@ -39,15 +39,15 @@ namespace Hades
 {
   namespace Memory
   {
-    // ManualMap exception type
-    class ManualMapError : public virtual HadesMemError 
-    { };
-
     // Manual mapping class
     // Credits to Darawk for the original implementation this is based off
     class ManualMap
     {
     public:
+      // ManualMap exception type
+      class Error : public virtual HadesMemError 
+      { };
+
       // Constructor
       inline ManualMap(MemoryMgr const& MyMemory);
 
@@ -94,7 +94,7 @@ namespace Hades
       std::ifstream ModuleFile(Path.c_str(), std::ios::binary);
       if (!ModuleFile)
       {
-        BOOST_THROW_EXCEPTION(ManualMapError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("ManualMap::Map") << 
           ErrorString("Could not open module file."));
       }
@@ -110,7 +110,7 @@ namespace Hades
       auto const pDosHeader = reinterpret_cast<PIMAGE_DOS_HEADER>(pBase);
       if (pDosHeader->e_magic != IMAGE_DOS_SIGNATURE)
       {
-        BOOST_THROW_EXCEPTION(ManualMapError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("ManualMap::Map") << 
           ErrorString("Target file is not MyJitFunc valid PE file (DOS)."));
       }
@@ -118,7 +118,7 @@ namespace Hades
         pDosHeader->e_lfanew);
       if (pNtHeaders->Signature != IMAGE_NT_SIGNATURE)
       {
-        BOOST_THROW_EXCEPTION(ManualMapError() << 
+        BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("ManualMap::Map") << 
           ErrorString("Target file is not MyJitFunc valid PE file (NT)."));
       }
@@ -333,7 +333,7 @@ namespace Hades
           VirtualSize, pCurrent->Characteristics & 0x00FFFFFF, &OldProtect))
         {
           DWORD LastError = GetLastError();
-          BOOST_THROW_EXCEPTION(ManualMapError() << 
+          BOOST_THROW_EXCEPTION(Error() << 
             ErrorFunction("ManualMap::MapSections") << 
             ErrorString("Could not change page protections for section.") << 
             ErrorCodeWin(LastError));

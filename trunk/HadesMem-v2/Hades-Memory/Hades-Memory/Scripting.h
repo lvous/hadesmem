@@ -166,10 +166,6 @@ namespace Hades
       }
     }
 
-    // Lua exception type
-    class LuaError : public virtual HadesMemError 
-    { };
-
     // LuaState wrapper class for RAII
     class LuaState : private boost::noncopyable
     {
@@ -212,6 +208,10 @@ namespace Hades
     class LuaMgr
     {
     public:
+      // Lua exception type
+      class Error : public virtual HadesMemError 
+      { };
+
       // Constructor
       LuaMgr() 
         : m_State()
@@ -270,7 +270,7 @@ namespace Hades
           // Pop error message off stack
           lua_pop(m_State, 1);
           // Throw exception for error
-          BOOST_THROW_EXCEPTION(LuaError() << 
+          BOOST_THROW_EXCEPTION(Error() << 
             ErrorFunction("LuaMgr::ReportError") << 
             ErrorString(Message));
         }
