@@ -58,7 +58,6 @@ namespace Hades
     public:
       // Constructor
       inline explicit Region(MemoryMgr const& MyMemory, PVOID Address);
-      inline explicit Region(MemoryMgr const& MyMemory, DWORD_PTR Address);
 
       // Get base address
       inline PVOID GetBase() const;
@@ -135,27 +134,6 @@ namespace Hades
 
       // Query region info
       if (!VirtualQueryEx(m_Memory.GetProcessHandle(), Address, 
-        &m_RegionInfo, sizeof(m_RegionInfo)))
-      {
-        DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(RegionError() << 
-          ErrorFunction("Region::Region") << 
-          ErrorString("Could not query memory region.") << 
-          ErrorCodeWin(LastError));
-      }
-    }
-
-    // Constructor
-    Region::Region(MemoryMgr const& MyMemory, DWORD_PTR Address) 
-      : m_Memory(MyMemory), 
-      m_RegionInfo() 
-    {
-      // Clear region info
-      ZeroMemory(&m_RegionInfo, sizeof(m_RegionInfo));
-
-      // Query region info
-      if (!VirtualQueryEx(m_Memory.GetProcessHandle(), 
-        reinterpret_cast<LPCVOID>(Address), 
         &m_RegionInfo, sizeof(m_RegionInfo)))
       {
         DWORD LastError = GetLastError();

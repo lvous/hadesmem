@@ -149,24 +149,24 @@ void Write##x(DWORD_PTR Address, Types::x Data)\
 
 // Wrapper function generator for MyScanner::Find
 #define HADESMEM_SCRIPTING_GEN_FIND(x) \
-inline DWORD_PTR Scanner_Find##x(Scanner const& MyScanner, Types::x Data)\
+DWORD_PTR Find##x(Types::x Data)\
 {\
-  return reinterpret_cast<DWORD_PTR>(MyScanner.Find(Data));\
+  return reinterpret_cast<DWORD_PTR>(Scanner::Find(Data));\
 }
 
 // Wrapper function generator for MyScanner::Find
 #define HADESMEM_SCRIPTING_GEN_FIND_ALL(x) \
-inline DwordPtrList Scanner_FindAll##x(Scanner const& MyScanner, Types::x Data)\
+DwordPtrList FindAll##x(Types::x Data)\
 {\
-  auto AddrList = MyScanner.FindAll(Data);\
+  auto AddrList = Scanner::FindAll(Data);\
   DwordPtrList NewList;\
   NewList.List.reserve(AddrList.size());\
   std::transform(AddrList.begin(), AddrList.end(), std::back_inserter(\
   NewList.List), \
   [] (PVOID Current)\
-{\
-  return reinterpret_cast<DWORD_PTR>(Current);\
-});\
+  {\
+    return reinterpret_cast<DWORD_PTR>(Current);\
+  });\
   return NewList;\
 }
 
@@ -176,6 +176,33 @@ namespace Hades
   {
     namespace Wrappers
     {
+      // Console output wrapper
+      inline void WriteLn(std::string const& Data)
+      {
+        std::cout << Data << std::endl;
+      }
+
+      // Convert number to hex string
+      inline std::string ToHexStr(DWORD_PTR Num)
+      {
+        std::stringstream MyStream;
+        MyStream << "0x" << std::hex << std::setfill('0') << 
+          std::setw(sizeof(PVOID) * 2) << std::uppercase << Num;
+        return MyStream.str();
+      }
+
+      // Whether this is a x64 build of HadesMem
+      inline bool IsAMD64()
+      {
+#if defined(_M_AMD64) 
+        return true;
+#elif defined(_M_IX86) 
+        return false;
+#else 
+#error "Unsupported architecture."
+#endif
+      }
+
       class MemoryMgrWrappers : public MemoryMgr
       {
       public:
@@ -365,50 +392,36 @@ namespace Hades
         }
       };
 
-      // Console output wrapper
-      inline void WriteLn(std::string const& Data)
+      class ModuleWrappers : public Module
       {
-        std::cout << Data << std::endl;
-      }
+      public:
+        ModuleWrappers(MemoryMgr const& MyMemory, DWORD_PTR Handle) 
+          : Module(MyMemory, reinterpret_cast<HMODULE>(Handle))
+        { }
 
-      // Convert number to hex string
-      inline std::string ToHexStr(DWORD_PTR Num)
-      {
-        std::stringstream MyStream;
-        MyStream << "0x" << std::hex << std::setfill('0') << 
-          std::setw(sizeof(PVOID) * 2) << std::uppercase << Num;
-        return MyStream.str();
-      }
+        ModuleWrappers(MemoryMgr const& MyMemory, 
+          std::string const& ModuleName) 
+          : Module(MyMemory, boost::lexical_cast<std::wstring>(ModuleName))
+        { }
 
-      // Whether this is a x64 build of HadesMem
-      inline bool IsAMD64()
-      {
-#if defined(_M_AMD64) 
-        return true;
-#elif defined(_M_IX86) 
-        return false;
-#else 
-#error "Unsupported architecture."
-#endif
-      }
+        // Module::GetBase wrapper
+        DWORD_PTR GetBase()
+        {
+          return reinterpret_cast<DWORD_PTR>(Module::GetBase());
+        }
 
-      // Module::GetBase wrapper
-      inline DWORD_PTR Module_GetBase(Module const& MyModule)
-      {
-        return reinterpret_cast<DWORD_PTR>(MyModule.GetBase());
-      }
+        // Module::GetName wrapper
+        std::string GetName()
+        {
+          return boost::lexical_cast<std::string>(Module::GetName());
+        }
 
-      // Module::GetName wrapper
-      inline std::string Module_GetName(Module const& MyModule)
-      {
-        return boost::lexical_cast<std::string>(MyModule.GetName());
-      }
-
-      // Module::GetPath wrapper
-      inline std::string Module_GetPath(Module const& MyModule)
-      {
-        return boost::lexical_cast<std::string>(MyModule.GetPath());
-      }
+        // Module::GetPath wrapper
+        std::string GetPath()
+        {
+          return boost::lexical_cast<std::string>(Module::GetPath());
+        }
+      };
 
       // Module list wrapper
       struct ModuleList
@@ -423,17 +436,25 @@ namespace Hades
         return MyModuleList;
       }
 
-      // Region::GetBase wrapper
-      inline DWORD_PTR Region_GetBaseAddress(Region const& MyRegion)
+      class RegionWrappers : public Region
       {
-        return reinterpret_cast<DWORD_PTR>(MyRegion.GetBase());
-      }
+      public:
+        RegionWrappers(MemoryMgr const& MyMemory, DWORD_PTR Address)
+          : Region(MyMemory, reinterpret_cast<PVOID>(Address))
+        { }
 
-      // Region::GetAllocBase wrapper
-      inline DWORD_PTR Region_GetAllocationBase(Region const& MyRegion)
-      {
-        return reinterpret_cast<DWORD_PTR>(MyRegion.GetAllocBase());
-      }
+        // Region::GetBase wrapper
+        DWORD_PTR GetBaseAddress()
+        {
+          return reinterpret_cast<DWORD_PTR>(Region::GetBase());
+        }
+
+        // Region::GetAllocBase wrapper
+        DWORD_PTR GetAllocationBase()
+        {
+          return reinterpret_cast<DWORD_PTR>(Region::GetAllocBase());
+        }
+      };
 
       // Module list wrapper
       struct RegionList
@@ -449,23 +470,29 @@ namespace Hades
         return MyRegionList;
       }
 
-      // Injector::InjectDll wrapper
-      inline DWORD_PTR Injector_InjectDll(Injector const& MyInjector, 
-        std::string const& Path, bool PathResolution)
+      class InjectorWrappers : public Injector
       {
-        return reinterpret_cast<DWORD_PTR>(MyInjector.InjectDll(
-          boost::lexical_cast<std::wstring>(Path), PathResolution));
-      }
+      public:
+        explicit InjectorWrappers(MemoryMgr const& MyMemory) 
+          : Injector(MyMemory)
+        { }
 
-      // Injector::CallExport wrapper
-      inline DWORD Injector_CallExport(Injector const& MyInjector, 
-        std::string const& ModulePath, DWORD_PTR ModuleRemote, 
-        std::string const& Export)
-      {
-        return MyInjector.CallExport(boost::lexical_cast<std::wstring>(
-          ModulePath), reinterpret_cast<HMODULE>(ModuleRemote), 
-          Export);
-      }
+        // Injector::InjectDll wrapper
+        DWORD_PTR InjectDll(std::string const& Path, bool PathResolution)
+        {
+          return reinterpret_cast<DWORD_PTR>(Injector::InjectDll(
+            boost::lexical_cast<std::wstring>(Path), PathResolution));
+        }
+
+        // Injector::CallExport wrapper
+        DWORD CallExport(std::string const& ModulePath, 
+          DWORD_PTR ModuleRemote, std::string const& Export)
+        {
+          return Injector::CallExport(boost::lexical_cast<std::wstring>(
+            ModulePath), reinterpret_cast<HMODULE>(ModuleRemote), 
+            Export);
+        }
+      };
 
       struct CreateAndInjectInfo
       {
@@ -503,194 +530,217 @@ namespace Hades
         std::vector<std::string> List;
       };
 
-      // Disassembler::DisassembleToStr wrapper
-      inline StringList Disassembler_DisassembleToStr(
-        Disassembler const& MyDisassembler, DWORD_PTR Address, 
-        DWORD_PTR NumInstructions)
+      class DisassemblerWrappers : public Disassembler
       {
-        StringList MyStringList;
-        MyStringList.List =  MyDisassembler.DisassembleToStr(
-          reinterpret_cast<PVOID>(Address), NumInstructions);
-        return MyStringList;
-      }
+      public:
+        explicit DisassemblerWrappers(MemoryMgr const& MyMemory) 
+          : Disassembler(MyMemory)
+        { }
 
-      // Scanner::LoadFromXML wrapper
-      inline void Scanner_LoadFromXML(Scanner& MyScanner, 
-        std::string const& Path)
-      {
-        MyScanner.LoadFromXML(boost::lexical_cast<std::wstring>(Path));
-      }
-
-      // Scanner::operator[] wrapper
-      inline DWORD_PTR Scanner_GetAddress(Scanner const& MyScanner, 
-        std::string const& Name)
-      {
-        return reinterpret_cast<DWORD_PTR>(MyScanner[
-          boost::lexical_cast<std::wstring>(Name)]);
-      }
-
-      // Scanner::Find<T> wrappers
-      HADESMEM_SCRIPTING_GEN_FIND(Int8)
-      HADESMEM_SCRIPTING_GEN_FIND(UInt8)
-      HADESMEM_SCRIPTING_GEN_FIND(Int16)
-      HADESMEM_SCRIPTING_GEN_FIND(UInt16)
-      HADESMEM_SCRIPTING_GEN_FIND(Int32)
-      HADESMEM_SCRIPTING_GEN_FIND(UInt32)
-      HADESMEM_SCRIPTING_GEN_FIND(Int64)
-      HADESMEM_SCRIPTING_GEN_FIND(UInt64)
-      HADESMEM_SCRIPTING_GEN_FIND(Float)
-      HADESMEM_SCRIPTING_GEN_FIND(Double)
-      HADESMEM_SCRIPTING_GEN_FIND(StrNarrow)
-
-        // Wrapper function for Scanner::FindCharNarrow
-      inline DWORD_PTR Scanner_FindCharNarrow(Scanner const& MyScanner, 
-        std::string const& Data)
-      {
-        if (Data.size() != 1)
+        // Disassembler::DisassembleToStr wrapper
+        inline StringList DisassembleToStr(DWORD_PTR Address, 
+          DWORD_PTR NumInstructions)
         {
-          BOOST_THROW_EXCEPTION(HadesMemError() << 
-            ErrorFunction("Scanner_FindCharNarrow") << 
-            ErrorString("Value invalid (must be a single character)."));
+          StringList MyStringList;
+          MyStringList.List =  Disassembler::DisassembleToStr(
+            reinterpret_cast<PVOID>(Address), NumInstructions);
+          return MyStringList;
         }
-        return reinterpret_cast<DWORD_PTR>(MyScanner.Find(Data[0]));
-      }
-
-      // Wrapper function for Scanner::FindCharWide
-      inline DWORD_PTR Scanner_FindCharWide(Scanner const& MyScanner, 
-        std::string const& Data)
-      {
-        if (Data.size() != 1)
-        {
-          BOOST_THROW_EXCEPTION(HadesMemError() << 
-            ErrorFunction("Scanner_FindCharNarrow") << 
-            ErrorString("Value invalid (must be a single character)."));
-        }
-        return reinterpret_cast<DWORD_PTR>(MyScanner.Find(
-          boost::lexical_cast<Types::StrWide>(Data[0])));
-      }
-
-      // Wrapper function for Scanner::FindStrWide
-      inline DWORD_PTR Scanner_FindStrWide(Scanner const& MyScanner, 
-        std::string const& Data)
-      {
-        return reinterpret_cast<DWORD_PTR>(MyScanner.Find(
-          boost::lexical_cast<Types::StrWide>(Data)));
-      }
-
-      // Wrapper function for MemoryMgr::ReadPointer
-      inline DWORD_PTR Scanner_FindPointer(Scanner const& MyScanner, 
-        DWORD_PTR Data)
-      {
-        return reinterpret_cast<DWORD_PTR>(MyScanner.Find(
-          reinterpret_cast<Types::Pointer>(Data)));
-      }
-
-      // Dword pointer list wrapper
-      struct DwordPtrList
-      {
-        std::vector<DWORD_PTR> List;
       };
 
-      // Scanner::FindAll<T> wrappers
-      HADESMEM_SCRIPTING_GEN_FIND_ALL(Int8)
-      HADESMEM_SCRIPTING_GEN_FIND_ALL(UInt8)
-      HADESMEM_SCRIPTING_GEN_FIND_ALL(Int16)
-      HADESMEM_SCRIPTING_GEN_FIND_ALL(UInt16)
-      HADESMEM_SCRIPTING_GEN_FIND_ALL(Int32)
-      HADESMEM_SCRIPTING_GEN_FIND_ALL(UInt32)
-      HADESMEM_SCRIPTING_GEN_FIND_ALL(Int64)
-      HADESMEM_SCRIPTING_GEN_FIND_ALL(UInt64)
-      HADESMEM_SCRIPTING_GEN_FIND_ALL(Float)
-      HADESMEM_SCRIPTING_GEN_FIND_ALL(Double)
-      HADESMEM_SCRIPTING_GEN_FIND_ALL(StrNarrow)
+      class ScannerWrappers : public Scanner
+      {
+      public:
+        explicit ScannerWrappers(MemoryMgr const& MyMemory) 
+          : Scanner(MyMemory)
+        { }
 
+        ScannerWrappers(MemoryMgr const& MyMemory, DWORD_PTR Module) 
+          : Scanner(MyMemory, reinterpret_cast<HMODULE>(Module))
+        { }
+
+        ScannerWrappers(MemoryMgr const& MyMemory, DWORD_PTR Start, 
+          DWORD_PTR End) 
+          : Scanner(MyMemory, reinterpret_cast<PVOID>(Start), 
+          reinterpret_cast<PVOID>(End))
+        { }
+
+
+        // Scanner::LoadFromXML wrapper
+        void LoadFromXML(std::string const& Path)
+        {
+          Scanner::LoadFromXML(boost::lexical_cast<std::wstring>(Path));
+        }
+
+        // Scanner::operator[] wrapper
+        DWORD_PTR GetAddress(std::string const& Name)
+        {
+          return reinterpret_cast<DWORD_PTR>(Scanner::operator[](
+            boost::lexical_cast<std::wstring>(Name)));
+        }
+
+        // Scanner::Find<T> wrappers
+        HADESMEM_SCRIPTING_GEN_FIND(Int8)
+        HADESMEM_SCRIPTING_GEN_FIND(UInt8)
+        HADESMEM_SCRIPTING_GEN_FIND(Int16)
+        HADESMEM_SCRIPTING_GEN_FIND(UInt16)
+        HADESMEM_SCRIPTING_GEN_FIND(Int32)
+        HADESMEM_SCRIPTING_GEN_FIND(UInt32)
+        HADESMEM_SCRIPTING_GEN_FIND(Int64)
+        HADESMEM_SCRIPTING_GEN_FIND(UInt64)
+        HADESMEM_SCRIPTING_GEN_FIND(Float)
+        HADESMEM_SCRIPTING_GEN_FIND(Double)
+        HADESMEM_SCRIPTING_GEN_FIND(StrNarrow)
+
+        // Wrapper function for Scanner::FindCharNarrow
+        DWORD_PTR FindCharNarrow(std::string const& Data)
+        {
+          if (Data.size() != 1)
+          {
+            BOOST_THROW_EXCEPTION(HadesMemError() << 
+              ErrorFunction("Scanner_FindCharNarrow") << 
+              ErrorString("Value invalid (must be a single character)."));
+          }
+          return reinterpret_cast<DWORD_PTR>(Scanner::Find(Data[0]));
+        }
+
+        // Wrapper function for Scanner::FindCharWide
+        DWORD_PTR FindCharWide(std::string const& Data)
+        {
+          if (Data.size() != 1)
+          {
+            BOOST_THROW_EXCEPTION(HadesMemError() << 
+              ErrorFunction("Scanner_FindCharNarrow") << 
+              ErrorString("Value invalid (must be a single character)."));
+          }
+          return reinterpret_cast<DWORD_PTR>(Scanner::Find(
+            boost::lexical_cast<Types::StrWide>(Data[0])));
+        }
+
+        // Wrapper function for Scanner::FindStrWide
+        DWORD_PTR FindStrWide(std::string const& Data)
+        {
+          return reinterpret_cast<DWORD_PTR>(Scanner::Find(
+            boost::lexical_cast<Types::StrWide>(Data)));
+        }
+
+        // Wrapper function for Scanner::FindPointer
+        DWORD_PTR FindPointer(DWORD_PTR Data)
+        {
+          return reinterpret_cast<DWORD_PTR>(Scanner::Find(
+            reinterpret_cast<Types::Pointer>(Data)));
+        }
+
+        // Dword pointer list wrapper
+        struct DwordPtrList
+        {
+          std::vector<DWORD_PTR> List;
+        };
+
+        // Scanner::FindAll<T> wrappers
+        HADESMEM_SCRIPTING_GEN_FIND_ALL(Int8)
+        HADESMEM_SCRIPTING_GEN_FIND_ALL(UInt8)
+        HADESMEM_SCRIPTING_GEN_FIND_ALL(Int16)
+        HADESMEM_SCRIPTING_GEN_FIND_ALL(UInt16)
+        HADESMEM_SCRIPTING_GEN_FIND_ALL(Int32)
+        HADESMEM_SCRIPTING_GEN_FIND_ALL(UInt32)
+        HADESMEM_SCRIPTING_GEN_FIND_ALL(Int64)
+        HADESMEM_SCRIPTING_GEN_FIND_ALL(UInt64)
+        HADESMEM_SCRIPTING_GEN_FIND_ALL(Float)
+        HADESMEM_SCRIPTING_GEN_FIND_ALL(Double)
+        HADESMEM_SCRIPTING_GEN_FIND_ALL(StrNarrow)
 
         // Wrapper function for Scanner::FindAllCharNarrow
-      inline DwordPtrList Scanner_FindAllCharNarrow(Scanner const& MyScanner, 
-        std::string const& Data)
-      {
-        if (Data.size() != 1)
+        DwordPtrList FindAllCharNarrow(std::string const& Data)
         {
-          BOOST_THROW_EXCEPTION(HadesMemError() << 
-            ErrorFunction("Scanner_FindAllCharNarrow") << 
-            ErrorString("Value invalid (must be a single character)."));
+          if (Data.size() != 1)
+          {
+            BOOST_THROW_EXCEPTION(HadesMemError() << 
+              ErrorFunction("Scanner_FindAllCharNarrow") << 
+              ErrorString("Value invalid (must be a single character)."));
+          }
+          auto AddrList = Scanner::FindAll(Data[0]);
+          DwordPtrList NewList;
+          NewList.List.reserve(AddrList.size());
+          std::transform(AddrList.begin(), AddrList.end(), std::back_inserter(
+            NewList.List), 
+            [] (PVOID Current)
+          {
+            return reinterpret_cast<DWORD_PTR>(Current);
+          });
+          return NewList;
         }
-        auto AddrList = MyScanner.FindAll(Data[0]);
-        DwordPtrList NewList;
-        NewList.List.reserve(AddrList.size());
-        std::transform(AddrList.begin(), AddrList.end(), std::back_inserter(
-          NewList.List), 
-          [] (PVOID Current)
-        {
-          return reinterpret_cast<DWORD_PTR>(Current);
-        });
-        return NewList;
-      }
 
-      // Wrapper function for Scanner::FindAllCharWide
-      inline DwordPtrList Scanner_FindAllCharWide(Scanner const& MyScanner, 
-        std::string const& Data)
-      {
-        if (Data.size() != 1)
+        // Wrapper function for Scanner::FindAllCharWide
+        DwordPtrList FindAllCharWide(std::string const& Data)
         {
-          BOOST_THROW_EXCEPTION(HadesMemError() << 
-            ErrorFunction("Scanner_FindAllCharWide") << 
-            ErrorString("Value invalid (must be a single character)."));
+          if (Data.size() != 1)
+          {
+            BOOST_THROW_EXCEPTION(HadesMemError() << 
+              ErrorFunction("Scanner_FindAllCharWide") << 
+              ErrorString("Value invalid (must be a single character)."));
+          }
+          auto AddrList = Scanner::FindAll(boost::lexical_cast<Types::StrWide>(
+            Data[0]));
+          DwordPtrList NewList;
+          NewList.List.reserve(AddrList.size());
+          std::transform(AddrList.begin(), AddrList.end(), std::back_inserter(
+            NewList.List), 
+            [] (PVOID Current)
+          {
+            return reinterpret_cast<DWORD_PTR>(Current);
+          });
+          return NewList;
         }
-        auto AddrList = MyScanner.FindAll(boost::lexical_cast<Types::StrWide>(
-          Data[0]));
-        DwordPtrList NewList;
-        NewList.List.reserve(AddrList.size());
-        std::transform(AddrList.begin(), AddrList.end(), std::back_inserter(
-          NewList.List), 
-          [] (PVOID Current)
-        {
-          return reinterpret_cast<DWORD_PTR>(Current);
-        });
-        return NewList;
-      }
 
-      // Wrapper function for Scanner::FindAllStrWide
-      inline DwordPtrList Scanner_FindAllStrWide(Scanner const& MyScanner, 
-        std::string const& Data)
-      {
-        auto AddrList = MyScanner.FindAll(boost::lexical_cast<Types::StrWide>(
-          Data));
-        DwordPtrList NewList;
-        NewList.List.reserve(AddrList.size());
-        std::transform(AddrList.begin(), AddrList.end(), std::back_inserter(
-          NewList.List), 
-          [] (PVOID Current)
+        // Wrapper function for Scanner::FindAllStrWide
+        DwordPtrList FindAllStrWide(std::string const& Data)
         {
-          return reinterpret_cast<DWORD_PTR>(Current);
-        });
-        return NewList;
-      }
+          auto AddrList = Scanner::FindAll(boost::lexical_cast<Types::StrWide>(
+            Data));
+          DwordPtrList NewList;
+          NewList.List.reserve(AddrList.size());
+          std::transform(AddrList.begin(), AddrList.end(), std::back_inserter(
+            NewList.List), 
+            [] (PVOID Current)
+          {
+            return reinterpret_cast<DWORD_PTR>(Current);
+          });
+          return NewList;
+        }
 
-      // Wrapper function for Scanner::FindAllPointer
-      inline DwordPtrList Scanner_FindAllPointer(Scanner const& MyScanner, 
-        DWORD_PTR Data)
-      {
-        auto AddrList = MyScanner.FindAll(reinterpret_cast<Types::Pointer>(
-          Data));
-        DwordPtrList NewList;
-        NewList.List.reserve(AddrList.size());
-        std::transform(AddrList.begin(), AddrList.end(), std::back_inserter(
-          NewList.List), 
-          [] (PVOID Current)
+        // Wrapper function for Scanner::FindAllPointer
+        DwordPtrList FindAllPointer(DWORD_PTR Data)
         {
-          return reinterpret_cast<DWORD_PTR>(Current);
-        });
-        return NewList;
-      }
+          auto AddrList = Scanner::FindAll(reinterpret_cast<Types::Pointer>(
+            Data));
+          DwordPtrList NewList;
+          NewList.List.reserve(AddrList.size());
+          std::transform(AddrList.begin(), AddrList.end(), std::back_inserter(
+            NewList.List), 
+            [] (PVOID Current)
+          {
+            return reinterpret_cast<DWORD_PTR>(Current);
+          });
+          return NewList;
+        }
+      };
 
-      // Wrapper function for ManualMap::Map
-      inline DWORD_PTR ManualMap_Map(ManualMap const& MyManualMapper, 
-        std::string const& Path, std::string const& Export, bool InjectHelper)
+      class ManualMapWrappers : public ManualMap
       {
-        return reinterpret_cast<DWORD_PTR>(MyManualMapper.Map(
-          boost::lexical_cast<std::wstring>(Path), Export, InjectHelper));
-      }
+      public:
+        ManualMapWrappers(MemoryMgr const& MyMemory) 
+          : ManualMap(MyMemory)
+        { }
+
+        // Wrapper function for ManualMap::Map
+        DWORD_PTR Map(std::string const& Path, std::string const& Export, 
+          bool InjectHelper)
+        {
+          return reinterpret_cast<DWORD_PTR>(ManualMap::Map(
+            boost::lexical_cast<std::wstring>(Path), Export, InjectHelper));
+        }
+      };
     }
 
     // Lua exception type
@@ -912,7 +962,8 @@ namespace Hades
           .def("GetProcessID", &MemoryMgr::GetProcessID)
 
           // Bind MemoryMgr::GetProcessHandle wrapper
-          .def("GetProcessHandle", &Wrappers::MemoryMgrWrappers::GetProcessHandle)
+          .def("GetProcessHandle", &Wrappers::MemoryMgrWrappers::
+            GetProcessHandle)
 
           // Bind MemoryMgr::GetRemoteProcAddress wrappers
           .def("GetRemoteProcAddress", &Wrappers::MemoryMgrWrappers::
@@ -924,26 +975,26 @@ namespace Hades
           .def("FlushCache", &Wrappers::MemoryMgrWrappers::FlushCache)
 
           // Bind Module class
-          ,luabind::class_<Module>("Module")
+          ,luabind::class_<Wrappers::ModuleWrappers>("Module")
 
           // Bind Module::Module wrappers
           .def(luabind::constructor<MemoryMgr const&, DWORD_PTR>())
           .def(luabind::constructor<MemoryMgr const&, std::string>())
 
           // Bind Module::GetBase wrapper
-          .def("GetBase", &Wrappers::Module_GetBase)
+          .def("GetBase", &Wrappers::ModuleWrappers::GetBase)
 
           // Bind Module::GetSize wrapper
-          .def("GetSize", &Module::GetSize)
+          .def("GetSize", &Wrappers::ModuleWrappers::GetSize)
 
           // Bind Module::GetName wrapper
-          .def("GetName", &Wrappers::Module_GetName)
+          .def("GetName", &Wrappers::ModuleWrappers::GetName)
 
           // Bind Module::GetPath wrapper
-          .def("GetPath", &Wrappers::Module_GetPath)
+          .def("GetPath", &Wrappers::ModuleWrappers::GetPath)
 
           // Bind Module::Found wrapper
-          .def("Found", &Module::Found)
+          .def("Found", &Wrappers::ModuleWrappers::Found)
 
           // Bind ModuleList class
           ,luabind::class_<Wrappers::ModuleList>("ModuleList")
@@ -955,31 +1006,31 @@ namespace Hades
           ,luabind::def("GetModuleList", &Wrappers::Module_GetModuleList)
 
           // Bind Region class
-          ,luabind::class_<Region>("Region")
+          ,luabind::class_<Wrappers::RegionWrappers>("Region")
 
           // Bind Scanner::Scanner
           .def(luabind::constructor<MemoryMgr const&, DWORD_PTR>())
 
           // Bind Region::GetBase wrapper
-          .def("GetBase", &Wrappers::Region_GetBaseAddress)
+          .def("GetBase", &Wrappers::RegionWrappers::GetBaseAddress)
 
           // Bind Region::GetAllocBase wrapper
-          .def("GetAllocBase", &Wrappers::Region_GetAllocationBase)
+          .def("GetAllocBase", &Wrappers::RegionWrappers::GetAllocationBase)
 
           // Bind Region::GetName wrapper
-          .def("GetAllocProtect", &Region::GetAllocProtect)
+          .def("GetAllocProtect", &Wrappers::RegionWrappers::GetAllocProtect)
 
           // Bind Region::GetPath wrapper
-          .def("GetSize", &Region::GetSize)
+          .def("GetSize", &Wrappers::RegionWrappers::GetSize)
 
           // Bind Region::GetState wrapper
-          .def("GetState", &Region::GetState)
+          .def("GetState", &Wrappers::RegionWrappers::GetState)
 
           // Bind Region::GetProtect wrapper
-          .def("GetProtect", &Region::GetProtect)
+          .def("GetProtect", &Wrappers::RegionWrappers::GetProtect)
 
           // Bind Region::GetType wrapper
-          .def("GetType", &Region::GetType)
+          .def("GetType", &Wrappers::RegionWrappers::GetType)
 
           // Bind RegionList class
           ,luabind::class_<Wrappers::RegionList>("RegionList")
@@ -991,16 +1042,16 @@ namespace Hades
           ,luabind::def("GetRegionList", &Wrappers::Region_GetRegionList)
 
           // Bind Injector class
-          ,luabind::class_<Injector>("Injector")
+          ,luabind::class_<Wrappers::InjectorWrappers>("Injector")
 
           // Bind Injector::Injector
           .def(luabind::constructor<MemoryMgr const&>())
 
           // Bind Injector::InjectDll wrapper
-          .def("InjectDll", &Wrappers::Injector_InjectDll)
+          .def("InjectDll", &Wrappers::InjectorWrappers::InjectDll)
 
           // Bind Injector::GetBase wrapper
-          .def("CallExport", &Wrappers::Injector_CallExport)
+          .def("CallExport", &Wrappers::InjectorWrappers::CallExport)
 
           // Bind CreateAndInject wrapper
           ,luabind::def("CreateAndInject", &Wrappers::Injector_CreateAndInject)
@@ -1021,16 +1072,17 @@ namespace Hades
             luabind::return_stl_iterator)
 
           // Bind Disassembler class
-          ,luabind::class_<Disassembler>("Disassembler")
+          ,luabind::class_<Wrappers::DisassemblerWrappers>("Disassembler")
 
           // Bind Disassembler::Disassembler
           .def(luabind::constructor<MemoryMgr const&>())
 
           // Bind Disassembler::DisassembleToStr wrapper
-          .def("DisassembleToStr", &Wrappers::Disassembler_DisassembleToStr)
+          .def("DisassembleToStr", &Wrappers::DisassemblerWrappers::
+            DisassembleToStr)
 
           // Bind Scanner class
-          ,luabind::class_<Scanner>("Scanner")
+          ,luabind::class_<Wrappers::ScannerWrappers>("Scanner")
 
           // Bind Scanner::Scanner
           .def(luabind::constructor<MemoryMgr const&>())
@@ -1038,59 +1090,62 @@ namespace Hades
           .def(luabind::constructor<MemoryMgr const&, DWORD_PTR, DWORD_PTR>())
 
           // Bind Scanner::Find<T> wrappers
-          .def("FindInt8", &Wrappers::Scanner_FindInt8) 
-          .def("FindUInt8", &Wrappers::Scanner_FindUInt8) 
-          .def("FindInt16", &Wrappers::Scanner_FindInt16) 
-          .def("FindUInt16", &Wrappers::Scanner_FindUInt16)
-          .def("FindInt32", &Wrappers::Scanner_FindInt32)
-          .def("FindUInt32", &Wrappers::Scanner_FindUInt32)
-          .def("FindInt64", &Wrappers::Scanner_FindInt64)
-          .def("FindUInt64", &Wrappers::Scanner_FindUInt64)
-          .def("FindFloat", &Wrappers::Scanner_FindFloat)
-          .def("FindDouble", &Wrappers::Scanner_FindDouble)
-          .def("FindCharNarrow", &Wrappers::Scanner_FindCharNarrow)
-          .def("FindCharWide", &Wrappers::Scanner_FindCharWide)
-          .def("FindStrNarrow", &Wrappers::Scanner_FindStrNarrow)
-          .def("FindStrWide", &Wrappers::Scanner_FindStrWide)
-          .def("FindPointer", &Wrappers::Scanner_FindPointer)
+          .def("FindInt8", &Wrappers::ScannerWrappers::FindInt8) 
+          .def("FindUInt8", &Wrappers::ScannerWrappers::FindUInt8) 
+          .def("FindInt16", &Wrappers::ScannerWrappers::FindInt16) 
+          .def("FindUInt16", &Wrappers::ScannerWrappers::FindUInt16)
+          .def("FindInt32", &Wrappers::ScannerWrappers::FindInt32)
+          .def("FindUInt32", &Wrappers::ScannerWrappers::FindUInt32)
+          .def("FindInt64", &Wrappers::ScannerWrappers::FindInt64)
+          .def("FindUInt64", &Wrappers::ScannerWrappers::FindUInt64)
+          .def("FindFloat", &Wrappers::ScannerWrappers::FindFloat)
+          .def("FindDouble", &Wrappers::ScannerWrappers::FindDouble)
+          .def("FindCharNarrow", &Wrappers::ScannerWrappers::FindCharNarrow)
+          .def("FindCharWide", &Wrappers::ScannerWrappers::FindCharWide)
+          .def("FindStrNarrow", &Wrappers::ScannerWrappers::FindStrNarrow)
+          .def("FindStrWide", &Wrappers::ScannerWrappers::FindStrWide)
+          .def("FindPointer", &Wrappers::ScannerWrappers::FindPointer)
 
           // Bind Scanner::FindAll<T> wrappers
-          .def("FindAllInt8", &Wrappers::Scanner_FindAllInt8) 
-          .def("FindAllUInt8", &Wrappers::Scanner_FindAllUInt8) 
-          .def("FindAllInt16", &Wrappers::Scanner_FindAllInt16) 
-          .def("FindAllUInt16", &Wrappers::Scanner_FindAllUInt16)
-          .def("FindAllInt32", &Wrappers::Scanner_FindAllInt32)
-          .def("FindAllUInt32", &Wrappers::Scanner_FindAllUInt32)
-          .def("FindAllInt64", &Wrappers::Scanner_FindAllInt64)
-          .def("FindAllUInt64", &Wrappers::Scanner_FindAllUInt64)
-          .def("FindAllFloat", &Wrappers::Scanner_FindAllFloat)
-          .def("FindAllDouble", &Wrappers::Scanner_FindAllDouble)
-          .def("FindAllCharNarrow", &Wrappers::Scanner_FindAllCharNarrow)
-          .def("FindAllCharWide", &Wrappers::Scanner_FindAllCharWide)
-          .def("FindAllStrNarrow", &Wrappers::Scanner_FindAllStrNarrow)
-          .def("FindAllStrWide", &Wrappers::Scanner_FindAllStrWide)
-          .def("FindAllPointer", &Wrappers::Scanner_FindAllPointer)
+          .def("FindAllInt8", &Wrappers::ScannerWrappers::FindAllInt8) 
+          .def("FindAllUInt8", &Wrappers::ScannerWrappers::FindAllUInt8) 
+          .def("FindAllInt16", &Wrappers::ScannerWrappers::FindAllInt16) 
+          .def("FindAllUInt16", &Wrappers::ScannerWrappers::FindAllUInt16)
+          .def("FindAllInt32", &Wrappers::ScannerWrappers::FindAllInt32)
+          .def("FindAllUInt32", &Wrappers::ScannerWrappers::FindAllUInt32)
+          .def("FindAllInt64", &Wrappers::ScannerWrappers::FindAllInt64)
+          .def("FindAllUInt64", &Wrappers::ScannerWrappers::FindAllUInt64)
+          .def("FindAllFloat", &Wrappers::ScannerWrappers::FindAllFloat)
+          .def("FindAllDouble", &Wrappers::ScannerWrappers::FindAllDouble)
+          .def("FindAllCharNarrow", &Wrappers::ScannerWrappers::
+            FindAllCharNarrow)
+          .def("FindAllCharWide", &Wrappers::ScannerWrappers::FindAllCharWide)
+          .def("FindAllStrNarrow", &Wrappers::ScannerWrappers::
+            FindAllStrNarrow)
+          .def("FindAllStrWide", &Wrappers::ScannerWrappers::FindAllStrWide)
+          .def("FindAllPointer", &Wrappers::ScannerWrappers::FindAllPointer)
 
           // Bind Scanner::LoadFromXML wrapper
-          .def("LoadFromXML", &Wrappers::Scanner_LoadFromXML)
+          .def("LoadFromXML", &Wrappers::ScannerWrappers::LoadFromXML)
 
           // Bind Scanner::operator[] wrapper
-          .def("GetAddress", &Wrappers::Scanner_GetAddress)
+          .def("GetAddress", &Wrappers::ScannerWrappers::GetAddress)
 
           // Bind DwordPtrList class
-          ,luabind::class_<Wrappers::DwordPtrList>("DwordPtrList")
+          ,luabind::class_<Wrappers::ScannerWrappers::DwordPtrList>(
+            "DwordPtrList")
           .def(luabind::constructor<>())
-          .def_readonly("List", &Wrappers::DwordPtrList::List, 
+          .def_readonly("List", &Wrappers::ScannerWrappers::DwordPtrList::List, 
             luabind::return_stl_iterator)
 
           // Bind ManualMap class
-          ,luabind::class_<ManualMap>("ManualMap")
+          ,luabind::class_<Wrappers::ManualMapWrappers>("ManualMap")
 
           // Bind ManualMap::ManualMap
           .def(luabind::constructor<MemoryMgr const&>())
 
           // Bind ManualMap::Map wrapper
-          .def("Map", &Wrappers::ManualMap_Map)
+          .def("Map", &Wrappers::ManualMapWrappers::Map)
 
           // Bind PeFile class
           ,luabind::class_<PeFile>("PeFile")

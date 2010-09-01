@@ -61,10 +61,8 @@ namespace Hades
     public:
       // Find module by handle
       inline Module(MemoryMgr const& MyMemory, HMODULE Handle);
-      inline Module(MemoryMgr const& MyMemory, DWORD_PTR Handle);
 
       // Find module by name
-      inline Module(MemoryMgr const& MyMemory, std::string const& ModuleName);
       inline Module(MemoryMgr const& MyMemory, std::wstring const& ModuleName);
 
       // Get module base
@@ -195,59 +193,6 @@ namespace Hades
       m_Found = Found;
     }
 
-    // Find module by name
-    Module::Module(MemoryMgr const& MyMemory, std::string const& ModuleName) 
-      : m_Memory(MyMemory), 
-      m_Base(nullptr), 
-      m_Size(0), 
-      m_Name(), 
-      m_Path(), 
-      m_Found(false) 
-    {
-      // Grab a new snapshot of the process
-      Windows::EnsureCloseHandle const Snap(CreateToolhelp32Snapshot(
-        TH32CS_SNAPMODULE, MyMemory.GetProcessID()));
-      if (Snap == INVALID_HANDLE_VALUE)
-      {
-        DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(ModuleError() << 
-          ErrorFunction("Module::Module") << 
-          ErrorString("Could not get module snapshot.") << 
-          ErrorCodeWin(LastError));
-      }
-
-      // Convert module name to lowercase
-      std::wstring const ModuleNameLower(boost::to_lower_copy(
-        boost::lexical_cast<std::wstring>(ModuleName)));
-
-      // Search for process
-      MODULEENTRY32 ModEntry = { sizeof(ModEntry) };
-      bool Found = false;
-      for (BOOL MoreMods = Module32First(Snap, &ModEntry); MoreMods; 
-        MoreMods = Module32Next(Snap, &ModEntry)) 
-      {
-        Found = (boost::to_lower_copy(std::wstring(ModEntry.szModule)) == 
-          ModuleNameLower) || (boost::to_lower_copy(std::wstring(
-          ModEntry.szExePath)) == ModuleNameLower);
-        if (Found)
-        {
-          break;
-        }
-      }
-
-      // Check if module was found
-      if (Found)
-      {
-        m_Base = ModEntry.hModule;
-        m_Size = ModEntry.modBaseSize;
-        m_Name = ModEntry.szModule;
-        m_Path = ModEntry.szExePath;
-      }
-
-      // Whether module was found
-      m_Found = Found;
-    }
-
     // Find module by handle
     Module::Module(MemoryMgr const& MyMemory, HMODULE Handle) 
       : m_Memory(MyMemory), 
@@ -276,55 +221,6 @@ namespace Hades
         MoreMods = Module32Next(Snap, &ModEntry)) 
       {
         Found = (ModEntry.hModule == Handle);
-        if (Found)
-        {
-          break;
-        }
-      }
-
-      // Check process was found
-      if (!Found)
-      {
-        BOOST_THROW_EXCEPTION(ModuleError() << 
-          ErrorFunction("Module::Module") << 
-          ErrorString("Could not find module."));
-      }
-
-      // Get module data
-      m_Base = ModEntry.hModule;
-      m_Size = ModEntry.modBaseSize;
-      m_Name = ModEntry.szModule;
-      m_Path = ModEntry.szExePath;
-    }
-
-    // Find module by handle
-    Module::Module(MemoryMgr const& MyMemory, DWORD_PTR Handle) 
-      : m_Memory(MyMemory), 
-      m_Base(nullptr), 
-      m_Size(0), 
-      m_Name(), 
-      m_Path(), 
-      m_Found(false)
-    {
-      // Grab a new snapshot of the process
-      Windows::EnsureCloseHandle const Snap(CreateToolhelp32Snapshot(
-        TH32CS_SNAPMODULE, MyMemory.GetProcessID()));
-      if (Snap == INVALID_HANDLE_VALUE)
-      {
-        DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(ModuleError() << 
-          ErrorFunction("Module::Module") << 
-          ErrorString("Could not get module snapshot.") << 
-          ErrorCodeWin(LastError));
-      }
-
-      // Search for process
-      MODULEENTRY32 ModEntry = { sizeof(ModEntry) };
-      bool Found = false;
-      for (BOOL MoreMods = Module32First(Snap, &ModEntry); MoreMods; 
-        MoreMods = Module32Next(Snap, &ModEntry)) 
-      {
-        Found = (ModEntry.hModule == reinterpret_cast<HMODULE>(Handle));
         if (Found)
         {
           break;

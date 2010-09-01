@@ -55,11 +55,8 @@ namespace Hades
       // Constructor
       inline explicit Scanner(MemoryMgr const& MyMemory);
       inline explicit Scanner(MemoryMgr const& MyMemory, HMODULE Module);
-      inline explicit Scanner(MemoryMgr const& MyMemory, DWORD_PTR Module);
       inline explicit Scanner(MemoryMgr const& MyMemory, PVOID Start, 
         PVOID End);
-      inline explicit Scanner(MemoryMgr const& MyMemory, DWORD_PTR Start, 
-        DWORD_PTR End);
 
       // Search memory (POD types)
       template <typename T>
@@ -127,35 +124,14 @@ namespace Hades
     };
 
     // Constructor
-    Scanner::Scanner(MemoryMgr const& MyMemory, PVOID Start, PVOID End) 
+    Scanner::Scanner(MemoryMgr const& MyMemory) 
       : m_Memory(MyMemory), 
-      m_Start(static_cast<PBYTE>(Start)), 
-      m_End(static_cast<PBYTE>(End)), 
+      m_Start(nullptr), 
+      m_End(nullptr), 
       m_Addresses()
     {
-      // Ensure range is valid
-      if (m_End < m_Start)
-      {
-        BOOST_THROW_EXCEPTION(ScannerError() << 
-          ErrorFunction("Scanner::Scanner") << 
-          ErrorString("Start or end address is invalid."));
-      }
-    }
-
-    // Constructor
-    Scanner::Scanner(MemoryMgr const& MyMemory, DWORD_PTR Start, DWORD_PTR End) 
-      : m_Memory(MyMemory), 
-      m_Start(reinterpret_cast<PBYTE>(Start)), 
-      m_End(reinterpret_cast<PBYTE>(End)), 
-      m_Addresses()
-    {
-      // Ensure range is valid
-      if (m_End < m_Start)
-      {
-        BOOST_THROW_EXCEPTION(ScannerError() << 
-          ErrorFunction("Scanner::Scanner") << 
-          ErrorString("Start or end address is invalid."));
-      }
+      // Initialize using PE header
+      Initialize();
     }
 
     // Constructor
@@ -191,46 +167,19 @@ namespace Hades
     }
 
     // Constructor
-    Scanner::Scanner(MemoryMgr const& MyMemory, DWORD_PTR Module) 
+    Scanner::Scanner(MemoryMgr const& MyMemory, PVOID Start, PVOID End) 
       : m_Memory(MyMemory), 
-      m_Start(nullptr), 
-      m_End(nullptr), 
+      m_Start(static_cast<PBYTE>(Start)), 
+      m_End(static_cast<PBYTE>(End)), 
       m_Addresses()
     {
-      // Ensure file is a valid PE file
-      auto pBase = reinterpret_cast<PBYTE>(Module);
-      auto DosHeader = MyMemory.Read<IMAGE_DOS_HEADER>(pBase);
-      if (DosHeader.e_magic != IMAGE_DOS_SIGNATURE)
+      // Ensure range is valid
+      if (m_End < m_Start)
       {
         BOOST_THROW_EXCEPTION(ScannerError() << 
           ErrorFunction("Scanner::Scanner") << 
-          ErrorString("Target file is not a valid PE file (DOS)."));
+          ErrorString("Start or end address is invalid."));
       }
-      auto NtHeader = MyMemory.Read<IMAGE_NT_HEADERS>(pBase + DosHeader.
-        e_lfanew);
-      if (NtHeader.Signature != IMAGE_NT_SIGNATURE)
-      {
-        BOOST_THROW_EXCEPTION(ScannerError() << 
-          ErrorFunction("Scanner::Scanner") << 
-          ErrorString("Target file is not a valid PE file (NT)."));
-      }
-
-      // Get base of code section
-      m_Start = pBase + NtHeader.OptionalHeader.BaseOfCode;
-
-      // Calculate end of code section
-      m_End = m_Start + NtHeader.OptionalHeader.SizeOfImage;
-    }
-
-    // Constructor
-    Scanner::Scanner(MemoryMgr const& MyMemory) 
-      : m_Memory(MyMemory), 
-      m_Start(nullptr), 
-      m_End(nullptr), 
-      m_Addresses()
-    {
-      // Initialize using PE header
-      Initialize();
     }
 
     // Search memory (POD types)
