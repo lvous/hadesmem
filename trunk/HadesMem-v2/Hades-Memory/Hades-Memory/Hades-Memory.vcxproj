@@ -23,18 +23,25 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Disassembler.h" />
+    <ClInclude Include="DisassemblerWrap.h" />
     <ClInclude Include="DosHeader.h" />
     <ClInclude Include="Error.h" />
     <ClInclude Include="Injector.h" />
+    <ClInclude Include="InjectorWrap.h" />
     <ClInclude Include="ManualMap.h" />
+    <ClInclude Include="ManualMapWrap.h" />
     <ClInclude Include="Memory.h" />
     <ClInclude Include="MemoryMgr.h" />
+    <ClInclude Include="MemoryMgrWrap.h" />
     <ClInclude Include="Module.h" />
+    <ClInclude Include="ModuleWrap.h" />
     <ClInclude Include="Patcher.h" />
     <ClInclude Include="PeFile.h" />
     <ClInclude Include="Process.h" />
     <ClInclude Include="Region.h" />
+    <ClInclude Include="RegionWrap.h" />
     <ClInclude Include="Scanner.h" />
+    <ClInclude Include="ScannerWrap.h" />
     <ClInclude Include="Scripting.h" />
     <ClInclude Include="Types.h" />
   </ItemGroup>

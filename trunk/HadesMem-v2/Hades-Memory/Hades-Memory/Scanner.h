@@ -36,6 +36,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #pragma warning(pop)
 
 // Hades
+#include "Types.h"
 #include "Module.h"
 #include "Region.h"
 #include "MemoryMgr.h"
