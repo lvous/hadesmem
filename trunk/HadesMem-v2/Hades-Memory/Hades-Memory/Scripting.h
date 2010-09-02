@@ -604,8 +604,35 @@ namespace Hades
           // Bind DosHeader::GetMagic
           .def("GetMagic", &DosHeader::GetMagic)
 
+          // Bind DosHeader::GetChecksum
+          .def("GetChecksum", &DosHeader::GetChecksum)
+
+          // Bind GetNewHeaderOffset::GetMagic
+          .def("GetNewHeaderOffset", &DosHeader::GetNewHeaderOffset)
+
           // Bind DosHeader::SetMagic
           .def("SetMagic", &DosHeader::SetMagic)
+
+          // Bind DosHeader::SetChecksum
+          .def("SetChecksum", &DosHeader::SetChecksum)
+
+          // Bind DosHeader::SetMagic
+          .def("SetNewHeaderOffset", &DosHeader::SetNewHeaderOffset)
+
+          // Bind NtHeaders class
+          ,luabind::class_<NtHeaders>("NtHeaders")
+
+          // Bind NtHeaders::NtHeaders
+          .def(luabind::constructor<PeFile const&>())
+
+          // Bind NtHeaders::IsSignatureValid
+          .def("IsSignatureValid", &NtHeaders::IsSignatureValid)
+
+          // Bind NtHeaders::GetSignature
+          .def("GetSignature", &NtHeaders::GetSignature)
+
+          // Bind NtHeaders::SetSignature
+          .def("SetSignature", &NtHeaders::SetSignature)
         ];
       }
 
