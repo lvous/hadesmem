@@ -121,7 +121,7 @@ namespace Hades
       if (m_DosHeaderRaw.e_lfanew != Offset)
       {
         BOOST_THROW_EXCEPTION(Error() << 
-          ErrorFunction("DosHeader::SetMagic") << 
+          ErrorFunction("DosHeader::SetNewHeaderOffset") << 
           ErrorString("Could not set new header offset. Verification "
             "mismatch."));
       }

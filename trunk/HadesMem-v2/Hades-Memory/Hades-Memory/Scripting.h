@@ -314,7 +314,8 @@ namespace Hades
           ,luabind::def("IsAMD64", &Wrappers::IsAMD64)
 
           // Bind MemoryMgr class
-          ,luabind::class_<Wrappers::MemoryMgrWrappers>("MemoryMgr")
+          ,luabind::class_<MemoryMgr>("MemoryMgrBase")
+          ,luabind::class_<Wrappers::MemoryMgrWrappers, MemoryMgr>("MemoryMgr")
 
           // Bind MemoryMgr::MemoryMgr
           .def(luabind::constructor<DWORD>())
@@ -398,7 +399,8 @@ namespace Hades
           .def("FlushCache", &Wrappers::MemoryMgrWrappers::FlushCache)
 
           // Bind Module class
-          ,luabind::class_<Wrappers::ModuleWrappers>("Module")
+          ,luabind::class_<Module>("ModuleBase")
+          ,luabind::class_<Wrappers::ModuleWrappers, Module>("Module")
 
           // Bind Module::Module wrappers
           .def(luabind::constructor<MemoryMgr const&, DWORD_PTR>())
@@ -429,7 +431,8 @@ namespace Hades
           ,luabind::def("GetModuleList", &Wrappers::Module_GetModuleList)
 
           // Bind Region class
-          ,luabind::class_<Wrappers::RegionWrappers>("Region")
+          ,luabind::class_<Region>("RegionBase")
+          ,luabind::class_<Wrappers::RegionWrappers, Region>("Region")
 
           // Bind Scanner::Scanner
           .def(luabind::constructor<MemoryMgr const&, DWORD_PTR>())
@@ -465,7 +468,8 @@ namespace Hades
           ,luabind::def("GetRegionList", &Wrappers::Region_GetRegionList)
 
           // Bind Injector class
-          ,luabind::class_<Wrappers::InjectorWrappers>("Injector")
+          ,luabind::class_<Injector>("InjectorBase")
+          ,luabind::class_<Wrappers::InjectorWrappers, Injector>("Injector")
 
           // Bind Injector::Injector
           .def(luabind::constructor<MemoryMgr const&>())
@@ -495,7 +499,9 @@ namespace Hades
             luabind::return_stl_iterator)
 
           // Bind Disassembler class
-          ,luabind::class_<Wrappers::DisassemblerWrappers>("Disassembler")
+          ,luabind::class_<Disassembler>("DisassemblerBase")
+          ,luabind::class_<Wrappers::DisassemblerWrappers, Disassembler>(
+            "Disassembler")
 
           // Bind Disassembler::Disassembler
           .def(luabind::constructor<MemoryMgr const&>())
@@ -505,7 +511,8 @@ namespace Hades
             DisassembleToStr)
 
           // Bind Scanner class
-          ,luabind::class_<Wrappers::ScannerWrappers>("Scanner")
+          ,luabind::class_<Scanner>("ScannerBase")
+          ,luabind::class_<Wrappers::ScannerWrappers, Scanner>("Scanner")
 
           // Bind Scanner::Scanner
           .def(luabind::constructor<MemoryMgr const&>())
@@ -562,7 +569,8 @@ namespace Hades
             luabind::return_stl_iterator)
 
           // Bind ManualMap class
-          ,luabind::class_<Wrappers::ManualMapWrappers>("ManualMap")
+          ,luabind::class_<ManualMap>("ManualMapBase")
+          ,luabind::class_<Wrappers::ManualMapWrappers, ManualMap>("ManualMap")
 
           // Bind ManualMap::ManualMap
           .def(luabind::constructor<MemoryMgr const&>())
