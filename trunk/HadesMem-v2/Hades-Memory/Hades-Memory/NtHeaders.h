@@ -50,21 +50,15 @@ namespace Hades
       DosHeader m_DosHeader;
 
       PVOID m_pNtHeadersBase;
-
-      IMAGE_NT_HEADERS m_NtHeadersRaw;
     };
 
     NtHeaders::NtHeaders(PeFile const& MyPeFile)
       : m_PeFile(MyPeFile), 
       m_Memory(m_PeFile.GetMemoryMgr()), 
       m_DosHeader(m_PeFile), 
-      m_pNtHeadersBase(nullptr), 
-      m_NtHeadersRaw()
-    {
-      auto pBase = static_cast<PBYTE>(m_PeFile.GetBase());
-      m_pNtHeadersBase = pBase + m_DosHeader.GetNewHeaderOffset();
-      m_NtHeadersRaw = m_Memory.Read<IMAGE_NT_HEADERS>(m_pNtHeadersBase);
-    }
+      m_pNtHeadersBase(static_cast<PBYTE>(m_PeFile.GetBase()) + m_DosHeader.
+        GetNewHeaderOffset())
+    { }
 
     bool NtHeaders::IsSignatureValid() const
     {
@@ -73,16 +67,18 @@ namespace Hades
 
     DWORD NtHeaders::GetSignature() const
     {
-      return m_NtHeadersRaw.Signature;
+      auto NtHeadersRaw = m_Memory.Read<IMAGE_NT_HEADERS>(m_pNtHeadersBase);
+      return NtHeadersRaw.Signature;
     }
 
     void NtHeaders::SetSignature(DWORD Signature)
     {
-      m_NtHeadersRaw.Signature = Signature;
-      m_Memory.Write(m_PeFile.GetBase(), m_NtHeadersRaw);
+      auto NtHeadersRaw = m_Memory.Read<IMAGE_NT_HEADERS>(m_pNtHeadersBase);
+      NtHeadersRaw.Signature = Signature;
+      m_Memory.Write(m_pNtHeadersBase, NtHeadersRaw);
 
-      m_NtHeadersRaw = m_Memory.Read<IMAGE_NT_HEADERS>(m_pNtHeadersBase);
-      if (m_NtHeadersRaw.Signature != Signature)
+      NtHeadersRaw = m_Memory.Read<IMAGE_NT_HEADERS>(m_pNtHeadersBase);
+      if (NtHeadersRaw.Signature != Signature)
       {
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("NtHeaders::SetSignature") << 

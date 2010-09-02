@@ -51,18 +51,13 @@ namespace Hades
       MemoryMgr const& m_Memory;
 
       PVOID m_pBase;
-
-      IMAGE_DOS_HEADER m_DosHeaderRaw;
     };
 
     DosHeader::DosHeader(PeFile const& MyPeFile)
       : m_PeFile(MyPeFile), 
       m_Memory(m_PeFile.GetMemoryMgr()), 
-      m_pBase(m_PeFile.GetBase()), 
-      m_DosHeaderRaw()
-    {
-      m_DosHeaderRaw = m_Memory.Read<IMAGE_DOS_HEADER>(m_pBase);
-    }
+      m_pBase(m_PeFile.GetBase())
+    { }
 
     bool DosHeader::IsMagicValid() const
     {
@@ -71,26 +66,30 @@ namespace Hades
 
     WORD DosHeader::GetMagic() const
     {
-      return m_DosHeaderRaw.e_magic;
+      auto DosHeaderRaw = m_Memory.Read<IMAGE_DOS_HEADER>(m_pBase);
+      return DosHeaderRaw.e_magic;
     }
 
     WORD DosHeader::GetChecksum() const
     {
-      return m_DosHeaderRaw.e_csum;
+      auto DosHeaderRaw = m_Memory.Read<IMAGE_DOS_HEADER>(m_pBase);
+      return DosHeaderRaw.e_csum;
     }
 
     LONG DosHeader::GetNewHeaderOffset() const
     {
-      return m_DosHeaderRaw.e_lfanew;
+      auto DosHeaderRaw = m_Memory.Read<IMAGE_DOS_HEADER>(m_pBase);
+      return DosHeaderRaw.e_lfanew;
     }
 
     void DosHeader::SetMagic(WORD Magic) 
     {
-      m_DosHeaderRaw.e_magic = Magic;
-      m_Memory.Write(m_PeFile.GetBase(), m_DosHeaderRaw);
+      auto DosHeaderRaw = m_Memory.Read<IMAGE_DOS_HEADER>(m_pBase);
+      DosHeaderRaw.e_magic = Magic;
+      m_Memory.Write(m_PeFile.GetBase(), DosHeaderRaw);
 
-      m_DosHeaderRaw = m_Memory.Read<IMAGE_DOS_HEADER>(m_pBase);
-      if (m_DosHeaderRaw.e_magic != Magic)
+      DosHeaderRaw = m_Memory.Read<IMAGE_DOS_HEADER>(m_pBase);
+      if (DosHeaderRaw.e_magic != Magic)
       {
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("DosHeader::SetMagic") << 
@@ -100,11 +99,12 @@ namespace Hades
 
     void DosHeader::SetChecksum(WORD Checksum) 
     {
-      m_DosHeaderRaw.e_csum = Checksum;
-      m_Memory.Write(m_PeFile.GetBase(), m_DosHeaderRaw);
+      auto DosHeaderRaw = m_Memory.Read<IMAGE_DOS_HEADER>(m_pBase);
+      DosHeaderRaw.e_csum = Checksum;
+      m_Memory.Write(m_PeFile.GetBase(), DosHeaderRaw);
 
-      m_DosHeaderRaw = m_Memory.Read<IMAGE_DOS_HEADER>(m_pBase);
-      if (m_DosHeaderRaw.e_csum != Checksum)
+      DosHeaderRaw = m_Memory.Read<IMAGE_DOS_HEADER>(m_pBase);
+      if (DosHeaderRaw.e_csum != Checksum)
       {
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("DosHeader::SetChecksum") << 
@@ -114,11 +114,12 @@ namespace Hades
 
     void DosHeader::SetNewHeaderOffset(LONG Offset) 
     {
-      m_DosHeaderRaw.e_lfanew = Offset;
-      m_Memory.Write(m_PeFile.GetBase(), m_DosHeaderRaw);
+      auto DosHeaderRaw = m_Memory.Read<IMAGE_DOS_HEADER>(m_pBase);
+      DosHeaderRaw.e_lfanew = Offset;
+      m_Memory.Write(m_PeFile.GetBase(), DosHeaderRaw);
 
-      m_DosHeaderRaw = m_Memory.Read<IMAGE_DOS_HEADER>(m_pBase);
-      if (m_DosHeaderRaw.e_lfanew != Offset)
+      DosHeaderRaw = m_Memory.Read<IMAGE_DOS_HEADER>(m_pBase);
+      if (DosHeaderRaw.e_lfanew != Offset)
       {
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("DosHeader::SetNewHeaderOffset") << 
