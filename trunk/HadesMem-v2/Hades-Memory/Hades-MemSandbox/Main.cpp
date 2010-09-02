@@ -90,10 +90,10 @@ int wmain(int argc, wchar_t* argv[], wchar_t* /*envp*/[])
 #else
 #error Unsupported platform!
 #endif
-    std::wcout << "Copyright (C) 2010 Cypherjb. All rights reserved." << 
+    std::wcout << "Copyright (C) 2010 RaptorFactor. All rights reserved." << 
       std::endl;
-    std::wcout << "Website: http://www.cypherjb.com/, "
-      "Email: cypher.jb@gmail.com." << std::endl;
+    std::wcout << "Website: http://www.raptorfactor.com/, "
+      "Email: raptorfactor@raptorfactor.com." << std::endl;
     std::wcout << "Built on " << __DATE__ << " at " << __TIME__ << "." << 
       std::endl << std::endl;
 
