@@ -707,19 +707,9 @@ namespace Hades
     // Initialize using PE header
     void Scanner::Initialize()
     {
-      // Get module list
-      auto ModuleList = GetModuleList(m_Memory);
-
-      // Ensure module list is valid
-      if (ModuleList.empty())
-      {
-        BOOST_THROW_EXCEPTION(Error() << 
-          ErrorFunction("Scanner::Scanner") << 
-          ErrorString("Could not get module list."));
-      }
-
       // Get pointer to image headers
-      auto pBase = reinterpret_cast<PBYTE>(ModuleList[0]->GetBase());
+      ModuleEnum MyModuleEnum(m_Memory);
+      auto pBase = reinterpret_cast<PBYTE>(MyModuleEnum.First()->GetBase());
       auto DosHeader = m_Memory.Read<IMAGE_DOS_HEADER>(pBase);
       auto NtHeader = m_Memory.Read<IMAGE_NT_HEADERS>(pBase + DosHeader.
         e_lfanew);

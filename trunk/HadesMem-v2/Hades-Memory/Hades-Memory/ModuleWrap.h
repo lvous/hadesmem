@@ -75,31 +75,33 @@ namespace Hades
         }
       };
 
-      // Module list wrapper
-      struct ModuleList
+      class ModuleEnumWrap : public ModuleEnum
       {
-        std::vector<boost::shared_ptr<ModuleWrappers>> List;
-      };
+      public:
+        ModuleEnumWrap(MemoryMgr const& MyMemory)
+          : ModuleEnum(MyMemory)
+        { }
 
-      // GetModuleList wrapper
-      inline ModuleList Module_GetModuleList(MemoryMgr const& MyMemory)
-      {
-        auto TempModuleList = GetModuleList(MyMemory);
-
-        ModuleList MyModuleList;
-        std::transform(TempModuleList.begin(), TempModuleList.end(), 
-          std::back_inserter(MyModuleList.List), 
-          [&] (boost::shared_ptr<Module> const& Current) 
+        boost::shared_ptr<ModuleWrappers> First()
         {
           // This is dangerous, but I haven't had time to think about the 
           // 'proper' solution yet, so this should work for now, but needs 
           // to be fixed in the future.
           // Todo: Fix this monstrosity.
-          return boost::static_pointer_cast<ModuleWrappers>(Current);
-        });
+          return boost::static_pointer_cast<ModuleWrappers>(ModuleEnum::
+            First());
+        }
 
-        return MyModuleList;
-      }
+        boost::shared_ptr<ModuleWrappers> Next()
+        {
+          // This is dangerous, but I haven't had time to think about the 
+          // 'proper' solution yet, so this should work for now, but needs 
+          // to be fixed in the future.
+          // Todo: Fix this monstrosity.
+          return boost::static_pointer_cast<ModuleWrappers>(ModuleEnum::
+            Next());
+        }
+      };
     }
   }
 }

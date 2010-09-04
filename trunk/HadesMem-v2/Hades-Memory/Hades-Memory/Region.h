@@ -31,6 +31,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/iterator/iterator_facade.hpp>
 #pragma warning(pop)
 
 // HadesMem
@@ -40,14 +41,6 @@ namespace Hades
 {
   namespace Memory
   {
-    // Get memory region list
-    inline std::vector<boost::shared_ptr<class Region>> GetMemoryRegionList(
-      MemoryMgr const& MyMemory);
-
-    // Region wide stream overload
-    inline std::wostream& operator<< (std::wostream& Out, 
-      class Region const& In);
-
     // Memory region managing class
     class Region
     {
@@ -57,7 +50,11 @@ namespace Hades
       { };
 
       // Constructor
-      inline explicit Region(MemoryMgr const& MyMemory, PVOID Address);
+      inline Region(MemoryMgr const& MyMemory, PVOID Address);
+
+      // Constructor
+      inline Region(MemoryMgr const& MyMemory, 
+        MEMORY_BASIC_INFORMATION const& MyMbi);
 
       // Get base address
       inline PVOID GetBase() const;
@@ -85,6 +82,109 @@ namespace Hades
       MEMORY_BASIC_INFORMATION m_RegionInfo;
     };
 
+    // Region enumerator
+    class RegionEnum
+    {
+    public:
+      // Constructor
+      RegionEnum(MemoryMgr const& MyMemory) 
+        : m_Memory(MyMemory), 
+        m_Address(nullptr), 
+        m_Current()
+      {
+        ZeroMemory(&m_Current, sizeof(m_Current));
+      }
+
+      // Get first region
+      boost::shared_ptr<Region> First() 
+      {
+        if (!VirtualQueryEx(m_Memory.GetProcessHandle(), m_Address, &m_Current, 
+          sizeof(m_Current)))
+        {
+          DWORD LastError = GetLastError();
+          BOOST_THROW_EXCEPTION(Module::Error() << 
+            ErrorFunction("RegionEnum::First") << 
+            ErrorString("Could not get first memory region.") << 
+            ErrorCodeWin(LastError));
+        }
+
+        return boost::make_shared<Region>(m_Memory, m_Current);
+      }
+
+      // Get next module
+      boost::shared_ptr<Region> Next()
+      {
+        // Advance to next region
+        m_Address = reinterpret_cast<PBYTE>(m_Current.BaseAddress) + 
+          m_Current.RegionSize;
+
+        // Get region info
+        // Todo: Check GetLastError to ensure EOL and throw an exception 
+        // on an actual error.
+        return 
+          VirtualQueryEx(m_Memory.GetProcessHandle(), m_Address, &m_Current, 
+          sizeof(m_Current)) ? boost::make_shared<Region>(m_Memory, m_Current) 
+          : boost::shared_ptr<Region>(static_cast<Region*>(nullptr));
+      }
+
+      // Region iterator
+      class RegionListIter : public boost::iterator_facade<RegionListIter, 
+        boost::shared_ptr<Region>, boost::incrementable_traversal_tag>
+      {
+      public:
+        // Construtor
+        RegionListIter(RegionEnum& MyRegionEnum) 
+          : m_RegionEnum(MyRegionEnum)
+        {
+          m_Current = m_RegionEnum.First();
+        }
+
+      private:
+        // Compiler cannot generate assignment operator
+        RegionListIter& operator= (RegionListIter const& Rhs)
+        {
+          m_RegionEnum = Rhs.m_RegionEnum;
+          m_Current = Rhs.m_Current;
+          return *this;
+        }
+
+        // Allow Boost.Iterator access to internals
+        friend class boost::iterator_core_access;
+
+        // For Boost.Iterator
+        void increment() 
+        {
+          m_Current = m_RegionEnum.Next();
+        }
+
+        // For Boost.Iterator
+        boost::shared_ptr<Region>& dereference() const
+        {
+          return m_Current;
+        }
+
+        // Parent
+        RegionEnum& m_RegionEnum;
+
+        // Current region
+        // Mutable due to 'dereference' being marked as 'const'
+        mutable boost::shared_ptr<Region> m_Current;
+      };
+
+    private:
+      // Disable assignmnet
+      RegionEnum& operator= (RegionEnum const&);
+
+      // Memory instance
+      MemoryMgr const& m_Memory;
+
+      // Current address
+      PVOID m_Address;
+
+      // Current region info
+      MEMORY_BASIC_INFORMATION m_Current;
+    };
+
     // Get memory region list
     std::vector<boost::shared_ptr<Region>> GetMemoryRegionList(
       MemoryMgr const& MyMemory)
@@ -110,20 +210,6 @@ namespace Hades
       return RegionList;
     }
 
-    // Region wide stream overload
-    std::wostream& operator<< (std::wostream& Out, Region const& In)
-    {
-      Out << "Base Address: " << In.GetBase() << "." << std::endl;
-      Out << "Allocation Base: " << In.GetAllocBase() << "." << std::endl;
-      Out << "Allocation Protect: " << In.GetAllocProtect() << "." << 
-        std::endl;
-      Out << "Region Size: " << In.GetSize() << "." << std::endl;
-      Out << "State: " << In.GetState() << "." << std::endl;
-      Out << "Protect: " << In.GetProtect() << "." << std::endl;
-      Out << "Type: " << In.GetType() << "." << std::endl;
-      return Out;
-    }
-
     // Constructor
     Region::Region(MemoryMgr const& MyMemory, PVOID Address) 
       : m_Memory(MyMemory), 
@@ -143,6 +229,13 @@ namespace Hades
           ErrorCodeWin(LastError));
       }
     }
+
+    // Constructor
+    Region::Region(MemoryMgr const& MyMemory, 
+      MEMORY_BASIC_INFORMATION const& MyMbi) 
+      : m_Memory(MyMemory), 
+      m_RegionInfo(MyMbi)
+    { }
 
     // Get base address
     PVOID Region::GetBase() const

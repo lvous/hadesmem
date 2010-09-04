@@ -362,21 +362,24 @@ namespace Hades
         std::wcout << "Module Name: " << ModuleNameW << "." << std::endl;
 
         // Check whether dependent module is already loaded
-        auto const ModuleList(GetModuleList(m_Memory));
-        auto const ModIter = std::find_if(ModuleList.begin(), ModuleList.end(), 
-          [&ModuleNameLowerW] (boost::shared_ptr<Module> Current)
+        ModuleEnum MyModuleList(m_Memory);
+        boost::shared_ptr<Module> MyModule;
+        for (ModuleEnum::ModuleListIter MyIter(MyModuleList); *MyIter; 
+          ++MyIter)
         {
-          return 
-            boost::to_lower_copy(Current->GetName()) == ModuleNameLowerW || 
-            boost::to_lower_copy(Current->GetPath()) == ModuleNameLowerW;
-        });
+          if (boost::to_lower_copy((*MyIter)->GetName()) == ModuleNameLowerW || 
+            boost::to_lower_copy((*MyIter)->GetPath()) == ModuleNameLowerW)
+          {
+            MyModule = *MyIter;
+          }
+        }
 
         // Module base address and name
         HMODULE CurModBase = 0;
         std::wstring CurModName;
 
         // If dependent module is not yet loaded then inject it
-        if (ModIter == ModuleList.end())
+        if (!MyModule)
         {
           // Inject dependent DLL
           std::wcout << "Injecting dependent DLL." << std::endl;
@@ -386,8 +389,8 @@ namespace Hades
         }
         else
         {
-          CurModBase = (*ModIter)->GetBase();
-          CurModName = (*ModIter)->GetName();
+          CurModBase = MyModule->GetBase();
+          CurModName = MyModule->GetName();
         }
 
         // Lookup the first import thunk for this module

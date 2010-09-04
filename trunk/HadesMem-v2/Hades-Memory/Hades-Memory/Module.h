@@ -34,6 +34,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/iterator/iterator_facade.hpp>
 #pragma warning(pop)
 
 // Hades
@@ -43,14 +44,6 @@ namespace Hades
 {
   namespace Memory
   {
-    // Get module list
-    inline std::vector<boost::shared_ptr<class Module>> GetModuleList(
-      MemoryMgr const& MyMemory);
-
-    // Module wide stream overload
-    inline std::wostream& operator<< (std::wostream& Out, 
-    class Module const& In);
-
     // Module managing class
     class Module
     {
@@ -58,6 +51,10 @@ namespace Hades
       // Module exception type
       class Error : public virtual HadesMemError
       { };
+
+      // Create module
+      inline Module(MemoryMgr const& MyMemory, 
+        MODULEENTRY32 const& ModuleEntry);
 
       // Find module by handle
       inline Module(MemoryMgr const& MyMemory, HMODULE Handle);
@@ -75,9 +72,6 @@ namespace Hades
       // Get module path
       inline std::wstring GetPath() const;
 
-      // Whether module was found
-      inline bool Found() const;
-
     private:
       // Disable assignment
       Module& operator= (Module const&);
@@ -93,53 +87,117 @@ namespace Hades
       std::wstring m_Name;
       // Module path
       std::wstring m_Path;
-
-      // Whether module was found
-      bool m_Found;
     };
 
-    // Get module list
-    inline std::vector<boost::shared_ptr<class Module>> GetModuleList(
-      MemoryMgr const& MyMemory) 
+    // Module enumerator
+    class ModuleEnum
     {
-      // Grab a new snapshot of the process
-      Windows::EnsureCloseSnap const Snap(CreateToolhelp32Snapshot(
-        TH32CS_SNAPMODULE, MyMemory.GetProcessID()));
-      if (Snap == INVALID_HANDLE_VALUE)
+    public:
+      // Constructor
+      ModuleEnum(MemoryMgr const& MyMemory) 
+        : m_Memory(MyMemory), 
+        m_Snap(), 
+        m_ModuleEntry()
       {
-        DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(Module::Error() << 
-          ErrorFunction("GetModuleList") << 
-          ErrorString("Could not get module snapshot.") << 
-          ErrorCodeWin(LastError));
+        ZeroMemory(&m_ModuleEntry, sizeof(m_ModuleEntry));
+        m_ModuleEntry.dwSize = sizeof(m_ModuleEntry);
       }
 
-      // Container to hold module list
-      std::vector<boost::shared_ptr<class Module>> ModList;
-
-      // Get all modules
-      MODULEENTRY32 ModEntry = { sizeof(ModEntry) };
-      for (BOOL MoreMods = Module32First(Snap, &ModEntry); MoreMods; 
-        MoreMods = Module32Next(Snap, &ModEntry)) 
+      // Get first module
+      boost::shared_ptr<Module> First() 
       {
-        ModList.push_back(boost::make_shared<Module>(MyMemory, 
-          ModEntry.hModule));
+        // Grab a new snapshot of the process
+        m_Snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, m_Memory.
+          GetProcessID());
+        if (m_Snap == INVALID_HANDLE_VALUE)
+        {
+          DWORD LastError = GetLastError();
+          BOOST_THROW_EXCEPTION(Module::Error() << 
+            ErrorFunction("ModuleEnum::First") << 
+            ErrorString("Could not get module snapshot.") << 
+            ErrorCodeWin(LastError));
+        }
+
+        // Get first module entry
+        if (!Module32First(m_Snap, &m_ModuleEntry))
+        {
+          DWORD LastError = GetLastError();
+          BOOST_THROW_EXCEPTION(Module::Error() << 
+            ErrorFunction("ModuleEnum::First") << 
+            ErrorString("Could not get module info.") << 
+            ErrorCodeWin(LastError));
+        }
+
+        return boost::make_shared<Module>(m_Memory, m_ModuleEntry);
       }
 
-      // Return module list
-      return ModList;
-    }
+      // Get next module
+      boost::shared_ptr<Module> Next()
+      {
+        // Todo: Check GetLastError to ensure EOL and throw an exception 
+        // on an actual error.
+        return Module32Next(m_Snap, &m_ModuleEntry) ? 
+          boost::make_shared<Module>(m_Memory, m_ModuleEntry) 
+          : boost::shared_ptr<Module>(static_cast<Module*>(nullptr));
+      }
 
-    // Module wide stream overload
-    inline std::wostream& operator<< (std::wostream& Stream, 
-      Module const& MyModule)
-    {
-      Stream << "Module Base: " << MyModule.GetBase() << "." << std::endl;
-      Stream << "Module Size: " << MyModule.GetSize() << "." << std::endl;
-      Stream << "Module Name: " << MyModule.GetName() << "." << std::endl;
-      Stream << "Module Path: " << MyModule.GetPath() << "." << std::endl;
-      return Stream;
-    }
+      // Module iterator
+      class ModuleListIter : public boost::iterator_facade<ModuleListIter, 
+        boost::shared_ptr<Module>, boost::incrementable_traversal_tag>
+      {
+      public:
+        // Construtor
+        ModuleListIter(ModuleEnum& MyModuleList) 
+          : m_ModuleEnum(MyModuleList)
+        {
+          m_Current = m_ModuleEnum.First();
+        }
+
+      private:
+        // Compiler cannot generate assignment operator
+        ModuleListIter& operator= (ModuleListIter const& Rhs)
+        {
+          m_ModuleEnum = Rhs.m_ModuleEnum;
+          m_Current = Rhs.m_Current;
+          return *this;
+        }
+
+        // Allow Boost.Iterator access to internals
+        friend class boost::iterator_core_access;
+        
+        // For Boost.Iterator
+        void increment() 
+        {
+          m_Current = m_ModuleEnum.Next();
+        }
+
+        // For Boost.Iterator
+        boost::shared_ptr<Module>& dereference() const
+        {
+          return m_Current;
+        }
+
+        // Parent
+        ModuleEnum& m_ModuleEnum;
+
+        // Current module
+        // Mutable due to 'dereference' being marked as 'const'
+        mutable boost::shared_ptr<Module> m_Current;
+      };
+
+    private:
+      // Disable assignmnet
+      ModuleEnum& operator= (ModuleEnum const&);
+
+      // Memory instance
+      MemoryMgr const& m_Memory;
+
+      // Toolhelp32 snapshot handle
+      Windows::EnsureCloseSnap m_Snap;
+      
+      // Current module entry
+      MODULEENTRY32 m_ModuleEntry;
+    };
 
     // Find module by name
     Module::Module(MemoryMgr const& MyMemory, std::wstring const& ModuleName) 
@@ -147,8 +205,7 @@ namespace Hades
       m_Base(nullptr), 
       m_Size(0), 
       m_Name(), 
-      m_Path(), 
-      m_Found(false) 
+      m_Path()
     {
       // Grab a new snapshot of the process
       Windows::EnsureCloseSnap const Snap(CreateToolhelp32Snapshot(
@@ -180,17 +237,19 @@ namespace Hades
         }
       }
 
-      // Check if module was found
-      if (Found)
+      // Check process was found
+      if (!Found)
       {
-        m_Base = ModEntry.hModule;
-        m_Size = ModEntry.modBaseSize;
-        m_Name = ModEntry.szModule;
-        m_Path = ModEntry.szExePath;
+        BOOST_THROW_EXCEPTION(Error() << 
+          ErrorFunction("Module::Module") << 
+          ErrorString("Could not find module."));
       }
 
-      // Whether module was found
-      m_Found = Found;
+      // Get module data
+      m_Base = ModEntry.hModule;
+      m_Size = ModEntry.modBaseSize;
+      m_Name = ModEntry.szModule;
+      m_Path = ModEntry.szExePath;
     }
 
     // Find module by handle
@@ -199,8 +258,7 @@ namespace Hades
       m_Base(nullptr), 
       m_Size(0), 
       m_Name(), 
-      m_Path(), 
-      m_Found(false)
+      m_Path()
     {
       // Grab a new snapshot of the process
       Windows::EnsureCloseSnap const Snap(CreateToolhelp32Snapshot(
@@ -242,6 +300,14 @@ namespace Hades
       m_Path = ModEntry.szExePath;
     }
 
+    Module::Module(MemoryMgr const& MyMemory, MODULEENTRY32 const& ModuleEntry) 
+      : m_Memory(MyMemory), 
+      m_Base(ModuleEntry.hModule), 
+      m_Size(ModuleEntry.dwSize), 
+      m_Name(ModuleEntry.szModule), 
+      m_Path(ModuleEntry.szExePath)
+    { }
+
     // Get module base address
     HMODULE Module::GetBase() const
     {
@@ -264,12 +330,6 @@ namespace Hades
     std::wstring Module::GetPath() const
     {
       return m_Path;
-    }
-
-    // Whether module was found
-    bool Module::Found() const
-    {
-      return m_Found;
     }
   }
 }

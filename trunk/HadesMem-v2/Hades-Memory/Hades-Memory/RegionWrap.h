@@ -61,31 +61,33 @@ namespace Hades
         }
       };
 
-      // Module list wrapper
-      struct RegionList
+      class RegionEnumWrap : public RegionEnum
       {
-        std::vector<boost::shared_ptr<Region>> List;
-      };
+      public:
+        RegionEnumWrap(MemoryMgr const& MyMemory)
+          : RegionEnum(MyMemory)
+        { }
 
-      // GetRegionList wrapper
-      inline RegionList Region_GetRegionList(MemoryMgr const& MyMemory)
-      {
-        auto TempRegionList = GetMemoryRegionList(MyMemory);
-
-        RegionList MyRegionList;
-        std::transform(TempRegionList.begin(), TempRegionList.end(), 
-          std::back_inserter(MyRegionList.List), 
-          [&] (boost::shared_ptr<Region> const& Current) 
+        boost::shared_ptr<RegionWrappers> First()
         {
           // This is dangerous, but I haven't had time to think about the 
           // 'proper' solution yet, so this should work for now, but needs 
           // to be fixed in the future.
           // Todo: Fix this monstrosity.
-          return boost::static_pointer_cast<RegionWrappers>(Current);
-        });
+          return boost::static_pointer_cast<RegionWrappers>(RegionEnum::
+            First());
+        }
 
-        return MyRegionList;
-      }
+        boost::shared_ptr<RegionWrappers> Next()
+        {
+          // This is dangerous, but I haven't had time to think about the 
+          // 'proper' solution yet, so this should work for now, but needs 
+          // to be fixed in the future.
+          // Todo: Fix this monstrosity.
+          return boost::static_pointer_cast<RegionWrappers>(RegionEnum::
+            Next());
+        }
+      };
     }
   }
 }

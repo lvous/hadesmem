@@ -323,13 +323,9 @@ namespace Hades
           // Bind MemoryMgr class
           ,luabind::class_<MemoryMgr>("MemoryMgrBase")
           ,luabind::class_<Wrappers::MemoryMgrWrappers, MemoryMgr>("MemoryMgr")
-
-          // Bind MemoryMgr::MemoryMgr
           .def(luabind::constructor<DWORD>())
           .def(luabind::constructor<std::string>())
           .def(luabind::constructor<std::string, std::string>())
-
-          // Bind calling conventions
           .enum_("CallConv")
           [
             luabind::value("CallConv_CDECL", MemoryMgr::CallConv_CDECL),
@@ -339,11 +335,7 @@ namespace Hades
             luabind::value("CallConv_X64", MemoryMgr::CallConv_X64),
             luabind::value("CallConv_Default", MemoryMgr::CallConv_Default)
           ]
-
-          // Bind MemoryMgr::Call wrapper
           .def("Call", &Wrappers::MemoryMgrWrappers::Call) 
-
-          // Bind MemoryMgr::Read<T> wrappers
           .def("ReadInt8", &Wrappers::MemoryMgrWrappers::ReadInt8) 
           .def("ReadUInt8", &Wrappers::MemoryMgrWrappers::ReadUInt8) 
           .def("ReadInt16", &Wrappers::MemoryMgrWrappers::ReadInt16) 
@@ -359,8 +351,6 @@ namespace Hades
           .def("ReadStrNarrow", &Wrappers::MemoryMgrWrappers::ReadStrNarrow)
           .def("ReadStrWide", &Wrappers::MemoryMgrWrappers::ReadStrWide)
           .def("ReadPointer", &Wrappers::MemoryMgrWrappers::ReadPointer)
-
-          // Bind MemoryMgr::Write<T> wrappers
           .def("WriteInt8", &Wrappers::MemoryMgrWrappers::WriteInt8) 
           .def("WriteUInt8", &Wrappers::MemoryMgrWrappers::WriteUInt8) 
           .def("WriteInt16", &Wrappers::MemoryMgrWrappers::WriteInt16) 
@@ -376,115 +366,58 @@ namespace Hades
           .def("WriteStrNarrow", &Wrappers::MemoryMgrWrappers::WriteStrNarrow)
           .def("WriteStrWide", &Wrappers::MemoryMgrWrappers::WriteStrWide)
           .def("WritePointer", &Wrappers::MemoryMgrWrappers::WritePointer)
-
-          // Bind MemoryMgr::CanRead wrapper
           .def("CanRead", &Wrappers::MemoryMgrWrappers::CanRead)
-
-          // Bind MemoryMgr::CanWrite wrapper
           .def("CanWrite", &Wrappers::MemoryMgrWrappers::CanWrite)
-
-          // Bind MemoryMgr::Alloc wrapper
           .def("Alloc", &Wrappers::MemoryMgrWrappers::Alloc)
-
-          // Bind MemoryMgr::Free wrapper
           .def("Free", &Wrappers::MemoryMgrWrappers::Free)
-
-          // Bind MemoryMgr::GetProcessID wrapper
           .def("GetProcessID", &MemoryMgr::GetProcessID)
-
-          // Bind MemoryMgr::GetProcessHandle wrapper
           .def("GetProcessHandle", &Wrappers::MemoryMgrWrappers::
             GetProcessHandle)
-
-          // Bind MemoryMgr::GetRemoteProcAddress wrappers
           .def("GetRemoteProcAddress", &Wrappers::MemoryMgrWrappers::
             GetRemoteProcAddressByOrdinal)
           .def("GetRemoteProcAddress", &Wrappers::MemoryMgrWrappers::
             GetRemoteProcAddressByName)
-
-          // Bind MemoryMgr::FlushCache wrapper
           .def("FlushCache", &Wrappers::MemoryMgrWrappers::FlushCache)
 
           // Bind Module class
           ,luabind::class_<Module>("ModuleBase")
           ,luabind::class_<Wrappers::ModuleWrappers, Module>("Module")
-
-          // Bind Module::Module wrappers
           .def(luabind::constructor<MemoryMgr const&, DWORD_PTR>())
           .def(luabind::constructor<MemoryMgr const&, std::string>())
-
-          // Bind Module::GetBase wrapper
           .def("GetBase", &Wrappers::ModuleWrappers::GetBase)
-
-          // Bind Module::GetSize wrapper
           .def("GetSize", &Wrappers::ModuleWrappers::GetSize)
-
-          // Bind Module::GetName wrapper
           .def("GetName", &Wrappers::ModuleWrappers::GetName)
-
-          // Bind Module::GetPath wrapper
           .def("GetPath", &Wrappers::ModuleWrappers::GetPath)
 
-          // Bind Module::Found wrapper
-          .def("Found", &Wrappers::ModuleWrappers::Found)
-
-          // Bind ModuleList class
-          ,luabind::class_<Wrappers::ModuleList>("ModuleList")
-          .def(luabind::constructor<>())
-          .def_readonly("List", &Wrappers::ModuleList::List, 
-            luabind::return_stl_iterator)
-
-          // Bind GetModuleList function
-          ,luabind::def("GetModuleList", &Wrappers::Module_GetModuleList)
+          // Bind ModuleEnum class
+          ,luabind::class_<Wrappers::ModuleEnumWrap>("ModuleEnum")
+          .def(luabind::constructor<MemoryMgr const&>())
+          .def("First", &Wrappers::ModuleEnumWrap::First)
+          .def("Next", &Wrappers::ModuleEnumWrap::Next)
 
           // Bind Region class
           ,luabind::class_<Region>("RegionBase")
           ,luabind::class_<Wrappers::RegionWrappers, Region>("Region")
-
-          // Bind Scanner::Scanner
           .def(luabind::constructor<MemoryMgr const&, DWORD_PTR>())
-
-          // Bind Region::GetBase wrapper
           .def("GetBase", &Wrappers::RegionWrappers::GetBaseAddress)
-
-          // Bind Region::GetAllocBase wrapper
           .def("GetAllocBase", &Wrappers::RegionWrappers::GetAllocationBase)
-
-          // Bind Region::GetName wrapper
           .def("GetAllocProtect", &Wrappers::RegionWrappers::GetAllocProtect)
-
-          // Bind Region::GetPath wrapper
           .def("GetSize", &Wrappers::RegionWrappers::GetSize)
-
-          // Bind Region::GetState wrapper
           .def("GetState", &Wrappers::RegionWrappers::GetState)
-
-          // Bind Region::GetProtect wrapper
           .def("GetProtect", &Wrappers::RegionWrappers::GetProtect)
-
-          // Bind Region::GetType wrapper
           .def("GetType", &Wrappers::RegionWrappers::GetType)
 
-          // Bind RegionList class
-          ,luabind::class_<Wrappers::RegionList>("RegionList")
-          .def(luabind::constructor<>())
-          .def_readonly("List", &Wrappers::RegionList::List, 
-          luabind::return_stl_iterator)
-
-          // Bind GetRegionList function
-          ,luabind::def("GetRegionList", &Wrappers::Region_GetRegionList)
+          // Bind RegionEnum class
+          ,luabind::class_<Wrappers::RegionEnumWrap>("RegionEnum")
+          .def(luabind::constructor<MemoryMgr const&>())
+          .def("First", &Wrappers::RegionEnumWrap::First)
+          .def("Next", &Wrappers::RegionEnumWrap::Next)
 
           // Bind Injector class
           ,luabind::class_<Injector>("InjectorBase")
           ,luabind::class_<Wrappers::InjectorWrappers, Injector>("Injector")
-
-          // Bind Injector::Injector
           .def(luabind::constructor<MemoryMgr const&>())
-
-          // Bind Injector::InjectDll wrapper
           .def("InjectDll", &Wrappers::InjectorWrappers::InjectDll)
-
-          // Bind Injector::GetBase wrapper
           .def("CallExport", &Wrappers::InjectorWrappers::CallExport)
 
           // Bind CreateAndInject wrapper
@@ -509,24 +442,16 @@ namespace Hades
           ,luabind::class_<Disassembler>("DisassemblerBase")
           ,luabind::class_<Wrappers::DisassemblerWrappers, Disassembler>(
             "Disassembler")
-
-          // Bind Disassembler::Disassembler
           .def(luabind::constructor<MemoryMgr const&>())
-
-          // Bind Disassembler::DisassembleToStr wrapper
           .def("DisassembleToStr", &Wrappers::DisassemblerWrappers::
             DisassembleToStr)
 
           // Bind Scanner class
           ,luabind::class_<Scanner>("ScannerBase")
           ,luabind::class_<Wrappers::ScannerWrappers, Scanner>("Scanner")
-
-          // Bind Scanner::Scanner
           .def(luabind::constructor<MemoryMgr const&>())
           .def(luabind::constructor<MemoryMgr const&, DWORD_PTR>())
           .def(luabind::constructor<MemoryMgr const&, DWORD_PTR, DWORD_PTR>())
-
-          // Bind Scanner::Find<T> wrappers
           .def("FindInt8", &Wrappers::ScannerWrappers::FindInt8) 
           .def("FindUInt8", &Wrappers::ScannerWrappers::FindUInt8) 
           .def("FindInt16", &Wrappers::ScannerWrappers::FindInt16) 
@@ -542,8 +467,6 @@ namespace Hades
           .def("FindStrNarrow", &Wrappers::ScannerWrappers::FindStrNarrow)
           .def("FindStrWide", &Wrappers::ScannerWrappers::FindStrWide)
           .def("FindPointer", &Wrappers::ScannerWrappers::FindPointer)
-
-          // Bind Scanner::FindAll<T> wrappers
           .def("FindAllInt8", &Wrappers::ScannerWrappers::FindAllInt8) 
           .def("FindAllUInt8", &Wrappers::ScannerWrappers::FindAllUInt8) 
           .def("FindAllInt16", &Wrappers::ScannerWrappers::FindAllInt16) 
@@ -561,11 +484,7 @@ namespace Hades
             FindAllStrNarrow)
           .def("FindAllStrWide", &Wrappers::ScannerWrappers::FindAllStrWide)
           .def("FindAllPointer", &Wrappers::ScannerWrappers::FindAllPointer)
-
-          // Bind Scanner::LoadFromXML wrapper
           .def("LoadFromXML", &Wrappers::ScannerWrappers::LoadFromXML)
-
-          // Bind Scanner::operator[] wrapper
           .def("GetAddress", &Wrappers::ScannerWrappers::GetAddress)
 
           // Bind DwordPtrList class
@@ -578,67 +497,35 @@ namespace Hades
           // Bind ManualMap class
           ,luabind::class_<ManualMap>("ManualMapBase")
           ,luabind::class_<Wrappers::ManualMapWrappers, ManualMap>("ManualMap")
-
-          // Bind ManualMap::ManualMap
           .def(luabind::constructor<MemoryMgr const&>())
-
-          // Bind ManualMap::Map wrapper
           .def("Map", &Wrappers::ManualMapWrappers::Map)
 
           // Bind PeFile class
           ,luabind::class_<PeFile>("PeFile")
-
-          // Bind PE file types
           .enum_("PeFileType")
           [
             luabind::value("PeFileMem", PeFile::PEFileMem),
             luabind::value("PeFileDisk", PeFile::PEFileDisk)
           ]
-
-          // Bind PeFile::PeFile
           .def(luabind::constructor<MemoryMgr const&, PeFile::PeFileType, 
             DWORD_PTR>())
 
           // Bind DosHeader class
           ,luabind::class_<DosHeader>("DosHeader")
-
-          // Bind DosHeader::DosHeader
           .def(luabind::constructor<PeFile const&>())
-
-          // Bind DosHeader::IsMagicValid
           .def("IsMagicValid", &DosHeader::IsMagicValid)
-
-          // Bind DosHeader::GetMagic
           .def("GetMagic", &DosHeader::GetMagic)
-
-          // Bind DosHeader::GetChecksum
           .def("GetChecksum", &DosHeader::GetChecksum)
-
-          // Bind GetNewHeaderOffset::GetMagic
           .def("GetNewHeaderOffset", &DosHeader::GetNewHeaderOffset)
-
-          // Bind DosHeader::SetMagic
           .def("SetMagic", &DosHeader::SetMagic)
-
-          // Bind DosHeader::SetChecksum
           .def("SetChecksum", &DosHeader::SetChecksum)
-
-          // Bind DosHeader::SetMagic
           .def("SetNewHeaderOffset", &DosHeader::SetNewHeaderOffset)
 
           // Bind NtHeaders class
           ,luabind::class_<NtHeaders>("NtHeaders")
-
-          // Bind NtHeaders::NtHeaders
           .def(luabind::constructor<PeFile const&>())
-
-          // Bind NtHeaders::IsSignatureValid
           .def("IsSignatureValid", &NtHeaders::IsSignatureValid)
-
-          // Bind NtHeaders::GetSignature
           .def("GetSignature", &NtHeaders::GetSignature)
-
-          // Bind NtHeaders::SetSignature
           .def("SetSignature", &NtHeaders::SetSignature)
         ];
       }

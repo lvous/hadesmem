@@ -249,24 +249,30 @@ namespace Hades
       std::wstring const PathRealLower(boost::to_lower_copy(
         static_cast<std::wstring>(PathReal.c_str())));
 
-      // Get module list for remote process
-      auto const ModuleList(GetModuleList(m_Memory));
       // Look for target module
-      auto const Iter = std::find_if(ModuleList.begin(), ModuleList.end(), 
-        [&] (boost::shared_ptr<Module> const& MyModule) -> bool
+      ModuleEnum MyModuleList(m_Memory);
+      boost::shared_ptr<Module> MyModule;
+      for (ModuleEnum::ModuleListIter MyIter(MyModuleList); *MyIter; ++MyIter)
       {
         if (PathResolution)
         {
-          return boost::filesystem::equivalent(MyModule->GetPath(), PathReal);
+          if (boost::filesystem::equivalent((*MyIter)->GetPath(), PathReal))
+          {
+            MyModule = *MyIter;
+          }
         }
         else
         {
-          return boost::to_lower_copy(MyModule->GetName()) == PathRealLower || 
-            boost::to_lower_copy(MyModule->GetPath()) == PathRealLower;
+          if (boost::to_lower_copy((*MyIter)->GetName()) == PathRealLower || 
+            boost::to_lower_copy((*MyIter)->GetPath()) == PathRealLower)
+          {
+            MyModule = *MyIter;
+          }
         }
-      });
+      }
+
       // Ensure target module was found
-      if (Iter == ModuleList.end())
+      if (!MyModule)
       {
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Injector::InjectDll") << 
@@ -274,7 +280,7 @@ namespace Hades
       }
 
       // Return module base
-      return (*Iter)->GetBase();
+      return MyModule->GetBase();
     }
 
     // Call export
