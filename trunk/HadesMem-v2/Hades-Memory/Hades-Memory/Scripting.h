@@ -294,13 +294,6 @@ namespace Hades
           &ScriptMgr::TranslateException, this, std::placeholders::_1, 
           std::placeholders::_2));
 
-        // RunFile wrapper
-        // Todo: Move this somewhere more appropriate
-        auto MyRunFile = [&] (std::string const& File) 
-        {
-          this->RunFile(File);
-        };
-
         luabind::module(GetState(), "std")
         [
           luabind::class_<std::vector<DWORD_PTR>>("vector_dwordptr")
@@ -315,7 +308,8 @@ namespace Hades
         [
           // Bind RunFile
           luabind::def("RunFile", luabind::tag_function<void (
-            std::string const&)>(MyRunFile))
+            std::string const&)>(std::bind(&LuaMgr::RunFile, this, 
+            std::placeholders::_1)))
 
           // Bind console output wrapper
           ,luabind::def("WriteLn", &Wrappers::WriteLn)
