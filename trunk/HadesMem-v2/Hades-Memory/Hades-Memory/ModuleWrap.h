@@ -44,19 +44,6 @@ namespace Hades
   {
     namespace Wrappers
     {
-      // Module list wrapper
-      struct ModuleList
-      {
-        std::vector<boost::shared_ptr<Module>> List;
-      };
-
-      // GetModuleList wrapper
-      inline ModuleList Module_GetModuleList(MemoryMgr const& MyMemory)
-      {
-        ModuleList MyModuleList = { GetModuleList(MyMemory) };
-        return MyModuleList;
-      }
-
       class ModuleWrappers : public Module
       {
       public:
@@ -87,6 +74,32 @@ namespace Hades
           return boost::lexical_cast<std::string>(Module::GetPath());
         }
       };
+
+      // Module list wrapper
+      struct ModuleList
+      {
+        std::vector<boost::shared_ptr<ModuleWrappers>> List;
+      };
+
+      // GetModuleList wrapper
+      inline ModuleList Module_GetModuleList(MemoryMgr const& MyMemory)
+      {
+        auto TempModuleList = GetModuleList(MyMemory);
+
+        ModuleList MyModuleList;
+        std::transform(TempModuleList.begin(), TempModuleList.end(), 
+          std::back_inserter(MyModuleList.List), 
+          [&] (boost::shared_ptr<Module> const& Current) 
+        {
+          // This is dangerous, but I haven't had time to think about the 
+          // 'proper' solution yet, so this should work for now, but needs 
+          // to be fixed in the future.
+          // Todo: Fix this monstrosity.
+          return boost::static_pointer_cast<ModuleWrappers>(Current);
+        });
+
+        return MyModuleList;
+      }
     }
   }
 }

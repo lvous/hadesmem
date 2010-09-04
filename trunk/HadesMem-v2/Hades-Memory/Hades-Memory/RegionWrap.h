@@ -41,20 +41,6 @@ namespace Hades
   {
     namespace Wrappers
     {
-      // Module list wrapper
-      struct RegionList
-      {
-        std::vector<boost::shared_ptr<Region>> List;
-      };
-
-      // GetRegionList wrapper
-      inline RegionList Region_GetRegionList(MemoryMgr const& MyMemory)
-      {
-        RegionList MyRegionList;
-        MyRegionList.List = GetMemoryRegionList(MyMemory);
-        return MyRegionList;
-      }
-
       class RegionWrappers : public Region
       {
       public:
@@ -74,6 +60,32 @@ namespace Hades
           return reinterpret_cast<DWORD_PTR>(Region::GetAllocBase());
         }
       };
+
+      // Module list wrapper
+      struct RegionList
+      {
+        std::vector<boost::shared_ptr<Region>> List;
+      };
+
+      // GetRegionList wrapper
+      inline RegionList Region_GetRegionList(MemoryMgr const& MyMemory)
+      {
+        auto TempRegionList = GetMemoryRegionList(MyMemory);
+
+        RegionList MyRegionList;
+        std::transform(TempRegionList.begin(), TempRegionList.end(), 
+          std::back_inserter(MyRegionList.List), 
+          [&] (boost::shared_ptr<Region> const& Current) 
+        {
+          // This is dangerous, but I haven't had time to think about the 
+          // 'proper' solution yet, so this should work for now, but needs 
+          // to be fixed in the future.
+          // Todo: Fix this monstrosity.
+          return boost::static_pointer_cast<RegionWrappers>(Current);
+        });
+
+        return MyRegionList;
+      }
     }
   }
 }
