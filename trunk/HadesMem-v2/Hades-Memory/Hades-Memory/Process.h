@@ -308,30 +308,24 @@ namespace Hades
           ErrorCodeWin(LastError));
       }
 
-      // If current process is not running under WoW64 then it must be a 
-      // 'native' process. If the target process is a WoW64 process that 
-      // must mean that our process is a different architecture to the 
-      // target process, which this library currently does not 'support'.
-      // Todo: Support cross-architecture process manipulation.
-      if (!IsWoW64Me)
+      // Get WoW64 status of target process
+      BOOL IsWoW64 = FALSE;
+      if (!IsWow64Process(m_Handle, &IsWoW64))
       {
-        BOOL IsWoW64 = FALSE;
-        if (!IsWow64Process(m_Handle, &IsWoW64))
-        {
-          DWORD LastError = GetLastError();
-          BOOST_THROW_EXCEPTION(Error() << 
-            ErrorFunction("Process::Open") << 
-            ErrorString("Could not detect WoW64 status of target process.") << 
-            ErrorCodeWin(LastError));
-        }
+        DWORD LastError = GetLastError();
+        BOOST_THROW_EXCEPTION(Error() << 
+          ErrorFunction("Process::Open") << 
+          ErrorString("Could not detect WoW64 status of target process.") << 
+          ErrorCodeWin(LastError));
+      }
 
-        if (IsWoW64)
-        {
-          BOOST_THROW_EXCEPTION(Error() << 
-            ErrorFunction("Process::Open") << 
-            ErrorString("Cross-architecture process manipulation is "
-              "currently unsupported."));
-        }
+      // Ensure WoW64 status of both self and target match
+      if (IsWoW64Me != IsWoW64)
+      {
+        BOOST_THROW_EXCEPTION(Error() << 
+          ErrorFunction("Process::Open") << 
+          ErrorString("Cross-architecture process manipulation is "
+          "currently unsupported."));
       }
     }
 
