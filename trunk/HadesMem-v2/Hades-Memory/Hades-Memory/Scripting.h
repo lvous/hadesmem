@@ -28,6 +28,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include <sstream>
 #include <iomanip>
 #include <iostream>
+#include <functional>
 
 // Boost
 #pragma warning(push, 1)
@@ -48,6 +49,7 @@ extern "C"
 #pragma warning(push, 1)
 #pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
 #include <LuaBind/luabind.hpp>
+#include <Luabind/tag_function.hpp>
 #include <Luabind/iterator_policy.hpp>
 #include <Luabind/exception_handler.hpp>
 #pragma warning(pop)
@@ -292,6 +294,13 @@ namespace Hades
           &ScriptMgr::TranslateException, this, std::placeholders::_1, 
           std::placeholders::_2));
 
+        // RunFile wrapper
+        // Todo: Move this somewhere more appropriate
+        auto MyRunFile = [&] (std::string const& File) 
+        {
+          this->RunFile(File);
+        };
+
         luabind::module(GetState(), "std")
         [
           luabind::class_<std::vector<DWORD_PTR>>("vector_dwordptr")
@@ -304,8 +313,12 @@ namespace Hades
         // Register HadesMem API
         luabind::module(GetState(), "HadesMem")
         [
+          // Bind RunFile
+          luabind::def("RunFile", luabind::tag_function<void (
+            std::string const&)>(MyRunFile))
+
           // Bind console output wrapper
-          luabind::def("WriteLn", &Wrappers::WriteLn)
+          ,luabind::def("WriteLn", &Wrappers::WriteLn)
 
           // Number to hex string converter
           ,luabind::def("ToHexStr", &Wrappers::ToHexStr)

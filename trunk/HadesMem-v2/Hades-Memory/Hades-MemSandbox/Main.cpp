@@ -51,15 +51,6 @@ bool GetInput(Hades::Memory::ScriptMgr& MyScriptMgr)
     return false;
   }
 
-  // Check for runfile request
-  if (Input.find(' ') != std::string::npos && Input.substr(0, 
-    Input.find(' ')) == "runfile")
-  {
-    MyScriptMgr.RunFile(Input.substr(Input.find(' ') + 1, 
-      std::string::npos));
-    return true;
-  }
-
   // Run script
   MyScriptMgr.RunString(Input);
 
@@ -107,18 +98,8 @@ int wmain(int argc, wchar_t* argv[], wchar_t* /*envp*/[])
       std::string const Input(boost::lexical_cast<std::string, std::wstring>(
         argv[1]));
 
-      // Check for runfile request
-      if (Input.find(' ') != std::string::npos && Input.substr(0, 
-        Input.find(' ')) == "runfile")
-      {
-        MyScriptMgr.RunFile(Input.substr(Input.find(' ') + 1, 
-          std::string::npos));
-      }
-      else
-      {
-        // Run script
-        MyScriptMgr.RunString(Input);
-      }
+      // Run script
+      MyScriptMgr.RunString(Input);
     }
     // Otherwise process commands from user
     else
