@@ -103,7 +103,7 @@ namespace Hades
       MemoryMgr const& MyMemory) 
     {
       // Grab a new snapshot of the process
-      Windows::EnsureCloseHandle const Snap(CreateToolhelp32Snapshot(
+      Windows::EnsureCloseSnap const Snap(CreateToolhelp32Snapshot(
         TH32CS_SNAPMODULE, MyMemory.GetProcessID()));
       if (Snap == INVALID_HANDLE_VALUE)
       {
@@ -151,7 +151,7 @@ namespace Hades
       m_Found(false) 
     {
       // Grab a new snapshot of the process
-      Windows::EnsureCloseHandle const Snap(CreateToolhelp32Snapshot(
+      Windows::EnsureCloseSnap const Snap(CreateToolhelp32Snapshot(
         TH32CS_SNAPMODULE, MyMemory.GetProcessID()));
       if (Snap == INVALID_HANDLE_VALUE)
       {
@@ -203,7 +203,7 @@ namespace Hades
       m_Found(false)
     {
       // Grab a new snapshot of the process
-      Windows::EnsureCloseHandle const Snap(CreateToolhelp32Snapshot(
+      Windows::EnsureCloseSnap const Snap(CreateToolhelp32Snapshot(
         TH32CS_SNAPMODULE, MyMemory.GetProcessID()));
       if (Snap == INVALID_HANDLE_VALUE)
       {

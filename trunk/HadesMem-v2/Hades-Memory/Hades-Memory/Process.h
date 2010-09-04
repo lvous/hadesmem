@@ -113,7 +113,7 @@ namespace Hades
       GetSeDebugPrivilege();
 
       // Grab a new snapshot of the process
-      Windows::EnsureCloseHandle const Snap(CreateToolhelp32Snapshot(
+      Windows::EnsureCloseSnap const Snap(CreateToolhelp32Snapshot(
         TH32CS_SNAPPROCESS, 0));
       if (Snap == INVALID_HANDLE_VALUE)
       {
@@ -163,7 +163,7 @@ namespace Hades
       GetSeDebugPrivilege();
 
       // Grab a new snapshot of the process
-      Windows::EnsureCloseHandle const Snap(CreateToolhelp32Snapshot(
+      Windows::EnsureCloseSnap const Snap(CreateToolhelp32Snapshot(
         TH32CS_SNAPPROCESS, 0));
       if (Snap == INVALID_HANDLE_VALUE)
       {
