@@ -23,6 +23,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include <Windows.h>
 
 // HadesMem
+#include "Error.h"
 #include "MemoryMgr.h"
 
 namespace Hades
@@ -32,41 +33,95 @@ namespace Hades
     class PeFile
     {
     public:
-      enum PeFileType
-      {
-        PEFileMem, 
-        PEFileDisk
-      };
+      // PeFile exception type
+      class Error : public virtual HadesMemError 
+      { };
 
-      inline PeFile(MemoryMgr const& MyMemory, PeFileType Type, PVOID Address);
-      inline PeFile(MemoryMgr const& MyMemory, PeFileType Type, 
-        DWORD_PTR Address);
+      inline PeFile(MemoryMgr const& MyMemory, PVOID Address);
 
       MemoryMgr const& GetMemoryMgr() const;
 
       PVOID GetBase() const;
+
+      virtual PVOID RvaToVa(DWORD Rva);
 
     private:
       PeFile& operator= (PeFile const&);
 
       MemoryMgr const& m_Memory;
 
-      PeFileType m_Type;
-
       PVOID m_pBase;
     };
 
-    PeFile::PeFile(MemoryMgr const& MyMemory, PeFileType Type, PVOID Address)
-      : m_Memory(MyMemory), 
-      m_Type(Type), 
-      m_pBase(Address)
+    class PeFileAsData : public PeFile
+    {
+    public:
+      inline PeFileAsData(MemoryMgr const& MyMemory, PVOID Address);
+
+      virtual PVOID RvaToVa(DWORD Rva);
+    };
+
+    PeFileAsData::PeFileAsData(MemoryMgr const& MyMemory, PVOID Address) 
+      : PeFile(MyMemory, Address)
     { }
 
-    PeFile::PeFile(MemoryMgr const& MyMemory, PeFileType Type, 
-      DWORD_PTR Address)
+    PVOID PeFileAsData::RvaToVa(DWORD Rva)
+    {
+      if (!Rva)
+      {
+        return nullptr;
+      }
+
+      MemoryMgr const& MyMemory(GetMemoryMgr());
+
+      PBYTE pBase = static_cast<PBYTE>(GetBase());
+
+      auto DosHeader(MyMemory.Read<IMAGE_DOS_HEADER>(pBase));
+      if (DosHeader.e_magic != IMAGE_DOS_SIGNATURE)
+      {
+        BOOST_THROW_EXCEPTION(Error() << 
+          ErrorFunction("PeFileAsData::RvaToVa") << 
+          ErrorString("Invalid DOS header."));
+      }
+
+      auto pNtHeaders(pBase + DosHeader.e_lfanew);
+
+      auto NtHeadersRaw(MyMemory.Read<IMAGE_NT_HEADERS>(pNtHeaders));
+      if (NtHeadersRaw.Signature != IMAGE_NT_SIGNATURE)
+      {
+        BOOST_THROW_EXCEPTION(Error() << 
+          ErrorFunction("PeFileAsData::RvaToVa") << 
+          ErrorString("Invalid NT headers."));
+      }
+
+      auto pSectionHeader(reinterpret_cast<PIMAGE_SECTION_HEADER>(pNtHeaders + 
+        sizeof(NtHeadersRaw.FileHeader) + sizeof(NtHeadersRaw.Signature) + 
+        NtHeadersRaw.FileHeader.SizeOfOptionalHeader));
+
+      auto SectionHeader(MyMemory.Read<IMAGE_SECTION_HEADER>(pSectionHeader));
+
+      WORD NumSections = NtHeadersRaw.FileHeader.NumberOfSections;
+
+      for (WORD i = 0; i < NumSections; ++i)
+      {
+        if (SectionHeader.PointerToRawData <= Rva && (SectionHeader.
+          PointerToRawData + SectionHeader.SizeOfRawData) > Rva)
+        {
+          Rva -= SectionHeader.PointerToRawData;
+          Rva += SectionHeader.VirtualAddress;
+
+          return reinterpret_cast<PBYTE>(GetBase()) + Rva;
+        }
+
+        SectionHeader = MyMemory.Read<IMAGE_SECTION_HEADER>(++pSectionHeader);
+      }
+
+      return nullptr;
+    }
+
+    PeFile::PeFile(MemoryMgr const& MyMemory, PVOID Address)
       : m_Memory(MyMemory), 
-      m_Type(Type), 
-      m_pBase(reinterpret_cast<PVOID>(Address))
+      m_pBase(Address)
     { }
 
     MemoryMgr const& PeFile::GetMemoryMgr() const
@@ -77,6 +132,11 @@ namespace Hades
     PVOID PeFile::GetBase() const
     {
       return m_pBase;
+    }
+
+    PVOID PeFile::RvaToVa(DWORD Rva)
+    {
+      return Rva ? static_cast<PBYTE>(m_pBase) + Rva : nullptr;
     }
   }
 }

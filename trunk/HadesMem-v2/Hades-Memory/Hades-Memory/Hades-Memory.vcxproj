@@ -38,12 +38,14 @@
     <ClInclude Include="NtHeaders.h" />
     <ClInclude Include="Patcher.h" />
     <ClInclude Include="PeFile.h" />
+    <ClInclude Include="PeFileWrap.h" />
     <ClInclude Include="Process.h" />
     <ClInclude Include="Region.h" />
     <ClInclude Include="RegionWrap.h" />
     <ClInclude Include="Scanner.h" />
     <ClInclude Include="ScannerWrap.h" />
     <ClInclude Include="Scripting.h" />
+    <ClInclude Include="Section.h" />
     <ClInclude Include="Types.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

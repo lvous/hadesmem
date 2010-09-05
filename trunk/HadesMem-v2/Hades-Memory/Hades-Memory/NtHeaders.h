@@ -35,11 +35,19 @@ namespace Hades
 
       NtHeaders(PeFile const& MyPeFile);
 
+      PVOID GetBase() const;
+
       bool IsSignatureValid() const;
+
+      void EnsureSignatureValid() const;
 
       DWORD GetSignature() const;
 
       void SetSignature(DWORD Signature);
+
+      WORD GetNumberOfSections() const;
+
+      IMAGE_NT_HEADERS GetHeadersRaw() const;
 
     private:
       NtHeaders& operator= (NtHeaders const&);
@@ -60,9 +68,24 @@ namespace Hades
         GetNewHeaderOffset())
     { }
 
+    PVOID NtHeaders::GetBase() const
+    {
+      return m_pNtHeadersBase;
+    }
+
     bool NtHeaders::IsSignatureValid() const
     {
       return IMAGE_NT_SIGNATURE == GetSignature();
+    }
+
+    void NtHeaders::EnsureSignatureValid() const
+    {
+      if (!IsSignatureValid())
+      {
+        BOOST_THROW_EXCEPTION(Error() << 
+          ErrorFunction("NtHeaders::EnsureSignatureValid") << 
+          ErrorString("NT headers signature invalid."));
+      }
     }
 
     DWORD NtHeaders::GetSignature() const
@@ -84,6 +107,17 @@ namespace Hades
           ErrorFunction("NtHeaders::SetSignature") << 
           ErrorString("Could not set signature. Verification mismatch."));
       }
+    }
+
+    WORD NtHeaders::GetNumberOfSections() const
+    {
+      auto NtHeadersRaw = m_Memory.Read<IMAGE_NT_HEADERS>(m_pNtHeadersBase);
+      return NtHeadersRaw.FileHeader.NumberOfSections;
+    }
+
+    IMAGE_NT_HEADERS NtHeaders::GetHeadersRaw() const
+    {
+      return m_Memory.Read<IMAGE_NT_HEADERS>(m_pNtHeadersBase);
     }
   }
 }

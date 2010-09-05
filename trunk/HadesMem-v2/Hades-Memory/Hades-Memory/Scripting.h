@@ -59,6 +59,7 @@ extern "C"
 #include "PeFile.h"
 #include "DosHeader.h"
 #include "NtHeaders.h"
+#include "PeFileWrap.h"
 #include "ModuleWrap.h"
 #include "RegionWrap.h"
 #include "ScannerWrap.h"
@@ -501,14 +502,15 @@ namespace Hades
           .def("Map", &Wrappers::ManualMapWrappers::Map)
 
           // Bind PeFile class
-          ,luabind::class_<PeFile>("PeFile")
-          .enum_("PeFileType")
-          [
-            luabind::value("PeFileMem", PeFile::PEFileMem),
-            luabind::value("PeFileDisk", PeFile::PEFileDisk)
-          ]
-          .def(luabind::constructor<MemoryMgr const&, PeFile::PeFileType, 
-            DWORD_PTR>())
+          ,luabind::class_<PeFile>("PeFileBase")
+          ,luabind::class_<Wrappers::PeFileWrappers, PeFile>("PeFile")
+          .def(luabind::constructor<MemoryMgr const&, DWORD_PTR>())
+
+          // Bind PeFileAsData class
+          ,luabind::class_<PeFileAsData>("PeFileAsDataBase")
+          ,luabind::class_<Wrappers::PeFileAsDataWrappers, PeFileAsData>(
+            "PeFileAsData")
+          .def(luabind::constructor<MemoryMgr const&, DWORD_PTR>())
 
           // Bind DosHeader class
           ,luabind::class_<DosHeader>("DosHeader")
