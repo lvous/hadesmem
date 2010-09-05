@@ -112,7 +112,7 @@ namespace Hades
       {
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("ManualMap::Map") << 
-          ErrorString("Target file is not MyJitFunc valid PE file (DOS)."));
+          ErrorString("Target file is not a valid PE file (DOS)."));
       }
       auto const pNtHeaders = reinterpret_cast<PIMAGE_NT_HEADERS>(pBase + 
         pDosHeader->e_lfanew);
@@ -120,7 +120,7 @@ namespace Hades
       {
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("ManualMap::Map") << 
-          ErrorString("Target file is not MyJitFunc valid PE file (NT)."));
+          ErrorString("Target file is not a valid PE file (NT)."));
       }
 
       // Allocate memory for image
