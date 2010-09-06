@@ -30,6 +30,7 @@ namespace Hades
 {
   namespace Memory
   {
+    // PE file format wrapper
     class PeFile
     {
     public:
@@ -37,45 +38,62 @@ namespace Hades
       class Error : public virtual HadesMemError 
       { };
 
+      // Constructor
       inline PeFile(MemoryMgr const& MyMemory, PVOID Address);
 
+      // Get memory manager
       MemoryMgr const& GetMemoryMgr() const;
 
+      // Get base address
       PVOID GetBase() const;
 
-      virtual PVOID RvaToVa(DWORD Rva);
+      // Convert RVA to VA
+      inline virtual PVOID RvaToVa(DWORD Rva);
 
     private:
+      // Disable assignment
       PeFile& operator= (PeFile const&);
 
+      // Memory instance
       MemoryMgr const& m_Memory;
 
+      // Base address
       PVOID m_pBase;
     };
 
+    // PE file format wrapper
+    // For PE files mapped as data rather than images
     class PeFileAsData : public PeFile
     {
     public:
+      // Constructor
       inline PeFileAsData(MemoryMgr const& MyMemory, PVOID Address);
 
-      virtual PVOID RvaToVa(DWORD Rva);
+      // Convert RVA to VA
+      inline virtual PVOID RvaToVa(DWORD Rva);
     };
 
+    // Constructor
     PeFileAsData::PeFileAsData(MemoryMgr const& MyMemory, PVOID Address) 
       : PeFile(MyMemory, Address)
     { }
 
+    // Convert RVA to VA
     PVOID PeFileAsData::RvaToVa(DWORD Rva)
     {
+      // Ensure RVA is valid
       if (!Rva)
       {
         return nullptr;
       }
 
+      // Get memory manager
       MemoryMgr const& MyMemory(GetMemoryMgr());
 
+      // Get PE file base
       PBYTE pBase = static_cast<PBYTE>(GetBase());
 
+      // Get DOS header
       auto DosHeader(MyMemory.Read<IMAGE_DOS_HEADER>(pBase));
       if (DosHeader.e_magic != IMAGE_DOS_SIGNATURE)
       {
@@ -84,8 +102,8 @@ namespace Hades
           ErrorString("Invalid DOS header."));
       }
 
+      // Get NT headers
       auto pNtHeaders(pBase + DosHeader.e_lfanew);
-
       auto NtHeadersRaw(MyMemory.Read<IMAGE_NT_HEADERS>(pNtHeaders));
       if (NtHeadersRaw.Signature != IMAGE_NT_SIGNATURE)
       {
@@ -94,16 +112,20 @@ namespace Hades
           ErrorString("Invalid NT headers."));
       }
 
+      // Get first section header
       auto pSectionHeader(reinterpret_cast<PIMAGE_SECTION_HEADER>(pNtHeaders + 
         sizeof(NtHeadersRaw.FileHeader) + sizeof(NtHeadersRaw.Signature) + 
         NtHeadersRaw.FileHeader.SizeOfOptionalHeader));
-
       auto SectionHeader(MyMemory.Read<IMAGE_SECTION_HEADER>(pSectionHeader));
 
+      // Get number of sections
       WORD NumSections = NtHeadersRaw.FileHeader.NumberOfSections;
 
+      // Loop over all sections
       for (WORD i = 0; i < NumSections; ++i)
       {
+        // If RVA is in target file/raw data region perform adjustments to 
+        // turn it into a VA.
         if (SectionHeader.PointerToRawData <= Rva && (SectionHeader.
           PointerToRawData + SectionHeader.SizeOfRawData) > Rva)
         {
@@ -113,27 +135,33 @@ namespace Hades
           return reinterpret_cast<PBYTE>(GetBase()) + Rva;
         }
 
+        // Get next section
         SectionHeader = MyMemory.Read<IMAGE_SECTION_HEADER>(++pSectionHeader);
       }
 
+      // Conversion failed
       return nullptr;
     }
 
+    // Constructor
     PeFile::PeFile(MemoryMgr const& MyMemory, PVOID Address)
       : m_Memory(MyMemory), 
       m_pBase(Address)
     { }
 
+    // Get memory manager
     MemoryMgr const& PeFile::GetMemoryMgr() const
     {
       return m_Memory;
     }
 
+    // Get base address
     PVOID PeFile::GetBase() const
     {
       return m_pBase;
     }
 
+    // Convert RVA to VA
     PVOID PeFile::RvaToVa(DWORD Rva)
     {
       return Rva ? static_cast<PBYTE>(m_pBase) + Rva : nullptr;

@@ -66,7 +66,9 @@ namespace Hades
       m_DosHeader(m_PeFile), 
       m_pNtHeadersBase(static_cast<PBYTE>(m_PeFile.GetBase()) + m_DosHeader.
         GetNewHeaderOffset())
-    { }
+    {
+      EnsureSignatureValid();
+    }
 
     PVOID NtHeaders::GetBase() const
     {

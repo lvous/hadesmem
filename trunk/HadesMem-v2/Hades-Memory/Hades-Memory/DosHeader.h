@@ -36,6 +36,8 @@ namespace Hades
 
       bool IsMagicValid() const;
 
+      void EnsureMagicValid() const;
+
       WORD GetMagic() const;
       WORD GetChecksum() const;
       LONG GetNewHeaderOffset() const;
@@ -57,11 +59,23 @@ namespace Hades
       : m_PeFile(MyPeFile), 
       m_Memory(m_PeFile.GetMemoryMgr()), 
       m_pBase(m_PeFile.GetBase())
-    { }
+    {
+      EnsureMagicValid();
+    }
 
     bool DosHeader::IsMagicValid() const
     {
       return IMAGE_DOS_SIGNATURE == GetMagic();
+    }
+
+    void DosHeader::EnsureMagicValid() const
+    {
+      if (!IsMagicValid())
+      {
+        BOOST_THROW_EXCEPTION(Error() << 
+          ErrorFunction("DosHeader::EnsureSignatureValid") << 
+          ErrorString("DOS header magic invalid."));
+      }
     }
 
     WORD DosHeader::GetMagic() const

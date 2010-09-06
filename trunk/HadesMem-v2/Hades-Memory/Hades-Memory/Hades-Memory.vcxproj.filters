@@ -116,5 +116,8 @@
     <ClInclude Include="Section.h">
       <Filter>Header Files\External\PELib</Filter>
     </ClInclude>
+    <ClInclude Include="SectionEnum.h">
+      <Filter>Header Files\External\PELib</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

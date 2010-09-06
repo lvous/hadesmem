@@ -19,14 +19,6 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-// Boost
-#pragma warning(push, 1)
-#pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
-#include <boost/shared_ptr.hpp>
-#include <boost/make_shared.hpp>
-#include <boost/iterator/iterator_facade.hpp>
-#pragma warning(pop)
-
 // Hades
 #include "PeFile.h"
 #include "NtHeaders.h"
@@ -35,153 +27,91 @@ namespace Hades
 {
   namespace Memory
   {
+    // PE file section
     class Section
     {
     public:
+      // Section error class
       class Error : public virtual HadesMemError
       { };
 
+      // Constructor
       Section(PeFile const& MyPeFile, WORD Number);
 
+      // Get name
       std::string GetName() const;
 
+      // Get raw section header
+      IMAGE_SECTION_HEADER GetSectionHeaderRaw() const;
+
     private:
+      // Disable assignment
       Section& operator= (Section const&);
 
+      // PE file
       PeFile const& m_PeFile;
+
+      // Memory instance
       MemoryMgr const& m_Memory;
 
+      // Section number
       WORD m_SectionNum;
     };
 
-    // Section enumerator
-    class SectionEnum
-    {
-    public:
-      // Constructor
-      SectionEnum(PeFile const& MyPeFile) 
-        : m_PeFile(MyPeFile), 
-        m_Current(0)
-      {
-        ZeroMemory(&m_Current, sizeof(m_Current));
-      }
-
-      // Get first region
-      boost::shared_ptr<Section> First() 
-      {
-        Hades::Memory::NtHeaders MyNtHeaders(m_PeFile);
-        WORD NumberOfSections(MyNtHeaders.GetNumberOfSections());
-
-        return NumberOfSections ? boost::make_shared<Section>(m_PeFile, 
-          m_Current) : boost::shared_ptr<Section>(static_cast<Section*>(
-          nullptr));
-      }
-
-      // Get next module
-      boost::shared_ptr<Section> Next()
-      {
-        Hades::Memory::NtHeaders MyNtHeaders(m_PeFile);
-        WORD NumberOfSections(MyNtHeaders.GetNumberOfSections());
-
-        ++m_Current;
-
-        return (m_Current < NumberOfSections) ? boost::make_shared<Section>(
-          m_PeFile, m_Current) : boost::shared_ptr<Section>(
-          static_cast<Section*>(nullptr));
-      }
-
-      // Section iterator
-      class SectionIter : public boost::iterator_facade<SectionIter, 
-        boost::shared_ptr<Section>, boost::incrementable_traversal_tag>
-      {
-      public:
-        // Construtor
-        SectionIter(SectionEnum& MySectionEnum) 
-          : m_SectionEnum(MySectionEnum)
-        {
-          m_Current = m_SectionEnum.First();
-        }
-
-      private:
-        // Compiler cannot generate assignment operator
-        SectionIter& operator= (SectionIter const& Rhs)
-        {
-          m_SectionEnum = Rhs.m_SectionEnum;
-          m_Current = Rhs.m_Current;
-          return *this;
-        }
-
-        // Allow Boost.Iterator access to internals
-        friend class boost::iterator_core_access;
-
-        // For Boost.Iterator
-        void increment() 
-        {
-          m_Current = m_SectionEnum.Next();
-        }
-
-        // For Boost.Iterator
-        boost::shared_ptr<Section>& dereference() const
-        {
-          return m_Current;
-        }
-
-        // Parent
-        SectionEnum& m_SectionEnum;
-
-        // Current section
-        // Mutable due to 'dereference' being marked as 'const'
-        mutable boost::shared_ptr<Section> m_Current;
-      };
-
-    private:
-      // Disable assignmnet
-      SectionEnum& operator= (SectionEnum const&);
-
-      // Memory instance
-      PeFile const& m_PeFile;
-
-      // Current section number
-      WORD m_Current;
-    };
-
+    // Constructor
     Section::Section(PeFile const& MyPeFile, WORD Number)
       : m_PeFile(MyPeFile), 
       m_Memory(m_PeFile.GetMemoryMgr()), 
       m_SectionNum(Number)
     { }
 
+    // Get name
     std::string Section::GetName() const
     {
-      NtHeaders MyNtHeaders(m_PeFile);
-      MyNtHeaders.EnsureSignatureValid();
+      // Get section header
+      auto const SectionHeaderRaw(GetSectionHeaderRaw());
 
+      // Convert section name to string
+      std::string Name;
+      for (std::size_t i = 0; i < 8 && SectionHeaderRaw.Name[i]; ++i)
+      {
+        Name += static_cast<char const>(SectionHeaderRaw.Name[i]);
+      }
+
+      // Return section name
+      return Name;
+    }
+
+    // Get raw section header
+    IMAGE_SECTION_HEADER Section::GetSectionHeaderRaw() const
+    {
+      // Get NT headers
+      NtHeaders MyNtHeaders(m_PeFile);
+
+      // Ensure section number is valid
       if (m_SectionNum >= MyNtHeaders.GetNumberOfSections())
       {
         BOOST_THROW_EXCEPTION(Error() << 
-          ErrorFunction("Section::GetName") << 
+          ErrorFunction("Section::GetSectionHeaderRaw") << 
           ErrorString("Invalid section number."));
       }
 
+      // Get raw NT headers
       auto NtHeadersRaw(MyNtHeaders.GetHeadersRaw());
+
+      // Get pointer to raw NT headers
       auto pNtHeaders(static_cast<PBYTE>(MyNtHeaders.GetBase()));
 
+      // Get pointer to first section
       auto pSectionHeader(reinterpret_cast<PIMAGE_SECTION_HEADER>(pNtHeaders + 
         sizeof(NtHeadersRaw.FileHeader) + sizeof(NtHeadersRaw.Signature) + 
         NtHeadersRaw.FileHeader.SizeOfOptionalHeader));
+
+      // Adjust pointer to target section
       pSectionHeader += m_SectionNum;
 
-      auto SectionHeaderRaw(m_Memory.Read<IMAGE_SECTION_HEADER>(
-        pSectionHeader));
-
-      auto pName(reinterpret_cast<char const*>(&SectionHeaderRaw.Name[0]));
-      std::string Name;
-      while (*pName)
-      {
-        Name += *pName++;
-      }
-
-      return Name;
+      // Get target raw section header
+      return m_Memory.Read<IMAGE_SECTION_HEADER>(pSectionHeader);
     }
   }
 }

@@ -57,11 +57,13 @@ extern "C"
 // Hades
 #include "Types.h"
 #include "PeFile.h"
+#include "Section.h"
 #include "DosHeader.h"
 #include "NtHeaders.h"
 #include "PeFileWrap.h"
 #include "ModuleWrap.h"
 #include "RegionWrap.h"
+#include "SectionEnum.h"
 #include "ScannerWrap.h"
 #include "InjectorWrap.h"
 #include "ManualMapWrap.h"
@@ -529,6 +531,17 @@ namespace Hades
           .def("IsSignatureValid", &NtHeaders::IsSignatureValid)
           .def("GetSignature", &NtHeaders::GetSignature)
           .def("SetSignature", &NtHeaders::SetSignature)
+
+          // Bind Section class
+          ,luabind::class_<Section>("Section")
+          .def(luabind::constructor<PeFile const&, WORD>())
+          .def("GetName", &Section::GetName)
+
+          // Bind SectionEnum class
+          ,luabind::class_<SectionEnum>("SectionEnum")
+          .def(luabind::constructor<PeFile const&>())
+          .def("First", &SectionEnum::First)
+          .def("Next", &SectionEnum::Next)
         ];
       }
 
