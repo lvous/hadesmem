@@ -46,8 +46,56 @@ namespace Hades
       // Get magic
       WORD GetMagic() const;
 
+      // Get bytes on last page
+      WORD GetBytesOnLastPage() const;
+
+      // Get pages in file
+      WORD GetPagesInFile() const;
+
+      // Get relocations
+      WORD GetRelocations() const;
+
+      // Get size of header in paragraphs
+      WORD GetSizeOfHeaderInParagraphs() const;
+
+      // Get minimum extra paragraphs needed
+      WORD GetMinExtraParagraphs() const;
+
+      // Get maximum extra paragraphs needed
+      WORD GetMaxExtraParagraphs() const;
+
+      // Get initial SS value
+      WORD GetInitialSS() const;
+
+      // Get initial SP value
+      WORD GetInitialSP() const;
+
       // Get checksum
       WORD GetChecksum() const;
+
+      // Get initial IP value
+      WORD GetInitialIP() const;
+
+      // Get initial CS value
+      WORD GetInitialCS() const;
+
+      // Get file address of reloc table
+      WORD GetRelocTableFileAddr() const;
+
+      // Get overlay number
+      WORD GetOverlayNum() const;
+
+      // Get first set of reserved words
+      std::vector<WORD> GetReservedWords1() const;
+
+      // Get OEM ID
+      WORD GetOEMID() const;
+
+      // Get OEM info
+      WORD GetOEMInfo() const;
+
+      // Get second set of reserved words
+      std::vector<WORD> GetReservedWords2() const;
 
       // Get new header offset
       LONG GetNewHeaderOffset() const;
@@ -109,11 +157,124 @@ namespace Hades
         e_magic));
     }
 
+    // Get bytes on last page
+    WORD DosHeader::GetBytesOnLastPage() const
+    {
+      return m_Memory.Read<WORD>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
+        e_cblp));
+    }
+
+    // Get pages in file
+    WORD DosHeader::GetPagesInFile() const
+    {
+      return m_Memory.Read<WORD>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
+        e_cp));
+
+    }
+
+    // Get relocations
+    WORD DosHeader::GetRelocations() const
+    {
+      return m_Memory.Read<WORD>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
+        e_crlc));
+    }
+
+    // Get size of header in paragraphs
+    WORD DosHeader::GetSizeOfHeaderInParagraphs() const
+    {
+      return m_Memory.Read<WORD>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
+        e_cparhdr));
+    }
+
+    // Get minimum extra paragraphs needed
+    WORD DosHeader::GetMinExtraParagraphs() const
+    {
+      return m_Memory.Read<WORD>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
+        e_minalloc));
+    }
+
+    // Get maximum extra paragraphs needed
+    WORD DosHeader::GetMaxExtraParagraphs() const
+    {
+      return m_Memory.Read<WORD>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
+        e_maxalloc));
+    }
+
+    // Get initial SS value
+    WORD DosHeader::GetInitialSS() const
+    {
+      return m_Memory.Read<WORD>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
+        e_ss));
+    }
+
+    // Get initial SP value
+    WORD DosHeader::GetInitialSP() const
+    {
+      return m_Memory.Read<WORD>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
+        e_sp));
+    }
+
     // Get checksum
     WORD DosHeader::GetChecksum() const
     {
       return m_Memory.Read<WORD>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
         e_csum));
+    }
+
+    // Get initial IP value
+    WORD DosHeader::GetInitialIP() const
+    {
+      return m_Memory.Read<WORD>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
+        e_ip));
+    }
+
+    // Get initial CS value
+    WORD DosHeader::GetInitialCS() const
+    {
+      return m_Memory.Read<WORD>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
+        e_cs));
+    }
+
+    // Get file address of reloc table
+    WORD DosHeader::GetRelocTableFileAddr() const
+    {
+      return m_Memory.Read<WORD>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
+        e_lfarlc));
+    }
+
+    // Get overlay number
+    WORD DosHeader::GetOverlayNum() const
+    {
+      return m_Memory.Read<WORD>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
+        e_ovno));
+    }
+
+    // Get first set of reserved words
+    std::vector<WORD> DosHeader::GetReservedWords1() const
+    {
+      return m_Memory.Read<std::vector<WORD>>(m_pBase + FIELD_OFFSET(
+        IMAGE_DOS_HEADER, e_res), 4);
+    }
+
+    // Get OEM ID
+    WORD DosHeader::GetOEMID() const
+    {
+      return m_Memory.Read<WORD>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
+        e_oemid));
+    }
+
+    // Get OEM info
+    WORD DosHeader::GetOEMInfo() const
+    {
+      return m_Memory.Read<WORD>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
+        e_oeminfo));
+    }
+
+    // Get second set of reserved words
+    std::vector<WORD> DosHeader::GetReservedWords2() const
+    {
+      return m_Memory.Read<std::vector<WORD>>(m_pBase + FIELD_OFFSET(
+        IMAGE_DOS_HEADER, e_res2), 10);
     }
 
     // Get new header offset
