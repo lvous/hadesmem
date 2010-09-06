@@ -49,7 +49,7 @@ namespace Hades
         ZeroMemory(&m_Current, sizeof(m_Current));
       }
 
-      // Get first region
+      // Get first section
       boost::shared_ptr<Section> First() 
       {
         Hades::Memory::NtHeaders MyNtHeaders(m_PeFile);
@@ -60,7 +60,7 @@ namespace Hades
           nullptr));
       }
 
-      // Get next module
+      // Get next section
       boost::shared_ptr<Section> Next()
       {
         Hades::Memory::NtHeaders MyNtHeaders(m_PeFile);

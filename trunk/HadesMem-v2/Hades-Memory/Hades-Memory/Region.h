@@ -111,7 +111,7 @@ namespace Hades
         return boost::make_shared<Region>(m_Memory, m_Current);
       }
 
-      // Get next module
+      // Get next region
       boost::shared_ptr<Region> Next()
       {
         // Advance to next region
