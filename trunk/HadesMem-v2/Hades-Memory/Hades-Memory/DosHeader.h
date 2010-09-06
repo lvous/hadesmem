@@ -26,48 +26,72 @@ namespace Hades
 {
   namespace Memory
   {
+    // PE file DOS header
     class DosHeader
     {
     public:
+      // DOS header error class
       class Error : public virtual HadesMemError
       { };
 
+      // Constructor
       DosHeader(PeFile const& MyPeFile);
 
+      // Whether magic is valid
       bool IsMagicValid() const;
 
+      // Ensure magic is valid
       void EnsureMagicValid() const;
 
+      // Get magic
       WORD GetMagic() const;
+
+      // Get checksum
       WORD GetChecksum() const;
+
+      // Get new header offset
       LONG GetNewHeaderOffset() const;
 
+      // Set magic
       void SetMagic(WORD Magic);
+
+      // Set checksum
       void SetChecksum(WORD Checksum);
+
+      // Set new header offset
       void SetNewHeaderOffset(LONG Offset);
 
     private:
+      // Disable assignment
       DosHeader& operator= (DosHeader const&);
 
+      // PE file
       PeFile const& m_PeFile;
+
+      // Memory instance
       MemoryMgr const& m_Memory;
 
-      PVOID m_pBase;
+      // DOS header base
+      PBYTE m_pBase;
     };
 
+    // Constructor
     DosHeader::DosHeader(PeFile const& MyPeFile)
       : m_PeFile(MyPeFile), 
       m_Memory(m_PeFile.GetMemoryMgr()), 
-      m_pBase(m_PeFile.GetBase())
+      m_pBase(static_cast<PBYTE>(m_PeFile.GetBase()))
     {
+      // Ensure magic is valid
       EnsureMagicValid();
     }
 
+    // Whether magic is valid
     bool DosHeader::IsMagicValid() const
     {
       return IMAGE_DOS_SIGNATURE == GetMagic();
     }
 
+    // Ensure magic is valid
     void DosHeader::EnsureMagicValid() const
     {
       if (!IsMagicValid())
@@ -78,32 +102,34 @@ namespace Hades
       }
     }
 
+    // Get magic
     WORD DosHeader::GetMagic() const
     {
-      auto DosHeaderRaw = m_Memory.Read<IMAGE_DOS_HEADER>(m_pBase);
-      return DosHeaderRaw.e_magic;
+      return m_Memory.Read<WORD>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
+        e_magic));
     }
 
+    // Get checksum
     WORD DosHeader::GetChecksum() const
     {
-      auto DosHeaderRaw = m_Memory.Read<IMAGE_DOS_HEADER>(m_pBase);
-      return DosHeaderRaw.e_csum;
+      return m_Memory.Read<WORD>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
+        e_csum));
     }
 
+    // Get new header offset
     LONG DosHeader::GetNewHeaderOffset() const
     {
-      auto DosHeaderRaw = m_Memory.Read<IMAGE_DOS_HEADER>(m_pBase);
-      return DosHeaderRaw.e_lfanew;
+      return m_Memory.Read<LONG>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
+        e_lfanew));
     }
 
+    // Set magic
     void DosHeader::SetMagic(WORD Magic) 
     {
-      auto DosHeaderRaw = m_Memory.Read<IMAGE_DOS_HEADER>(m_pBase);
-      DosHeaderRaw.e_magic = Magic;
-      m_Memory.Write(m_PeFile.GetBase(), DosHeaderRaw);
+      m_Memory.Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_magic), 
+        Magic);
 
-      DosHeaderRaw = m_Memory.Read<IMAGE_DOS_HEADER>(m_pBase);
-      if (DosHeaderRaw.e_magic != Magic)
+      if (GetMagic() != Magic)
       {
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("DosHeader::SetMagic") << 
@@ -111,14 +137,13 @@ namespace Hades
       }
     }
 
+    // Set checksum
     void DosHeader::SetChecksum(WORD Checksum) 
     {
-      auto DosHeaderRaw = m_Memory.Read<IMAGE_DOS_HEADER>(m_pBase);
-      DosHeaderRaw.e_csum = Checksum;
-      m_Memory.Write(m_PeFile.GetBase(), DosHeaderRaw);
+      m_Memory.Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_csum), 
+        Checksum);
 
-      DosHeaderRaw = m_Memory.Read<IMAGE_DOS_HEADER>(m_pBase);
-      if (DosHeaderRaw.e_csum != Checksum)
+      if (GetChecksum() != Checksum)
       {
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("DosHeader::SetChecksum") << 
@@ -126,19 +151,18 @@ namespace Hades
       }
     }
 
+    // Set new header offset
     void DosHeader::SetNewHeaderOffset(LONG Offset) 
     {
-      auto DosHeaderRaw = m_Memory.Read<IMAGE_DOS_HEADER>(m_pBase);
-      DosHeaderRaw.e_lfanew = Offset;
-      m_Memory.Write(m_PeFile.GetBase(), DosHeaderRaw);
+      m_Memory.Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_lfanew), 
+        Offset);
 
-      DosHeaderRaw = m_Memory.Read<IMAGE_DOS_HEADER>(m_pBase);
-      if (DosHeaderRaw.e_lfanew != Offset)
+      if (GetNewHeaderOffset() != Offset)
       {
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("DosHeader::SetNewHeaderOffset") << 
           ErrorString("Could not set new header offset. Verification "
-            "mismatch."));
+          "mismatch."));
       }
     }
   }

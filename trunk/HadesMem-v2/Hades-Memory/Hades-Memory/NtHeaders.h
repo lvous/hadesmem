@@ -27,59 +27,79 @@ namespace Hades
 {
   namespace Memory
   {
+    // PE file NT headers
     class NtHeaders
     {
     public:
+      // NT headers error class
       class Error : public virtual HadesMemError
       { };
 
+      // Constructor
       NtHeaders(PeFile const& MyPeFile);
 
+      // Get base of NT headers
       PVOID GetBase() const;
 
+      // Whether signature is valid
       bool IsSignatureValid() const;
 
+      // Ensure signature is valid
       void EnsureSignatureValid() const;
 
+      // Get signature
       DWORD GetSignature() const;
 
+      // Set signature
       void SetSignature(DWORD Signature);
 
+      // Get number of sections
       WORD GetNumberOfSections() const;
 
+      // Set number of sections
+      void SetNumberOfSections(WORD NumberOfSections);
+
+      // Get raw NT headers
       IMAGE_NT_HEADERS GetHeadersRaw() const;
 
     private:
+      // Disable assignment
       NtHeaders& operator= (NtHeaders const&);
 
+      // PE file
       PeFile const& m_PeFile;
+
+      // Memory instance
       MemoryMgr const& m_Memory;
 
+      // Dos header
       DosHeader m_DosHeader;
-
-      PVOID m_pNtHeadersBase;
     };
 
+    // Constructor
     NtHeaders::NtHeaders(PeFile const& MyPeFile)
       : m_PeFile(MyPeFile), 
       m_Memory(m_PeFile.GetMemoryMgr()), 
-      m_DosHeader(m_PeFile), 
-      m_pNtHeadersBase(static_cast<PBYTE>(m_PeFile.GetBase()) + m_DosHeader.
-        GetNewHeaderOffset())
+      m_DosHeader(m_PeFile)
     {
+      // Ensure signature is valid
       EnsureSignatureValid();
     }
 
+    // Get base of NT headers
     PVOID NtHeaders::GetBase() const
     {
-      return m_pNtHeadersBase;
+      return static_cast<PBYTE>(m_PeFile.GetBase()) + m_DosHeader.
+        GetNewHeaderOffset();
     }
 
+    // Whether signature is valid
     bool NtHeaders::IsSignatureValid() const
     {
       return IMAGE_NT_SIGNATURE == GetSignature();
     }
 
+    // Ensure signature is valid
     void NtHeaders::EnsureSignatureValid() const
     {
       if (!IsSignatureValid())
@@ -90,20 +110,22 @@ namespace Hades
       }
     }
 
+    // Get signature
     DWORD NtHeaders::GetSignature() const
     {
-      auto NtHeadersRaw = m_Memory.Read<IMAGE_NT_HEADERS>(m_pNtHeadersBase);
-      return NtHeadersRaw.Signature;
+      PBYTE pBase(static_cast<PBYTE>(GetBase()));
+      return m_Memory.Read<DWORD>(pBase + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+        Signature));
     }
 
+    // Set signature
     void NtHeaders::SetSignature(DWORD Signature)
     {
-      auto NtHeadersRaw = m_Memory.Read<IMAGE_NT_HEADERS>(m_pNtHeadersBase);
-      NtHeadersRaw.Signature = Signature;
-      m_Memory.Write(m_pNtHeadersBase, NtHeadersRaw);
+      PBYTE pBase(static_cast<PBYTE>(GetBase()));
+      m_Memory.Write(pBase + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+        Signature), Signature);
 
-      NtHeadersRaw = m_Memory.Read<IMAGE_NT_HEADERS>(m_pNtHeadersBase);
-      if (NtHeadersRaw.Signature != Signature)
+      if (GetSignature() != Signature)
       {
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("NtHeaders::SetSignature") << 
@@ -111,15 +133,34 @@ namespace Hades
       }
     }
 
+    // Get number of sections
     WORD NtHeaders::GetNumberOfSections() const
     {
-      auto NtHeadersRaw = m_Memory.Read<IMAGE_NT_HEADERS>(m_pNtHeadersBase);
-      return NtHeadersRaw.FileHeader.NumberOfSections;
+      PBYTE pBase(static_cast<PBYTE>(GetBase()));
+      return m_Memory.Read<WORD>(pBase + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+        FileHeader.NumberOfSections));
     }
 
+    // Set number of sections
+    void NtHeaders::SetNumberOfSections(WORD NumberOfSections)
+    {
+      PBYTE pBase(static_cast<PBYTE>(GetBase()));
+      m_Memory.Write(pBase + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+        FileHeader.NumberOfSections), NumberOfSections);
+
+      if (GetNumberOfSections() != NumberOfSections)
+      {
+        BOOST_THROW_EXCEPTION(Error() << 
+          ErrorFunction("NtHeaders::SetNumberOfSections") << 
+          ErrorString("Could not set numer of sections. Verification "
+          "mismatch."));
+      }
+    }
+
+    // Get raw NT headers
     IMAGE_NT_HEADERS NtHeaders::GetHeadersRaw() const
     {
-      return m_Memory.Read<IMAGE_NT_HEADERS>(m_pNtHeadersBase);
+      return m_Memory.Read<IMAGE_NT_HEADERS>(GetBase());
     }
   }
 }
