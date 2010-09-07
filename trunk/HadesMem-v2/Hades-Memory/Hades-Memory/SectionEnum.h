@@ -42,7 +42,7 @@ namespace Hades
     {
     public:
       // Constructor
-      SectionEnum(PeFile const& MyPeFile) 
+      explicit SectionEnum(PeFile const& MyPeFile) 
         : m_PeFile(MyPeFile), 
         m_Current(0)
       {
@@ -79,7 +79,7 @@ namespace Hades
       {
       public:
         // Construtor
-        SectionIter(SectionEnum& MySectionEnum) 
+        explicit SectionIter(SectionEnum& MySectionEnum) 
           : m_SectionEnum(MySectionEnum)
         {
           m_Current = m_SectionEnum.First();

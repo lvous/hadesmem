@@ -36,7 +36,7 @@ namespace Hades
       { };
 
       // Constructor
-      NtHeaders(PeFile const& MyPeFile);
+      explicit NtHeaders(PeFile const& MyPeFile);
 
       // Get base of NT headers
       PVOID GetBase() const;

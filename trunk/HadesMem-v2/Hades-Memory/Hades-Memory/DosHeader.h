@@ -35,7 +35,7 @@ namespace Hades
       { };
 
       // Constructor
-      DosHeader(PeFile const& MyPeFile);
+      explicit DosHeader(PeFile const& MyPeFile);
 
       // Whether magic is valid
       bool IsMagicValid() const;
@@ -86,6 +86,8 @@ namespace Hades
       WORD GetOverlayNum() const;
 
       // Get first set of reserved words
+      // Todo: Rewrite this to return an std::array once MemoryMgr API has 
+      // been updated.
       std::vector<WORD> GetReservedWords1() const;
 
       // Get OEM ID
@@ -95,6 +97,8 @@ namespace Hades
       WORD GetOEMInfo() const;
 
       // Get second set of reserved words
+      // Todo: Rewrite this to return an std::array once MemoryMgr API has 
+      // been updated.
       std::vector<WORD> GetReservedWords2() const;
 
       // Get new header offset
@@ -103,8 +107,60 @@ namespace Hades
       // Set magic
       void SetMagic(WORD Magic);
 
+      // Set bytes on last page
+      void SetBytesOnLastPage(WORD BytesOnLastPage);
+
+      // Set pages in file
+      void SetPagesInFile(WORD PagesInFile);
+
+      // Set relocations
+      void SetRelocations(WORD Relocations);
+
+      // Set size of header in paragraphs
+      void SetSizeOfHeaderInParagraphs(WORD SizeOfHeaderInParagraphs);
+
+      // Set minimum extra paragraphs needed
+      void SetMinExtraParagraphs(WORD MinExtraParagraphs);
+
+      // Set maximum extra paragraphs needed
+      void SetMaxExtraParagraphs(WORD MaxExtraParagraphs);
+
+      // Set initial SS value
+      void SetInitialSS(WORD InitialSS);
+
+      // Set initial SP value
+      void SetInitialSP(WORD InitialSP);
+
       // Set checksum
       void SetChecksum(WORD Checksum);
+
+      // Set initial IP value
+      void SetInitialIP(WORD InitialIP);
+
+      // Set initial CS value
+      void SetInitialCS(WORD InitialCS);
+
+      // Set file address of reloc table
+      void SetRelocTableFileAddr(WORD RelocTableFileAddr);
+
+      // Set overlay number
+      void SetOverlayNum(WORD OverlayNum);
+
+      // Set first set of reserved words
+      // Todo: Rewrite this to take an std::array once MemoryMgr API has 
+      // been updated.
+      void SetReservedWords1(std::vector<WORD> const& ReservedWords1);
+
+      // Set OEM ID
+      void SetOEMID(WORD OEMID);
+
+      // Set OEM info
+      void SetOEMInfo(WORD OEMInfo);
+
+      // Set second set of reserved words
+      // Todo: Rewrite this to take an std::array once MemoryMgr API has 
+      // been updated.
+      void SetReservedWords2(std::vector<WORD> const& ReservedWords2);
 
       // Set new header offset
       void SetNewHeaderOffset(LONG Offset);
@@ -298,6 +354,122 @@ namespace Hades
       }
     }
 
+    // Set bytes on last page
+    void DosHeader::SetBytesOnLastPage(WORD BytesOnLastPage)
+    {
+      m_Memory.Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_cblp), 
+        BytesOnLastPage);
+
+      if (GetBytesOnLastPage() != BytesOnLastPage)
+      {
+        BOOST_THROW_EXCEPTION(Error() << 
+          ErrorFunction("DosHeader::SetBytesOnLastPage") << 
+          ErrorString("Could not set bytes on last page. Verification "
+          "mismatch."));
+      }
+    }
+
+    // Set pages in file
+    void DosHeader::SetPagesInFile(WORD PagesInFile)
+    {
+      m_Memory.Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_cp), 
+        PagesInFile);
+
+      if (GetPagesInFile() != PagesInFile)
+      {
+        BOOST_THROW_EXCEPTION(Error() << 
+          ErrorFunction("DosHeader::SetPagesInFile") << 
+          ErrorString("Could not set pages in file. Verification mismatch."));
+      }
+    }
+
+    // Set relocations
+    void DosHeader::SetRelocations(WORD Relocations)
+    {
+      m_Memory.Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_crlc), 
+        Relocations);
+
+      if (GetRelocations() != Relocations)
+      {
+        BOOST_THROW_EXCEPTION(Error() << 
+          ErrorFunction("DosHeader::SetRelocations") << 
+          ErrorString("Could not set relocations. Verification mismatch."));
+      }
+    }
+
+    // Set size of header in paragraphs
+    void DosHeader::SetSizeOfHeaderInParagraphs(WORD SizeOfHeaderInParagraphs)
+    {
+      m_Memory.Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_cparhdr), 
+        SizeOfHeaderInParagraphs);
+
+      if (GetSizeOfHeaderInParagraphs() != SizeOfHeaderInParagraphs)
+      {
+        BOOST_THROW_EXCEPTION(Error() << 
+          ErrorFunction("DosHeader::SetSizeOfHeaderInParagraphs") << 
+          ErrorString("Could not set size of header in paragraphs. "
+            "Verification mismatch."));
+      }
+    }
+
+    // Set min extra paragraphs
+    void DosHeader::SetMinExtraParagraphs(WORD MinExtraParagraphs)
+    {
+      m_Memory.Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_minalloc), 
+        MinExtraParagraphs);
+
+      if (GetMinExtraParagraphs() != MinExtraParagraphs)
+      {
+        BOOST_THROW_EXCEPTION(Error() << 
+          ErrorFunction("DosHeader::SetMinExtraParagraphs") << 
+          ErrorString("Could not set min extra paragraphs. Verification "
+            "mismatch."));
+      }
+    }
+
+    // Set max extra paragraphs
+    void DosHeader::SetMaxExtraParagraphs(WORD MaxExtraParagraphs)
+    {
+      m_Memory.Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_maxalloc), 
+        MaxExtraParagraphs);
+
+      if (GetMaxExtraParagraphs() != MaxExtraParagraphs)
+      {
+        BOOST_THROW_EXCEPTION(Error() << 
+          ErrorFunction("DosHeader::SetMaxExtraParagraphs") << 
+          ErrorString("Could not set max extra paragraphs. Verification "
+          "mismatch."));
+      }
+    }
+
+    // Set initial SS
+    void DosHeader::SetInitialSS(WORD InitialSS)
+    {
+      m_Memory.Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_ss), 
+        InitialSS);
+
+      if (GetInitialSS() != InitialSS)
+      {
+        BOOST_THROW_EXCEPTION(Error() << 
+          ErrorFunction("DosHeader::SetInitialSS") << 
+          ErrorString("Could not set initial SS. Verification mismatch."));
+      }
+    }
+
+    // Set initial SP
+    void DosHeader::SetInitialSP(WORD InitialSP)
+    {
+      m_Memory.Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_sp), 
+        InitialSP);
+
+      if (GetInitialSP() != InitialSP)
+      {
+        BOOST_THROW_EXCEPTION(Error() << 
+          ErrorFunction("DosHeader::SetInitialSP") << 
+          ErrorString("Could not set initial SP. Verification mismatch."));
+      }
+    }
+
     // Set checksum
     void DosHeader::SetChecksum(WORD Checksum) 
     {
@@ -309,6 +481,121 @@ namespace Hades
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("DosHeader::SetChecksum") << 
           ErrorString("Could not set checksum. Verification mismatch."));
+      }
+    }
+
+    // Set initial IP
+    void DosHeader::SetInitialIP(WORD InitialIP)
+    {
+      m_Memory.Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_ip), 
+        InitialIP);
+
+      if (GetInitialIP() != InitialIP)
+      {
+        BOOST_THROW_EXCEPTION(Error() << 
+          ErrorFunction("DosHeader::SetInitialIP") << 
+          ErrorString("Could not set initial IP. Verification mismatch."));
+      }
+    }
+
+    // Set initial CS
+    void DosHeader::SetInitialCS(WORD InitialCS)
+    {
+      m_Memory.Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_cs), 
+        InitialCS);
+
+      if (GetInitialCS() != InitialCS)
+      {
+        BOOST_THROW_EXCEPTION(Error() << 
+          ErrorFunction("DosHeader::SetInitialCS") << 
+          ErrorString("Could not set initial CS. Verification mismatch."));
+      }
+    }
+
+    // Set reloc table file address
+    void DosHeader::SetRelocTableFileAddr(WORD RelocTableFileAddr)
+    {
+      m_Memory.Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_lfarlc), 
+        RelocTableFileAddr);
+
+      if (GetRelocTableFileAddr() != RelocTableFileAddr)
+      {
+        BOOST_THROW_EXCEPTION(Error() << 
+          ErrorFunction("DosHeader::SetRelocTableFileAddr") << 
+          ErrorString("Could not set reloc table file address. Verification "
+            "mismatch."));
+      }
+    }
+
+    // Set overlay number
+    void DosHeader::SetOverlayNum(WORD OverlayNum)
+    {
+      m_Memory.Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_ovno), 
+        OverlayNum);
+
+      if (GetOverlayNum() != OverlayNum)
+      {
+        BOOST_THROW_EXCEPTION(Error() << 
+          ErrorFunction("DosHeader::SetOverlayNum") << 
+          ErrorString("Could not set overlay number. Verification mismatch."));
+      }
+    }
+
+    // Set first set of reserved words
+    void DosHeader::SetReservedWords1(std::vector<WORD> const& ReservedWords1)
+    {
+      m_Memory.Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_res), 
+        ReservedWords1);
+
+      if (GetReservedWords1() != ReservedWords1)
+      {
+        BOOST_THROW_EXCEPTION(Error() << 
+          ErrorFunction("DosHeader::SetReservedWords1") << 
+          ErrorString("Could not set first set of reserved words. "
+            "Verification mismatch."));
+      }
+    }
+
+    // Set OEM ID
+    void DosHeader::SetOEMID(WORD OEMID)
+    {
+      m_Memory.Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_oemid), 
+        OEMID);
+
+      if (GetOEMID() != OEMID)
+      {
+        BOOST_THROW_EXCEPTION(Error() << 
+          ErrorFunction("DosHeader::SetOEMID") << 
+          ErrorString("Could not set OEM ID. Verification mismatch."));
+      }
+    }
+
+    // Set OEM info
+    void DosHeader::SetOEMInfo(WORD OEMInfo)
+    {
+      m_Memory.Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_oeminfo), 
+        OEMInfo);
+
+      if (GetOEMInfo() != OEMInfo)
+      {
+        BOOST_THROW_EXCEPTION(Error() << 
+          ErrorFunction("DosHeader::SetOEMInfo") << 
+          ErrorString("Could not set OEM info. Verification mismatch."));
+      }
+    }
+
+    // Set second set of reserved words
+    void DosHeader::SetReservedWords2(std::vector<WORD> const& ReservedWords2)
+    {
+      m_Memory.Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_res2), 
+        ReservedWords2);
+
+      if (GetReservedWords2() != ReservedWords2)
+      {
+        BOOST_THROW_EXCEPTION(Error() << 
+          ErrorFunction("DosHeader::SetReservedWords2") << 
+          ErrorString("Could not set second set of reserved words. "
+            "Verification mismatch."));
       }
     }
 
