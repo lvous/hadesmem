@@ -86,8 +86,6 @@ namespace Hades
       WORD GetOverlayNum() const;
 
       // Get first set of reserved words
-      // Todo: Rewrite this to return an std::array once MemoryMgr API has 
-      // been updated.
       std::array<WORD, 4> GetReservedWords1() const;
 
       // Get OEM ID
@@ -97,8 +95,6 @@ namespace Hades
       WORD GetOEMInfo() const;
 
       // Get second set of reserved words
-      // Todo: Rewrite this to return an std::array once MemoryMgr API has 
-      // been updated.
       std::array<WORD, 10> GetReservedWords2() const;
 
       // Get new header offset
@@ -147,8 +143,6 @@ namespace Hades
       void SetOverlayNum(WORD OverlayNum);
 
       // Set first set of reserved words
-      // Todo: Rewrite this to take an std::array once MemoryMgr API has 
-      // been updated.
       void SetReservedWords1(std::array<WORD, 4> const& ReservedWords1);
 
       // Set OEM ID
@@ -158,8 +152,6 @@ namespace Hades
       void SetOEMInfo(WORD OEMInfo);
 
       // Set second set of reserved words
-      // Todo: Rewrite this to take an std::array once MemoryMgr API has 
-      // been updated.
       void SetReservedWords2(std::array<WORD, 10> const& ReservedWords2);
 
       // Set new header offset
