@@ -88,7 +88,7 @@ namespace Hades
       // Get first set of reserved words
       // Todo: Rewrite this to return an std::array once MemoryMgr API has 
       // been updated.
-      std::vector<WORD> GetReservedWords1() const;
+      std::array<WORD, 4> GetReservedWords1() const;
 
       // Get OEM ID
       WORD GetOEMID() const;
@@ -99,7 +99,7 @@ namespace Hades
       // Get second set of reserved words
       // Todo: Rewrite this to return an std::array once MemoryMgr API has 
       // been updated.
-      std::vector<WORD> GetReservedWords2() const;
+      std::array<WORD, 10> GetReservedWords2() const;
 
       // Get new header offset
       LONG GetNewHeaderOffset() const;
@@ -149,7 +149,7 @@ namespace Hades
       // Set first set of reserved words
       // Todo: Rewrite this to take an std::array once MemoryMgr API has 
       // been updated.
-      void SetReservedWords1(std::vector<WORD> const& ReservedWords1);
+      void SetReservedWords1(std::array<WORD, 4> const& ReservedWords1);
 
       // Set OEM ID
       void SetOEMID(WORD OEMID);
@@ -160,7 +160,7 @@ namespace Hades
       // Set second set of reserved words
       // Todo: Rewrite this to take an std::array once MemoryMgr API has 
       // been updated.
-      void SetReservedWords2(std::vector<WORD> const& ReservedWords2);
+      void SetReservedWords2(std::array<WORD, 10> const& ReservedWords2);
 
       // Set new header offset
       void SetNewHeaderOffset(LONG Offset);
@@ -306,10 +306,10 @@ namespace Hades
     }
 
     // Get first set of reserved words
-    std::vector<WORD> DosHeader::GetReservedWords1() const
+    std::array<WORD, 4> DosHeader::GetReservedWords1() const
     {
-      return m_Memory.Read<std::vector<WORD>>(m_pBase + FIELD_OFFSET(
-        IMAGE_DOS_HEADER, e_res), 4);
+      return m_Memory.Read<std::array<WORD, 4>>(m_pBase + FIELD_OFFSET(
+        IMAGE_DOS_HEADER, e_res));
     }
 
     // Get OEM ID
@@ -327,10 +327,10 @@ namespace Hades
     }
 
     // Get second set of reserved words
-    std::vector<WORD> DosHeader::GetReservedWords2() const
+    std::array<WORD, 10> DosHeader::GetReservedWords2() const
     {
-      return m_Memory.Read<std::vector<WORD>>(m_pBase + FIELD_OFFSET(
-        IMAGE_DOS_HEADER, e_res2), 10);
+      return m_Memory.Read<std::array<WORD, 10>>(m_pBase + FIELD_OFFSET(
+        IMAGE_DOS_HEADER, e_res2));
     }
 
     // Get new header offset
@@ -542,7 +542,8 @@ namespace Hades
     }
 
     // Set first set of reserved words
-    void DosHeader::SetReservedWords1(std::vector<WORD> const& ReservedWords1)
+    void DosHeader::SetReservedWords1(std::array<WORD, 4> const& 
+      ReservedWords1)
     {
       m_Memory.Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_res), 
         ReservedWords1);
@@ -585,7 +586,8 @@ namespace Hades
     }
 
     // Set second set of reserved words
-    void DosHeader::SetReservedWords2(std::vector<WORD> const& ReservedWords2)
+    void DosHeader::SetReservedWords2(std::array<WORD, 10> const& 
+      ReservedWords2)
     {
       m_Memory.Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_res2), 
         ReservedWords2);

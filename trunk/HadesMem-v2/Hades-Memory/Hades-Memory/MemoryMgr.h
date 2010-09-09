@@ -97,8 +97,7 @@ namespace Hades
       template <typename T>
       T Read(PVOID Address, typename std::vector<typename T::value_type>::
         size_type Size, typename boost::enable_if<std::is_same<T, std::vector<
-        typename T::value_type>>>::type* Dummy1 = 0, typename boost::enable_if<
-        std::is_pod<typename T::value_type>>::type* Dummy2 = 0) const;
+        typename T::value_type>>>::type* Dummy = 0) const;
 
       // Write memory (POD types)
       template <typename T>
@@ -498,8 +497,7 @@ namespace Hades
     template <typename T>
     T MemoryMgr::Read(PVOID Address, typename std::vector<typename T::
       value_type>::size_type Size, typename boost::enable_if<std::is_same<T, 
-      std::vector<typename T::value_type>>>::type* /*Dummy*/, typename boost::
-      enable_if<std::is_pod<typename T::value_type>>::type* /*Dummy2*/) const
+      std::vector<typename T::value_type>>>::type* /*Dummy*/) const
     {
       // Create buffer
       T Buffer(Size);
