@@ -104,10 +104,13 @@ namespace Hades
       std::vector<BYTE> ModuleFileBuf((std::istreambuf_iterator<BYTE>(
         ModuleFile)), std::istreambuf_iterator<BYTE>());
 
+      // Create memory manager for local proc
+      MemoryMgr MyMemoryLocal(GetCurrentProcessId());
+
       // Ensure file is a valid PE file
       std::wcout << "Performing PE file format validation." << std::endl;
       auto pBase = &ModuleFileBuf[0];
-      PeFile MyPeFile(m_Memory, pBase);
+      PeFile MyPeFile(MyMemoryLocal, pBase);
       DosHeader MyDosHeader(MyPeFile);
       NtHeaders MyNtHeaders(MyPeFile);
       auto pNtHeadersRaw(static_cast<PIMAGE_NT_HEADERS>(MyNtHeaders.
