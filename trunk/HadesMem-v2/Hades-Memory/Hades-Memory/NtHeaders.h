@@ -36,31 +36,31 @@ namespace Hades
       { };
 
       // Constructor
-      explicit NtHeaders(PeFile const& MyPeFile);
+      inline explicit NtHeaders(PeFile const& MyPeFile);
 
       // Get base of NT headers
-      PVOID GetBase() const;
+      inline PVOID GetBase() const;
 
       // Whether signature is valid
-      bool IsSignatureValid() const;
+      inline bool IsSignatureValid() const;
 
       // Ensure signature is valid
-      void EnsureSignatureValid() const;
+      inline void EnsureSignatureValid() const;
 
       // Get signature
-      DWORD GetSignature() const;
+      inline DWORD GetSignature() const;
 
       // Set signature
-      void SetSignature(DWORD Signature);
+      inline void SetSignature(DWORD Signature);
 
       // Get number of sections
-      WORD GetNumberOfSections() const;
+      inline WORD GetNumberOfSections() const;
 
       // Set number of sections
-      void SetNumberOfSections(WORD NumberOfSections);
+      inline void SetNumberOfSections(WORD NumberOfSections);
 
       // Get raw NT headers
-      IMAGE_NT_HEADERS GetHeadersRaw() const;
+      inline IMAGE_NT_HEADERS GetHeadersRaw() const;
 
     private:
       // Disable assignment

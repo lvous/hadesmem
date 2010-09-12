@@ -39,6 +39,7 @@
     <ClInclude Include="Patcher.h" />
     <ClInclude Include="PeFile.h" />
     <ClInclude Include="PeFileWrap.h" />
+    <ClInclude Include="PeLib.h" />
     <ClInclude Include="Process.h" />
     <ClInclude Include="Region.h" />
     <ClInclude Include="RegionWrap.h" />

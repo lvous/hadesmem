@@ -42,10 +42,10 @@ namespace Hades
       inline PeFile(MemoryMgr const& MyMemory, PVOID Address);
 
       // Get memory manager
-      MemoryMgr const& GetMemoryMgr() const;
+      inline MemoryMgr const& GetMemoryMgr() const;
 
       // Get base address
-      PVOID GetBase() const;
+      inline PVOID GetBase() const;
 
       // Convert RVA to VA
       inline virtual PVOID RvaToVa(DWORD Rva);

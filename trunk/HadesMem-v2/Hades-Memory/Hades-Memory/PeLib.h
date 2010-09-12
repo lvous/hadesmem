@@ -19,18 +19,9 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-// HadesMem (External)
-#include "Module.h"
-#include "Region.h"
-#include "Process.h"
-#include "Scanner.h"
-#include "Injector.h"
-#include "ManualMap.h"
-#include "MemoryMgr.h"
-#include "Disassembler.h"
-
-// HadesMem (Internal)
-#include "Patcher.h"
-
 // HadesMem (PELib)
-#include "PeLib.h"
+#include "PeFile.h"
+#include "Section.h"
+#include "DosHeader.h"
+#include "NtHeaders.h"
+#include "SectionEnum.h"
