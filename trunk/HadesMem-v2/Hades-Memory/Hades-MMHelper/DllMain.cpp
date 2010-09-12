@@ -17,9 +17,47 @@ You should have received a copy of the GNU General Public License
 along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+// Boost
+#pragma warning(push, 1)
+#pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
+#include <boost/thread.hpp>
+#include <boost/exception/all.hpp>
+#pragma warning(pop)
+
 // Windows API
 #include <crtdbg.h>
 #include <Windows.h>
+
+extern "C" __declspec(dllexport) DWORD __stdcall Test(HMODULE /*Module*/)
+{
+  // Break to debugger if present
+  if (IsDebuggerPresent())
+  {
+    DebugBreak();
+  }
+
+  // Test IAT
+  MessageBoxW(NULL, L"Testing IAT", L"Hades-MMHelper", MB_OK);
+
+  // Test TLS
+  boost::thread_specific_ptr<std::wstring> TlsTest;
+  TlsTest.reset(new std::wstring(L"Testing TLS"));
+  MessageBoxW(NULL, TlsTest->c_str(), L"Hades-MMHelper", MB_OK);
+
+  // Test EH
+  try
+  {
+    throw std::runtime_error("Testing EH");
+  }
+  catch (std::exception const& e)
+  {
+    MessageBoxA(NULL, boost::diagnostic_information(e).c_str(), 
+      "Hades-MMHelper", MB_OK);
+  }
+
+  // Test return values
+  return 1337;
+}
 
 extern "C" __declspec(dllexport) DWORD __stdcall Initialize(HMODULE /*Module*/)
 {

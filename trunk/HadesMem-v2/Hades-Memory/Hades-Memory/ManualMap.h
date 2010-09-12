@@ -31,6 +31,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include <iostream>
 
 // Hades
+#include "PeLib.h"
 #include "Module.h"
 #include "Injector.h"
 #include "MemoryMgr.h"
@@ -40,7 +41,6 @@ namespace Hades
   namespace Memory
   {
     // Manual mapping class
-    // Credits to Darawk for the original implementation this is based off
     class ManualMap
     {
     public:
@@ -91,7 +91,7 @@ namespace Hades
     {
       // Open file for reading
       std::wcout << "Opening module file for reading." << std::endl;
-      std::ifstream ModuleFile(Path.c_str(), std::ios::binary);
+      std::basic_ifstream<BYTE> ModuleFile(Path.c_str(), std::ios::binary);
       if (!ModuleFile)
       {
         BOOST_THROW_EXCEPTION(Error() << 
@@ -101,85 +101,75 @@ namespace Hades
 
       // Read file into buffer
       std::wcout << "Reading module file into buffer." << std::endl;
-      std::vector<BYTE> ModuleFileBuf((std::istreambuf_iterator<char>(
-        ModuleFile)), std::istreambuf_iterator<char>());
+      std::vector<BYTE> ModuleFileBuf((std::istreambuf_iterator<BYTE>(
+        ModuleFile)), std::istreambuf_iterator<BYTE>());
 
       // Ensure file is a valid PE file
       std::wcout << "Performing PE file format validation." << std::endl;
       auto pBase = &ModuleFileBuf[0];
-      auto const pDosHeader = reinterpret_cast<PIMAGE_DOS_HEADER>(pBase);
-      if (pDosHeader->e_magic != IMAGE_DOS_SIGNATURE)
-      {
-        BOOST_THROW_EXCEPTION(Error() << 
-          ErrorFunction("ManualMap::Map") << 
-          ErrorString("Target file is not a valid PE file (DOS)."));
-      }
-      auto const pNtHeaders = reinterpret_cast<PIMAGE_NT_HEADERS>(pBase + 
-        pDosHeader->e_lfanew);
-      if (pNtHeaders->Signature != IMAGE_NT_SIGNATURE)
-      {
-        BOOST_THROW_EXCEPTION(Error() << 
-          ErrorFunction("ManualMap::Map") << 
-          ErrorString("Target file is not a valid PE file (NT)."));
-      }
+      PeFile MyPeFile(m_Memory, pBase);
+      DosHeader MyDosHeader(MyPeFile);
+      NtHeaders MyNtHeaders(MyPeFile);
+      auto pNtHeadersRaw(static_cast<PIMAGE_NT_HEADERS>(MyNtHeaders.
+        GetBase()));
 
       // Allocate memory for image
       std::wcout << "Allocating memory for module." << std::endl;
-      PVOID const RemoteBase = m_Memory.Alloc(pNtHeaders->OptionalHeader.
+      PVOID const RemoteBase = m_Memory.Alloc(pNtHeadersRaw->OptionalHeader.
         SizeOfImage);
       std::wcout << "Module base address: " << RemoteBase << "." << std::endl;
-      std::wcout << "Module size: " << std::hex << pNtHeaders->OptionalHeader.
-        SizeOfImage << std::dec << "." << std::endl;
+      std::wcout << "Module size: " << std::hex << pNtHeadersRaw->
+        OptionalHeader.SizeOfImage << std::dec << "." << std::endl;
 
       // Get all TLS callbacks
       std::vector<PIMAGE_TLS_CALLBACK> TlsCallbacks;
-      auto const TlsDirSize = pNtHeaders->OptionalHeader.DataDirectory
+      auto const TlsDirSize = pNtHeadersRaw->OptionalHeader.DataDirectory
         [IMAGE_DIRECTORY_ENTRY_TLS].Size;
       if (TlsDirSize)
       {
         auto const pTlsDir = reinterpret_cast<PIMAGE_TLS_DIRECTORY>(pBase + 
-          RvaToFileOffset(pNtHeaders, pNtHeaders->OptionalHeader.
+          RvaToFileOffset(pNtHeadersRaw, pNtHeadersRaw->OptionalHeader.
           DataDirectory[IMAGE_DIRECTORY_ENTRY_TLS].VirtualAddress));
 
         std::wcout << "Enumerating TLS callbacks." << std::endl;
-        std::wcout << "Image Base: " << reinterpret_cast<PVOID>(pNtHeaders->
+        std::wcout << "Image Base: " << reinterpret_cast<PVOID>(pNtHeadersRaw->
           OptionalHeader.ImageBase) << "." << std::endl;
         std::wcout << "Address Of Callbacks: " << reinterpret_cast<PVOID>(
           pTlsDir->AddressOfCallBacks) << "." << std::endl;
 
         for (auto pCallbacks = reinterpret_cast<PIMAGE_TLS_CALLBACK*>(pBase + 
-          RvaToFileOffset(pNtHeaders, pTlsDir->AddressOfCallBacks - 
-          pNtHeaders->OptionalHeader.ImageBase)); *pCallbacks; ++pCallbacks)
+          RvaToFileOffset(pNtHeadersRaw, pTlsDir->AddressOfCallBacks - 
+          pNtHeadersRaw->OptionalHeader.ImageBase)); *pCallbacks; ++pCallbacks)
         {
           std::wcout << "TLS Callback: " << *pCallbacks << "." << std::endl;
           TlsCallbacks.push_back(reinterpret_cast<PIMAGE_TLS_CALLBACK>(
-            reinterpret_cast<DWORD_PTR>(*pCallbacks) - pNtHeaders->
+            reinterpret_cast<DWORD_PTR>(*pCallbacks) - pNtHeadersRaw->
             OptionalHeader.ImageBase));
         }
       }
 
       // Fix import table if applicable
-      auto const ImpDirSize = pNtHeaders->OptionalHeader.DataDirectory
+      auto const ImpDirSize = pNtHeadersRaw->OptionalHeader.DataDirectory
         [IMAGE_DIRECTORY_ENTRY_IMPORT].Size;
       if (ImpDirSize)
       {
         auto const pImpDir = reinterpret_cast<PIMAGE_IMPORT_DESCRIPTOR>(pBase + 
-          RvaToFileOffset(pNtHeaders, pNtHeaders->OptionalHeader.
+          RvaToFileOffset(pNtHeadersRaw, pNtHeadersRaw->OptionalHeader.
           DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress));
 
-        FixImports(ModuleFileBuf, pNtHeaders, pImpDir);
+        FixImports(ModuleFileBuf, pNtHeadersRaw, pImpDir);
       }
 
       // Fix relocations if applicable
-      auto const RelocDirSize = pNtHeaders->OptionalHeader.DataDirectory
+      auto const RelocDirSize = pNtHeadersRaw->OptionalHeader.DataDirectory
         [IMAGE_DIRECTORY_ENTRY_BASERELOC].Size;
       if (RelocDirSize)
       {
         auto const pRelocDir = reinterpret_cast<PIMAGE_BASE_RELOCATION>(pBase + 
-          RvaToFileOffset(pNtHeaders, pNtHeaders->OptionalHeader.
+          RvaToFileOffset(pNtHeadersRaw, pNtHeadersRaw->OptionalHeader.
           DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC].VirtualAddress));
 
-        FixRelocations(ModuleFileBuf, pNtHeaders, pRelocDir, RelocDirSize, 
+        FixRelocations(ModuleFileBuf, pNtHeadersRaw, pRelocDir, RelocDirSize, 
           RemoteBase);
       }
 
@@ -189,21 +179,21 @@ namespace Hades
       m_Memory.Write(RemoteBase, *reinterpret_cast<PIMAGE_DOS_HEADER>(pBase));
 
       // Write PE header to process
-      PBYTE const PeHeaderStart = reinterpret_cast<PBYTE>(pNtHeaders);
+      PBYTE const PeHeaderStart = reinterpret_cast<PBYTE>(pNtHeadersRaw);
       PBYTE const PeHeaderEnd = reinterpret_cast<PBYTE>(IMAGE_FIRST_SECTION(
-        pNtHeaders));
+        pNtHeadersRaw));
       std::vector<BYTE> PeHeaderBuf(PeHeaderStart, PeHeaderEnd);
       PBYTE const TargetAddr = static_cast<PBYTE>(RemoteBase) + 
-        pDosHeader->e_lfanew;
+        MyDosHeader.GetNewHeaderOffset();
       std::wcout << "Writing NT header." << std::endl;
       std::wcout << "NT Header: " << TargetAddr << std::endl;
       m_Memory.Write(TargetAddr, PeHeaderBuf);
 
       // Write sections to process
-      MapSections(pNtHeaders, RemoteBase, ModuleFileBuf);
+      MapSections(pNtHeadersRaw, RemoteBase, ModuleFileBuf);
 
       // Calculate module entry point
-      PVOID const EntryPoint = static_cast<PBYTE>(RemoteBase) + pNtHeaders->
+      PVOID const EntryPoint = static_cast<PBYTE>(RemoteBase) + pNtHeadersRaw->
         OptionalHeader.AddressOfEntryPoint;
       std::wcout << "Entry Point: " << EntryPoint << "." << std::endl;
 
@@ -262,6 +252,12 @@ namespace Hades
     DWORD_PTR ManualMap::RvaToFileOffset(PIMAGE_NT_HEADERS pNtHeaders, 
       DWORD_PTR Rva) const
     {
+      // Santiy check
+      if (!Rva)
+      {
+        return 0;
+      }
+
       // Get number of sections
       WORD const NumSections = pNtHeaders->FileHeader.NumberOfSections;
       // Get pointer to first section
@@ -284,8 +280,8 @@ namespace Hades
         }
       }
 
-      // Could not perform conversion. Return number signifying an error.
-      return static_cast<DWORD>(-1);
+      // Could not perform conversion
+      return 0;
     }
 
     // Map sections
