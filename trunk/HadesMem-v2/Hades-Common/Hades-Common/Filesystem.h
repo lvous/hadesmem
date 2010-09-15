@@ -47,7 +47,7 @@ namespace Hades
   {
     // Load a file into a buffer
     inline void BufferToFile(std::vector<BYTE> const& Buffer, 
-      std::wstring const& Path)
+      boost::filesystem::path const& Path)
     {
       // Open file
       std::basic_ofstream<BYTE> File(Path.c_str(), std::ios::binary);
@@ -63,7 +63,7 @@ namespace Hades
     }
 
     // Load a file into a buffer
-    inline std::vector<BYTE> FileToBuffer(std::wstring const& Path)
+    inline std::vector<BYTE> FileToBuffer(boost::filesystem::path const& Path)
     {
       // Open file
       std::basic_ifstream<BYTE> File(Path.c_str(), std::ios::binary | 
