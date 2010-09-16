@@ -244,7 +244,7 @@ namespace Hades
       MyJitFunc.mov(AsmJit::rbp, AsmJit::rsp);
 
       // Allocate ghost space
-      MyJitFunc.sub(AsmJit::rsp, AsmJit::Immediate(0x20));
+      MyJitFunc.sub(AsmJit::rsp, AsmJit::Imm(0x20));
 
       // Set up first 4 parameters
       MyJitFunc.mov(AsmJit::rcx, NumArgs > 0 ? reinterpret_cast<DWORD_PTR>(
@@ -272,13 +272,13 @@ namespace Hades
       MyJitFunc.call(AsmJit::rax);
 
       // Cleanup ghost space
-      MyJitFunc.add(AsmJit::rsp, AsmJit::Immediate(0x20));
+      MyJitFunc.add(AsmJit::rsp, AsmJit::Imm(0x20));
 
       // Clean up remaining stack space
       std::size_t StackArgs(NumArgs > 4 ? NumArgs - 4 : 0);
       while (StackArgs--)
       {
-        MyJitFunc.add(AsmJit::rsp, AsmJit::Immediate(0x8));
+        MyJitFunc.add(AsmJit::rsp, AsmJit::Imm(0x8));
       }
 
       // Epilogue
