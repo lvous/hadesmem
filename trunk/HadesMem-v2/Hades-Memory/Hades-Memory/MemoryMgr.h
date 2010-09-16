@@ -320,38 +320,17 @@ namespace Hades
       // Pass first arg in through ECX if 'thiscall' is specified
       if (MyCallConv == CallConv_THISCALL)
       {
-        if (NumArgs)
-        {
-          MyJitFunc.mov(AsmJit::ecx, reinterpret_cast<DWORD_PTR>(Args[0]));
-        }
-        else
-        {
-          MyJitFunc.mov(AsmJit::ecx, AsmJit::Imm(0));
-        }
+        MyJitFunc.mov(AsmJit::ecx, NumArgs ? reinterpret_cast<DWORD_PTR>(
+          Args[0]) : 0);
       }
 
       // Pass first two args in through ECX and EDX if 'fastcall' is specified
       if (MyCallConv == CallConv_FASTCALL)
       {
-        // Ensure there is an arg to pass
-        if (NumArgs)
-        {
-          MyJitFunc.mov(AsmJit::ecx, reinterpret_cast<DWORD_PTR>(Args[0]));
-        }
-        else
-        {
-          MyJitFunc.mov(AsmJit::ecx, AsmJit::Imm(0));
-        }
-
-        // Ensure there is an arg to pass
-        if (NumArgs > 1)
-        {
-          MyJitFunc.mov(AsmJit::edx, reinterpret_cast<DWORD_PTR>(Args[1]));
-        }
-        else
-        {
-          MyJitFunc.mov(AsmJit::edx, AsmJit::Imm(0));
-        }
+        MyJitFunc.mov(AsmJit::ecx, NumArgs ? reinterpret_cast<DWORD_PTR>(
+          Args[0]) : 0);
+        MyJitFunc.mov(AsmJit::edx, NumArgs > 1 ? reinterpret_cast<DWORD_PTR>(
+          Args[1]) : 0);
       }
 
       // Pass all remaining args on stack if there are any left to process.
