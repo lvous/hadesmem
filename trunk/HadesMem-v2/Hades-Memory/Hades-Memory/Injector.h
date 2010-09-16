@@ -98,7 +98,7 @@ namespace Hades
       if (!CreateProcess(Path.c_str(), &ProcArgs[0], NULL, NULL, FALSE, 
         CREATE_SUSPENDED, NULL, NULL, &StartInfo, &ProcInfo))
       {
-        DWORD LastError = GetLastError();
+        DWORD const LastError(GetLastError());
         BOOST_THROW_EXCEPTION(Injector::Error() << 
           ErrorFunction("CreateAndInject") << 
           ErrorString("Could not create process.") << 
@@ -121,7 +121,7 @@ namespace Hades
         Hades::Memory::Injector const MyInjector(*MyMemory);
 
         // Inject DLL
-        HMODULE const ModBase = MyInjector.InjectDll(Module);
+        HMODULE const ModBase(MyInjector.InjectDll(Module));
         if (ModBaseOut)
         {
           *ModBaseOut = ModBase;
@@ -131,7 +131,7 @@ namespace Hades
         if (!Export.empty())
         {
           // Call remote export
-          DWORD ExportRet = MyInjector.CallExport(Module, ModBase, Export);
+          DWORD ExportRet(MyInjector.CallExport(Module, ModBase, Export));
           if (ExportRetOut)
           {
             *ExportRetOut = ExportRet;
@@ -189,14 +189,14 @@ namespace Hades
       }
 
       // Calculate the number of bytes needed for the DLL's pathname
-      size_t const PathBufSize  = (PathReal.wstring().length() + 1) * 
-        sizeof(wchar_t);
+      std::size_t const PathBufSize((PathReal.wstring().length() + 1) * 
+        sizeof(wchar_t));
 
       // Allocate space in the remote process for the pathname
       AllocAndFree const LibFileRemote(m_Memory, PathBufSize);
       if (!LibFileRemote.GetAddress())
       {
-        DWORD LastError = GetLastError();
+        DWORD const LastError(GetLastError());
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Injector::InjectDll") << 
           ErrorString("Could not allocate memory.") << 
@@ -207,19 +207,19 @@ namespace Hades
       m_Memory.Write(LibFileRemote.GetAddress(), PathReal.wstring());
 
       // Get the real address of LoadLibraryW in Kernel32.dll
-      HMODULE const hKernel32 = GetModuleHandleW(L"Kernel32");
+      HMODULE const hKernel32(GetModuleHandleW(L"Kernel32.dll"));
       if (!hKernel32)
       {
-        DWORD LastError = GetLastError();
+        DWORD const LastError(GetLastError());
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Injector::InjectDll") << 
           ErrorString("Could not get handle to Kernel32.") << 
           ErrorCodeWin(LastError));
       }
-      FARPROC const pLoadLibraryW = GetProcAddress(hKernel32, "LoadLibraryW");
+      FARPROC const pLoadLibraryW(GetProcAddress(hKernel32, "LoadLibraryW"));
       if (!pLoadLibraryW)
       {
-        DWORD LastError = GetLastError();
+        DWORD const LastError(GetLastError());
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Injector::InjectDll") << 
           ErrorString("Could not get pointer to LoadLibraryW.") << 
