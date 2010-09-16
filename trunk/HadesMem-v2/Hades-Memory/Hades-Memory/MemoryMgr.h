@@ -189,7 +189,7 @@ namespace Hades
         // Free memory if necessary
         if (m_Address)
         {
-          AsmJit::MemoryManager::global()->free(m_Address);
+          AsmJit::MemoryManager::getGlobal()->free(m_Address);
         }
       }
 
@@ -330,8 +330,7 @@ namespace Hades
       // Clean up stack if necessary
       if (MyCallConv == CallConv_CDECL)
       {
-        MyJitFunc.add(AsmJit::esp, AsmJit::Immediate(NumArgs * sizeof(
-          PVOID)));
+        MyJitFunc.add(AsmJit::esp, AsmJit::Imm(NumArgs * sizeof(PVOID)));
       }
 
       // Epilogue
@@ -356,7 +355,7 @@ namespace Hades
       }
 
       // Get stub size
-      DWORD_PTR const StubSize = MyJitFunc.codeSize();
+      DWORD_PTR const StubSize = MyJitFunc.getCodeSize();
 
       // Allocate memory for stub buffer
       AllocAndFree const StubMemRemote(*this, StubSize);
