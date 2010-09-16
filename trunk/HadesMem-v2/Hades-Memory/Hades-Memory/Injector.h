@@ -39,6 +39,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Hades
 #include "Module.h"
 #include "MemoryMgr.h"
+#include "Hades-Common/Filesystem.h"
 
 // Image base linker 'trick'
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
@@ -169,26 +170,9 @@ namespace Hades
       // an absolute
       if (PathResolution && Path.is_relative())
       {
-        // Get handle to self
-        HMODULE const Self = reinterpret_cast<HMODULE>(&__ImageBase);
-
-        // Get path to self
-        std::array<wchar_t, MAX_PATH> SelfPathTemp;
-        if (!GetModuleFileName(Self, &SelfPathTemp[0], MAX_PATH) || 
-          GetLastError() == ERROR_INSUFFICIENT_BUFFER)
-        {
-          DWORD LastError = GetLastError();
-          BOOST_THROW_EXCEPTION(Error() << 
-            ErrorFunction("Injector::InjectDll") << 
-            ErrorString("Could not get path to self.") << 
-            ErrorCodeWin(LastError));
-        }
-
-        // Path to self
-        boost::filesystem::path const SelfPath(&SelfPathTemp[0]);
-
         // Convert relative path to absolute path
-        PathReal = boost::filesystem::absolute(Path, SelfPath.parent_path());
+        PathReal = boost::filesystem::absolute(Path, Hades::Windows::
+          GetSelfDirPath());
       }
 
       // Ensure target file exists
