@@ -1,6 +1,6 @@
 // AsmJit - Complete JIT Assembler for C++ Language.
 
-// Copyright (c) 2008-2009, Petr Kobalicek <kobalicek.petr@gmail.com>
+// Copyright (c) 2008-2010, Petr Kobalicek <kobalicek.petr@gmail.com>
 //
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
@@ -10,10 +10,10 @@
 // copies of the Software, and to permit persons to whom the
 // Software is furnished to do so, subject to the following
 // conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 // OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -23,48 +23,72 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 // OTHER DEALINGS IN THE SOFTWARE.
 
-// [Guard]
-#ifndef _ASMJIT_SERIALIZER_H
-#define _ASMJIT_SERIALIZER_H
-
 // [Dependencies]
-#include "Build.h"
+#include "Assembler.h"
+#include "CodeGenerator.h"
+#include "Defs.h"
+#include "MemoryManager.h"
 
 namespace AsmJit {
 
 // ============================================================================
-// [Forward Declarations]
+// [AsmJit::CodeGenerator]
 // ============================================================================
 
-struct Label;
-struct Logger;
-struct Assembler;
-struct Compiler;
+CodeGenerator::CodeGenerator()
+{
+}
 
-//! @addtogroup AsmJit_Serializer
-//! @{
+CodeGenerator::~CodeGenerator()
+{
+}
 
-// ============================================================================
-// [Constants]
-// ============================================================================
-
-enum {
-  //! @brief Maximum size of inlined comment (see @c SerializerCore::_inlineComment() method).
-  MAX_INLINE_COMMENT_SIZE = 256
-};
-
-//! @}
-
-} // AsmJit namespace.
+CodeGenerator* CodeGenerator::getGlobal()
+{
+  static JitCodeGenerator global;
+  return &global;
+}
 
 // ============================================================================
-// [Platform Specific]
+// [AsmJit::JitCodeGenerator]
 // ============================================================================
 
-// [X86 / X64]
-#if defined(ASMJIT_X86) || defined(ASMJIT_X64)
-#include "SerializerX86X64.h"
-#endif // ASMJIT_X86 || ASMJIT_X64
+JitCodeGenerator::JitCodeGenerator() :
+  _memoryManager(NULL),
+  _allocType(MEMORY_ALLOC_FREEABLE)
+{
+}
 
-// [Guard]
-#endif // _ASMJIT_SERIALIZER_H
+JitCodeGenerator::~JitCodeGenerator()
+{
+}
+
+uint32_t JitCodeGenerator::generate(void** dest, Assembler* assembler)
+{
+  // Disallow empty code generation.
+  sysuint_t codeSize = assembler->getCodeSize();
+  if (codeSize == 0)
+  {
+    *dest = NULL;
+    return AsmJit::ERROR_NO_FUNCTION;
+  }
+
+  // Switch to global memory manager if not provided.
+  MemoryManager* memmgr = getMemoryManager();
+  if (memmgr == NULL) memmgr = MemoryManager::getGlobal();
+
+  void* p = memmgr->alloc(codeSize, getAllocType());
+  if (p == NULL)
+  {
+    *dest = NULL;
+    return ERROR_NO_VIRTUAL_MEMORY;
+  }
+
+  // This is the last step. Relocate the code and return it.
+  assembler->relocCode(p);
+
+  *dest = p;
+  return ERROR_NONE;
+}
+
+} // AsmJit namespace
