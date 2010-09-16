@@ -88,7 +88,7 @@ namespace Hades
       PROCESS_INFORMATION ProcInfo = { 0 };
 
       // Construct command line.
-      std::wstring CommandLine(L"\"" + Path + L"\" " + Args);
+      std::wstring const CommandLine(L"\"" + Path + L"\" " + Args);
       // Copy command line to buffer
       std::vector<wchar_t> ProcArgs(CommandLine.begin(), CommandLine.end());
       ProcArgs.push_back(L'\0');
@@ -105,8 +105,8 @@ namespace Hades
       }
 
       // Ensure cleanup
-      Windows::EnsureCloseHandle ProcHandle(ProcInfo.hProcess);
-      Windows::EnsureCloseHandle ThreadHandle(ProcInfo.hThread);
+      Windows::EnsureCloseHandle const ProcHandle(ProcInfo.hProcess);
+      Windows::EnsureCloseHandle const ThreadHandle(ProcInfo.hThread);
 
       // Memory manager instance
       boost::shared_ptr<MemoryMgr> MyMemory;
@@ -117,10 +117,10 @@ namespace Hades
         MyMemory.reset(new Hades::Memory::MemoryMgr(ProcInfo.dwProcessId));
 
         // Create DLL injector
-        Hades::Memory::Injector MyInjector(*MyMemory);
+        Hades::Memory::Injector const MyInjector(*MyMemory);
 
         // Inject DLL
-        HMODULE ModBase = MyInjector.InjectDll(Module);
+        HMODULE const ModBase = MyInjector.InjectDll(Module);
         if (ModBaseOut)
         {
           *ModBaseOut = ModBase;
@@ -173,8 +173,8 @@ namespace Hades
         HMODULE const Self = reinterpret_cast<HMODULE>(&__ImageBase);
 
         // Get path to self
-        std::array<wchar_t, MAX_PATH> SelfPath;
-        if (!GetModuleFileName(Self, &SelfPath[0], MAX_PATH) || 
+        std::array<wchar_t, MAX_PATH> SelfPathTemp;
+        if (!GetModuleFileName(Self, &SelfPathTemp[0], MAX_PATH) || 
           GetLastError() == ERROR_INSUFFICIENT_BUFFER)
         {
           DWORD LastError = GetLastError();
@@ -184,9 +184,11 @@ namespace Hades
             ErrorCodeWin(LastError));
         }
 
+        // Path to self
+        boost::filesystem::path const SelfPath(&SelfPathTemp[0]);
+
         // Convert relative path to absolute path
-        PathReal = boost::filesystem::absolute(Path, boost::filesystem::path(
-          &SelfPath[0]).parent_path()).c_str();
+        PathReal = boost::filesystem::absolute(Path, SelfPath.parent_path());
       }
 
       // Ensure target file exists
@@ -246,8 +248,8 @@ namespace Hades
       }
 
       // Get path as lowercase string
-      std::wstring const PathRealLower(boost::to_lower_copy(
-        static_cast<std::wstring>(PathReal.c_str())));
+      std::wstring const PathRealLower(boost::to_lower_copy(PathReal.
+        wstring()));
 
       // Look for target module
       ModuleEnum MyModuleList(m_Memory);
