@@ -131,7 +131,7 @@ namespace Hades
         if (!Export.empty())
         {
           // Call remote export
-          DWORD ExportRet(MyInjector.CallExport(Module, ModBase, Export));
+          DWORD const ExportRet(MyInjector.CallExport(Module, ModBase, Export));
           if (ExportRetOut)
           {
             *ExportRetOut = ExportRet;
