@@ -1,6 +1,8 @@
 #ifndef _BEA_ENGINE_
 #define _BEA_ENGINE_
 
+#define BEA_ENGINE_STATIC
+
 #include <beaengine/macros.h>
 #include <beaengine/export.h>
 #include <beaengine/basic_types.h>
