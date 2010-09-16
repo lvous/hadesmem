@@ -68,6 +68,10 @@ namespace Hades
           &ExportRet);
 
         CreateAndInjectInfo MyInfo;
+        // This is dangerous, but I haven't had time to think about the 
+        // 'proper' solution yet, so this should work for now, but needs 
+        // to be fixed in the future.
+        // Todo: Fix this monstrosity.
         MyInfo.Memory = boost::static_pointer_cast<Wrappers::
           MemoryMgrWrappers>(MyMemory);
         MyInfo.ModBase = reinterpret_cast<DWORD_PTR>(ModBase);
