@@ -111,7 +111,7 @@ namespace Hades
       Scanner& operator= (Scanner const&);
 
       // Initialize using PE header
-      void Initialize();
+      inline void Initialize();
 
       // Memory manager instance
       MemoryMgr const& m_Memory;
