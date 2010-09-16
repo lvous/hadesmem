@@ -226,7 +226,7 @@ namespace Hades
       CallConv MyCallConv) const 
     {
       // Get number of arguments
-      std::size_t NumArgs = Args.size();
+      std::size_t NumArgs(Args.size());
 
       // Create Assembler.
       AsmJit::Assembler MyJitFunc;
@@ -294,7 +294,7 @@ namespace Hades
       MyJitFunc.mov(AsmJit::ebp, AsmJit::esp);
 
       // Get stack arguments offset
-      std::size_t StackArgOffs = 0;
+      std::size_t StackArgOffs(0);
       switch (MyCallConv)
       {
         case CallConv_THISCALL:
@@ -386,7 +386,7 @@ namespace Hades
 #endif
 
       // Make JIT function.
-      EnsureAsmJitFree LoaderStub(MyJitFunc.make());
+      EnsureAsmJitFree const LoaderStub(MyJitFunc.make());
 
       // Ensure function creation succeeded
       if (!LoaderStub.Get())
@@ -397,24 +397,23 @@ namespace Hades
       }
 
       // Get stub size
-      DWORD_PTR const StubSize = MyJitFunc.getCodeSize();
+      DWORD_PTR const StubSize(MyJitFunc.getCodeSize());
 
       // Allocate memory for stub buffer
       AllocAndFree const StubMemRemote(*this, StubSize);
       // Copy loader stub to stub buffer
-      std::vector<BYTE> const EpCallerBuf(reinterpret_cast<PBYTE>(
-        LoaderStub.Get()), reinterpret_cast<PBYTE>(LoaderStub.Get()) + 
-        StubSize);
+      std::vector<BYTE> const EpCallBuf(static_cast<PBYTE>(LoaderStub.Get()), 
+        static_cast<PBYTE>(LoaderStub.Get()) + StubSize);
       // Write stub buffer to process
-      Write(StubMemRemote.GetAddress(), EpCallerBuf);
+      Write(StubMemRemote.GetAddress(), EpCallBuf);
 
       // Call stub via creating a remote thread in the target.
-      Windows::EnsureCloseHandle const MyThread = CreateRemoteThread(m_Process.
+      Windows::EnsureCloseHandle const MyThread(CreateRemoteThread(m_Process.
         GetHandle(), nullptr, 0, reinterpret_cast<LPTHREAD_START_ROUTINE>(
-        StubMemRemote.GetAddress()), nullptr, 0, nullptr);
+        StubMemRemote.GetAddress()), nullptr, 0, nullptr));
       if (!MyThread)
       {
-        DWORD LastError = GetLastError();
+        DWORD const LastError(GetLastError());
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("MemoryMgr::Call") << 
           ErrorString("Could not create remote thread.") << 
@@ -424,7 +423,7 @@ namespace Hades
       // Wait for the remote thread to terminate
       if (WaitForSingleObject(MyThread, INFINITE) != WAIT_OBJECT_0)
       {
-        DWORD LastError = GetLastError();
+        DWORD const LastError(GetLastError());
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("MemoryMgr::Call") << 
           ErrorString("Could not wait for remote thread.") << 
@@ -435,7 +434,7 @@ namespace Hades
       DWORD ExitCode = 0;
       if (!GetExitCodeThread(MyThread, &ExitCode))
       {
-        DWORD LastError = GetLastError();
+        DWORD const LastError(GetLastError());
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("MemoryMgr::Call") << 
           ErrorString("Could not get remote thread exit code.") << 
@@ -448,11 +447,11 @@ namespace Hades
 
     // Read memory (POD types)
     template <typename T>
-    T MemoryMgr::Read(PVOID Address, typename boost::enable_if<
-      std::is_pod<T>>::type* /*Dummy*/) const 
+    T MemoryMgr::Read(PVOID Address, typename boost::enable_if<std::is_pod<T>>
+      ::type* /*Dummy*/) const 
     {
       // Whether we can read the given address
-      bool CanReadMem = CanRead(Address);
+      bool const CanReadMem(CanRead(Address));
 
       // Set page protection for reading
       DWORD OldProtect;
@@ -461,7 +460,7 @@ namespace Hades
         if (!VirtualProtectEx(m_Process.GetHandle(), Address, sizeof(T), 
           PAGE_EXECUTE_READWRITE, &OldProtect))
         {
-          DWORD LastError = GetLastError();
+          DWORD const LastError(GetLastError());
           BOOST_THROW_EXCEPTION(Error() << 
             ErrorFunction("MemoryMgr::Read") << 
             ErrorString("Could not change process memory protection.") << 
@@ -471,7 +470,7 @@ namespace Hades
 
       // Read data
       T Out = T();
-      SIZE_T BytesRead = 0;
+      SIZE_T BytesRead(0);
       if (!ReadProcessMemory(m_Process.GetHandle(), Address, &Out, sizeof(T), 
         &BytesRead) || BytesRead != sizeof(T))
       {
@@ -482,7 +481,7 @@ namespace Hades
             OldProtect, &OldProtect);
         }
 
-        DWORD LastError = GetLastError();
+        DWORD const LastError(GetLastError());
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("MemoryMgr::Read") << 
           ErrorString("Could not read process memory.") << 
@@ -495,7 +494,7 @@ namespace Hades
         if (!VirtualProtectEx(m_Process.GetHandle(), Address, sizeof(T), 
           OldProtect, &OldProtect))
         {
-          DWORD LastError = GetLastError();
+          DWORD const LastError(GetLastError());
           BOOST_THROW_EXCEPTION(Error() << 
             ErrorFunction("MemoryMgr::Read") << 
             ErrorString("Could not restore process memory protection.") << 
@@ -521,7 +520,7 @@ namespace Hades
       for (CharT* AddressReal = static_cast<CharT*>(Address);; ++AddressReal)
       {
         // Read current character
-        CharT Current = Read<CharT>(AddressReal);
+        auto const Current(Read<CharT>(AddressReal));
 
         // Return generated string on null terminator
         if (Current == 0)
@@ -540,62 +539,19 @@ namespace Hades
       enable_if<std::is_same<T, std::vector<typename T::value_type>>>::type* 
       /*Dummy*/) const
     {
+      // Create value type pointer
+      T::value_type* AddressReal(static_cast<T::value_type*>(Address));
+
       // Create buffer
-      T Buffer(Size);
-      SIZE_T BufferSize = sizeof(T::value_type) * Size;
+      T Buffer;
 
-      // Whether we can read the given address
-      bool CanReadMem = CanRead(Address);
-
-      // Set page protection for reading
-      DWORD OldProtect;
-      if (!CanReadMem)
+      // Read data from memory
+      for (std::size_t i = 0; i < Size; ++i)
       {
-        if (!VirtualProtectEx(m_Process.GetHandle(), Address, BufferSize, 
-          PAGE_EXECUTE_READWRITE, &OldProtect))
-        {
-          DWORD LastError = GetLastError();
-          BOOST_THROW_EXCEPTION(Error() << 
-            ErrorFunction("MemoryMgr::Read") << 
-            ErrorString("Could not change process memory protection.") << 
-            ErrorCodeWin(LastError));
-        }
+        Buffer.push_back(this->Read<T::value_type>(AddressReal + i));
       }
 
-      // Read data
-      SIZE_T BytesRead = 0;
-      if (!ReadProcessMemory(m_Process.GetHandle(), Address, &Buffer[0], 
-        BufferSize, &BytesRead) || BytesRead != BufferSize)
-      {
-        if (!CanReadMem)
-        {
-          // Restore original page protections
-          VirtualProtectEx(m_Process.GetHandle(), Address, BufferSize, 
-            OldProtect, &OldProtect);
-        }
-
-        DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(Error() << 
-          ErrorFunction("MemoryMgr::Read") << 
-          ErrorString("Could not read process memory.") << 
-          ErrorCodeWin(LastError));
-      }
-
-      // Restore original page protections
-      if (!CanReadMem)
-      {
-        if (!VirtualProtectEx(m_Process.GetHandle(), Address, BufferSize, 
-          OldProtect, &OldProtect))
-        {
-          DWORD LastError = GetLastError();
-          BOOST_THROW_EXCEPTION(Error() << 
-            ErrorFunction("MemoryMgr::Read") << 
-            ErrorString("Could not restore process memory protection.") << 
-            ErrorCodeWin(LastError));
-        }
-      }
-
-      // Return generated buffer
+      // Return buffer
       return Buffer;
     }
 
@@ -609,7 +565,7 @@ namespace Hades
       if (!VirtualProtectEx(m_Process.GetHandle(), Address, sizeof(T), 
         PAGE_EXECUTE_READWRITE, &OldProtect))
       {
-        DWORD LastError = GetLastError();
+        DWORD const LastError(GetLastError());
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("MemoryMgr::Write") << 
           ErrorString("Could not change process memory protection.") << 
@@ -617,7 +573,7 @@ namespace Hades
       }
 
       // Write data
-      SIZE_T BytesWritten = 0;
+      SIZE_T BytesWritten(0);
       if (!WriteProcessMemory(m_Process.GetHandle(), Address, &Data, sizeof(T), 
         &BytesWritten) || BytesWritten != sizeof(T))
       {
@@ -625,7 +581,7 @@ namespace Hades
         VirtualProtectEx(m_Process.GetHandle(), Address, sizeof(T), OldProtect, 
           &OldProtect);
 
-        DWORD LastError = GetLastError();
+        DWORD const LastError(GetLastError());
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("MemoryMgr::Write") << 
           ErrorString("Could not write process memory.") << 
@@ -636,7 +592,7 @@ namespace Hades
       if (!VirtualProtectEx(m_Process.GetHandle(), Address, sizeof(T), 
         OldProtect, &OldProtect))
       {
-        DWORD LastError = GetLastError();
+        DWORD const LastError(GetLastError());
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("MemoryMgr::Write") << 
           ErrorString("Could not restore process memory protection.") << 
@@ -654,11 +610,11 @@ namespace Hades
       typedef typename T::value_type CharT;
 
       // Create character pointer
-      CharT* AddressReal = reinterpret_cast<CharT*>(Address);
+      CharT* AddressReal(reinterpret_cast<CharT*>(Address));
 
       // Write all characters in string to memory
       std::for_each(Data.begin(), Data.end(), 
-        [&AddressReal, this] (CharT Current) 
+        [&] (CharT Current) 
       {
         // Write current character to memory
         this->Write(AddressReal++, Current);
@@ -670,16 +626,16 @@ namespace Hades
 
     // Write memory (vector types)
     template <typename T>
-    void MemoryMgr::Write(PVOID Address, T const& Data, 
-      typename boost::enable_if<std::is_same<T, std::vector<
-      typename T::value_type>>>::type* /*Dummy*/) const
+    void MemoryMgr::Write(PVOID Address, T const& Data, typename boost::
+      enable_if<std::is_same<T, std::vector<typename T::value_type>>>::type* 
+      /*Dummy*/) const
     {
       // Create value type pointer
-      T::value_type* AddressReal = static_cast<T::value_type*>(Address);
+      T::value_type* AddressReal(static_cast<T::value_type*>(Address));
 
       // Write all data in buffer to memory
       std::for_each(Data.begin(), Data.end(), 
-        [&AddressReal, this] (T::value_type const& Current) 
+        [&] (T::value_type const& Current) 
       {
         // Write current character to memory
         this->Write(AddressReal++, Current);
@@ -694,7 +650,7 @@ namespace Hades
       if (!VirtualQueryEx(m_Process.GetHandle(), Address, &MyMemInfo, 
         sizeof(MyMemInfo)))
       {
-        DWORD LastError = GetLastError();
+        DWORD const LastError(GetLastError());
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("MemoryMgr::CanRead") << 
           ErrorString("Could not read process memory protection.") << 
@@ -718,7 +674,7 @@ namespace Hades
       if (!VirtualQueryEx(m_Process.GetHandle(), Address, &MyMemInfo, 
         sizeof(MyMemInfo)))
       {
-        DWORD LastError = GetLastError();
+        DWORD const LastError(GetLastError());
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("MemoryMgr::Write") << 
           ErrorString("Could not read process memory protection.") << 
@@ -735,11 +691,11 @@ namespace Hades
     // Allocate memory
     PVOID MemoryMgr::Alloc(SIZE_T Size) const
     {
-      PVOID Address = VirtualAllocEx(m_Process.GetHandle(), nullptr, Size, 
-        MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+      PVOID Address(VirtualAllocEx(m_Process.GetHandle(), nullptr, Size, 
+        MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE));
       if (!Address)
       {
-        DWORD LastError = GetLastError();
+        DWORD const LastError(GetLastError());
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("MemoryMgr::Alloc") << 
           ErrorString("Could not allocate memory.") << 
@@ -754,7 +710,7 @@ namespace Hades
     {
       if (!VirtualFreeEx(m_Process.GetHandle(), Address, 0, MEM_RELEASE))
       {
-        DWORD LastError = GetLastError();
+        DWORD const LastError(GetLastError());
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("MemoryMgr::Free") << 
           ErrorString("Could not free memory.") << 
@@ -784,7 +740,7 @@ namespace Hades
         ModulePath.c_str(), NULL, DONT_RESOLVE_DLL_REFERENCES));
       if (!LocalMod)
       {
-        DWORD LastError = GetLastError();
+        DWORD const LastError(GetLastError());
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("MemoryMgr::GetRemoteProcAddress") << 
           ErrorString("Could not load module locally.") << 
@@ -792,19 +748,19 @@ namespace Hades
       }
 
       // Find target function in module
-      FARPROC const LocalFunc = GetProcAddress(LocalMod, Function.c_str());
+      FARPROC const LocalFunc(GetProcAddress(LocalMod, Function.c_str()));
       if (!LocalFunc)
       {
         return nullptr;
       }
 
       // Calculate function delta
-      LONG_PTR const FuncDelta = reinterpret_cast<DWORD_PTR>(LocalFunc) - 
-        reinterpret_cast<DWORD_PTR>(static_cast<HMODULE>(LocalMod));
+      LONG_PTR const FuncDelta(reinterpret_cast<DWORD_PTR>(LocalFunc) - 
+        reinterpret_cast<DWORD_PTR>(static_cast<HMODULE>(LocalMod)));
 
       // Calculate function location in remote process
-      auto const RemoteFunc = reinterpret_cast<FARPROC>(
-        reinterpret_cast<DWORD_PTR>(RemoteMod) + FuncDelta);
+      auto const RemoteFunc(reinterpret_cast<FARPROC>(
+        reinterpret_cast<DWORD_PTR>(RemoteMod) + FuncDelta));
 
       // Return remote function location
       return RemoteFunc;
@@ -819,7 +775,7 @@ namespace Hades
         ModulePath.c_str(), NULL, DONT_RESOLVE_DLL_REFERENCES));
       if (!LocalMod)
       {
-        DWORD LastError = GetLastError();
+        DWORD const LastError(GetLastError());
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("MemoryMgr::GetRemoteProcAddress") << 
           ErrorString("Could not load module locally.") << 
@@ -827,20 +783,20 @@ namespace Hades
       }
 
       // Find target function in module
-      FARPROC const LocalFunc = GetProcAddress(LocalMod, 
-        reinterpret_cast<LPCSTR>(MAKELONG(Ordinal, 0)));
+      FARPROC const LocalFunc(GetProcAddress(LocalMod, MAKEINTRESOURCEA(
+        Ordinal)));
       if (!LocalFunc)
       {
         return nullptr;
       }
 
       // Calculate function delta
-      DWORD_PTR const FuncDelta = reinterpret_cast<DWORD_PTR>(LocalFunc) - 
-        reinterpret_cast<DWORD_PTR>(static_cast<HMODULE>(LocalMod));
+      DWORD_PTR const FuncDelta(reinterpret_cast<DWORD_PTR>(LocalFunc) - 
+        reinterpret_cast<DWORD_PTR>(static_cast<HMODULE>(LocalMod)));
 
       // Calculate function location in remote process
-      auto const RemoteFunc = reinterpret_cast<FARPROC>(
-        reinterpret_cast<DWORD_PTR>(RemoteMod) + FuncDelta);
+      auto const RemoteFunc(reinterpret_cast<FARPROC>(
+        reinterpret_cast<DWORD_PTR>(RemoteMod) + FuncDelta));
 
       // Return remote function location
       return RemoteFunc;
@@ -851,7 +807,7 @@ namespace Hades
     {
       if (!FlushInstructionCache(m_Process.GetHandle(), Address, Size))
       {
-        DWORD LastError = GetLastError();
+        DWORD const LastError(GetLastError());
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("MemoryMgr::FlushInstructionCache") << 
           ErrorString("Could not flush instruction cache.") << 
