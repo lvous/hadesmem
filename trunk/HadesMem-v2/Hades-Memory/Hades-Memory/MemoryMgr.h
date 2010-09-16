@@ -32,6 +32,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #pragma warning(push, 1)
 #pragma warning(disable: 4706)
 #pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
+#include <boost/filesystem.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/type_traits.hpp>
 #pragma warning(pop)
@@ -136,12 +137,12 @@ namespace Hades
 
       // Get address of export in remote process (by name)
       inline FARPROC GetRemoteProcAddress(HMODULE RemoteMod, 
-        std::wstring const& Module, std::string const& Function) 
+        boost::filesystem::path const& Module, std::string const& Function) 
         const;
 
       // Get address of export in remote process (by ordinal)
       inline FARPROC GetRemoteProcAddress(HMODULE RemoteMod, 
-        std::wstring const& Module, WORD Function) 
+        boost::filesystem::path const& Module, WORD Function) 
         const;
 
       // Flush instruction cache
@@ -734,7 +735,8 @@ namespace Hades
 
     // Get address of export in remote process
     FARPROC MemoryMgr::GetRemoteProcAddress(HMODULE RemoteMod, 
-      std::wstring const& ModulePath, std::string const& Function) const
+      boost::filesystem::path const& ModulePath, std::string const& Function) 
+      const
     {
       // Load module as data so we can read the EAT locally
       Windows::EnsureFreeLibrary const LocalMod(LoadLibraryEx(
@@ -756,7 +758,7 @@ namespace Hades
       }
 
       // Calculate function delta
-      DWORD_PTR const FuncDelta = reinterpret_cast<DWORD_PTR>(LocalFunc) - 
+      LONG_PTR const FuncDelta = reinterpret_cast<DWORD_PTR>(LocalFunc) - 
         reinterpret_cast<DWORD_PTR>(static_cast<HMODULE>(LocalMod));
 
       // Calculate function location in remote process
@@ -769,7 +771,7 @@ namespace Hades
 
     // Get address of export in remote process
     FARPROC MemoryMgr::GetRemoteProcAddress(HMODULE RemoteMod, 
-      std::wstring const& ModulePath, WORD Ordinal) const
+      boost::filesystem::path const& ModulePath, WORD Ordinal) const
     {
       // Load module as data so we can read the EAT locally
       Windows::EnsureFreeLibrary const LocalMod(LoadLibraryExW(

@@ -59,11 +59,11 @@ namespace Hades
       inline Injector(MemoryMgr const& MyMemory);
 
       // Inject DLL
-      inline HMODULE InjectDll(std::wstring const& Path, 
+      inline HMODULE InjectDll(boost::filesystem::path const& Path, 
         bool PathResolution = true) const;
 
       // Call export
-      inline DWORD CallExport(std::wstring const& ModulePath, 
+      inline DWORD CallExport(boost::filesystem::path const& ModulePath, 
         HMODULE ModuleRemote, std::string const& Export) const;
 
     private:
@@ -159,15 +159,15 @@ namespace Hades
     { }
 
     // Inject DLL
-    HMODULE Injector::InjectDll(std::wstring const& Path, bool PathResolution) 
-      const
+    HMODULE Injector::InjectDll(boost::filesystem::path const& Path, 
+      bool PathResolution) const
     {
       // String to hold 'real' path to module
       boost::filesystem::path PathReal(Path);
 
       // Check whether we need to convert the path from a relative to 
       // an absolute
-      if (PathResolution && boost::filesystem::path(Path).is_relative())
+      if (PathResolution && Path.is_relative())
       {
         // Get handle to self
         HMODULE const Self = reinterpret_cast<HMODULE>(&__ImageBase);
@@ -198,7 +198,8 @@ namespace Hades
       }
 
       // Calculate the number of bytes needed for the DLL's pathname
-      size_t const PathBufSize  = (Path.length() + 1) * sizeof(wchar_t);
+      size_t const PathBufSize  = (PathReal.wstring().length() + 1) * 
+        sizeof(wchar_t);
 
       // Allocate space in the remote process for the pathname
       AllocAndFree const LibFileRemote(m_Memory, PathBufSize);
@@ -212,8 +213,7 @@ namespace Hades
       }
 
       // Copy the DLL's pathname to the remote process' address space
-      m_Memory.Write(LibFileRemote.GetAddress(), static_cast<std::wstring>(
-        PathReal.c_str()));
+      m_Memory.Write(LibFileRemote.GetAddress(), PathReal.wstring());
 
       // Get the real address of LoadLibraryW in Kernel32.dll
       HMODULE const hKernel32 = GetModuleHandleW(L"Kernel32");
@@ -284,43 +284,12 @@ namespace Hades
     }
 
     // Call export
-    DWORD Injector::CallExport(std::wstring const& ModulePath, 
+    DWORD Injector::CallExport(boost::filesystem::path const& ModulePath, 
       HMODULE ModuleRemote, std::string const& Export) const
     {
-      // Load module as data so we can read the EAT locally
-      Windows::EnsureFreeLibrary const MyModule(LoadLibraryExW(
-        ModulePath.c_str(), nullptr, DONT_RESOLVE_DLL_REFERENCES));
-      if (!MyModule)
-      {
-        DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(Error() << 
-          ErrorFunction("Injector::CallExport") << 
-          ErrorString("Could not load module locally.") << 
-          ErrorCodeWin(LastError));
-      }
-
-      // Find export
-      PVOID pExportAddr = GetProcAddress(MyModule, Export.c_str());
-
-      // Nothing found, throw exception
-      if (!pExportAddr)
-      {
-        BOOST_THROW_EXCEPTION(Error() << 
-          ErrorFunction("Injector::CallExport") << 
-          ErrorString("Could not find export."));
-      }
-
-      // If image is relocated we need to recalculate the address
-      if (MyModule != ModuleRemote)
-      {
-        // Get local module pointer
-        PBYTE const ModuleLocal = static_cast<PBYTE>(static_cast<PVOID>(
-          MyModule));
-
-        // Calculate new address
-        pExportAddr = reinterpret_cast<PBYTE>(ModuleRemote) + 
-          (static_cast<PBYTE>(pExportAddr) - ModuleLocal);
-      }
+      // Get export address
+      FARPROC const pExportAddr(m_Memory.GetRemoteProcAddress(ModuleRemote, 
+        ModulePath, Export));
 
       // Create a remote thread that calls the desired export
       std::vector<PVOID> ExportArgs;
