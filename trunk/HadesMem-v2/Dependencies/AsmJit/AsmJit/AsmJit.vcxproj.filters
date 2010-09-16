@@ -15,6 +15,30 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="MemoryManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Operand.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="OperandX86X64.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Platform.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Util.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Util_p.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ApiBegin.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ApiEnd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="AsmJit.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -25,6 +49,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Build.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CodeGenerator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Compiler.h">
@@ -45,39 +72,21 @@
     <ClInclude Include="DefsX86X64.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Lock.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Logger.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="LoggerX86X64.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MemoryManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Serializer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SerializerX86X64.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Util.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="VirtualMemory.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WarningsPop.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WarningsPush.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Assembler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="AssemblerX86X64.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CodeGenerator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Compiler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CompilerX86X64.cpp">
@@ -89,28 +98,25 @@
     <ClCompile Include="Defs.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Lock.cpp">
+    <ClCompile Include="DefsX86X64.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Logger.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="LoggerX86X64.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="LoggerX86X64Dump.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="MemoryManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SerializerX86X64.cpp">
+    <ClCompile Include="Operand.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="OperandX86X64.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Platform.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Util.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="VirtualMemory.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

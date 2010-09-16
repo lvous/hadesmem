@@ -1,6 +1,6 @@
 // AsmJit - Complete JIT Assembler for C++ Language.
 
-// Copyright (c) 2008-2009, Petr Kobalicek <kobalicek.petr@gmail.com>
+// Copyright (c) 2008-2010, Petr Kobalicek <kobalicek.petr@gmail.com>
 //
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
@@ -70,8 +70,7 @@
 // #define ASMJIT_FREE ::free
 
 // [AsmJit - Debug]
-// #define ASMJIT_CRASH() crash()
-// #define ASMJIT_ASSERT(exp) do { if (!(exp)) ASMJIT_CRASH(); } while(0)
+// #define ASMJIT_ASSERT(exp) do { if (!(exp)) ::AsmJit::assertionFailure(__FILE__, __LINE__, #exp); } while(0)
 
 // [Guard]
 #endif // _ASMJIT_CONFIG_H

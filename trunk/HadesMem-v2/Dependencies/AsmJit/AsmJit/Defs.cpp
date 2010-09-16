@@ -1,6 +1,6 @@
 // AsmJit - Complete JIT Assembler for C++ Language.
 
-// Copyright (c) 2008-2009, Petr Kobalicek <kobalicek.petr@gmail.com>
+// Copyright (c) 2008-2010, Petr Kobalicek <kobalicek.petr@gmail.com>
 //
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
@@ -26,21 +26,33 @@
 // [Dependencies]
 #include "Defs.h"
 
-// [Warnings-Push]
-#include "WarningsPush.h"
+// [Api-Begin]
+#include "ApiBegin.h"
 
 namespace AsmJit {
 
-const char* errorCodeToString(UInt32 error) ASMJIT_NOTHROW
+const char* getErrorCodeAsString(uint32_t error) ASMJIT_NOTHROW
 {
   static const char* errorMessage[] = {
     "No error",
+
     "No heap memory",
     "No virtual memory",
+
     "Unknown instruction",
     "Illegal instruction",
     "Illegal addressing",
     "Illegal short jump",
+
+    "No function defined",
+    "Incomplete function",
+
+    "Not enough registers",
+    "Registers overlap",
+
+    "Incompatible argument",
+    "Incompatible return value",
+
     "Unknown error"
   };
 
@@ -52,5 +64,5 @@ const char* errorCodeToString(UInt32 error) ASMJIT_NOTHROW
 
 } // AsmJit
 
-// [Warnings-Pop]
-#include "WarningsPop.h"
+// [Api-End]
+#include "ApiEnd.h"

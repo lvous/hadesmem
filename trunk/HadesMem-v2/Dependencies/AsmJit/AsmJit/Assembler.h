@@ -1,6 +1,6 @@
 // AsmJit - Complete JIT Assembler for C++ Language.
 
-// Copyright (c) 2008-2009, Petr Kobalicek <kobalicek.petr@gmail.com>
+// Copyright (c) 2008-2010, Petr Kobalicek <kobalicek.petr@gmail.com>
 //
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
@@ -29,6 +29,18 @@
 
 // [Dependencies]
 #include "Build.h"
+
+// ============================================================================
+// [AsmJit::Forward Declarations]
+// ============================================================================
+
+namespace AsmJit {
+
+struct Logger;
+struct MemoryManager;
+struct EInstruction;
+
+} // AsmJit namespace
 
 // ============================================================================
 // [Platform Specific]

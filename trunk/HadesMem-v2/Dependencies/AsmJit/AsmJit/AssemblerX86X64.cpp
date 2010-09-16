@@ -1,6 +1,6 @@
 // AsmJit - Complete JIT Assembler for C++ Language.
 
-// Copyright (c) 2008-2009, Petr Kobalicek <kobalicek.petr@gmail.com>
+// Copyright (c) 2008-2010, Petr Kobalicek <kobalicek.petr@gmail.com>
 //
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
@@ -30,16 +30,23 @@
 
 // [Dependencies]
 #include "Assembler.h"
+#include "CodeGenerator.h"
 #include "CpuInfo.h"
+#include "Defs.h"
 #include "Logger.h"
 #include "MemoryManager.h"
-#include "VirtualMemory.h"
+#include "Platform.h"
+#include "Util_p.h"
+
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 // A little bit C++.
 #include <new>
 
-// [Warnings-Push]
-#include "WarningsPush.h"
+// [Api-Begin]
+#include "ApiBegin.h"
 
 namespace AsmJit {
 
@@ -55,106 +62,155 @@ struct ASMJIT_HIDDEN TrampolineWriter
   // Size of trampoline
   enum {
     TRAMPOLINE_JMP = 6,
-    TRAMPOLINE_ADDR = sizeof(SysInt),
+    TRAMPOLINE_ADDR = sizeof(sysint_t),
 
     TRAMPOLINE_SIZE = TRAMPOLINE_JMP + TRAMPOLINE_ADDR
   };
 
   // Write trampoline into code at address @a code that will jump to @a target.
-  static void writeTrampoline(UInt8* code, void* target)
+  static void writeTrampoline(uint8_t* code, void* target)
   {
     // Jmp.
     code[0] = 0xFF;
     // ModM (RIP addressing).
     code[1] = 0x25;
     // Offset (zero).
-    ((UInt32*)(code + 2))[0] = 0;
+    ((uint32_t*)(code + 2))[0] = 0;
     // Absolute address.
-    ((SysUInt*)(code + TRAMPOLINE_JMP))[0] = (SysUInt)target;
+    ((sysuint_t*)(code + TRAMPOLINE_JMP))[0] = (sysuint_t)target;
   }
 };
 
 #endif // ASMJIT_X64
 
 // ============================================================================
-// [AsmJit::Assembler - Construction / Destruction]
+// [AsmJit::AssemblerCore - Construction / Destruction]
 // ============================================================================
 
-Assembler::Assembler() ASMJIT_NOTHROW :
+AssemblerCore::AssemblerCore(CodeGenerator* codeGenerator) ASMJIT_NOTHROW :
+  _codeGenerator(codeGenerator != NULL ? codeGenerator : CodeGenerator::getGlobal()),
+  _zone(16384 - sizeof(Zone::Chunk) - 32),
+  _logger(NULL),
+  _error(0),
+  _properties((1 << PROPERTY_OPTIMIZE_ALIGN)),
+  _emitOptions(0),
   _buffer(32), // Max instruction length is 15, but we can align up to 32 bytes.
   _trampolineSize(0),
-  _unusedLinks(NULL)
+  _unusedLinks(NULL),
+  _comment(NULL)
 {
-  _inlineCommentBuffer[0] = '\0';
 }
 
-Assembler::~Assembler() ASMJIT_NOTHROW
+AssemblerCore::~AssemblerCore() ASMJIT_NOTHROW
 {
 }
 
 // ============================================================================
-// [AsmJit::Assembler - Buffer]
+// [AsmJit::AssemblerCore - Logging]
 // ============================================================================
 
-void Assembler::free() ASMJIT_NOTHROW
+void AssemblerCore::setLogger(Logger* logger) ASMJIT_NOTHROW
 {
-  _buffer.free();
-  _relocData.free();
-  _zone.freeAll();
-
-  if (error()) clearError();
+  _logger = logger;
 }
 
-UInt8* Assembler::takeCode() ASMJIT_NOTHROW
-{
-  UInt8* code = _buffer.take();
-  _relocData.clear();
-  _zone.clear();
+// ============================================================================
+// [AsmJit::AssemblerCore - Error Handling]
+// ============================================================================
 
-  if (error()) clearError();
-  return code;
+void AssemblerCore::setError(uint32_t error) ASMJIT_NOTHROW
+{
+  _error = error;
+
+  // Log.
+  if (_error != ERROR_NONE && _logger && _logger->isUsed())
+  {
+    _logger->logFormat("*** ASSEMBLER ERROR: %s (%u).\n",
+      getErrorCodeAsString(error),
+      (unsigned int)error);
+  }
 }
 
-void Assembler::clear() ASMJIT_NOTHROW
+// ============================================================================
+// [AsmJit::AssemblerCore - Properties]
+// ============================================================================
+
+uint32_t AssemblerCore::getProperty(uint32_t propertyId)
+{
+  return (_properties & (1 << propertyId)) != 0;
+}
+
+void AssemblerCore::setProperty(uint32_t propertyId, uint32_t value)
+{
+  if (value)
+    _properties |= (1 << propertyId);
+  else
+    _properties &= ~(1 << propertyId);
+}
+
+// ============================================================================
+// [AsmJit::AssemblerCore - Buffer]
+// ============================================================================
+
+void AssemblerCore::clear() ASMJIT_NOTHROW
 {
   _buffer.clear();
   _relocData.clear();
   _zone.clear();
 
-  if (error()) clearError();
+  if (_error) setError(ERROR_NONE);
+}
+
+void AssemblerCore::free() ASMJIT_NOTHROW
+{
+  _zone.freeAll();
+  _buffer.free();
+  _relocData.free();
+
+  if (_error) setError(ERROR_NONE);
+}
+
+uint8_t* AssemblerCore::takeCode() ASMJIT_NOTHROW
+{
+  uint8_t* code = _buffer.take();
+  _relocData.clear();
+  _zone.clear();
+
+  if (_error) setError(ERROR_NONE);
+  return code;
 }
 
 // ============================================================================
-// [AsmJit::Assembler - Stream Setters / Getters]
+// [AsmJit::AssemblerCore - Stream Setters / Getters]
 // ============================================================================
 
-void Assembler::setVarAt(SysInt pos, SysInt i, UInt8 isUnsigned, UInt32 size) ASMJIT_NOTHROW
+void AssemblerCore::setVarAt(sysint_t pos, sysint_t i, uint8_t isUnsigned, uint32_t size) ASMJIT_NOTHROW
 {
-  if (size == 1 && !isUnsigned) setByteAt (pos, (Int8  )i);
-  else if (size == 1 &&  isUnsigned) setByteAt (pos, (UInt8 )i);
-  else if (size == 2 && !isUnsigned) setWordAt (pos, (Int16 )i);
-  else if (size == 2 &&  isUnsigned) setWordAt (pos, (UInt16)i);
-  else if (size == 4 && !isUnsigned) setDWordAt(pos, (Int32 )i);
-  else if (size == 4 &&  isUnsigned) setDWordAt(pos, (UInt32)i);
+  if (size == 1 && !isUnsigned) setByteAt (pos, (int8_t  )i);
+  else if (size == 1 &&  isUnsigned) setByteAt (pos, (uint8_t )i);
+  else if (size == 2 && !isUnsigned) setWordAt (pos, (int16_t )i);
+  else if (size == 2 &&  isUnsigned) setWordAt (pos, (uint16_t)i);
+  else if (size == 4 && !isUnsigned) setDWordAt(pos, (int32_t )i);
+  else if (size == 4 &&  isUnsigned) setDWordAt(pos, (uint32_t)i);
 #if defined(ASMJIT_X64)
-  else if (size == 8 && !isUnsigned) setQWordAt(pos, (Int64 )i);
-  else if (size == 8 &&  isUnsigned) setQWordAt(pos, (UInt64)i);
+  else if (size == 8 && !isUnsigned) setQWordAt(pos, (int64_t )i);
+  else if (size == 8 &&  isUnsigned) setQWordAt(pos, (uint64_t)i);
 #endif // ASMJIT_X64
   else
     ASMJIT_ASSERT(0);
 }
 
 // ============================================================================
-// [AsmJit::Assembler - Assembler Emitters]
+// [AsmJit::AssemblerCore - Assembler Emitters]
 // ============================================================================
 
-bool Assembler::canEmit() ASMJIT_NOTHROW
+bool AssemblerCore::canEmit() ASMJIT_NOTHROW
 {
-  // If there is an error, we can't emit another instruction until clearError()
-  // is called. If something caused an error while generating code it's probably
-  // fatal in all cases. You can't use generated code, because you are not sure
-  // about its status.
-  if (error()) return false;
+  // If there is an error, we can't emit another instruction until last error
+  // is cleared by calling @c setError(ERROR_NONE). If something caused an error
+  // while generating code it's probably fatal in all cases. You can't use 
+  // generated code, because you are not sure about its status.
+  if (_error) return false;
 
   // The ensureSpace() method returns true on success and false on failure. We
   // are catching return value and setting error code here.
@@ -167,114 +223,112 @@ bool Assembler::canEmit() ASMJIT_NOTHROW
   return false;
 }
 
-void Assembler::_emitSegmentPrefix(const Operand& rm) ASMJIT_NOTHROW
+void AssemblerCore::_emitSegmentPrefix(const Operand& rm) ASMJIT_NOTHROW
 {
-  static const UInt8 prefixes[] = { 0x00, 0x2E, 0x36, 0x3E, 0x26, 0x64, 0x65 };
+  static const uint8_t prefixes[] = { 0x00, 0x2E, 0x36, 0x3E, 0x26, 0x64, 0x65 };
 
   if (rm.isMem())
   {
-    SysUInt segmentPrefix = reinterpret_cast<const Mem&>(rm).segmentPrefix();
+    sysuint_t segmentPrefix = reinterpret_cast<const Mem&>(rm).getSegmentPrefix();
     if (segmentPrefix) _emitByte(prefixes[segmentPrefix]);
   }
 }
 
-void Assembler::_emitImmediate(const Immediate& imm, UInt32 size) ASMJIT_NOTHROW
+void AssemblerCore::_emitImmediate(const Imm& imm, uint32_t size) ASMJIT_NOTHROW
 {
-  UInt8 isUnsigned = imm.isUnsigned();
-  SysInt i = imm.value();
+  uint8_t isUnsigned = imm.isUnsigned();
+  sysint_t i = imm.getValue();
 
-  if (imm.relocMode() != RELOC_NONE) 
-  {
-    // TODO: I don't know why there is this condition.
-  }
-
-  if (size == 1 && !isUnsigned) _emitByte ((Int8  )i);
-  else if (size == 1 &&  isUnsigned) _emitByte ((UInt8 )i);
-  else if (size == 2 && !isUnsigned) _emitWord ((Int16 )i);
-  else if (size == 2 &&  isUnsigned) _emitWord ((UInt16)i);
-  else if (size == 4 && !isUnsigned) _emitDWord((Int32 )i);
-  else if (size == 4 &&  isUnsigned) _emitDWord((UInt32)i);
+  if (size == 1 && !isUnsigned) _emitByte ((int8_t  )i);
+  else if (size == 1 &&  isUnsigned) _emitByte ((uint8_t )i);
+  else if (size == 2 && !isUnsigned) _emitWord ((int16_t )i);
+  else if (size == 2 &&  isUnsigned) _emitWord ((uint16_t)i);
+  else if (size == 4 && !isUnsigned) _emitDWord((int32_t )i);
+  else if (size == 4 &&  isUnsigned) _emitDWord((uint32_t)i);
 #if defined(ASMJIT_X64)
-  else if (size == 8 && !isUnsigned) _emitQWord((Int64 )i);
-  else if (size == 8 &&  isUnsigned) _emitQWord((UInt64)i);
+  else if (size == 8 && !isUnsigned) _emitQWord((int64_t )i);
+  else if (size == 8 &&  isUnsigned) _emitQWord((uint64_t)i);
 #endif // ASMJIT_X64
   else
     ASMJIT_ASSERT(0);
 }
 
-void Assembler::_emitModM(
-  UInt8 opReg, const Mem& mem, SysInt immSize) ASMJIT_NOTHROW
+void AssemblerCore::_emitModM(
+  uint8_t opReg, const Mem& mem, sysint_t immSize) ASMJIT_NOTHROW
 {
-  ASMJIT_ASSERT(mem.op() == OP_MEM);
+  ASMJIT_ASSERT(mem.getType() == OPERAND_MEM);
 
-  UInt8 baseReg = mem.base() & 0x7;
-  UInt8 indexReg = mem.index() & 0x7;
-  SysInt disp = mem.displacement();
-  UInt32 shift = mem.shift();
+  uint8_t baseReg = mem.getBase() & 0x7;
+  uint8_t indexReg = mem.getIndex() & 0x7;
+  sysint_t disp = mem.getDisplacement();
+  uint32_t shift = mem.getShift();
 
-  // [base + displacemnt]
-  if (mem.hasBase() && !mem.hasIndex())
+  if (mem.getMemType() == OPERAND_MEM_NATIVE)
   {
-    // ESP/RSP/R12 == 4
-    if (baseReg == 4)
+    // [base + displacemnt]
+    if (!mem.hasIndex())
     {
-      UInt8 mod = 0;
-
-      if (disp)
+      // ESP/RSP/R12 == 4
+      if (baseReg == 4)
       {
-        mod = isInt8(disp) ? 1 : 2;
+        uint8_t mod = 0;
+
+        if (disp)
+        {
+          mod = Util::isInt8(disp) ? 1 : 2;
+        }
+
+        _emitMod(mod, opReg, 4);
+        _emitSib(0, 4, 4);
+
+        if (disp)
+        {
+          if (Util::isInt8(disp))
+            _emitByte((int8_t)disp);
+          else
+            _emitInt32((int32_t)disp);
+        }
       }
-
-      _emitMod(mod, opReg, 4);
-      _emitSib(0, 4, 4);
-
-      if (disp)
+      // EBP/RBP/R13 == 5
+      else if (baseReg != 5 && disp == 0)
       {
-        if (isInt8(disp))
-          _emitByte((Int8)disp);
-        else
-          _emitInt32((Int32)disp);
+        _emitMod(0, opReg, baseReg);
+      }
+      else if (Util::isInt8(disp))
+      {
+        _emitMod(1, opReg, baseReg);
+        _emitByte((int8_t)disp);
+      }
+      else
+      {
+        _emitMod(2, opReg, baseReg);
+        _emitInt32((int32_t)disp);
       }
     }
-    // EBP/RBP/R13 == 5
-    else if (baseReg != 5 && disp == 0)
-    {
-      _emitMod(0, opReg, baseReg);
-    }
-    else if (isInt8(disp))
-    {
-      _emitMod(1, opReg, baseReg);
-      _emitByte((Int8)disp);
-    }
+
+    // [base + index * scale + displacemnt]
     else
     {
-      _emitMod(2, opReg, baseReg);
-      _emitInt32((Int32)disp);
-    }
-  }
+      // ASMJIT_ASSERT(indexReg != RID_ESP);
 
-  // [base + index * scale + displacemnt]
-  else if (mem.hasBase() && mem.hasIndex())
-  {
-    // ASMJIT_ASSERT(indexReg != RID_ESP);
-
-    // EBP/RBP/R13 == 5
-    if (baseReg != 5 && disp == 0)
-    {
-      _emitMod(0, opReg, 4);
-      _emitSib(shift, indexReg, baseReg);
-    }
-    else if (isInt8(disp))
-    {
-      _emitMod(1, opReg, 4);
-      _emitSib(shift, indexReg, baseReg);
-      _emitByte((Int8)disp);
-    }
-    else
-    {
-      _emitMod(2, opReg, 4);
-      _emitSib(shift, indexReg, baseReg);
-      _emitInt32((Int32)disp);
+      // EBP/RBP/R13 == 5
+      if (baseReg != 5 && disp == 0)
+      {
+        _emitMod(0, opReg, 4);
+        _emitSib(shift, indexReg, baseReg);
+      }
+      else if (Util::isInt8(disp))
+      {
+        _emitMod(1, opReg, 4);
+        _emitSib(shift, indexReg, baseReg);
+        _emitByte((int8_t)disp);
+      }
+      else
+      {
+        _emitMod(2, opReg, 4);
+        _emitSib(shift, indexReg, baseReg);
+        _emitInt32((int32_t)disp);
+      }
     }
   }
 
@@ -284,15 +338,16 @@ void Assembler::_emitModM(
   // [index * scale + displacemnt] |   ABSOLUTE  | ABSOLUTE (ZERO EXTENDED)
   else
   {
-    // In 32 bit mode is used absolute addressing model.
-    // In 64 bit mode is used relative addressing model together with absolute
-    // addressing one. Main problem is that if instruction contains SIB then
-    // relative addressing (RIP) is not possible.
+    // - In 32-bit mode is used absolute addressing model.
+    // - In 64-bit mode is used relative addressing model together with
+    //   absolute addressing one. Main problem is that if instruction
+    //   contains SIB then relative addressing (RIP) is not possible.
+
 #if defined(ASMJIT_X86)
 
     if (mem.hasIndex())
     {
-      // ASMJIT_ASSERT(mem.index() != 4); // ESP/RSP == 4
+      // ASMJIT_ASSERT(mem.getMemIndex() != 4); // ESP/RSP == 4
       _emitMod(0, opReg, 4);
       _emitSib(shift, indexReg, 5);
     }
@@ -303,75 +358,82 @@ void Assembler::_emitModM(
 
     // X86 uses absolute addressing model, all relative addresses will be
     // relocated to absolute ones.
-    if (mem.hasLabel())
+    if (mem.getMemType() == OPERAND_MEM_LABEL)
     {
-      Label* label = mem._mem.label;
-      UInt32 relocId = _relocData.length();
-      RelocData rd;
+      LabelData& l_data = _labelData[mem._mem.base & OPERAND_ID_VALUE_MASK];
+      RelocData r_data;
+      uint32_t relocId = _relocData.getLength();
 
       // Relative addressing will be relocated to absolute address.
-      rd.type = RelocData::RELATIVE_TO_ABSOLUTE;
-      rd.size = 4;
-      rd.offset = offset();
-      rd.destination = disp;
+      r_data.type = RelocData::RELATIVE_TO_ABSOLUTE;
+      r_data.size = 4;
+      r_data.offset = getOffset();
+      r_data.destination = disp;
 
-      if (label->isBound())
+      if (l_data.offset != -1)
       {
-        rd.destination += label->position();
-        // Dummy DWORD
+        // Bound label.
+        r_data.destination += l_data.offset;
+
+        // Add a dummy DWORD.
         _emitInt32(0);
       }
       else
       {
-        _emitDisplacement(label, -4 - immSize, 4)->relocId = relocId;
+        // Non-bound label.
+        _emitDisplacement(l_data, -4 - immSize, 4)->relocId = relocId;
       }
 
-      _relocData.append(rd);
+      _relocData.append(r_data);
     }
     else
     {
       // Absolute address
-      _emitInt32( (Int32)((UInt8*)mem._mem.target + disp) );
+      _emitInt32( (int32_t)((uint8_t*)mem._mem.target + disp) );
     }
 
 #else
 
     // X64 uses relative addressing model
-    if (mem.hasLabel())
+    if (mem.getMemType() == OPERAND_MEM_LABEL)
     {
-      Label* label = mem._mem.label;
+      LabelData& l_data = _labelData[mem._mem.base & OPERAND_ID_VALUE_MASK];
 
       if (mem.hasIndex())
       {
-        // Indexing is not possible
+        // Indexing is not possible.
         setError(ERROR_ILLEGAL_ADDRESING);
         return;
       }
 
-      // Relative address (RIP +/- displacement)
+      // Relative address (RIP +/- displacement).
       _emitMod(0, opReg, 5);
 
       disp -= (4 + immSize);
 
-      if (label->isBound())
+      if (l_data.offset != -1)
       {
-        disp += label->position() - offset();
-        _emitInt32((Int32)disp);
+        // Bound label.
+        disp += getOffset() - l_data.offset;
+
+        // Add a dummy DWORD.
+        _emitInt32((int32_t)disp);
       }
       else
       {
-        _emitDisplacement(label, disp, 4);
+        // Non-bound label.
+        _emitDisplacement(l_data, disp, 4);
       }
     }
     else
     {
-      // Absolute address (truncated to 32 bits), this kind of address requires
-      // SIB byte (4)
+      // Absolute address (truncated to 32-bits), this kind of address requires
+      // SIB byte (4).
       _emitMod(0, opReg, 4);
 
       if (mem.hasIndex())
       {
-        // ASMJIT_ASSERT(mem.index() != 4); // ESP/RSP == 4
+        // ASMJIT_ASSERT(mem.getMemIndex() != 4); // ESP/RSP == 4
         _emitSib(shift, indexReg, 5);
       }
       else
@@ -379,16 +441,19 @@ void Assembler::_emitModM(
         _emitSib(0, 4, 5);
       }
 
-      // truncate to 32 bits
-      SysUInt target = (SysUInt)((UInt8*)mem._mem.target + disp);
+      // Truncate to 32-bits.
+      sysuint_t target = (sysuint_t)((uint8_t*)mem._mem.target + disp);
 
-      if (target > (SysUInt)0xFFFFFFFF)
+      if (target > (sysuint_t)0xFFFFFFFF)
       {
-        if (_logger)
-          _logger->log("; Warning: Absolute address truncated to 32 bits\n");
+        if (_logger && _logger->isUsed())
+        {
+          _logger->logString("*** ASSEMBER WARNING - Absolute address truncated to 32-bits\n");
+        }
+        target &= 0xFFFFFFFF;
       }
 
-      _emitInt32( (Int32)((UInt32)target) );
+      _emitInt32( (int32_t)((uint32_t)target) );
     }
 
 #endif // ASMJIT_X64
@@ -396,142 +461,140 @@ void Assembler::_emitModM(
   }
 }
 
-void Assembler::_emitModRM(
-  UInt8 opReg, const Operand& op, SysInt immSize) ASMJIT_NOTHROW
+void AssemblerCore::_emitModRM(
+  uint8_t opReg, const Operand& op, sysint_t immSize) ASMJIT_NOTHROW
 {
-  ASMJIT_ASSERT(op.op() == OP_REG || op.op() == OP_MEM);
+  ASMJIT_ASSERT(op.getType() == OPERAND_REG || op.getType() == OPERAND_MEM);
 
-  if (op.op() == OP_REG)
-    _emitModR(opReg, reinterpret_cast<const BaseReg&>(op).code());
+  if (op.getType() == OPERAND_REG)
+    _emitModR(opReg, reinterpret_cast<const BaseReg&>(op).getRegCode());
   else
     _emitModM(opReg, reinterpret_cast<const Mem&>(op), immSize);
 }
 
-void Assembler::_emitX86Inl(
-  UInt32 opCode, UInt8 i16bit, UInt8 rexw, UInt8 reg) ASMJIT_NOTHROW
+void AssemblerCore::_emitX86Inl(
+  uint32_t opCode, uint8_t i16bit, uint8_t rexw, uint8_t reg, bool forceRexPrefix) ASMJIT_NOTHROW
 {
-  // 16 bit prefix
+  // 16-bit prefix.
   if (i16bit) _emitByte(0x66);
 
-  // instruction prefix
-  if (opCode & 0xFF000000) _emitByte((UInt8)((opCode & 0xFF000000) >> 24));
+  // Instruction prefix.
+  if (opCode & 0xFF000000) _emitByte((uint8_t)((opCode & 0xFF000000) >> 24));
 
-  // rex prefix
+  // REX prefix.
 #if defined(ASMJIT_X64)
-  _emitRexR(rexw, 0, reg);
+  _emitRexR(rexw, 0, reg, forceRexPrefix);
 #endif // ASMJIT_X64
 
-  // instruction opcodes
-  if (opCode & 0x00FF0000) _emitByte((UInt8)((opCode & 0x00FF0000) >> 16));
-  if (opCode & 0x0000FF00) _emitByte((UInt8)((opCode & 0x0000FF00) >>  8));
+  // Instruction opcodes.
+  if (opCode & 0x00FF0000) _emitByte((uint8_t)((opCode & 0x00FF0000) >> 16));
+  if (opCode & 0x0000FF00) _emitByte((uint8_t)((opCode & 0x0000FF00) >>  8));
 
-  _emitByte((UInt8)(opCode & 0x000000FF) + (reg & 0x7));
+  _emitByte((uint8_t)(opCode & 0x000000FF) + (reg & 0x7));
 }
 
-void Assembler::_emitX86RM(
-  UInt32 opCode, UInt8 i16bit, UInt8 rexw, UInt8 o, 
-  const Operand& op, SysInt immSize) ASMJIT_NOTHROW
+void AssemblerCore::_emitX86RM(
+  uint32_t opCode, uint8_t i16bit, uint8_t rexw, uint8_t o,
+  const Operand& op, sysint_t immSize, bool forceRexPrefix) ASMJIT_NOTHROW
 {
-  // 16 bit prefix
+  // 16-bit prefix.
   if (i16bit) _emitByte(0x66);
 
-  // segment prefix
+  // Segment prefix.
   _emitSegmentPrefix(op);
 
-  // instruction prefix
-  if (opCode & 0xFF000000) _emitByte((UInt8)((opCode & 0xFF000000) >> 24));
+  // Instruction prefix.
+  if (opCode & 0xFF000000) _emitByte((uint8_t)((opCode & 0xFF000000) >> 24));
 
-  // rex prefix
+  // REX prefix.
 #if defined(ASMJIT_X64)
-  _emitRexRM(rexw, o, op);
+  _emitRexRM(rexw, o, op, forceRexPrefix);
 #endif // ASMJIT_X64
 
-  // instruction opcodes
-  if (opCode & 0x00FF0000) _emitByte((UInt8)((opCode & 0x00FF0000) >> 16));
-  if (opCode & 0x0000FF00) _emitByte((UInt8)((opCode & 0x0000FF00) >>  8));
+  // Instruction opcodes.
+  if (opCode & 0x00FF0000) _emitByte((uint8_t)((opCode & 0x00FF0000) >> 16));
+  if (opCode & 0x0000FF00) _emitByte((uint8_t)((opCode & 0x0000FF00) >>  8));
+  _emitByte((uint8_t)(opCode & 0x000000FF));
 
-  _emitByte((UInt8)(opCode & 0x000000FF));
-
-  // ModR/M
+  // Mod R/M.
   _emitModRM(o, op, immSize);
 }
 
-void Assembler::_emitFpu(UInt32 opCode) ASMJIT_NOTHROW
+void AssemblerCore::_emitFpu(uint32_t opCode) ASMJIT_NOTHROW
 {
   _emitOpCode(opCode);
 }
 
-void Assembler::_emitFpuSTI(UInt32 opCode, UInt32 sti) ASMJIT_NOTHROW
+void AssemblerCore::_emitFpuSTI(uint32_t opCode, uint32_t sti) ASMJIT_NOTHROW
 {
-  // illegal stack offset
+  // Illegal stack offset.
   ASMJIT_ASSERT(0 <= sti && sti < 8);
   _emitOpCode(opCode + sti);
 }
 
-void Assembler::_emitFpuMEM(UInt32 opCode, UInt8 opReg, const Mem& mem) ASMJIT_NOTHROW
+void AssemblerCore::_emitFpuMEM(uint32_t opCode, uint8_t opReg, const Mem& mem) ASMJIT_NOTHROW
 {
-  // segment prefix
+  // Segment prefix.
   _emitSegmentPrefix(mem);
 
-  // instruction prefix
-  if (opCode & 0xFF000000) _emitByte((UInt8)((opCode & 0xFF000000) >> 24));
+  // Instruction prefix.
+  if (opCode & 0xFF000000) _emitByte((uint8_t)((opCode & 0xFF000000) >> 24));
 
-  // rex prefix
+  // REX prefix.
 #if defined(ASMJIT_X64)
-  _emitRexRM(0, opReg, mem);
+  _emitRexRM(0, opReg, mem, false);
 #endif // ASMJIT_X64
 
-  // instruction opcodes
-  if (opCode & 0x00FF0000) _emitByte((UInt8)((opCode & 0x00FF0000) >> 16));
-  if (opCode & 0x0000FF00) _emitByte((UInt8)((opCode & 0x0000FF00) >>  8));
+  // Instruction opcodes.
+  if (opCode & 0x00FF0000) _emitByte((uint8_t)((opCode & 0x00FF0000) >> 16));
+  if (opCode & 0x0000FF00) _emitByte((uint8_t)((opCode & 0x0000FF00) >>  8));
 
-  _emitByte((UInt8)((opCode & 0x000000FF)));
+  _emitByte((uint8_t)((opCode & 0x000000FF)));
   _emitModM(opReg, mem, 0);
 }
 
-void Assembler::_emitMmu(UInt32 opCode, UInt8 rexw, UInt8 opReg, 
-  const Operand& src, SysInt immSize) ASMJIT_NOTHROW
+void AssemblerCore::_emitMmu(uint32_t opCode, uint8_t rexw, uint8_t opReg,
+  const Operand& src, sysint_t immSize) ASMJIT_NOTHROW
 {
   // Segment prefix.
   _emitSegmentPrefix(src);
 
   // Instruction prefix.
-  if (opCode & 0xFF000000) _emitByte((UInt8)((opCode & 0xFF000000) >> 24));
+  if (opCode & 0xFF000000) _emitByte((uint8_t)((opCode & 0xFF000000) >> 24));
 
-  // Rex prefix
+  // REX prefix.
 #if defined(ASMJIT_X64)
-  _emitRexRM(rexw, opReg, src);
+  _emitRexRM(rexw, opReg, src, false);
 #endif // ASMJIT_X64
 
   // Instruction opcodes.
-  if (opCode & 0x00FF0000) _emitByte((UInt8)((opCode & 0x00FF0000) >> 16));
+  if (opCode & 0x00FF0000) _emitByte((uint8_t)((opCode & 0x00FF0000) >> 16));
 
   // No checking, MMX/SSE instructions have always two opcodes or more.
-  _emitByte((UInt8)((opCode & 0x0000FF00) >> 8));
-  _emitByte((UInt8)((opCode & 0x000000FF)));
+  _emitByte((uint8_t)((opCode & 0x0000FF00) >> 8));
+  _emitByte((uint8_t)((opCode & 0x000000FF)));
 
   if (src.isReg())
-    _emitModR(opReg, reinterpret_cast<const BaseReg&>(src).code());
+    _emitModR(opReg, reinterpret_cast<const BaseReg&>(src).getRegCode());
   else
     _emitModM(opReg, reinterpret_cast<const Mem&>(src), immSize);
 }
 
-Assembler::LinkData* Assembler::_emitDisplacement(
-  Label* label, SysInt inlinedDisplacement, int size) ASMJIT_NOTHROW
+AssemblerCore::LabelLink* AssemblerCore::_emitDisplacement(
+  LabelData& l_data, sysint_t inlinedDisplacement, int size) ASMJIT_NOTHROW
 {
-  ASMJIT_ASSERT(!label->isBound());
+  ASMJIT_ASSERT(l_data.offset == -1);
   ASMJIT_ASSERT(size == 1 || size == 4);
 
   // Chain with label.
-  LinkData* link = _newLinkData();
-  link->prev = (LinkData*)label->_lbl.link;
-  link->offset = offset();
+  LabelLink* link = _newLabelLink();
+  link->prev = l_data.links;
+  link->offset = getOffset();
   link->displacement = inlinedDisplacement;
 
-  label->_lbl.link = link;
-  label->_lbl.state = LABEL_STATE_LINKED;
+  l_data.links = link;
 
-  // Emit dummy DWORD.
+  // Emit label size as dummy data.
   if (size == 1)
     _emitByte(0x01);
   else // if (size == 4)
@@ -540,7 +603,7 @@ Assembler::LinkData* Assembler::_emitDisplacement(
   return link;
 }
 
-void Assembler::_emitJmpOrCallReloc(UInt32 instruction, void* target) ASMJIT_NOTHROW
+void AssemblerCore::_emitJmpOrCallReloc(uint32_t instruction, void* target) ASMJIT_NOTHROW
 {
   RelocData rd;
 
@@ -553,7 +616,7 @@ void Assembler::_emitJmpOrCallReloc(UInt32 instruction, void* target) ASMJIT_NOT
 #endif // ARCHITECTURE_SPECIFIC
 
   rd.size = 4;
-  rd.offset = offset();
+  rd.offset = getOffset();
   rd.address = target;
 
   _relocData.append(rd);
@@ -562,1230 +625,669 @@ void Assembler::_emitJmpOrCallReloc(UInt32 instruction, void* target) ASMJIT_NOT
   _emitInt32(0);
 }
 
-// ============================================================================
-// [AsmJit::Assembler - Relocation helpers]
-// ============================================================================
-
-void Assembler::relocCode(void* _dst) const ASMJIT_NOTHROW
+// Logging helpers.
+static const char* operandSize[] =
 {
-  // Copy code to virtual memory (this is a given _dst pointer).
-  UInt8* dst = reinterpret_cast<UInt8*>(_dst);
+  NULL,
+  "byte ptr ",
+  "word ptr ",
+  NULL,
+  "dword ptr ",
+  NULL,
+  NULL,
+  NULL,
+  "qword ptr ",
+  NULL,
+  "tword ptr ",
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  "dqword ptr "
+};
 
-  SysInt coff = _buffer.offset();
-  SysInt csize = codeSize();
+static const char segmentName[] =
+  "\0\0\0\0"
+  "cs:\0"
+  "ss:\0"
+  "ds:\0"
+  "es:\0"
+  "fs:\0"
+  "gs:\0";
 
-  // We are copying exactly size of generated code. Extra code for trampolines
-  // is generated on-the-fly by relocator (this code not exists at now).
-  memcpy(dst, _buffer.data(), coff);
+ASMJIT_HIDDEN char* dumpInstructionName(char* buf, uint32_t code) ASMJIT_NOTHROW
+{
+  ASMJIT_ASSERT(code < _INST_COUNT);
+  return Util::mycpy(buf, instructionDescription[code].getName());
+}
 
-#if defined(ASMJIT_X64)
-  // Trampoline pointer.
-  UInt8* tramp = dst + coff;
-#endif // ASMJIT_X64
+ASMJIT_HIDDEN char* dumpRegister(char* buf, uint32_t type, uint32_t index) ASMJIT_NOTHROW
+{
+  // NE == Not-Encodable.
+  const char reg8l[] = "al\0\0" "cl\0\0" "dl\0\0" "bl\0\0" "spl\0"  "bpl\0"  "sil\0"  "dil\0" ;
+  const char reg8h[] = "ah\0\0" "ch\0\0" "dh\0\0" "bh\0\0" "NE\0\0" "NE\0\0" "NE\0\0" "NE\0\0";
+  const char reg16[] = "ax\0\0" "cx\0\0" "dx\0\0" "bx\0\0" "sp\0\0" "bp\0\0" "si\0\0" "di\0\0";
 
-  // Relocate recorded locations.
-  SysInt i;
-  SysInt len = _relocData.length();
-
-  for (i = 0; i < len; i++)
+  switch (type)
   {
-    const RelocData& r = _relocData[i];
-    SysInt val;
-
-#if defined(ASMJIT_X64)
-    // Whether to use trampoline, can be only used if relocation type is
-    // ABSOLUTE_TO_RELATIVE_TRAMPOLINE.
-    bool useTrampoline = false;
-#endif // ASMJIT_X64
-
-    // Be sure that reloc data structure is correct.
-    ASMJIT_ASSERT((SysInt)(r.offset + r.size) <= csize);
-
-    switch(r.type)
-    {
-      case RelocData::ABSOLUTE_TO_ABSOLUTE:
-        val = (SysInt)(r.address);
-        break;
-
-      case RelocData::RELATIVE_TO_ABSOLUTE:
-        val = (SysInt)(dst + r.destination);
-        break;
-
-      case RelocData::ABSOLUTE_TO_RELATIVE:
-      case RelocData::ABSOLUTE_TO_RELATIVE_TRAMPOLINE:
-        val = (SysInt)( (SysUInt)r.address - ((SysUInt)dst + (SysUInt)r.offset + 4) );
-
-#if defined(ASMJIT_X64)
-        if (r.type == RelocData::ABSOLUTE_TO_RELATIVE_TRAMPOLINE && !isInt32(val))
-        {
-          val = (SysInt)( (SysUInt)tramp - ((SysUInt)dst + (SysUInt)r.offset + 4) );
-          useTrampoline = true;
-        }
-#endif // ASMJIT_X64
-        break;
-
-      default:
-        ASMJIT_ASSERT(0);
-    }
-
-    switch(r.size)
-    {
-      case 4:
-        *reinterpret_cast<Int32*>(dst + r.offset) = (Int32)val;
-        break;
-
-      case 8:
-        *reinterpret_cast<Int64*>(dst + r.offset) = (Int64)val;
-        break;
-
-      default:
-        ASMJIT_ASSERT(0);
-    }
-
-#if defined(ASMJIT_X64)
-    if (useTrampoline)
-    {
-      if (logger() && logger()->enabled())
-      {
-        logger()->logFormat("; Trampoline from %p -> %p\n", dst + r.offset, r.address);
-      }
-
-      TrampolineWriter::writeTrampoline(tramp, r.address);
-      tramp += TrampolineWriter::TRAMPOLINE_SIZE;
-    }
-#endif // ASMJIT_X64
+    case REG_TYPE_GPB_LO:
+      if (index < 8)
+        return buf + sprintf(buf, "%s", &reg8l[index*4]);
+      else
+        return buf + sprintf(buf, "r%ub", (uint32_t)index);
+    case REG_TYPE_GPB_HI:
+      if (index < 8)
+        return buf + sprintf(buf, "%s", &reg8h[index*4]);
+      else
+        return buf + sprintf(buf, "r%ub", (uint32_t)index);
+    case REG_TYPE_GPW:
+      if (index < 8)
+        return buf + sprintf(buf, "%s", &reg16[index*4]);
+      else
+        return buf + sprintf(buf, "r%uw", (uint32_t)index);
+    case REG_TYPE_GPD:
+      if (index < 8)
+        return buf + sprintf(buf, "e%s", &reg16[index*4]);
+      else
+        return buf + sprintf(buf, "r%ud", (uint32_t)index);
+    case REG_TYPE_GPQ:
+      if (index < 8)
+        return buf + sprintf(buf, "r%s", &reg16[index*4]);
+      else
+        return buf + sprintf(buf, "r%u", (uint32_t)index);
+    case REG_TYPE_X87:
+      return buf + sprintf(buf, "st%u", (uint32_t)index);
+    case REG_TYPE_MM:
+      return buf + sprintf(buf, "mm%u", (uint32_t)index);
+    case REG_TYPE_XMM:
+      return buf + sprintf(buf, "xmm%u", (uint32_t)index);
+    default:
+      return buf;
   }
 }
 
-// ============================================================================
-// [AsmJit::Assembler - Abstract Emitters]
-// ============================================================================
-
-void Assembler::_inlineComment(const char* text, SysInt len) ASMJIT_NOTHROW
+ASMJIT_HIDDEN char* dumpOperand(char* buf, const Operand* op) ASMJIT_NOTHROW
 {
-  if (_logger == NULL) return;
+  if (op->isReg())
+  {
+    const BaseReg& reg = reinterpret_cast<const BaseReg&>(*op);
+    return dumpRegister(buf, reg.getRegType(), reg.getRegIndex());
+  }
+  else if (op->isMem())
+  {
+    bool isAbsolute = false;
+    const Mem& mem = reinterpret_cast<const Mem&>(*op);
 
-  if (len < 0) len = strlen(text);
-  if (len > MAX_INLINE_COMMENT_SIZE - 1) len = MAX_INLINE_COMMENT_SIZE - 1;
+    if (op->getSize() <= 16)
+    {
+      buf = Util::mycpy(buf, operandSize[op->getSize()]);
+    }
 
-  memcpy(_inlineCommentBuffer, text, len + 1);
+    buf = Util::mycpy(buf, &segmentName[mem.getSegmentPrefix() * 4]);
+
+    *buf++ = '[';
+
+    switch (mem.getMemType())
+    {
+      case OPERAND_MEM_NATIVE:
+      {
+        // [base + index*scale + displacement]
+        buf = dumpRegister(buf, REG_TYPE_GPN, mem.getBase());
+        break;
+      }
+      case OPERAND_MEM_LABEL:
+      {
+        // [label + index*scale + displacement]
+        buf += sprintf(buf, "L.%u", mem.getBase() & OPERAND_ID_VALUE_MASK);
+        break;
+      }
+      case OPERAND_MEM_ABSOLUTE:
+      {
+        // [absolute]
+        isAbsolute = true;
+        buf = Util::myutoa(buf, (sysuint_t)mem.getTarget(), 16);
+        break;
+      }
+    }
+
+    if (mem.hasIndex())
+    {
+      buf = Util::mycpy(buf, " + ");
+      buf = dumpRegister(buf, REG_TYPE_GPN, mem.getIndex());
+
+      if (mem.getShift())
+      {
+        buf = Util::mycpy(buf, " * ");
+        *buf++ = "1248"[mem.getShift() & 3];
+      }
+    }
+
+    if (mem.getDisplacement() && !isAbsolute)
+    {
+      sysint_t d = mem.getDisplacement();
+      *buf++ = ' ';
+      *buf++ = (d < 0) ? '-' : '+';
+      *buf++ = ' ';
+      buf = Util::myutoa(buf, d < 0 ? -d : d);
+    }
+
+    *buf++ = ']';
+    return buf;
+  }
+  else if (op->isImm())
+  {
+    const Imm& i = reinterpret_cast<const Imm&>(*op);
+    return Util::myitoa(buf, (sysint_t)i.getValue());
+  }
+  else if (op->isLabel())
+  {
+    return buf + sprintf(buf, "L.%u", op->getId() & OPERAND_ID_VALUE_MASK);
+  }
+  else
+  {
+    return Util::mycpy(buf, "None");
+  }
 }
 
-// #define ASMJIT_DEBUG_INSTRUCTION_MAP
-
-// Instruction description
-struct InstructionDescription
+static char* dumpInstruction(char* buf,
+  uint32_t code,
+  uint32_t emitOptions,
+  const Operand* o0,
+  const Operand* o1,
+  const Operand* o2) ASMJIT_NOTHROW
 {
-#if defined(ASMJIT_DEBUG_INSTRUCTION_MAP)
-  UInt32 instruction;
-  const char* name;
-#endif // ASMJIT_DEBUG_INSTRUCTION_MAP
+  if (emitOptions & EMIT_OPTION_REX_PREFIX ) buf = Util::mycpy(buf, "rex ", 4);
+  if (emitOptions & EMIT_OPTION_LOCK_PREFIX) buf = Util::mycpy(buf, "lock ", 5);
+  if (emitOptions & EMIT_OPTION_SHORT_JUMP ) buf = Util::mycpy(buf, "short ", 6);
 
-  // Instruction group
-  UInt8 group;
-  // First operand flags (some groups uses them, some not)
-  UInt8 o1Flags;
-  // Second operand flags (some groups uses them, some not)
-  UInt8 o2Flags;
-  // If instruction has only memory operand, this is register opcode
-  UInt8 opCodeR;
-  // Primary opcode
-  UInt32 opCode1;
-  // Secondary opcode (used only by few groups - mmx / sse)
-  UInt32 opCode2;
+  // Dump instruction.
+  buf = dumpInstructionName(buf, code);
+
+  // Dump operands.
+  if (!o0->isNone()) { *buf++ = ' '; buf = dumpOperand(buf, o0); }
+  if (!o1->isNone()) { *buf++ = ','; *buf++ = ' '; buf = dumpOperand(buf, o1); }
+  if (!o2->isNone()) { *buf++ = ','; *buf++ = ' '; buf = dumpOperand(buf, o2); }
+
+  return buf;
+}
+
+static char* dumpComment(char* buf, sysuint_t len, const uint8_t* binaryData, sysuint_t binaryLen, const char* comment)
+{
+  sysuint_t currentLength = len;
+  sysuint_t commentLength = comment ? strlen(comment) : 0;
+
+  if (binaryLen || commentLength)
+  {
+    sysuint_t align = 32;
+    char sep = ';';
+
+    // Truncate if comment is too long (it shouldn't be, larger than 80 seems to
+    // be an exploit).
+    if (commentLength > 80) commentLength = 80;
+
+    for (sysuint_t i = (binaryLen == 0); i < 2; i++)
+    {
+      char* bufBegin = buf;
+
+      // Append align.
+      if (currentLength < align) 
+      {
+        buf = Util::myfill(buf, ' ', align - currentLength);
+      }
+
+      // Append separator.
+      if (sep)
+      {
+        *buf++ = sep;
+        *buf++ = ' ';
+      }
+
+      // Append binary data or comment.
+      if (i == 0)
+      {
+        buf = Util::myhex(buf, binaryData, binaryLen);
+        if (commentLength == 0) break;
+      }
+      else
+      {
+        buf = Util::mycpy(buf, comment, commentLength);
+      }
+
+      currentLength += (sysuint_t)(buf - bufBegin);
+      align += 18;
+      sep = '|';
+    }
+  }
+
+  *buf++ = '\n';
+  return buf;
+}
+
+// Used for NULL operands to translate them to OPERAND_NONE.
+static const uint8_t _none[sizeof(Operand)] =
+{
+  0
 };
 
-// Instruction groups
-enum I
-{
-  I_EMIT,
-
-  I_ALU,
-  I_BSWAP,
-  I_BT,
-  I_CALL,
-  I_CRC32,
-  I_ENTER,
-  I_IMUL,
-  I_INC_DEC,
-  I_J,
-  I_JMP,
-  I_LEA,
-  I_M,
-  I_MOV,
-  I_MOV_PTR,
-  I_MOVSX_MOVZX,
-  I_MOVSXD,
-  I_PUSH, // I_PUSH is implemented before I_POP
-  I_POP,
-  I_R_RM,
-  I_RM_B,
-  I_RM,
-  I_RM_R,
-  I_RET,
-  I_ROT,
-  I_SHLD_SHRD,
-  I_TEST,
-  I_XCHG,
-
-  I_REP_INST,
-
-  // Group for x87 FP instructions in format mem or st(i), st(i) (fadd, fsub, fdiv, ...)
-  I_X87_FPU,
-  // Group for x87 FP instructions in format st(i), st(i)
-  I_X87_STI,
-  // Group for fld/fst/fstp instruction, internally uses I_X87_MEM group.
-  I_X87_MEM_STI,
-  // Group for x87 FP instructions that uses Word, DWord, QWord or TWord memory pointer.
-  I_X87_MEM,
-  // Group for x87 FSTSW/FNSTSW instructions
-  I_X87_FSTSW,
-
-  // Group for movbe instruction
-  I_MOVBE,
-
-  // Group for MMX/SSE instructions in format (X)MM|Reg|Mem <- (X)MM|Reg|Mem,
-  // 0x66 prefix must be set manually in opcodes.
-  // - Primary opcode is used for instructions in (X)MM <- (X)MM/Mem format,
-  // - Secondary opcode is used for instructions in (X)MM/Mem <- (X)MM format.
-  I_MMU_MOV,
-
-  // Group for movd and movq instructions.
-  I_MMU_MOVD,
-  I_MMU_MOVQ,
-
-  // Group for pextrd, pextrq and pextrw instructions (it's special instruction 
-  // not similar to others)
-  I_MMU_PEXTR,
-
-  // Group for prefetch instruction
-  I_MMU_PREFETCH,
-
-  // Group for MMX/SSE instructions in format (X)MM|Reg <- (X)MM|Reg|Mem|Imm, 
-  // 0x66 prefix is added for MMX instructions that used by SSE2 registers.
-  // - Primary opcode is used for instructions in (X)MM|Reg <- (X)MM|Reg|Mem format,
-  // - Secondary opcode is iused for instructions in (X)MM|Reg <- Imm format.
-  I_MMU_RMI,
-  I_MMU_RM_IMM8,
-
-  // Group for 3dNow instructions
-  I_MMU_RM_3DNOW
+static const Operand::RegData _patchedHiRegs[4] =
+{// op         , size, { reserved0, reserved1 }, id           , code
+  { OPERAND_REG, 1   , { 0        , 0         }, INVALID_VALUE, REG_TYPE_GPB_LO | 4 },
+  { OPERAND_REG, 1   , { 0        , 0         }, INVALID_VALUE, REG_TYPE_GPB_LO | 5 },
+  { OPERAND_REG, 1   , { 0        , 0         }, INVALID_VALUE, REG_TYPE_GPB_LO | 6 },
+  { OPERAND_REG, 1   , { 0        , 0         }, INVALID_VALUE, REG_TYPE_GPB_LO | 7 }
 };
 
-// Instruction operand flags
-enum O
+void AssemblerCore::_emitInstruction(uint32_t code) ASMJIT_NOTHROW
 {
-  // x86
-  O_G8          = 0x01,
-  O_G16         = 0x02,
-  O_G32         = 0x04,
-  O_G64         = 0x08,
-  O_MEM         = 0x40,
-  O_IMM         = 0x80,
+  _emitInstruction(code, NULL, NULL, NULL);
+}
 
-  O_G8_16_32_64 = O_G64  | O_G32  | O_G16  | O_G8,
-  O_G16_32_64   = O_G64  | O_G32  | O_G16,
-  O_G32_64      = O_G64  | O_G32,
+void AssemblerCore::_emitInstruction(uint32_t code, const Operand* o0) ASMJIT_NOTHROW
+{
+  _emitInstruction(code, o0, NULL, NULL);
+}
 
-  // x87
-  O_FM_1        = 0x01,
-  O_FM_2        = 0x02,
-  O_FM_4        = 0x04,
-  O_FM_8        = 0x08,
-  O_FM_10       = 0x10,
+void AssemblerCore::_emitInstruction(uint32_t code, const Operand* o0, const Operand* o1) ASMJIT_NOTHROW
+{
+  _emitInstruction(code, o0, o1, NULL);
+}
 
-  O_FM_2_4      = O_FM_2 | O_FM_4,
-  O_FM_2_4_8    = O_FM_2 | O_FM_4 | O_FM_8,
-  O_FM_4_8      = O_FM_4 | O_FM_8,
-  O_FM_4_8_10   = O_FM_4 | O_FM_8 | O_FM_10,
-
-  // mm|xmm
-  O_NOREX       = 0x01, // Used by MMX/SSE instructions, O_G8 is never used for them
-  O_MM          = 0x10,
-  O_XMM         = 0x20,
-
-  O_MM_MEM      = O_MM   | O_MEM,
-  O_XMM_MEM     = O_XMM  | O_MEM,
-  O_MM_XMM      = O_MM   | O_XMM,
-  O_MM_XMM_MEM  = O_MM   | O_XMM  | O_MEM
-};
-
-#if defined(ASMJIT_DEBUG_INSTRUCTION_MAP)
-#define MAKE_INST(code, name, type, o1Flags, o2Flags, opReg, opCode1, opCode2) \
-        { code, name, type, o1Flags, o2Flags, opReg, opCode1, opCode2 }
+void AssemblerCore::_emitInstruction(uint32_t code, const Operand* o0, const Operand* o1, const Operand* o2) ASMJIT_NOTHROW
+{
+  uint32_t bLoHiUsed = 0;
+#if defined(ASMJIT_X86)
+  uint32_t forceRexPrefix = false;
 #else
-#define MAKE_INST(code, name, type, o1Flags, o2Flags, opReg, opCode1, opCode2) \
-        { type, o1Flags, o2Flags, opReg, opCode1, opCode2 }
-#endif // ASMJIT_DEBUG_INSTRUCTION_MAP
+  uint32_t forceRexPrefix = _emitOptions & EMIT_OPTION_REX_PREFIX;
+#endif
 
-#define ToDo 0
+#if defined(ASMJIT_DEBUG)
+  bool assertIllegal = false;
+#endif // ASMJIT_DEBUG
 
-static const InstructionDescription x86instructions[] =
-{
-  // Instruction code (enum)      | instruction name   | group           | operator 1 flags| operator 2 flags| r| opCode1   | opcode2
-  MAKE_INST(INST_ADC              , "adc"              , I_ALU           , 0               , 0               , 2, 0x00000010, 0x00000080),
-  MAKE_INST(INST_ADD              , "add"              , I_ALU           , 0               , 0               , 0, 0x00000000, 0x00000080),
-  MAKE_INST(INST_ADDPD            , "addpd"            , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x66000F58, 0),
-  MAKE_INST(INST_ADDPS            , "addps"            , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x00000F58, 0),
-  MAKE_INST(INST_ADDSD            , "addsd"            , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0xF2000F58, 0),
-  MAKE_INST(INST_ADDSS            , "addss"            , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0xF3000F58, 0),
-  MAKE_INST(INST_ADDSUBPD         , "addsubpd"         , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x66000FD0, 0),
-  MAKE_INST(INST_ADDSUBPS         , "addsubps"         , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0xF2000FD0, 0),
-  MAKE_INST(INST_AMD_PREFETCH     , "amd_prefetch"     , I_M             , O_MEM           , 0               , 0, 0x00000F0D, 0),
-  MAKE_INST(INST_AMD_PREFETCHW    , "amd_prefetchw"    , I_M             , O_MEM           , 0               , 1, 0x00000F0D, 0),
-  MAKE_INST(INST_AND              , "and"              , I_ALU           , 0               , 0               , 4, 0x00000020, 0x00000080),
-  MAKE_INST(INST_ANDNPD           , "andnpd"           , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x66000F55, 0),
-  MAKE_INST(INST_ANDNPS           , "andnps"           , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x00000F55, 0),
-  MAKE_INST(INST_ANDPD            , "andpd"            , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x66000F54, 0),
-  MAKE_INST(INST_ANDPS            , "andps"            , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x00000F54, 0),
-  MAKE_INST(INST_BLENDPD          , "blendpd"          , I_MMU_RM_IMM8   , O_XMM           , O_XMM_MEM       , 0, 0x660F3A0D, 0),
-  MAKE_INST(INST_BLENDPS          , "blendps"          , I_MMU_RM_IMM8   , O_XMM           , O_XMM_MEM       , 0, 0x660F3A0C, 0),
-  MAKE_INST(INST_BLENDVPD         , "blendvpd"         , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x660F3815, 0),
-  MAKE_INST(INST_BLENDVPS         , "blendvps"         , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x660F3814, 0),
-  MAKE_INST(INST_BSF              , "bsf"              , I_R_RM          , 0               , 0               , 0, 0x00000FBC, 0),
-  MAKE_INST(INST_BSR              , "bsr"              , I_R_RM          , 0               , 0               , 0, 0x00000FBD, 0),
-  MAKE_INST(INST_BSWAP            , "bswap"            , I_BSWAP         , 0               , 0               , 0, 0         , 0),
-  MAKE_INST(INST_BT               , "bt"               , I_BT            ,O_G16_32_64|O_MEM,O_G16_32_64|O_IMM, 4, 0x00000FA3, 0x00000FBA),
-  MAKE_INST(INST_BTC              , "btc"              , I_BT            ,O_G16_32_64|O_MEM,O_G16_32_64|O_IMM, 7, 0x00000FBB, 0x00000FBA),
-  MAKE_INST(INST_BTR              , "btr"              , I_BT            ,O_G16_32_64|O_MEM,O_G16_32_64|O_IMM, 6, 0x00000FB3, 0x00000FBA),
-  MAKE_INST(INST_BTS              , "bts"              , I_BT            ,O_G16_32_64|O_MEM,O_G16_32_64|O_IMM, 5, 0x00000FAB, 0x00000FBA),
-  MAKE_INST(INST_CALL             , "call"             , I_CALL          , 0               , 0               , 0, 0         , 0),
-  MAKE_INST(INST_CBW              , "cbw"              , I_EMIT          , 0               , 0               , 0, 0x66000099, 0),
-  MAKE_INST(INST_CDQE             , "cdqe"             , I_EMIT          , 0               , 0               , 0, 0x48000099, 0),
-  MAKE_INST(INST_CLC              , "clc"              , I_EMIT          , 0               , 0               , 0, 0x000000F8, 0),
-  MAKE_INST(INST_CLD              , "cld"              , I_EMIT          , 0               , 0               , 0, 0x000000FC, 0),
-  MAKE_INST(INST_CLFLUSH          , "clflush"          , I_M             , O_MEM           , 0               , 7, 0x00000FAE, 0),
-  MAKE_INST(INST_CMC              , "cmc"              , I_EMIT          , 0               , 0               , 0, 0x000000F5, 0),
-  MAKE_INST(INST_CMOVA            , "cmova"            , I_R_RM          , 0               , 0               , 0, 0x00000F47, 0),
-  MAKE_INST(INST_CMOVAE           , "cmovae"           , I_R_RM          , 0               , 0               , 0, 0x00000F43, 0),
-  MAKE_INST(INST_CMOVB            , "cmovb"            , I_R_RM          , 0               , 0               , 0, 0x00000F42, 0),
-  MAKE_INST(INST_CMOVBE           , "cmovbe"           , I_R_RM          , 0               , 0               , 0, 0x00000F46, 0),
-  MAKE_INST(INST_CMOVC            , "cmovc"            , I_R_RM          , 0               , 0               , 0, 0x00000F42, 0),
-  MAKE_INST(INST_CMOVE            , "cmove"            , I_R_RM          , 0               , 0               , 0, 0x00000F44, 0),
-  MAKE_INST(INST_CMOVG            , "cmovg"            , I_R_RM          , 0               , 0               , 0, 0x00000F4F, 0),
-  MAKE_INST(INST_CMOVGE           , "cmovge"           , I_R_RM          , 0               , 0               , 0, 0x00000F4D, 0),
-  MAKE_INST(INST_CMOVL            , "cmovl"            , I_R_RM          , 0               , 0               , 0, 0x00000F4C, 0),
-  MAKE_INST(INST_CMOVLE           , "cmovle"           , I_R_RM          , 0               , 0               , 0, 0x00000F4E, 0),
-  MAKE_INST(INST_CMOVNA           , "cmovna"           , I_R_RM          , 0               , 0               , 0, 0x00000F46, 0),
-  MAKE_INST(INST_CMOVNAE          , "cmovnae"          , I_R_RM          , 0               , 0               , 0, 0x00000F42, 0),
-  MAKE_INST(INST_CMOVNB           , "cmovnb"           , I_R_RM          , 0               , 0               , 0, 0x00000F43, 0),
-  MAKE_INST(INST_CMOVNBE          , "cmovnbe"          , I_R_RM          , 0               , 0               , 0, 0x00000F47, 0),
-  MAKE_INST(INST_CMOVNC           , "cmovnc"           , I_R_RM          , 0               , 0               , 0, 0x00000F43, 0),
-  MAKE_INST(INST_CMOVNE           , "cmovne"           , I_R_RM          , 0               , 0               , 0, 0x00000F45, 0),
-  MAKE_INST(INST_CMOVNG           , "cmovng"           , I_R_RM          , 0               , 0               , 0, 0x00000F4E, 0),
-  MAKE_INST(INST_CMOVNGE          , "cmovnge"          , I_R_RM          , 0               , 0               , 0, 0x00000F4C, 0),
-  MAKE_INST(INST_CMOVNL           , "cmovnl"           , I_R_RM          , 0               , 0               , 0, 0x00000F4D, 0),
-  MAKE_INST(INST_CMOVNLE          , "cmovnle"          , I_R_RM          , 0               , 0               , 0, 0x00000F4F, 0),
-  MAKE_INST(INST_CMOVNO           , "cmovno"           , I_R_RM          , 0               , 0               , 0, 0x00000F41, 0),
-  MAKE_INST(INST_CMOVNP           , "cmovnp"           , I_R_RM          , 0               , 0               , 0, 0x00000F4B, 0),
-  MAKE_INST(INST_CMOVNS           , "cmovns"           , I_R_RM          , 0               , 0               , 0, 0x00000F49, 0),
-  MAKE_INST(INST_CMOVNZ           , "cmovnz"           , I_R_RM          , 0               , 0               , 0, 0x00000F45, 0),
-  MAKE_INST(INST_CMOVO            , "cmovo"            , I_R_RM          , 0               , 0               , 0, 0x00000F40, 0),
-  MAKE_INST(INST_CMOVP            , "cmovp"            , I_R_RM          , 0               , 0               , 0, 0x00000F4A, 0),
-  MAKE_INST(INST_CMOVPE           , "cmovpe"           , I_R_RM          , 0               , 0               , 0, 0x00000F4A, 0),
-  MAKE_INST(INST_CMOVPO           , "cmovpo"           , I_R_RM          , 0               , 0               , 0, 0x00000F4B, 0),
-  MAKE_INST(INST_CMOVS            , "cmovs"            , I_R_RM          , 0               , 0               , 0, 0x00000F48, 0),
-  MAKE_INST(INST_CMOVZ            , "cmovz"            , I_R_RM          , 0               , 0               , 0, 0x00000F44, 0),
-  MAKE_INST(INST_CMP              , "cmp"              , I_ALU           , 0               , 0               , 7, 0x00000038, 0x00000080),
-  MAKE_INST(INST_CMPPD            , "cmppd"            , I_MMU_RM_IMM8   , O_XMM           , O_XMM_MEM       , 0, 0x66000FC2, 0),
-  MAKE_INST(INST_CMPPS            , "cmpps"            , I_MMU_RM_IMM8   , O_XMM           , O_XMM_MEM       , 0, 0x00000FC2, 0),
-  MAKE_INST(INST_CMPSD            , "cmpsd"            , I_MMU_RM_IMM8   , O_XMM           , O_XMM_MEM       , 0, 0xF2000FC2, 0),
-  MAKE_INST(INST_CMPSS            , "cmpss"            , I_MMU_RM_IMM8   , O_XMM           , O_XMM_MEM       , 0, 0xF3000FC2, 0),
-  MAKE_INST(INST_CMPXCHG          , "cmpxchg"          , I_RM_R          , 0               , 0               , 0, 0x00000FB0, 0),
-  MAKE_INST(INST_CMPXCHG16B       , "cmpxchg16b"       , I_M             , O_MEM           , 0               , 1, 0x00000FC7, 1 /* RexW */),
-  MAKE_INST(INST_CMPXCHG8B        , "cmpxchg8b"        , I_M             , O_MEM           , 0               , 1, 0x00000FC7, 0),
-  MAKE_INST(INST_COMISD           , "comisd"           , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x66000F2F, 0),
-  MAKE_INST(INST_COMISS           , "comiss"           , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x00000F2F, 0),
-  MAKE_INST(INST_CPUID            , "cpuid"            , I_EMIT          , 0               , 0               , 0, 0x00000FA2, 0),
-  MAKE_INST(INST_CRC32            , "crc32"            , I_CRC32         , 0               , 0               , 0, 0xF20F38F0, 0),
-  MAKE_INST(INST_CVTDQ2PD         , "cvtdq2pd"         , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0xF3000FE6, 0),
-  MAKE_INST(INST_CVTDQ2PS         , "cvtdq2ps"         , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x00000F5B, 0),
-  MAKE_INST(INST_CVTPD2DQ         , "cvtpd2dq"         , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0xF2000FE6, 0),
-  MAKE_INST(INST_CVTPD2PI         , "cvtpd2pi"         , I_MMU_RMI       , O_MM            , O_XMM_MEM       , 0, 0x66000F2D, 0),
-  MAKE_INST(INST_CVTPD2PS         , "cvtpd2ps"         , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x66000F5A, 0),
-  MAKE_INST(INST_CVTPI2PD         , "cvtpi2pd"         , I_MMU_RMI       , O_XMM           , O_MM_MEM        , 0, 0x66000F2A, 0),
-  MAKE_INST(INST_CVTPI2PS         , "cvtpi2ps"         , I_MMU_RMI       , O_XMM           , O_MM_MEM        , 0, 0x00000F2A, 0),
-  MAKE_INST(INST_CVTPS2DQ         , "cvtps2dq"         , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x66000F5B, 0),
-  MAKE_INST(INST_CVTPS2PD         , "cvtps2pd"         , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x00000F5A, 0),
-  MAKE_INST(INST_CVTPS2PI         , "cvtps2pi"         , I_MMU_RMI       , O_MM            , O_XMM_MEM       , 0, 0x00000F2D, 0),
-  MAKE_INST(INST_CVTSD2SI         , "cvtsd2si"         , I_MMU_RMI       , O_G32_64        , O_XMM_MEM       , 0, 0xF2000F2D, 0),
-  MAKE_INST(INST_CVTSD2SS         , "cvtsd2ss"         , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0xF2000F5A, 0),
-  MAKE_INST(INST_CVTSI2SD         , "cvtsi2sd"         , I_MMU_RMI       , O_XMM           , O_G32_64|O_MEM  , 0, 0xF2000F2A, 0),
-  MAKE_INST(INST_CVTSI2SS         , "cvtsi2ss"         , I_MMU_RMI       , O_XMM           , O_G32_64|O_MEM  , 0, 0xF3000F2A, 0),
-  MAKE_INST(INST_CVTSS2SD         , "cvtss2sd"         , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0xF3000F5A, 0),
-  MAKE_INST(INST_CVTSS2SI         , "cvtss2si"         , I_MMU_RMI       , O_G32_64        , O_XMM_MEM       , 0, 0xF3000F2D, 0),
-  MAKE_INST(INST_CVTTPD2DQ        , "cvttpd2dq"        , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x66000FE6, 0),
-  MAKE_INST(INST_CVTTPD2PI        , "cvttpd2pi"        , I_MMU_RMI       , O_MM            , O_XMM_MEM       , 0, 0x66000F2C, 0),
-  MAKE_INST(INST_CVTTPS2DQ        , "cvttps2dq"        , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0xF3000F5B, 0),
-  MAKE_INST(INST_CVTTPS2PI        , "cvttps2pi"        , I_MMU_RMI       , O_MM            , O_XMM_MEM       , 0, 0x00000F2C, 0),
-  MAKE_INST(INST_CVTTSD2SI        , "cvttsd2si"        , I_MMU_RMI       , O_G32_64        , O_XMM_MEM       , 0, 0xF2000F2C, 0),
-  MAKE_INST(INST_CVTTSS2SI        , "cvttss2si"        , I_MMU_RMI       , O_G32_64        , O_XMM_MEM       , 0, 0xF3000F2C, 0),
-  MAKE_INST(INST_CWDE             , "cwde"             , I_EMIT          , 0               , 0               , 0, 0x00000099, 0),
-  MAKE_INST(INST_DAA              , "daa"              , I_EMIT          , 0               , 0               , 0, 0x00000027, 0),
-  MAKE_INST(INST_DAS              , "das"              , I_EMIT          , 0               , 0               , 0, 0x0000002F, 0),
-  MAKE_INST(INST_DEC              , "dec"              , I_INC_DEC       , 0               , 0               , 1, 0x00000048, 0x000000FE),
-  MAKE_INST(INST_DIV              , "div"              , I_RM            , 0               , 0               , 6, 0x000000F6, 0),
-  MAKE_INST(INST_DIVPD            , "divpd"            , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x66000F5E, 0),
-  MAKE_INST(INST_DIVPS            , "divps"            , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x00000F5E, 0),
-  MAKE_INST(INST_DIVSD            , "divsd"            , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0xF2000F5E, 0),
-  MAKE_INST(INST_DIVSS            , "divss"            , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0xF3000F5E, 0),
-  MAKE_INST(INST_DPPD             , "dppd"             , I_MMU_RM_IMM8   , O_XMM           , O_XMM_MEM       , 0, 0x660F3A41, 0),
-  MAKE_INST(INST_DPPS             , "dpps"             , I_MMU_RM_IMM8   , O_XMM           , O_XMM_MEM       , 0, 0x660F3A40, 0),
-  MAKE_INST(INST_EMMS             , "emms"             , I_EMIT          , 0               , 0               , 0, 0x00000F77, 0),
-  MAKE_INST(INST_ENTER            , "enter"            , I_ENTER         , 0               , 0               , 0, 0x000000C8, 0),
-  MAKE_INST(INST_EXTRACTPS        , "extractps"        , I_MMU_RM_IMM8   , O_XMM           , O_XMM_MEM       , 0, 0x660F3A17, 0),
-  MAKE_INST(INST_F2XM1            , "f2xm1"            , I_EMIT          , 0               , 0               , 0, 0x0000D9F0, 0),
-  MAKE_INST(INST_FABS             , "fabs"             , I_EMIT          , 0               , 0               , 0, 0x0000D9E1, 0),
-  MAKE_INST(INST_FADD             , "fadd"             , I_X87_FPU       , 0               , 0               , 0, 0xD8DCC0C0, 0),
-  MAKE_INST(INST_FADDP            , "faddp"            , I_X87_STI       , 0               , 0               , 0, 0x0000DEC0, 0),
-  MAKE_INST(INST_FBLD             , "fbld"             , I_M             , O_MEM           , 0               , 4, 0x000000DF, 0),
-  MAKE_INST(INST_FBSTP            , "fbstp"            , I_M             , O_MEM           , 0               , 6, 0x000000DF, 0),
-  MAKE_INST(INST_FCHS             , "fchs"             , I_EMIT          , 0               , 0               , 0, 0x0000D9E0, 0),
-  MAKE_INST(INST_FCLEX            , "fclex"            , I_EMIT          , 0               , 0               , 0, 0x9B00DBE2, 0),
-  MAKE_INST(INST_FCMOVB           , "fcmovb"           , I_X87_STI       , 0               , 0               , 0, 0x0000DAC0, 0),
-  MAKE_INST(INST_FCMOVBE          , "fcmovbe"          , I_X87_STI       , 0               , 0               , 0, 0x0000DAD0, 0),
-  MAKE_INST(INST_FCMOVE           , "fcmove"           , I_X87_STI       , 0               , 0               , 0, 0x0000DAC8, 0),
-  MAKE_INST(INST_FCMOVNB          , "fcmovnb"          , I_X87_STI       , 0               , 0               , 0, 0x0000DBC0, 0),
-  MAKE_INST(INST_FCMOVNBE         , "fcmovnbe"         , I_X87_STI       , 0               , 0               , 0, 0x0000DBD0, 0),
-  MAKE_INST(INST_FCMOVNE          , "fcmovne"          , I_X87_STI       , 0               , 0               , 0, 0x0000DBC8, 0),
-  MAKE_INST(INST_FCMOVNU          , "fcmovnu"          , I_X87_STI       , 0               , 0               , 0, 0x0000DBD8, 0),
-  MAKE_INST(INST_FCMOVU           , "fcmovu"           , I_X87_STI       , 0               , 0               , 0, 0x0000DAD8, 0),
-  MAKE_INST(INST_FCOM             , "fcom"             , I_X87_FPU       , 0               , 0               , 2, 0xD8DCD0D0, 0),
-  MAKE_INST(INST_FCOMI            , "fcomi"            , I_X87_STI       , 0               , 0               , 0, 0x0000DBF0, 0),
-  MAKE_INST(INST_FCOMIP           , "fcomip"           , I_X87_STI       , 0               , 0               , 0, 0x0000DFF0, 0),
-  MAKE_INST(INST_FCOMP            , "fcomp"            , I_X87_FPU       , 0               , 0               , 3, 0xD8DCD8D8, 0),
-  MAKE_INST(INST_FCOMPP           , "fcompp"           , I_EMIT          , 0               , 0               , 0, 0x0000DED9, 0),
-  MAKE_INST(INST_FCOS             , "fcos"             , I_EMIT          , 0               , 0               , 0, 0x0000D9FF, 0),
-  MAKE_INST(INST_FDECSTP          , "fdecstp"          , I_EMIT          , 0               , 0               , 0, 0x0000D9F6, 0),
-  MAKE_INST(INST_FDIV             , "fdiv"             , I_X87_FPU       , 0               , 0               , 6, 0xD8DCF0F8, 0),
-  MAKE_INST(INST_FDIVP            , "fdivp"            , I_X87_STI       , 0               , 0               , 0, 0x0000DEF8, 0),
-  MAKE_INST(INST_FDIVR            , "fdivr"            , I_X87_FPU       , 0               , 0               , 7, 0xD8DCF8F0, 0),
-  MAKE_INST(INST_FDIVRP           , "fdivrp"           , I_X87_STI       , 0               , 0               , 0, 0x0000DEF0, 0),
-  MAKE_INST(INST_FEMMS            , "femms"            , I_EMIT          , 0               , 0               , 0, 0x00000F0E, 0),
-  MAKE_INST(INST_FFREE            , "ffree"            , I_X87_STI       , 0               , 0               , 0, 0x0000DDC0, 0),
-  MAKE_INST(INST_FIADD            , "fiadd"            , I_X87_MEM       , O_FM_2_4        , 0               , 0, 0xDEDA0000, 0),
-  MAKE_INST(INST_FICOM            , "ficom"            , I_X87_MEM       , O_FM_2_4        , 0               , 2, 0xDEDA0000, 0),
-  MAKE_INST(INST_FICOMP           , "ficomp"           , I_X87_MEM       , O_FM_2_4        , 0               , 3, 0xDEDA0000, 0),
-  MAKE_INST(INST_FIDIV            , "fidiv"            , I_X87_MEM       , O_FM_2_4        , 0               , 6, 0xDEDA0000, 0),
-  MAKE_INST(INST_FIDIVR           , "fidivr"           , I_X87_MEM       , O_FM_2_4        , 0               , 7, 0xDEDA0000, 0),
-  MAKE_INST(INST_FILD             , "fild"             , I_X87_MEM       , O_FM_2_4_8      , 0               , 0, 0xDFDBDF05, 0),
-  MAKE_INST(INST_FIMUL            , "fimul"            , I_X87_MEM       , O_FM_2_4        , 0               , 1, 0xDEDA0000, 0),
-  MAKE_INST(INST_FINCSTP          , "fincstp"          , I_EMIT          , 0               , 0               , 0, 0x0000D9F7, 0),
-  MAKE_INST(INST_FINIT            , "finit"            , I_EMIT          , 0               , 0               , 0, 0x9B00DBE3, 0),
-  MAKE_INST(INST_FIST             , "fist"             , I_X87_MEM       , O_FM_2_4        , 0               , 2, 0xDFDB0000, 0),
-  MAKE_INST(INST_FISTP            , "fistp"            , I_X87_MEM       , O_FM_2_4_8      , 0               , 3, 0xDFDBDF07, 0),
-  MAKE_INST(INST_FISTTP           , "fisttp"           , I_X87_MEM       , O_FM_2_4_8      , 0               , 1, 0xDFDBDD01, 0),
-  MAKE_INST(INST_FISUB            , "fisub"            , I_X87_MEM       , O_FM_2_4        , 0               , 4, 0xDEDA0000, 0),
-  MAKE_INST(INST_FISUBR           , "fisubr"           , I_X87_MEM       , O_FM_2_4        , 0               , 5, 0xDEDA0000, 0),
-  MAKE_INST(INST_FLD              , "fld"              , I_X87_MEM_STI   , O_FM_4_8_10     , 0               , 0, 0x00D9DD00, 0xD9C0DB05),
-  MAKE_INST(INST_FLD1             , "fld1"             , I_EMIT          , 0               , 0               , 0, 0x0000D9E8, 0),
-  MAKE_INST(INST_FLDCW            , "fldcw"            , I_M             , O_MEM           , 0               , 5, 0x000000D9, 0),
-  MAKE_INST(INST_FLDENV           , "fldenv"           , I_M             , O_MEM           , 0               , 4, 0x000000D9, 0),
-  MAKE_INST(INST_FLDL2E           , "fldl2e"           , I_EMIT          , 0               , 0               , 0, 0x0000D9EA, 0),
-  MAKE_INST(INST_FLDL2T           , "fldl2t"           , I_EMIT          , 0               , 0               , 0, 0x0000D9E9, 0),
-  MAKE_INST(INST_FLDLG2           , "fldlg2"           , I_EMIT          , 0               , 0               , 0, 0x0000D9EC, 0),
-  MAKE_INST(INST_FLDLN2           , "fldln2"           , I_EMIT          , 0               , 0               , 0, 0x0000D9ED, 0),
-  MAKE_INST(INST_FLDPI            , "fldpi"            , I_EMIT          , 0               , 0               , 0, 0x0000D9EB, 0),
-  MAKE_INST(INST_FLDZ             , "fldz"             , I_EMIT          , 0               , 0               , 0, 0x0000D9EE, 0),
-  MAKE_INST(INST_FMUL             , "fmul"             , I_X87_FPU       , 0               , 0               , 1, 0xD8DCC8C8, 0),
-  MAKE_INST(INST_FMULP            , "fmulp"            , I_X87_STI       , 0               , 0               , 0, 0x0000DEC8, 0),
-  MAKE_INST(INST_FNCLEX           , "fnclex"           , I_EMIT          , 0               , 0               , 0, 0x0000DBE2, 0),
-  MAKE_INST(INST_FNINIT           , "fninit"           , I_EMIT          , 0               , 0               , 0, 0x0000DBE3, 0),
-  MAKE_INST(INST_FNOP             , "fnop"             , I_EMIT          , 0               , 0               , 0, 0x0000D9D0, 0),
-  MAKE_INST(INST_FNSAVE           , "fnsave"           , I_M             , O_MEM           , 0               , 6, 0x000000DD, 0),
-  MAKE_INST(INST_FNSTCW           , "fnstcw"           , I_M             , O_MEM           , 0               , 7, 0x000000D9, 0),
-  MAKE_INST(INST_FNSTENV          , "fnstenv"          , I_M             , O_MEM           , 0               , 6, 0x000000D9, 0),
-  MAKE_INST(INST_FNSTSW           , "fnstsw"           , I_X87_FSTSW     , O_MEM           , 0               , 7, 0x000000DD, 0x0000DFE0),
-  MAKE_INST(INST_FPATAN           , "fpatan"           , I_EMIT          , 0               , 0               , 0, 0x0000D9F3, 0),
-  MAKE_INST(INST_FPREM            , "fprem"            , I_EMIT          , 0               , 0               , 0, 0x0000D9F8, 0),
-  MAKE_INST(INST_FPREM1           , "fprem1"           , I_EMIT          , 0               , 0               , 0, 0x0000D9F5, 0),
-  MAKE_INST(INST_FPTAN            , "fptan"            , I_EMIT          , 0               , 0               , 0, 0x0000D9F2, 0),
-  MAKE_INST(INST_FRNDINT          , "frndint"          , I_EMIT          , 0               , 0               , 0, 0x0000D9FC, 0),
-  MAKE_INST(INST_FRSTOR           , "frstor"           , I_M             , O_MEM           , 0               , 4, 0x000000DD, 0),
-  MAKE_INST(INST_FSAVE            , "fsave"            , I_M             , O_MEM           , 0               , 6, 0x9B0000DD, 0),
-  MAKE_INST(INST_FSCALE           , "fscale"           , I_EMIT          , 0               , 0               , 0, 0x0000D9FD, 0),
-  MAKE_INST(INST_FSIN             , "fsin"             , I_EMIT          , 0               , 0               , 0, 0x0000D9FE, 0),
-  MAKE_INST(INST_FSINCOS          , "fsincos"          , I_EMIT          , 0               , 0               , 0, 0x0000D9FB, 0),
-  MAKE_INST(INST_FSQRT            , "fsqrt"            , I_EMIT          , 0               , 0               , 0, 0x0000D9FA, 0),
-  MAKE_INST(INST_FST              , "fst"              , I_X87_MEM_STI   , O_FM_4_8        , 0               , 2, 0x00D9DD02, 0xDDD00000),
-  MAKE_INST(INST_FSTCW            , "fstcw"            , I_M             , O_MEM           , 0               , 7, 0x9B0000D9, 0),
-  MAKE_INST(INST_FSTENV           , "fstenv"           , I_M             , O_MEM           , 0               , 6, 0x9B0000D9, 0),
-  MAKE_INST(INST_FSTP             , "fstp"             , I_X87_MEM_STI   , O_FM_4_8_10     , 0               , 3, 0x00D9DD03, 0xDDD8DB07),
-  MAKE_INST(INST_FSTSW            , "fstsw"            , I_X87_FSTSW     , O_MEM           , 0               , 7, 0x9B0000DD, 0x9B00DFE0),
-  MAKE_INST(INST_FSUB             , "fsub"             , I_X87_FPU       , 0               , 0               , 4, 0xD8DCE0E8, 0),
-  MAKE_INST(INST_FSUBP            , "fsubp"            , I_X87_STI       , 0               , 0               , 0, 0x0000DEE8, 0),
-  MAKE_INST(INST_FSUBR            , "fsubr"            , I_X87_FPU       , 0               , 0               , 5, 0xD8DCE8E0, 0),
-  MAKE_INST(INST_FSUBRP           , "fsubrp"           , I_X87_STI       , 0               , 0               , 0, 0x0000DEE0, 0),
-  MAKE_INST(INST_FTST             , "ftst"             , I_EMIT          , 0               , 0               , 0, 0x0000D9E4, 0),
-  MAKE_INST(INST_FUCOM            , "fucom"            , I_X87_STI       , 0               , 0               , 0, 0x0000DDE0, 0),
-  MAKE_INST(INST_FUCOMI           , "fucomi"           , I_X87_STI       , 0               , 0               , 0, 0x0000DBE8, 0),
-  MAKE_INST(INST_FUCOMIP          , "fucomip"          , I_X87_STI       , 0               , 0               , 0, 0x0000DFE8, 0),
-  MAKE_INST(INST_FUCOMP           , "fucomp"           , I_X87_STI       , 0               , 0               , 0, 0x0000DDE8, 0),
-  MAKE_INST(INST_FUCOMPP          , "fucompp"          , I_EMIT          , 0               , 0               , 0, 0x0000DAE9, 0),
-  MAKE_INST(INST_FWAIT            , "fwait"            , I_EMIT          , 0               , 0               , 0, 0x000000DB, 0),
-  MAKE_INST(INST_FXAM             , "fxam"             , I_EMIT          , 0               , 0               , 0, 0x0000D9E5, 0),
-  MAKE_INST(INST_FXCH             , "fxch"             , I_X87_STI       , 0               , 0               , 0, 0x0000D9C8, 0),
-  MAKE_INST(INST_FXRSTOR          , "fxrstor"          , I_M             , 0               , 0               , 1, 0x00000FAE, 0),
-  MAKE_INST(INST_FXSAVE           , "fxsave"           , I_M             , 0               , 0               , 0, 0x00000FAE, 0),
-  MAKE_INST(INST_FXTRACT          , "fxtract"          , I_EMIT          , 0               , 0               , 0, 0x0000D9F4, 0),
-  MAKE_INST(INST_FYL2X            , "fyl2x"            , I_EMIT          , 0               , 0               , 0, 0x0000D9F1, 0),
-  MAKE_INST(INST_FYL2XP1          , "fyl2xp1"          , I_EMIT          , 0               , 0               , 0, 0x0000D9F9, 0),
-  MAKE_INST(INST_HADDPD           , "haddpd"           , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x66000F7C, 0),
-  MAKE_INST(INST_HADDPS           , "haddps"           , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0xF2000F7C, 0),
-  MAKE_INST(INST_HSUBPD           , "hsubpd"           , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x66000F7D, 0),
-  MAKE_INST(INST_HSUBPS           , "hsubps"           , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0xF2000F7D, 0),
-  MAKE_INST(INST_IDIV             , "idiv"             , I_RM            , 0               , 0               , 7, 0x000000F6, 0),
-  MAKE_INST(INST_IMUL             , "imul"             , I_IMUL          , 0               , 0               , 0, 0         , 0),
-  MAKE_INST(INST_INC              , "inc"              , I_INC_DEC       , 0               , 0               , 0, 0x00000040, 0x000000FE),
-  MAKE_INST(INST_INT3             , "int3"             , I_EMIT          , 0               , 0               , 0, 0x000000CC, 0),
-  MAKE_INST(INST_JA               , "ja"               , I_J             , 0               , 0               , 0, 0x7       , 0),
-  MAKE_INST(INST_JAE              , "jae"              , I_J             , 0               , 0               , 0, 0x3       , 0),
-  MAKE_INST(INST_JB               , "jb"               , I_J             , 0               , 0               , 0, 0x2       , 0),
-  MAKE_INST(INST_JBE              , "jbe"              , I_J             , 0               , 0               , 0, 0x6       , 0),
-  MAKE_INST(INST_JC               , "jc"               , I_J             , 0               , 0               , 0, 0x2       , 0),
-  MAKE_INST(INST_JE               , "je"               , I_J             , 0               , 0               , 0, 0x4       , 0),
-  MAKE_INST(INST_JG               , "jg"               , I_J             , 0               , 0               , 0, 0xF       , 0),
-  MAKE_INST(INST_JGE              , "jge"              , I_J             , 0               , 0               , 0, 0xD       , 0),
-  MAKE_INST(INST_JL               , "jl"               , I_J             , 0               , 0               , 0, 0xC       , 0),
-  MAKE_INST(INST_JLE              , "jle"              , I_J             , 0               , 0               , 0, 0xE       , 0),
-  MAKE_INST(INST_JNA              , "jna"              , I_J             , 0               , 0               , 0, 0x6       , 0),
-  MAKE_INST(INST_JNAE             , "jnae"             , I_J             , 0               , 0               , 0, 0x2       , 0),
-  MAKE_INST(INST_JNB              , "jnb"              , I_J             , 0               , 0               , 0, 0x3       , 0),
-  MAKE_INST(INST_JNBE             , "jnbe"             , I_J             , 0               , 0               , 0, 0x7       , 0),
-  MAKE_INST(INST_JNC              , "jnc"              , I_J             , 0               , 0               , 0, 0x3       , 0),
-  MAKE_INST(INST_JNE              , "jne"              , I_J             , 0               , 0               , 0, 0x5       , 0),
-  MAKE_INST(INST_JNG              , "jng"              , I_J             , 0               , 0               , 0, 0xE       , 0),
-  MAKE_INST(INST_JNGE             , "jnge"             , I_J             , 0               , 0               , 0, 0xC       , 0),
-  MAKE_INST(INST_JNL              , "jnl"              , I_J             , 0               , 0               , 0, 0xD       , 0),
-  MAKE_INST(INST_JNLE             , "jnle"             , I_J             , 0               , 0               , 0, 0xF       , 0),
-  MAKE_INST(INST_JNO              , "jno"              , I_J             , 0               , 0               , 0, 0x1       , 0),
-  MAKE_INST(INST_JNP              , "jnp"              , I_J             , 0               , 0               , 0, 0xB       , 0),
-  MAKE_INST(INST_JNS              , "jns"              , I_J             , 0               , 0               , 0, 0x9       , 0),
-  MAKE_INST(INST_JNZ              , "jnz"              , I_J             , 0               , 0               , 0, 0x5       , 0),
-  MAKE_INST(INST_JO               , "jo"               , I_J             , 0               , 0               , 0, 0x0       , 0),
-  MAKE_INST(INST_JP               , "jp"               , I_J             , 0               , 0               , 0, 0xA       , 0),
-  MAKE_INST(INST_JPE              , "jpe"              , I_J             , 0               , 0               , 0, 0xA       , 0),
-  MAKE_INST(INST_JPO              , "jpo"              , I_J             , 0               , 0               , 0, 0xB       , 0),
-  MAKE_INST(INST_JS               , "js"               , I_J             , 0               , 0               , 0, 0x8       , 0),
-  MAKE_INST(INST_JZ               , "jz"               , I_J             , 0               , 0               , 0, 0x4       , 0),
-  MAKE_INST(INST_JMP              , "jmp"              , I_JMP           , 0               , 0               , 0, 0         , 0),
-  MAKE_INST(INST_JA_SHORT         , "ja short"         , I_J             , 0               , 0               , 0, 0x7       , 0),
-  MAKE_INST(INST_JAE_SHORT        , "jae short"        , I_J             , 0               , 0               , 0, 0x3       , 0),
-  MAKE_INST(INST_JB_SHORT         , "jb short"         , I_J             , 0               , 0               , 0, 0x2       , 0),
-  MAKE_INST(INST_JBE_SHORT        , "jbe short"        , I_J             , 0               , 0               , 0, 0x6       , 0),
-  MAKE_INST(INST_JC_SHORT         , "jc short"         , I_J             , 0               , 0               , 0, 0x2       , 0),
-  MAKE_INST(INST_JE_SHORT         , "je short"         , I_J             , 0               , 0               , 0, 0x4       , 0),
-  MAKE_INST(INST_JG_SHORT         , "jg short"         , I_J             , 0               , 0               , 0, 0xF       , 0),
-  MAKE_INST(INST_JGE_SHORT        , "jge short"        , I_J             , 0               , 0               , 0, 0xD       , 0),
-  MAKE_INST(INST_JL_SHORT         , "jl short"         , I_J             , 0               , 0               , 0, 0xC       , 0),
-  MAKE_INST(INST_JLE_SHORT        , "jle short"        , I_J             , 0               , 0               , 0, 0xE       , 0),
-  MAKE_INST(INST_JNA_SHORT        , "jna short"        , I_J             , 0               , 0               , 0, 0x6       , 0),
-  MAKE_INST(INST_JNAE_SHORT       , "jnae short"       , I_J             , 0               , 0               , 0, 0x2       , 0),
-  MAKE_INST(INST_JNB_SHORT        , "jnb short"        , I_J             , 0               , 0               , 0, 0x3       , 0),
-  MAKE_INST(INST_JNBE_SHORT       , "jnbe short"       , I_J             , 0               , 0               , 0, 0x7       , 0),
-  MAKE_INST(INST_JNC_SHORT        , "jnc short"        , I_J             , 0               , 0               , 0, 0x3       , 0),
-  MAKE_INST(INST_JNE_SHORT        , "jne short"        , I_J             , 0               , 0               , 0, 0x5       , 0),
-  MAKE_INST(INST_JNG_SHORT        , "jng short"        , I_J             , 0               , 0               , 0, 0xE       , 0),
-  MAKE_INST(INST_JNGE_SHORT       , "jnge short"       , I_J             , 0               , 0               , 0, 0xC       , 0),
-  MAKE_INST(INST_JNL_SHORT        , "jnl short"        , I_J             , 0               , 0               , 0, 0xD       , 0),
-  MAKE_INST(INST_JNLE_SHORT       , "jnle short"       , I_J             , 0               , 0               , 0, 0xF       , 0),
-  MAKE_INST(INST_JNO_SHORT        , "jno short"        , I_J             , 0               , 0               , 0, 0x1       , 0),
-  MAKE_INST(INST_JNP_SHORT        , "jnp short"        , I_J             , 0               , 0               , 0, 0xB       , 0),
-  MAKE_INST(INST_JNS_SHORT        , "jns short"        , I_J             , 0               , 0               , 0, 0x9       , 0),
-  MAKE_INST(INST_JNZ_SHORT        , "jnz short"        , I_J             , 0               , 0               , 0, 0x5       , 0),
-  MAKE_INST(INST_JO_SHORT         , "jo short"         , I_J             , 0               , 0               , 0, 0x0       , 0),
-  MAKE_INST(INST_JP_SHORT         , "jp short"         , I_J             , 0               , 0               , 0, 0xA       , 0),
-  MAKE_INST(INST_JPE_SHORT        , "jpe short"        , I_J             , 0               , 0               , 0, 0xA       , 0),
-  MAKE_INST(INST_JPO_SHORT        , "jpo short"        , I_J             , 0               , 0               , 0, 0xB       , 0),
-  MAKE_INST(INST_JS_SHORT         , "js short"         , I_J             , 0               , 0               , 0, 0x8       , 0),
-  MAKE_INST(INST_JZ_SHORT         , "jz short"         , I_J             , 0               , 0               , 0, 0x4       , 0),
-  MAKE_INST(INST_JMP_SHORT        , "jmp short"        , I_JMP           , 0               , 0               , 0, 0         , 0),
-  MAKE_INST(INST_LDDQU            , "lddqu"            , I_MMU_RMI       , O_XMM           , O_MEM           , 0, 0xF2000FF0, 0),
-  MAKE_INST(INST_LDMXCSR          , "ldmxcsr"          , I_M             , O_MEM           , 0               , 2, 0x00000FAE, 0),
-  MAKE_INST(INST_LEA              , "lea"              , I_LEA           , 0               , 0               , 0, 0         , 0),
-  MAKE_INST(INST_LEAVE            , "leave"            , I_EMIT          , 0               , 0               , 0, 0x000000C9, 0),
-  MAKE_INST(INST_LFENCE           , "lfence"           , I_EMIT          , 0               , 0               , 0, 0x000FAEE8, 0),
-  MAKE_INST(INST_LOCK             , "lock"             , I_EMIT          , 0               , 0               , 0, 0x000000F0, 0),
-  MAKE_INST(INST_MASKMOVDQU       , "maskmovdqu"       , I_MMU_RMI       , O_XMM           , O_XMM           , 0, 0x66000F57, 0),
-  MAKE_INST(INST_MASKMOVQ         , "maskmovq"         , I_MMU_RMI       , O_MM            , O_MM            , 0, 0x00000FF7, 0),
-  MAKE_INST(INST_MAXPD            , "maxpd"            , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x66000F5F, 0),
-  MAKE_INST(INST_MAXPS            , "maxps"            , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x00000F5F, 0),
-  MAKE_INST(INST_MAXSD            , "maxsd"            , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0xF2000F5F, 0),
-  MAKE_INST(INST_MAXSS            , "maxss"            , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0xF3000F5F, 0),
-  MAKE_INST(INST_MFENCE           , "mfence"           , I_EMIT          , 0               , 0               , 0, 0x000FAEF0, 0),
-  MAKE_INST(INST_MINPD            , "minpd"            , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x66000F5D, 0),
-  MAKE_INST(INST_MINPS            , "minps"            , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x00000F5D, 0),
-  MAKE_INST(INST_MINSD            , "minsd"            , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0xF2000F5D, 0),
-  MAKE_INST(INST_MINSS            , "minss"            , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0xF3000F5D, 0),
-  MAKE_INST(INST_MONITOR          , "monitor"          , I_EMIT          , 0               , 0               , 0, 0x000F01C8, 0),
-  MAKE_INST(INST_MOV              , "mov"              , I_MOV           , 0               , 0               , 0, 0         , 0),
-  MAKE_INST(INST_MOVAPD           , "movapd"           , I_MMU_MOV       , O_XMM_MEM       , O_XMM_MEM       , 0, 0x66000F28, 0x66000F29),
-  MAKE_INST(INST_MOVAPS           , "movaps"           , I_MMU_MOV       , O_XMM_MEM       , O_XMM_MEM       , 0, 0x00000F28, 0x00000F29),
-  MAKE_INST(INST_MOVBE            , "movbe"            , I_MOVBE         ,O_G16_32_64|O_MEM,O_G16_32_64|O_MEM, 0, 0x000F38F0, 0x000F38F1),
-  MAKE_INST(INST_MOVD             , "movd"             , I_MMU_MOVD      , 0               , 0               , 0, 0         , 0),
-  MAKE_INST(INST_MOVDDUP          , "movddup"          , I_MMU_MOV       , O_XMM           , O_XMM_MEM       , 0, 0xF2000F12, 0),
-  MAKE_INST(INST_MOVDQ2Q          , "movdq2q"          , I_MMU_MOV       , O_MM            , O_XMM           , 0, 0xF2000FD6, 0),
-  MAKE_INST(INST_MOVDQA           , "movdqa"           , I_MMU_MOV       , O_XMM_MEM       , O_XMM_MEM       , 0, 0x66000F6F, 0x66000F7F),
-  MAKE_INST(INST_MOVDQU           , "movdqu"           , I_MMU_MOV       , O_XMM_MEM       , O_XMM_MEM       , 0, 0xF3000F6F, 0xF3000F7F),
-  MAKE_INST(INST_MOVHLPS          , "movhlps"          , I_MMU_MOV       , O_XMM           , O_XMM           , 0, 0x00000F12, 0),
-  MAKE_INST(INST_MOVHPD           , "movhpd"           , I_MMU_MOV       , O_XMM_MEM       , O_XMM_MEM       , 0, 0x66000F16, 0x66000F17),
-  MAKE_INST(INST_MOVHPS           , "movhps"           , I_MMU_MOV       , O_XMM_MEM       , O_XMM_MEM       , 0, 0x00000F16, 0x00000F17),
-  MAKE_INST(INST_MOVLHPS          , "movlhps"          , I_MMU_MOV       , O_XMM           , O_XMM           , 0, 0x00000F16, 0),
-  MAKE_INST(INST_MOVLPD           , "movlpd"           , I_MMU_MOV       , O_XMM_MEM       , O_XMM_MEM       , 0, 0x66000F12, 0x66000F13),
-  MAKE_INST(INST_MOVLPS           , "movlps"           , I_MMU_MOV       , O_XMM_MEM       , O_XMM_MEM       , 0, 0x00000F12, 0x00000F13),
-  MAKE_INST(INST_MOVMSKPD         , "movmskpd"         , I_MMU_MOV       , O_G32_64|O_NOREX, O_XMM           , 0, 0x66000F50, 0),
-  MAKE_INST(INST_MOVMSKPS         , "movmskps"         , I_MMU_MOV       , O_G32_64|O_NOREX, O_XMM           , 0, 0x00000F50, 0),
-  MAKE_INST(INST_MOVNTDQ          , "movntdq"          , I_MMU_MOV       , O_MEM           , O_XMM           , 0, 0         , 0x66000FE7),
-  MAKE_INST(INST_MOVNTDQA         , "movntdqa"         , I_MMU_MOV       , O_XMM           , O_MEM           , 0, 0x660F382A, 0),
-  MAKE_INST(INST_MOVNTI           , "movnti"           , I_MMU_MOV       , O_MEM           , O_G32_64        , 0, 0         , 0x00000FC3),
-  MAKE_INST(INST_MOVNTPD          , "movntpd"          , I_MMU_MOV       , O_MEM           , O_XMM           , 0, 0         , 0x66000F2B),
-  MAKE_INST(INST_MOVNTPS          , "movntps"          , I_MMU_MOV       , O_MEM           , O_XMM           , 0, 0         , 0x00000F2B),
-  MAKE_INST(INST_MOVNTQ           , "movntq"           , I_MMU_MOV       , O_MEM           , O_MM            , 0, 0         , 0x00000FE7),
-  MAKE_INST(INST_MOVQ             , "movq"             , I_MMU_MOVQ      , 0               , 0               , 0, 0         , 0),
-  MAKE_INST(INST_MOVQ2DQ          , "movq2dq"          , I_MMU_RMI       , O_XMM           , O_MM            , 0, 0xF3000FD6, 0),
-  MAKE_INST(INST_MOVSD            , "movsd"            , I_MMU_MOV       , O_XMM_MEM       , O_XMM_MEM       , 0, 0xF2000F10, 0xF2000F11),
-  MAKE_INST(INST_MOVSHDUP         , "movshdup"         , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0xF3000F16, 0),
-  MAKE_INST(INST_MOVSLDUP         , "movsldup"         , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0xF3000F12, 0),
-  MAKE_INST(INST_MOVSS            , "movss"            , I_MMU_MOV       , O_XMM_MEM       , O_XMM_MEM       , 0, 0xF3000F10, 0xF3000F11),
-  MAKE_INST(INST_MOVSX            , "movsx"            , I_MOVSX_MOVZX   , 0               , 0               , 0, 0x00000FBE, 0),
-  MAKE_INST(INST_MOVSXD           , "movsxd"           , I_MOVSXD        , 0               , 0               , 0, 0         , 0),
-  MAKE_INST(INST_MOVUPD           , "movupd"           , I_MMU_MOV       , O_XMM_MEM       , O_XMM_MEM       , 0, 0x66000F10, 0x66000F11),
-  MAKE_INST(INST_MOVUPS           , "movups"           , I_MMU_MOV       , O_XMM_MEM       , O_XMM_MEM       , 0, 0x00000F10, 0x00000F11),
-  MAKE_INST(INST_MOVZX            , "movzx"            , I_MOVSX_MOVZX   , 0               , 0               , 0, 0x00000FB6, 0),
-  MAKE_INST(INST_MOV_PTR          , "mov"              , I_MOV_PTR       , 0               , 0               , 0, 0         , 0),
-  MAKE_INST(INST_MPSADBW          , "mpsadbw"          , I_MMU_RM_IMM8   , O_XMM           , O_XMM_MEM       , 0, 0x660F3A42, 0),
-  MAKE_INST(INST_MUL              , "mul"              , I_RM            , 0               , 0               , 4, 0x000000F6, 0),
-  MAKE_INST(INST_MULPD            , "mulpd"            , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x66000F59, 0),
-  MAKE_INST(INST_MULPS            , "mulps"            , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x00000F59, 0),
-  MAKE_INST(INST_MULSD            , "mulsd"            , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0xF2000F59, 0),
-  MAKE_INST(INST_MULSS            , "mulss"            , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0xF3000F59, 0),
-  MAKE_INST(INST_MWAIT            , "mwait"            , I_EMIT          , 0               , 0               , 0, 0x000F01C9, 0),
-  MAKE_INST(INST_NEG              , "neg"              , I_RM            , 0               , 0               , 3, 0x000000F6, 0),
-  MAKE_INST(INST_NOP              , "nop"              , I_EMIT          , 0               , 0               , 0, 0x00000090, 0),
-  MAKE_INST(INST_NOT              , "not"              , I_RM            , 0               , 0               , 2, 0x000000F6, 0),
-  MAKE_INST(INST_OR               , "or"               , I_ALU           , 0               , 0               , 1, 0x00000008, 0x00000080),
-  MAKE_INST(INST_ORPD             , "orpd"             , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x66000F56, 0),
-  MAKE_INST(INST_ORPS             , "orps"             , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x00000F56, 0),
-  MAKE_INST(INST_PABSB            , "pabsb"            , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x000F381C, 0),
-  MAKE_INST(INST_PABSD            , "pabsd"            , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x000F381E, 0),
-  MAKE_INST(INST_PABSW            , "pabsw"            , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x000F381D, 0),
-  MAKE_INST(INST_PACKSSDW         , "packssdw"         , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x00000F6B, 0),
-  MAKE_INST(INST_PACKSSWB         , "packsswb"         , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x00000F63, 0),
-  MAKE_INST(INST_PACKUSDW         , "packusdw"         , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x660F382B, 0),
-  MAKE_INST(INST_PACKUSWB         , "packuswb"         , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x00000F67, 0),
-  MAKE_INST(INST_PADDB            , "paddb"            , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x00000FFC, 0),
-  MAKE_INST(INST_PADDD            , "paddd"            , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x00000FFE, 0),
-  MAKE_INST(INST_PADDQ            , "paddq"            , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x00000FD4, 0),
-  MAKE_INST(INST_PADDSB           , "paddsb"           , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x00000FEC, 0),
-  MAKE_INST(INST_PADDSW           , "paddsw"           , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x00000FED, 0),
-  MAKE_INST(INST_PADDUSB          , "paddusb"          , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x00000FDC, 0),
-  MAKE_INST(INST_PADDUSW          , "paddusw"          , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x00000FDD, 0),
-  MAKE_INST(INST_PADDW            , "paddw"            , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x00000FFD, 0),
-  MAKE_INST(INST_PALIGNR          , "palignr"          , I_MMU_RM_IMM8   , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x000F3A0F, 0),
-  MAKE_INST(INST_PAND             , "pand"             , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x00000FDB, 0),
-  MAKE_INST(INST_PANDN            , "pandn"            , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x00000FDF, 0),
-  MAKE_INST(INST_PAUSE            , "pause"            , I_EMIT          , 0               , 0               , 0, 0xF3000090, 0),
-  MAKE_INST(INST_PAVGB            , "pavgb"            , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x00000FE0, 0),
-  MAKE_INST(INST_PAVGW            , "pavgw"            , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x00000FE3, 0),
-  MAKE_INST(INST_PBLENDVB         , "pblendvb"         , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x660F3810, 0),
-  MAKE_INST(INST_PBLENDW          , "pblendw"          , I_MMU_RM_IMM8   , O_XMM           , O_XMM_MEM       , 0, 0x660F3A0E, 0),
-  MAKE_INST(INST_PCMPEQB          , "pcmpeqb"          , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x00000F74, 0),
-  MAKE_INST(INST_PCMPEQD          , "pcmpeqd"          , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x00000F76, 0),
-  MAKE_INST(INST_PCMPEQQ          , "pcmpeqq"          , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x660F3829, 0),
-  MAKE_INST(INST_PCMPEQW          , "pcmpeqw"          , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x00000F75, 0),
-  MAKE_INST(INST_PCMPESTRI        , "pcmpestri"        , I_MMU_RM_IMM8   , O_XMM           , O_XMM_MEM       , 0, 0x660F3A61, 0),
-  MAKE_INST(INST_PCMPESTRM        , "pcmpestrm"        , I_MMU_RM_IMM8   , O_XMM           , O_XMM_MEM       , 0, 0x660F3A60, 0),
-  MAKE_INST(INST_PCMPGTB          , "pcmpgtb"          , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x00000F64, 0),
-  MAKE_INST(INST_PCMPGTD          , "pcmpgtd"          , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x00000F66, 0),
-  MAKE_INST(INST_PCMPGTQ          , "pcmpgtq"          , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x660F3837, 0),
-  MAKE_INST(INST_PCMPGTW          , "pcmpgtw"          , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x00000F65, 0),
-  MAKE_INST(INST_PCMPISTRI        , "pcmpistri"        , I_MMU_RM_IMM8   , O_XMM           , O_XMM_MEM       , 0, 0x660F3A63, 0),
-  MAKE_INST(INST_PCMPISTRM        , "pcmpistrm"        , I_MMU_RM_IMM8   , O_XMM           , O_XMM_MEM       , 0, 0x660F3A62, 0),
-  MAKE_INST(INST_PEXTRB           , "pextrb"           , I_MMU_PEXTR     , O_G8|O_G32|O_MEM, O_XMM           , 0, 0x000F3A14, 0),
-  MAKE_INST(INST_PEXTRD           , "pextrd"           , I_MMU_PEXTR     , O_G32     |O_MEM, O_XMM           , 0, 0x000F3A16, 0),
-  MAKE_INST(INST_PEXTRQ           , "pextrq"           , I_MMU_PEXTR     , O_G32_64  |O_MEM, O_XMM           , 1, 0x000F3A16, 0),
-  MAKE_INST(INST_PEXTRW           , "pextrw"           , I_MMU_PEXTR     , O_G32     |O_MEM, O_XMM | O_MM    , 0, 0x000F3A16, 0),
-  MAKE_INST(INST_PF2ID            , "pf2id"            , I_MMU_RM_3DNOW  , O_MM            , O_MM_MEM        , 0, 0x00000F0F, 0x1D),
-  MAKE_INST(INST_PF2IW            , "pf2iw"            , I_MMU_RM_3DNOW  , O_MM            , O_MM_MEM        , 0, 0x00000F0F, 0x1C),
-  MAKE_INST(INST_PFACC            , "pfacc"            , I_MMU_RM_3DNOW  , O_MM            , O_MM_MEM        , 0, 0x00000F0F, 0xAE),
-  MAKE_INST(INST_PFADD            , "pfadd"            , I_MMU_RM_3DNOW  , O_MM            , O_MM_MEM        , 0, 0x00000F0F, 0x9E),
-  MAKE_INST(INST_PFCMPEQ          , "pfcmpeq"          , I_MMU_RM_3DNOW  , O_MM            , O_MM_MEM        , 0, 0x00000F0F, 0xB0),
-  MAKE_INST(INST_PFCMPGE          , "pfcmpge"          , I_MMU_RM_3DNOW  , O_MM            , O_MM_MEM        , 0, 0x00000F0F, 0x90),
-  MAKE_INST(INST_PFCMPGT          , "pfcmpgt"          , I_MMU_RM_3DNOW  , O_MM            , O_MM_MEM        , 0, 0x00000F0F, 0xA0),
-  MAKE_INST(INST_PFMAX            , "pfmax"            , I_MMU_RM_3DNOW  , O_MM            , O_MM_MEM        , 0, 0x00000F0F, 0xA4),
-  MAKE_INST(INST_PFMIN            , "pfmin"            , I_MMU_RM_3DNOW  , O_MM            , O_MM_MEM        , 0, 0x00000F0F, 0x94),
-  MAKE_INST(INST_PFMUL            , "pfmul"            , I_MMU_RM_3DNOW  , O_MM            , O_MM_MEM        , 0, 0x00000F0F, 0xB4),
-  MAKE_INST(INST_PFNACC           , "pfnacc"           , I_MMU_RM_3DNOW  , O_MM            , O_MM_MEM        , 0, 0x00000F0F, 0x8A),
-  MAKE_INST(INST_PFPNACC          , "pfpnacc"          , I_MMU_RM_3DNOW  , O_MM            , O_MM_MEM        , 0, 0x00000F0F, 0x8E),
-  MAKE_INST(INST_PFRCP            , "pfrcp"            , I_MMU_RM_3DNOW  , O_MM            , O_MM_MEM        , 0, 0x00000F0F, 0x96),
-  MAKE_INST(INST_PFRCPIT1         , "pfrcpit1"         , I_MMU_RM_3DNOW  , O_MM            , O_MM_MEM        , 0, 0x00000F0F, 0xA6),
-  MAKE_INST(INST_PFRCPIT2         , "pfrcpit2"         , I_MMU_RM_3DNOW  , O_MM            , O_MM_MEM        , 0, 0x00000F0F, 0xB6),
-  MAKE_INST(INST_PFRSQIT1         , "pfrsqit1"         , I_MMU_RM_3DNOW  , O_MM            , O_MM_MEM        , 0, 0x00000F0F, 0xA7),
-  MAKE_INST(INST_PFRSQRT          , "pfrsqrt"          , I_MMU_RM_3DNOW  , O_MM            , O_MM_MEM        , 0, 0x00000F0F, 0x97),
-  MAKE_INST(INST_PFSUB            , "pfsub"            , I_MMU_RM_3DNOW  , O_MM            , O_MM_MEM        , 0, 0x00000F0F, 0x9A),
-  MAKE_INST(INST_PFSUBR           , "pfsubr"           , I_MMU_RM_3DNOW  , O_MM            , O_MM_MEM        , 0, 0x00000F0F, 0xAA),
-  MAKE_INST(INST_PHADDD           , "phaddd"           , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x000F3802, 0),
-  MAKE_INST(INST_PHADDSW          , "phaddsw"          , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x000F3803, 0),
-  MAKE_INST(INST_PHADDW           , "phaddw"           , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x000F3801, 0),
-  MAKE_INST(INST_PHMINPOSUW       , "phminposuw"       , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x660F3841, 0),
-  MAKE_INST(INST_PHSUBD           , "phsubd"           , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x000F3806, 0),
-  MAKE_INST(INST_PHSUBSW          , "phsubsw"          , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x000F3807, 0),
-  MAKE_INST(INST_PHSUBW           , "phsubw"           , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x000F3805, 0),
-  MAKE_INST(INST_PI2FD            , "pi2fd"            , I_MMU_RM_3DNOW  , O_MM            , O_MM_MEM        , 0, 0x00000F0F, 0x0D),
-  MAKE_INST(INST_PI2FW            , "pi2fw"            , I_MMU_RM_3DNOW  , O_MM            , O_MM_MEM        , 0, 0x00000F0F, 0x0C),
-  MAKE_INST(INST_PINSRB           , "pinsrb"           , I_MMU_RM_IMM8   , O_XMM           , O_G32 | O_MEM   , 0, 0x660F3A20, 0),
-  MAKE_INST(INST_PINSRD           , "pinsrd"           , I_MMU_RM_IMM8   , O_XMM           , O_G32 | O_MEM   , 0, 0x660F3A22, 0),
-  MAKE_INST(INST_PINSRQ           , "pinsrq"           , I_MMU_RM_IMM8   , O_XMM           , O_G64 | O_MEM   , 0, 0x660F3A22, 0),
-  MAKE_INST(INST_PINSRW           , "pinsrw"           , I_MMU_RM_IMM8   , O_MM_XMM        , O_G32 | O_MEM   , 0, 0x00000FC4, 0),
-  MAKE_INST(INST_PMADDUBSW        , "pmaddubsw"        , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x000F3804, 0),
-  MAKE_INST(INST_PMADDWD          , "pmaddwd"          , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x00000FF5, 0),
-  MAKE_INST(INST_PMAXSB           , "pmaxsb"           , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x660F383C, 0),
-  MAKE_INST(INST_PMAXSD           , "pmaxsd"           , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x660F383D, 0),
-  MAKE_INST(INST_PMAXSW           , "pmaxsw"           , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x00000FEE, 0),
-  MAKE_INST(INST_PMAXUB           , "pmaxub"           , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x00000FDE, 0),
-  MAKE_INST(INST_PMAXUD           , "pmaxud"           , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x660F383F, 0),
-  MAKE_INST(INST_PMAXUW           , "pmaxuw"           , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x660F383E, 0),
-  MAKE_INST(INST_PMINSB           , "pminsb"           , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x660F3838, 0),
-  MAKE_INST(INST_PMINSD           , "pminsd"           , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x660F3839, 0),
-  MAKE_INST(INST_PMINSW           , "pminsw"           , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x00000FEA, 0),
-  MAKE_INST(INST_PMINUB           , "pminub"           , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x00000FDA, 0),
-  MAKE_INST(INST_PMINUD           , "pminud"           , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x660F383B, 0),
-  MAKE_INST(INST_PMINUW           , "pminuw"           , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x660F383A, 0),
-  MAKE_INST(INST_PMOVMSKB         , "pmovmskb"         , I_MMU_RMI       , O_G32_64        , O_MM_XMM        , 0, 0x00000FD7, 0),
-  MAKE_INST(INST_PMOVSXBD         , "pmovsxbd"         , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x660F3821, 0),
-  MAKE_INST(INST_PMOVSXBQ         , "pmovsxbq"         , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x660F3822, 0),
-  MAKE_INST(INST_PMOVSXBW         , "pmovsxbw"         , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x660F3820, 0),
-  MAKE_INST(INST_PMOVSXDQ         , "pmovsxdq"         , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x660F3825, 0),
-  MAKE_INST(INST_PMOVSXWD         , "pmovsxwd"         , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x660F3823, 0),
-  MAKE_INST(INST_PMOVSXWQ         , "pmovsxwq"         , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x660F3824, 0),
-  MAKE_INST(INST_PMOVZXBD         , "pmovzxbd"         , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x660F3831, 0),
-  MAKE_INST(INST_PMOVZXBQ         , "pmovzxbq"         , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x660F3832, 0),
-  MAKE_INST(INST_PMOVZXBW         , "pmovzxbw"         , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x660F3830, 0),
-  MAKE_INST(INST_PMOVZXDQ         , "pmovzxdq"         , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x660F3835, 0),
-  MAKE_INST(INST_PMOVZXWD         , "pmovzxwd"         , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x660F3833, 0),
-  MAKE_INST(INST_PMOVZXWQ         , "pmovzxwq"         , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x660F3834, 0),
-  MAKE_INST(INST_PMULDQ           , "pmuldq"           , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x660F3828, 0),
-  MAKE_INST(INST_PMULHRSW         , "pmulhrsw"         , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x000F380B, 0),
-  MAKE_INST(INST_PMULHUW          , "pmulhuw"          , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x00000FE4, 0),
-  MAKE_INST(INST_PMULHW           , "pmulhw"           , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x00000FE5, 0),
-  MAKE_INST(INST_PMULLD           , "pmulld"           , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x660F3840, 0),
-  MAKE_INST(INST_PMULLW           , "pmullw"           , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x00000FD5, 0),
-  MAKE_INST(INST_PMULUDQ          , "pmuludq"          , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x00000FF4, 0),
-  MAKE_INST(INST_POP              , "pop"              , I_POP           , 0               , 0               , 0, 0x00000058, 0x0000008F),
-  MAKE_INST(INST_POPAD            , "popad"            , I_EMIT          , 0               , 0               , 0, 0x00000061, 0),
-  MAKE_INST(INST_POPCNT           , "popcnt"           , I_R_RM          , 0               , 0               , 0, 0xF3000FB8, 0),
-  MAKE_INST(INST_POPFD            , "popfd"            , I_EMIT          , 0               , 0               , 0, 0x0000009D, 0),
-  MAKE_INST(INST_POPFQ            , "popfq"            , I_EMIT          , 0               , 0               , 0, 0x0000009D, 0),
-  MAKE_INST(INST_POR              , "por"              , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x00000FEB, 0),
-  MAKE_INST(INST_PREFETCH         , "prefetch"         , I_MMU_PREFETCH  , O_MEM           , O_IMM           , 0, 0         , 0),
-  MAKE_INST(INST_PSADBW           , "psadbw"           , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x00000FF6, 0),
-  MAKE_INST(INST_PSHUFB           , "pshufb"           , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x000F3800, 0),
-  MAKE_INST(INST_PSHUFD           , "pshufd"           , I_MMU_RM_IMM8   , O_XMM           , O_XMM_MEM       , 0, 0x66000F70, 0),
-  MAKE_INST(INST_PSHUFW           , "pshufw"           , I_MMU_RM_IMM8   , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x00000F70, 0),
-  MAKE_INST(INST_PSHUFHW          , "pshufhw"          , I_MMU_RM_IMM8   , O_XMM           , O_XMM_MEM       , 0, 0xF3000F70, 0),
-  MAKE_INST(INST_PSHUFLW          , "pshuflw"          , I_MMU_RM_IMM8   , O_XMM           , O_XMM_MEM       , 0, 0xF2000F70, 0),
-  MAKE_INST(INST_PSIGNB           , "psignb"           , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x000F3808, 0),
-  MAKE_INST(INST_PSIGND           , "psignd"           , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x000F380A, 0),
-  MAKE_INST(INST_PSIGNW           , "psignw"           , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x000F3809, 0),
-  MAKE_INST(INST_PSLLD            , "pslld"            , I_MMU_RMI       , O_MM_XMM, O_IMM | O_MM_XMM_MEM    , 6, 0x00000FF2, 0x00000F72),
-  MAKE_INST(INST_PSLLDQ           , "pslldq"           , I_MMU_RMI       , O_XMM   , O_IMM                   , 7, 0         , 0x66000F73),
-  MAKE_INST(INST_PSLLQ            , "psllq"            , I_MMU_RMI       , O_MM_XMM, O_IMM | O_MM_XMM_MEM    , 6, 0x00000FF3, 0x00000F73),
-  MAKE_INST(INST_PSLLW            , "psllw"            , I_MMU_RMI       , O_MM_XMM, O_IMM | O_MM_XMM_MEM    , 6, 0x00000FF1, 0x00000F71),
-  MAKE_INST(INST_PSRAD            , "psrad"            , I_MMU_RMI       , O_MM_XMM, O_IMM | O_MM_XMM_MEM    , 4, 0x00000FE2, 0x00000F72),
-  MAKE_INST(INST_PSRAW            , "psraw"            , I_MMU_RMI       , O_MM_XMM, O_IMM | O_MM_XMM_MEM    , 4, 0x00000FE1, 0x00000F71),
-  MAKE_INST(INST_PSRLD            , "psrld"            , I_MMU_RMI       , O_MM_XMM, O_IMM | O_MM_XMM_MEM    , 2, 0x00000FD2, 0x00000F72),
-  MAKE_INST(INST_PSRLDQ           , "psrldq"           , I_MMU_RMI       , O_XMM   , O_IMM                   , 3, 0         , 0x66000F73),
-  MAKE_INST(INST_PSRLQ            , "psrlq"            , I_MMU_RMI       , O_MM_XMM, O_IMM | O_MM_XMM_MEM    , 2, 0x00000FD3, 0x00000F73),
-  MAKE_INST(INST_PSRLW            , "psrlw"            , I_MMU_RMI       , O_MM_XMM, O_IMM | O_MM_XMM_MEM    , 2, 0x00000FD1, 0x00000F71),
-  MAKE_INST(INST_PSUBB            , "psubb"            , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x00000FF8, 0),
-  MAKE_INST(INST_PSUBD            , "psubd"            , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x00000FFA, 0),
-  MAKE_INST(INST_PSUBQ            , "psubq"            , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x00000FFB, 0),
-  MAKE_INST(INST_PSUBSB           , "psubsb"           , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x00000FE8, 0),
-  MAKE_INST(INST_PSUBSW           , "psubsw"           , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x00000FE9, 0),
-  MAKE_INST(INST_PSUBUSB          , "psubusb"          , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x00000FD8, 0),
-  MAKE_INST(INST_PSUBUSW          , "psubusw"          , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x00000FD9, 0),
-  MAKE_INST(INST_PSUBW            , "psubw"            , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x00000FF9, 0),
-  MAKE_INST(INST_PSWAPD           , "pswapd"           , I_MMU_RM_3DNOW  , O_MM            , O_MM_MEM        , 0, 0x00000F0F, 0xBB),
-  MAKE_INST(INST_PTEST            , "ptest"            , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x660F3817, 0),
-  MAKE_INST(INST_PUNPCKHBW        , "punpckhbw"        , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x00000F68, 0),
-  MAKE_INST(INST_PUNPCKHDQ        , "punpckhdq"        , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x00000F6A, 0),
-  MAKE_INST(INST_PUNPCKHQDQ       , "punpckhqdq"       , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x66000F6D, 0),
-  MAKE_INST(INST_PUNPCKHWD        , "punpckhwd"        , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x00000F69, 0),
-  MAKE_INST(INST_PUNPCKLBW        , "punpcklbw"        , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x00000F60, 0),
-  MAKE_INST(INST_PUNPCKLDQ        , "punpckldq"        , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x00000F62, 0),
-  MAKE_INST(INST_PUNPCKLQDQ       , "punpcklqdq"       , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x66000F6C, 0),
-  MAKE_INST(INST_PUNPCKLWD        , "punpcklwd"        , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x00000F61, 0),
-  MAKE_INST(INST_PUSH             , "push"             , I_PUSH          , 0               , 0               , 6, 0x00000050, 0x000000FF),
-  MAKE_INST(INST_PUSHAD           , "pushad"           , I_EMIT          , 0               , 0               , 0, 0x00000060, 0),
-  MAKE_INST(INST_PUSHFD           , "pushfd"           , I_EMIT          , 0               , 0               , 0, 0x0000009C, 0),
-  MAKE_INST(INST_PUSHFQ           , "pushfq"           , I_EMIT          , 0               , 0               , 0, 0x0000009C, 0),
-  MAKE_INST(INST_PXOR             , "pxor"             , I_MMU_RMI       , O_MM_XMM        , O_MM_XMM_MEM    , 0, 0x00000FEF, 0),
-  MAKE_INST(INST_RCL              , "rcl"              , I_ROT           , 0               , 0               , 2, 0         , 0),
-  MAKE_INST(INST_RCPPS            , "rcpps"            , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x00000F53, 0),
-  MAKE_INST(INST_RCPSS            , "rcpss"            , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0xF3000F53, 0),
-  MAKE_INST(INST_RCR              , "rcr"              , I_ROT           , 0               , 0               , 3, 0         , 0),
-  MAKE_INST(INST_RDTSC            , "rdtsc"            , I_EMIT          , 0               , 0               , 0, 0x00000F31, 0),
-  MAKE_INST(INST_RDTSCP           , "rdtscp"           , I_EMIT          , 0               , 0               , 0, 0x000F01F9, 0),
-  MAKE_INST(INST_RET              , "ret"              , I_RET           , 0               , 0               , 0, 0         , 0),
-  MAKE_INST(INST_ROL              , "rol"              , I_ROT           , 0               , 0               , 0, 0         , 0),
-  MAKE_INST(INST_ROR              , "ror"              , I_ROT           , 0               , 0               , 1, 0         , 0),
-  MAKE_INST(INST_ROUNDPD          , "roundpd"          , I_MMU_RM_IMM8   , O_XMM           , O_XMM_MEM       , 0, 0x660F3A09, 0),
-  MAKE_INST(INST_ROUNDPS          , "roundps"          , I_MMU_RM_IMM8   , O_XMM           , O_XMM_MEM       , 0, 0x660F3A08, 0),
-  MAKE_INST(INST_ROUNDSD          , "roundsd"          , I_MMU_RM_IMM8   , O_XMM           , O_XMM_MEM       , 0, 0x660F3A0B, 0),
-  MAKE_INST(INST_ROUNDSS          , "roundss"          , I_MMU_RM_IMM8   , O_XMM           , O_XMM_MEM       , 0, 0x660F3A0A, 0),
-  MAKE_INST(INST_RSQRTPS          , "rsqrtps"          , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x00000F52, 0),
-  MAKE_INST(INST_RSQRTSS          , "rsqrtss"          , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0xF3000F52, 0),
-  MAKE_INST(INST_SAHF             , "sahf"             , I_EMIT          , 0               , 0               , 0, 0x0000009E, 0),
-  MAKE_INST(INST_SAL              , "sal"              , I_ROT           , 0               , 0               , 4, 0         , 0),
-  MAKE_INST(INST_SAR              , "sar"              , I_ROT           , 0               , 0               , 7, 0         , 0),
-  MAKE_INST(INST_SBB              , "sbb"              , I_ALU           , 0               , 0               , 3, 0x00000018, 0x00000080),
-  MAKE_INST(INST_SETA             , "seta"             , I_RM_B          , 0               , 0               , 0, 0x00000F97, 0),
-  MAKE_INST(INST_SETAE            , "setae"            , I_RM_B          , 0               , 0               , 0, 0x00000F93, 0),
-  MAKE_INST(INST_SETB             , "setb"             , I_RM_B          , 0               , 0               , 0, 0x00000F92, 0),
-  MAKE_INST(INST_SETBE            , "setbe"            , I_RM_B          , 0               , 0               , 0, 0x00000F96, 0),
-  MAKE_INST(INST_SETC             , "setc"             , I_RM_B          , 0               , 0               , 0, 0x00000F92, 0),
-  MAKE_INST(INST_SETE             , "sete"             , I_RM_B          , 0               , 0               , 0, 0x00000F94, 0),
-  MAKE_INST(INST_SETG             , "setg"             , I_RM_B          , 0               , 0               , 0, 0x00000F9F, 0),
-  MAKE_INST(INST_SETGE            , "setge"            , I_RM_B          , 0               , 0               , 0, 0x00000F9D, 0),
-  MAKE_INST(INST_SETL             , "setl"             , I_RM_B          , 0               , 0               , 0, 0x00000F9C, 0),
-  MAKE_INST(INST_SETLE            , "setle"            , I_RM_B          , 0               , 0               , 0, 0x00000F9E, 0),
-  MAKE_INST(INST_SETNA            , "setna"            , I_RM_B          , 0               , 0               , 0, 0x00000F96, 0),
-  MAKE_INST(INST_SETNAE           , "setnae"           , I_RM_B          , 0               , 0               , 0, 0x00000F92, 0),
-  MAKE_INST(INST_SETNB            , "setnb"            , I_RM_B          , 0               , 0               , 0, 0x00000F93, 0),
-  MAKE_INST(INST_SETNBE           , "setnbe"           , I_RM_B          , 0               , 0               , 0, 0x00000F97, 0),
-  MAKE_INST(INST_SETNC            , "setnc"            , I_RM_B          , 0               , 0               , 0, 0x00000F93, 0),
-  MAKE_INST(INST_SETNE            , "setne"            , I_RM_B          , 0               , 0               , 0, 0x00000F95, 0),
-  MAKE_INST(INST_SETNG            , "setng"            , I_RM_B          , 0               , 0               , 0, 0x00000F9E, 0),
-  MAKE_INST(INST_SETNGE           , "setnge"           , I_RM_B          , 0               , 0               , 0, 0x00000F9C, 0),
-  MAKE_INST(INST_SETNL            , "setnl"            , I_RM_B          , 0               , 0               , 0, 0x00000F9D, 0),
-  MAKE_INST(INST_SETNLE           , "setnle"           , I_RM_B          , 0               , 0               , 0, 0x00000F9F, 0),
-  MAKE_INST(INST_SETNO            , "setno"            , I_RM_B          , 0               , 0               , 0, 0x00000F91, 0),
-  MAKE_INST(INST_SETNP            , "setnp"            , I_RM_B          , 0               , 0               , 0, 0x00000F9B, 0),
-  MAKE_INST(INST_SETNS            , "setns"            , I_RM_B          , 0               , 0               , 0, 0x00000F99, 0),
-  MAKE_INST(INST_SETNZ            , "setnz"            , I_RM_B          , 0               , 0               , 0, 0x00000F95, 0),
-  MAKE_INST(INST_SETO             , "seto"             , I_RM_B          , 0               , 0               , 0, 0x00000F90, 0),
-  MAKE_INST(INST_SETP             , "setp"             , I_RM_B          , 0               , 0               , 0, 0x00000F9A, 0),
-  MAKE_INST(INST_SETPE            , "setpe"            , I_RM_B          , 0               , 0               , 0, 0x00000F9A, 0),
-  MAKE_INST(INST_SETPO            , "setpo"            , I_RM_B          , 0               , 0               , 0, 0x00000F9B, 0),
-  MAKE_INST(INST_SETS             , "sets"             , I_RM_B          , 0               , 0               , 0, 0x00000F98, 0),
-  MAKE_INST(INST_SETZ             , "setz"             , I_RM_B          , 0               , 0               , 0, 0x00000F94, 0),
-  MAKE_INST(INST_SFENCE           , "sfence"           , I_EMIT          , 0               , 0               , 0, 0x000FAEF8, 0),
-  MAKE_INST(INST_SHL              , "shl"              , I_ROT           , 0               , 0               , 4, 0         , 0),
-  MAKE_INST(INST_SHLD             , "shld"             , I_SHLD_SHRD     , 0               , 0               , 0, 0x00000FA4, 0),
-  MAKE_INST(INST_SHR              , "shr"              , I_ROT           , 0               , 0               , 5, 0         , 0),
-  MAKE_INST(INST_SHRD             , "shrd"             , I_SHLD_SHRD     , 0               , 0               , 0, 0x00000FAC, 0),
-  MAKE_INST(INST_SHUFPD           , "shufpd"           , I_MMU_RM_IMM8   , O_XMM           , O_XMM_MEM       , 0, 0x66000FC6, 0),
-  MAKE_INST(INST_SHUFPS           , "shufps"           , I_MMU_RM_IMM8   , O_XMM           , O_XMM_MEM       , 0, 0x00000FC6, 0),
-  MAKE_INST(INST_SQRTPD           , "sqrtpd"           , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x66000F51, 0),
-  MAKE_INST(INST_SQRTPS           , "sqrtps"           , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x00000F51, 0),
-  MAKE_INST(INST_SQRTSD           , "sqrtsd"           , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0xF2000F51, 0),
-  MAKE_INST(INST_SQRTSS           , "sqrtss"           , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0xF3000F51, 0),
-  MAKE_INST(INST_STC              , "stc"              , I_EMIT          , 0               , 0               , 0, 0x000000F9, 0),
-  MAKE_INST(INST_STD              , "std"              , I_EMIT          , 0               , 0               , 0, 0x000000FD, 0),
-  MAKE_INST(INST_STMXCSR          , "stmxcsr"          , I_M             , O_MEM           , 0               , 3, 0x00000FAE, 0),
-  MAKE_INST(INST_SUB              , "sub"              , I_ALU           , 0               , 0               , 5, 0x00000028, 0x00000080),
-  MAKE_INST(INST_SUBPD            , "subpd"            , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x66000F5C, 0),
-  MAKE_INST(INST_SUBPS            , "subps"            , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x00000F5C, 0),
-  MAKE_INST(INST_SUBSD            , "subsd"            , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0xF2000F5C, 0),
-  MAKE_INST(INST_SUBSS            , "subss"            , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0xF3000F5C, 0),
-  MAKE_INST(INST_TEST             , "test"             , I_TEST          , 0               , 0               , 0, 0         , 0),
-  MAKE_INST(INST_UCOMISD          , "ucomisd"          , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x66000F2E, 0),
-  MAKE_INST(INST_UCOMISS          , "ucomiss"          , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x00000F2E, 0),
-  MAKE_INST(INST_UD2              , "ud2"              , I_EMIT          , 0               , 0               , 0, 0x00000F0B, 0),
-  MAKE_INST(INST_UNPCKHPD         , "unpckhpd"         , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x66000F15, 0),
-  MAKE_INST(INST_UNPCKHPS         , "unpckhps"         , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x00000F15, 0),
-  MAKE_INST(INST_UNPCKLPD         , "unpcklpd"         , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x66000F14, 0),
-  MAKE_INST(INST_UNPCKLPS         , "unpcklps"         , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x00000F14, 0),
-  MAKE_INST(INST_XADD             , "xadd"             , I_RM_R          , 0               , 0               , 0, 0x00000FC0, 0),
-  MAKE_INST(INST_XCHG             , "xchg"             , I_XCHG          , 0               , 0               , 0, 0         , 0),
-  MAKE_INST(INST_XOR              , "xor"              , I_ALU           , 0               , 0               , 6, 0x00000030, 0x00000080),
-  MAKE_INST(INST_XORPD            , "xorpd"            , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x66000F57, 0),
-  MAKE_INST(INST_XORPS            , "xorps"            , I_MMU_RMI       , O_XMM           , O_XMM_MEM       , 0, 0x00000F57, 0),
+  // Convert operands to OPERAND_NONE if needed.
+  if (o0 == NULL) { o0 = reinterpret_cast<const Operand*>(_none); } else if (o0->isReg()) { bLoHiUsed |= o0->_reg.code & (REG_TYPE_GPB_LO | REG_TYPE_GPB_HI); }
+  if (o1 == NULL) { o1 = reinterpret_cast<const Operand*>(_none); } else if (o1->isReg()) { bLoHiUsed |= o1->_reg.code & (REG_TYPE_GPB_LO | REG_TYPE_GPB_HI); }
+  if (o2 == NULL) { o2 = reinterpret_cast<const Operand*>(_none); } else if (o2->isReg()) { bLoHiUsed |= o2->_reg.code & (REG_TYPE_GPB_LO | REG_TYPE_GPB_HI); }
 
-  MAKE_INST(INST_REP_LODSB        , "rep lodsb"        , I_REP_INST      , O_MEM           , 0               , 0, 0xF30000AC, 1 /* Size of mem */),
-  MAKE_INST(INST_REP_LODSD        , "rep lodsd"        , I_REP_INST      , O_MEM           , 0               , 0, 0xF30000AC, 4 /* Size of mem */),
-  MAKE_INST(INST_REP_LODSQ        , "rep lodsq"        , I_REP_INST      , O_MEM           , 0               , 0, 0xF30000AC, 8 /* Size of mem */),
-  MAKE_INST(INST_REP_LODSW        , "rep lodsw"        , I_REP_INST      , O_MEM           , 0               , 0, 0xF30000AC, 2 /* Size of mem */),
-
-  MAKE_INST(INST_REP_MOVSB        , "rep movsb"        , I_REP_INST      , O_MEM           , O_MEM           , 0, 0xF30000A4, 1 /* Size of mem */),
-  MAKE_INST(INST_REP_MOVSD        , "rep movsd"        , I_REP_INST      , O_MEM           , O_MEM           , 0, 0xF30000A4, 4 /* Size of mem */),
-  MAKE_INST(INST_REP_MOVSQ        , "rep movsq"        , I_REP_INST      , O_MEM           , O_MEM           , 0, 0xF30000A4, 8 /* Size of mem */),
-  MAKE_INST(INST_REP_MOVSW        , "rep movsw"        , I_REP_INST      , O_MEM           , O_MEM           , 0, 0xF30000A4, 2 /* Size of mem */),
-
-  MAKE_INST(INST_REP_STOSB        , "rep stosb"        , I_REP_INST      , O_MEM           , 0               , 0, 0xF30000AA, 1 /* Size of mem */),
-  MAKE_INST(INST_REP_STOSD        , "rep stosd"        , I_REP_INST      , O_MEM           , 0               , 0, 0xF30000AA, 4 /* Size of mem */),
-  MAKE_INST(INST_REP_STOSQ        , "rep stosq"        , I_REP_INST      , O_MEM           , 0               , 0, 0xF30000AA, 8 /* Size of mem */),
-  MAKE_INST(INST_REP_STOSW        , "rep stosw"        , I_REP_INST      , O_MEM           , 0               , 0, 0xF30000AA, 2 /* Size of mem */),
-
-  MAKE_INST(INST_REPE_CMPSB       , "repe cmpsb"       , I_REP_INST      , O_MEM           , O_MEM           , 0, 0xF30000A6, 1 /* Size of mem */),
-  MAKE_INST(INST_REPE_CMPSD       , "repe cmpsd"       , I_REP_INST      , O_MEM           , O_MEM           , 0, 0xF30000A6, 4 /* Size of mem */),
-  MAKE_INST(INST_REPE_CMPSQ       , "repe cmpsq"       , I_REP_INST      , O_MEM           , O_MEM           , 0, 0xF30000A6, 8 /* Size of mem */),
-  MAKE_INST(INST_REPE_CMPSW       , "repe cmpsw"       , I_REP_INST      , O_MEM           , O_MEM           , 0, 0xF30000A6, 2 /* Size of mem */),
-
-  MAKE_INST(INST_REPE_SCASB       , "repe scasb"       , I_REP_INST      , O_MEM           , O_MEM           , 0, 0xF30000AE, 1 /* Size of mem */),
-  MAKE_INST(INST_REPE_SCASD       , "repe scasd"       , I_REP_INST      , O_MEM           , O_MEM           , 0, 0xF30000AE, 4 /* Size of mem */),
-  MAKE_INST(INST_REPE_SCASQ       , "repe scasq"       , I_REP_INST      , O_MEM           , O_MEM           , 0, 0xF30000AE, 8 /* Size of mem */),
-  MAKE_INST(INST_REPE_SCASW       , "repe scasw"       , I_REP_INST      , O_MEM           , O_MEM           , 0, 0xF30000AE, 2 /* Size of mem */),
-
-  MAKE_INST(INST_REPNE_CMPSB      , "repne cmpsb"      , I_REP_INST      , O_MEM           , O_MEM           , 0, 0xF20000A6, 1 /* Size of mem */),
-  MAKE_INST(INST_REPNE_CMPSD      , "repne cmpsd"      , I_REP_INST      , O_MEM           , O_MEM           , 0, 0xF20000A6, 4 /* Size of mem */),
-  MAKE_INST(INST_REPNE_CMPSQ      , "repne cmpsq"      , I_REP_INST      , O_MEM           , O_MEM           , 0, 0xF20000A6, 8 /* Size of mem */),
-  MAKE_INST(INST_REPNE_CMPSW      , "repne cmpsw"      , I_REP_INST      , O_MEM           , O_MEM           , 0, 0xF20000A6, 2 /* Size of mem */),
-
-  MAKE_INST(INST_REPNE_SCASB      , "repne scasb"      , I_REP_INST      , O_MEM           , O_MEM           , 0, 0xF20000AE, 1 /* Size of mem */),
-  MAKE_INST(INST_REPNE_SCASD      , "repne scasd"      , I_REP_INST      , O_MEM           , O_MEM           , 0, 0xF20000AE, 4 /* Size of mem */),
-  MAKE_INST(INST_REPNE_SCASQ      , "repne scasq"      , I_REP_INST      , O_MEM           , O_MEM           , 0, 0xF20000AE, 8 /* Size of mem */),
-  MAKE_INST(INST_REPNE_SCASW      , "repne scasw"      , I_REP_INST      , O_MEM           , O_MEM           , 0, 0xF20000AE, 2 /* Size of mem */)
-};
-
-#undef MAKE_INST
-
-// Used for NULL operands to translate them to OP_NONE.
-static const UInt8 _none[sizeof(Operand)] = { 0 };
-
-void Assembler::_emitX86(UInt32 code, const Operand* o1, const Operand* o2, const Operand* o3) ASMJIT_NOTHROW
-{
-  // Check for buffer space (and grow if needed).
-  if (!canEmit()) return;
-
-  // Convert operands to OP_NONE if needed.
-  if (o1 == NULL) o1 = reinterpret_cast<const Operand*>(_none);
-  if (o2 == NULL) o2 = reinterpret_cast<const Operand*>(_none);
-  if (o3 == NULL) o3 = reinterpret_cast<const Operand*>(_none);
+  sysuint_t beginOffset = getOffset();
+  const InstructionDescription* id = &instructionDescription[code];
 
   if (code >= _INST_COUNT)
   {
     setError(ERROR_UNKNOWN_INSTRUCTION);
-    return;
-  }
-  const InstructionDescription& id = x86instructions[code];
-
-#if defined(ASMJIT_DEBUG_INSTRUCTION_MAP)
-  ASMJIT_ASSERT(id.instruction == code);
-#endif // ASMJIT_DEBUG_INSTRUCTION_MAP
-
-  if (_logger)
-  {
-    _logger->logInstruction(code, o1, o2, o3, _inlineCommentBuffer);
-    _inlineCommentBuffer[0] = '\0';
+    goto cleanup;
   }
 
-  switch (id.group)
+  // Check if register operand is BPL, SPL, SIL, DIL and do action that depends
+  // to current mode:
+  //   - 64-bit: - Force REX prefix.
+  //
+  // Check if register operand is AH, BH, CH or DH and do action that depends
+  // to current mode:
+  //   - 32-bit: - Patch operand index (index += 4), because we are using
+  //               different index what is used in opcode.
+  //   - 64-bit: - Check whether there is REX prefix and raise error if it is.
+  //             - Do the same as in 32-bit mode - patch register index.
+  //
+  // NOTE: This is a hit hacky, but I added this to older code-base and I have
+  // no energy to rewrite it. Maybe in future all of this can be cleaned up!
+  if (bLoHiUsed | forceRexPrefix)
   {
-    case I_EMIT:
+#if defined(ASMJIT_X64)
+    // Check if there is register that makes this instruction un-encodable.
+
+    forceRexPrefix |= o0->isExtendedRegisterUsed();
+    forceRexPrefix |= o1->isExtendedRegisterUsed();
+    forceRexPrefix |= o2->isExtendedRegisterUsed();
+
+    if      (o0->isRegType(REG_TYPE_GPB_LO) && (o0->_reg.code & REG_INDEX_MASK) >= 4) forceRexPrefix = true;
+    else if (o1->isRegType(REG_TYPE_GPB_LO) && (o1->_reg.code & REG_INDEX_MASK) >= 4) forceRexPrefix = true;
+    else if (o2->isRegType(REG_TYPE_GPB_LO) && (o2->_reg.code & REG_INDEX_MASK) >= 4) forceRexPrefix = true;
+
+    if ((bLoHiUsed & REG_TYPE_GPB_HI) != 0 && forceRexPrefix)
     {
-      _emitOpCode(id.opCode1);
-      return;
+      goto illegalInstruction;
+    }
+#endif // ASMJIT_X64
+
+    // Patch GPB.HI operand index.
+    if ((bLoHiUsed & REG_TYPE_GPB_HI) != 0)
+    {
+      if (o0->isRegType(REG_TYPE_GPB_HI)) o0 = reinterpret_cast<const Operand*>(&_patchedHiRegs[o0->_reg.code & REG_INDEX_MASK]);
+      if (o1->isRegType(REG_TYPE_GPB_HI)) o1 = reinterpret_cast<const Operand*>(&_patchedHiRegs[o1->_reg.code & REG_INDEX_MASK]);
+      if (o2->isRegType(REG_TYPE_GPB_HI)) o2 = reinterpret_cast<const Operand*>(&_patchedHiRegs[o2->_reg.code & REG_INDEX_MASK]);
+    }
+  }
+
+  // Check for buffer space (and grow if needed).
+  if (!canEmit()) goto cleanup;
+
+  if (_emitOptions & EMIT_OPTION_LOCK_PREFIX)
+  {
+    if (!id->isLockable()) goto illegalInstruction;
+    _emitByte(0xF0);
+  }
+
+  switch (id->group)
+  {
+    case InstructionDescription::G_EMIT:
+    {
+      _emitOpCode(id->opCode[0]);
+      goto end;
     }
 
-    case I_ALU:
+    case InstructionDescription::G_ALU:
     {
-      UInt32 opCode = id.opCode1;
-      UInt8 opReg = id.opCodeR;
+      uint32_t opCode = id->opCode[0];
+      uint8_t opReg = (uint8_t)id->opCodeR;
 
       // Mem <- Reg
-      if (o1->isMem() && o2->isReg())
+      if (o0->isMem() && o1->isReg())
       {
-        _emitX86RM(opCode + (!o2->isRegType(REG_GPB)),
-          o2->isRegType(REG_GPW), 
-          o2->isRegType(REG_GPQ), 
-          reinterpret_cast<const Register&>(*o2).code(), 
-          reinterpret_cast<const Operand&>(*o1),
-          0);
-        return;
+        _emitX86RM(opCode + (o1->getSize() != 1),
+          o1->getSize() == 2,
+          o1->getSize() == 8,
+          reinterpret_cast<const GPReg&>(*o1).getRegCode(),
+          reinterpret_cast<const Operand&>(*o0),
+          0, forceRexPrefix);
+        goto end;
       }
 
       // Reg <- Reg|Mem
-      if (o1->isReg() && o2->isRegMem())
+      if (o0->isReg() && o1->isRegMem())
       {
-        _emitX86RM(opCode + 2 + (!o1->isRegType(REG_GPB)),
-          o1->isRegType(REG_GPW), 
-          o1->isRegType(REG_GPQ), 
-          reinterpret_cast<const Register&>(*o1).code(), 
-          reinterpret_cast<const Operand&>(*o2),
-          0);
-        return;
+        _emitX86RM(opCode + 2 + (o0->getSize() != 1),
+          o0->getSize() == 2,
+          o0->getSize() == 8,
+          reinterpret_cast<const GPReg&>(*o0).getRegCode(),
+          reinterpret_cast<const Operand&>(*o1),
+          0, forceRexPrefix);
+        goto end;
       }
 
       // AL, AX, EAX, RAX register shortcuts
-      if (o1->isRegIndex(0) && o2->isImm())
+      if (o0->isRegIndex(0) && o1->isImm())
       {
-        if (o1->isRegType(REG_GPW))
-          _emitByte(0x66); // 16 bit
-        else if (o1->isRegType(REG_GPQ))
-          _emitByte(0x48); // REX.W
+        if (o0->getSize() == 2)
+          _emitByte(0x66); // 16-bit.
+        else if (o0->getSize() == 8)
+          _emitByte(0x48); // REX.W.
 
-        _emitByte((opReg << 3) | (0x04 + !o1->isRegType(REG_GPB)));
+        _emitByte((opReg << 3) | (0x04 + (o0->getSize() != 1)));
         _emitImmediate(
-          reinterpret_cast<const Immediate&>(*o2), o1->size() <= 4 ? o1->size() : 4);
-        return;
+          reinterpret_cast<const Imm&>(*o1), o0->getSize() <= 4 ? o0->getSize() : 4);
+        goto end;
       }
 
-      if (o1->isRegMem() && o2->isImm())
+      if (o0->isRegMem() && o1->isImm())
       {
-        const Immediate& imm = reinterpret_cast<const Immediate&>(*o2);
-        UInt8 immSize = isInt8(imm.value()) ? 1 : (o1->size() <= 4 ? o1->size() : 4);
+        const Imm& imm = reinterpret_cast<const Imm&>(*o1);
+        uint8_t immSize = Util::isInt8(imm.getValue()) ? 1 : (o0->getSize() <= 4 ? o0->getSize() : 4);
 
-        _emitX86RM(id.opCode2 + (o1->size() != 1 ? (immSize != 1 ? 1 : 3) : 0), 
-          o1->size() == 2,
-          o1->size() == 8,
-          opReg, reinterpret_cast<const Operand&>(*o1),
-          immSize);
+        _emitX86RM(id->opCode[1] + (o0->getSize() != 1 ? (immSize != 1 ? 1 : 3) : 0),
+          o0->getSize() == 2,
+          o0->getSize() == 8,
+          opReg, reinterpret_cast<const Operand&>(*o0),
+          immSize, forceRexPrefix);
         _emitImmediate(
-          reinterpret_cast<const Immediate&>(*o2),
+          reinterpret_cast<const Imm&>(*o1),
           immSize);
-        return;
+        goto end;
       }
 
       break;
     }
 
-    case I_BSWAP:
+    case InstructionDescription::G_BSWAP:
     {
-      if (o1->isReg())
+      if (o0->isReg())
       {
-        const Register& dst = reinterpret_cast<const Register&>(*o1);
+        const GPReg& dst = reinterpret_cast<const GPReg&>(*o0);
 
 #if defined(ASMJIT_X64)
-        _emitRexR(dst.type() == REG_GPQ, 1, dst.code());
+        _emitRexR(dst.getRegType() == REG_TYPE_GPQ, 1, dst.getRegCode(), forceRexPrefix);
 #endif // ASMJIT_X64
         _emitByte(0x0F);
-        _emitModR(1, dst.code());
-        return;
+        _emitModR(1, dst.getRegCode());
+        goto end;
       }
 
       break;
     }
 
-    case I_BT:
+    case InstructionDescription::G_BT:
     {
-      if (o1->isRegMem() && o2->isReg())
+      if (o0->isRegMem() && o1->isReg())
       {
-        const Operand& dst = reinterpret_cast<const Operand&>(*o1);
-        const Register& src = reinterpret_cast<const Register&>(*o2);
+        const Operand& dst = reinterpret_cast<const Operand&>(*o0);
+        const GPReg& src = reinterpret_cast<const GPReg&>(*o1);
 
-        _emitX86RM(id.opCode1, 
-          src.isRegType(REG_GPW),
-          src.isRegType(REG_GPQ),
-          src.code(),
+        _emitX86RM(id->opCode[0],
+          src.isRegType(REG_TYPE_GPW),
+          src.isRegType(REG_TYPE_GPQ),
+          src.getRegCode(),
           dst,
-          0);
-        return;
+          0, forceRexPrefix);
+        goto end;
       }
 
-      if (o1->isRegMem() && o2->isImm())
+      if (o0->isRegMem() && o1->isImm())
       {
-        const Operand& dst = reinterpret_cast<const Operand&>(*o1);
-        const Immediate& src = reinterpret_cast<const Immediate&>(*o2);
+        const Operand& dst = reinterpret_cast<const Operand&>(*o0);
+        const Imm& src = reinterpret_cast<const Imm&>(*o1);
 
-        _emitX86RM(id.opCode2,
-          src.size() == 2,
-          src.size() == 8,
-          id.opCodeR,
+        _emitX86RM(id->opCode[1],
+          dst.getSize() == 2,
+          dst.getSize() == 8,
+          (uint8_t)id->opCodeR,
           dst,
-          1);
+          1, forceRexPrefix);
         _emitImmediate(src, 1);
-        return;
+        goto end;
       }
 
       break;
     }
 
-    case I_CALL:
+    case InstructionDescription::G_CALL:
     {
-      if (o1->isRegMem(REG_GPN))
+      if (o0->isRegTypeMem(REG_TYPE_GPN))
       {
-        const Operand& dst = reinterpret_cast<const Operand&>(*o1);
-        _emitX86RM(0xFF, 
-          0, 
+        const Operand& dst = reinterpret_cast<const Operand&>(*o0);
+        _emitX86RM(0xFF,
+          0,
           0, 2, dst,
-          0);
-        return;
+          0, forceRexPrefix);
+        goto end;
       }
 
-      if (o1->isImm())
+      if (o0->isImm())
       {
-        const Immediate& imm = reinterpret_cast<const Immediate&>(*o1);
+        const Imm& imm = reinterpret_cast<const Imm&>(*o0);
         _emitByte(0xE8);
-        _emitJmpOrCallReloc(I_CALL, (void*)imm.value());
-        return;
+        _emitJmpOrCallReloc(InstructionDescription::G_CALL, (void*)imm.getValue());
+        goto end;
       }
 
-      if (o1->isLabel())
+      if (o0->isLabel())
       {
-        Label* label = (Label*)(o1);
+        LabelData& l_data = _labelData[reinterpret_cast<const Label*>(o0)->getId() & OPERAND_ID_VALUE_MASK];
 
-        if (label->isBound())
+        if (l_data.offset != -1)
         {
-          const SysInt rel32_size = 5;
-          SysInt offs = label->position() - offset();
+          // Bound label.
+          static const sysint_t rel32_size = 5;
+          sysint_t offs = l_data.offset - getOffset();
+
           ASMJIT_ASSERT(offs <= 0);
 
           _emitByte(0xE8);
-          _emitInt32((Int32)(offs - rel32_size));
+          _emitInt32((int32_t)(offs - rel32_size));
         }
         else
         {
+          // Non-bound label.
           _emitByte(0xE8);
-          _emitDisplacement(label, -4, 4);
+          _emitDisplacement(l_data, -4, 4);
         }
-        return;
+        goto end;
       }
 
       break;
     }
-    
-    case I_CRC32:
+
+    case InstructionDescription::G_CRC32:
     {
-      if (o1->isReg() && o2->isRegMem())
+      if (o0->isReg() && o1->isRegMem())
       {
-        const Register& dst = reinterpret_cast<const Register&>(*o1);
-        const Operand& src = reinterpret_cast<const Operand&>(*o2);
-        ASMJIT_ASSERT(dst.type() == REG_GPD || dst.type() == REG_GPQ);
+        const GPReg& dst = reinterpret_cast<const GPReg&>(*o0);
+        const Operand& src = reinterpret_cast<const Operand&>(*o1);
+        ASMJIT_ASSERT(dst.getRegType() == REG_TYPE_GPD || dst.getRegType() == REG_TYPE_GPQ);
 
-        _emitX86RM(id.opCode1 + (src.size() != 1),
-          src.size() == 2, 
-          dst.type() == 8, dst.code(), src, 
-          0);
-        return;
+        _emitX86RM(id->opCode[0] + (src.getSize() != 1),
+          src.getSize() == 2,
+          dst.getRegType() == 8, dst.getRegCode(), src,
+          0, forceRexPrefix);
+        goto end;
       }
 
       break;
     }
 
-    case I_ENTER:
+    case InstructionDescription::G_ENTER:
     {
-      if (o1->isImm() && o2->isImm())
+      if (o0->isImm() && o1->isImm())
       {
         _emitByte(0xC8);
-        _emitImmediate(reinterpret_cast<const Immediate&>(*o1), 2);
-        _emitImmediate(reinterpret_cast<const Immediate&>(*o2), 1);
+        _emitImmediate(reinterpret_cast<const Imm&>(*o0), 2);
+        _emitImmediate(reinterpret_cast<const Imm&>(*o1), 1);
       }
       break;
     }
 
-    case I_IMUL:
+    case InstructionDescription::G_IMUL:
     {
       // 1 operand
-      if (o1->isRegMem() && o2->isNone() && o3->isNone())
+      if (o0->isRegMem() && o1->isNone() && o2->isNone())
       {
-        const Operand& src = reinterpret_cast<const Operand&>(*o1);
-        _emitX86RM(0xF6 + (src.size() != 1),
-          src.size() == 2,
-          src.size() == 8, 5, src,
-          0);
-        return;
+        const Operand& src = reinterpret_cast<const Operand&>(*o0);
+        _emitX86RM(0xF6 + (src.getSize() != 1),
+          src.getSize() == 2,
+          src.getSize() == 8, 5, src,
+          0, forceRexPrefix);
+        goto end;
       }
       // 2 operands
-      else if (o1->isReg() && !o2->isNone() && o3->isNone())
+      else if (o0->isReg() && !o1->isNone() && o2->isNone())
       {
-        const Register& dst = reinterpret_cast<const Register&>(*o1);
-        ASMJIT_ASSERT(!dst.isRegType(REG_GPW));
+        const GPReg& dst = reinterpret_cast<const GPReg&>(*o0);
+        ASMJIT_ASSERT(!dst.isRegType(REG_TYPE_GPW));
 
-        if (o2->isRegMem())
+        if (o1->isRegMem())
         {
-          const Operand& src = reinterpret_cast<const Operand&>(*o2);
+          const Operand& src = reinterpret_cast<const Operand&>(*o1);
 
           _emitX86RM(0x0FAF,
-            dst.isRegType(REG_GPW), 
-            dst.isRegType(REG_GPQ), dst.code(), src,
-            0);
-          return;
+            dst.isRegType(REG_TYPE_GPW),
+            dst.isRegType(REG_TYPE_GPQ), dst.getRegCode(), src,
+            0, forceRexPrefix);
+          goto end;
         }
-        else if (o2->isImm())
+        else if (o1->isImm())
         {
-          const Immediate& imm = reinterpret_cast<const Immediate&>(*o2);
+          const Imm& imm = reinterpret_cast<const Imm&>(*o1);
 
-          if (isInt8(imm.value()) && imm.relocMode() == RELOC_NONE)
+          if (Util::isInt8(imm.getValue()))
           {
             _emitX86RM(0x6B,
-              dst.isRegType(REG_GPW),
-              dst.isRegType(REG_GPQ), dst.code(), dst,
-              1);
+              dst.isRegType(REG_TYPE_GPW),
+              dst.isRegType(REG_TYPE_GPQ), dst.getRegCode(), dst,
+              1, forceRexPrefix);
             _emitImmediate(imm, 1);
           }
           else
           {
-            Int32 immSize = dst.isRegType(REG_GPW) ? 2 : 4;
-            _emitX86RM(0x69, 
-              dst.isRegType(REG_GPW), 
-              dst.isRegType(REG_GPQ), dst.code(), dst,
-              immSize);
-            _emitImmediate(imm, (UInt32)immSize);
+            int32_t immSize = dst.isRegType(REG_TYPE_GPW) ? 2 : 4;
+            _emitX86RM(0x69,
+              dst.isRegType(REG_TYPE_GPW),
+              dst.isRegType(REG_TYPE_GPQ), dst.getRegCode(), dst,
+              immSize, forceRexPrefix);
+            _emitImmediate(imm, (uint32_t)immSize);
           }
-          return;
+          goto end;
         }
       }
       // 3 operands
-      else if (o1->isReg() && o2->isRegMem() && o3->isImm())
+      else if (o0->isReg() && o1->isRegMem() && o2->isImm())
       {
-        const Register& dst = reinterpret_cast<const Register&>(*o1);
-        const Operand& src = reinterpret_cast<const Operand&>(*o2);
-        const Immediate& imm = reinterpret_cast<const Immediate&>(*o3);
+        const GPReg& dst = reinterpret_cast<const GPReg&>(*o0);
+        const Operand& src = reinterpret_cast<const Operand&>(*o1);
+        const Imm& imm = reinterpret_cast<const Imm&>(*o2);
 
-        if (isInt8(imm.value()) && imm.relocMode() == RELOC_NONE)
+        if (Util::isInt8(imm.getValue()))
         {
           _emitX86RM(0x6B,
-            dst.isRegType(REG_GPW),
-            dst.isRegType(REG_GPQ), dst.code(), src,
-            1);
+            dst.isRegType(REG_TYPE_GPW),
+            dst.isRegType(REG_TYPE_GPQ), dst.getRegCode(), src,
+            1, forceRexPrefix);
           _emitImmediate(imm, 1);
         }
         else
         {
-          Int32 immSize = dst.isRegType(REG_GPW) ? 2 : 4;
-          _emitX86RM(0x69, 
-            dst.isRegType(REG_GPW), 
-            dst.isRegType(REG_GPQ), dst.code(), src,
-            immSize);
-          _emitImmediate(imm, (Int32)immSize);
+          int32_t immSize = dst.isRegType(REG_TYPE_GPW) ? 2 : 4;
+          _emitX86RM(0x69,
+            dst.isRegType(REG_TYPE_GPW),
+            dst.isRegType(REG_TYPE_GPQ), dst.getRegCode(), src,
+            immSize, forceRexPrefix);
+          _emitImmediate(imm, (int32_t)immSize);
         }
-        return;
+        goto end;
       }
 
       break;
     }
-    
-    case I_INC_DEC:
-    {
-      if (o1->isRegMem())
-      {
-        const Operand& dst = reinterpret_cast<const Operand&>(*o1);
 
-        // INC [r16|r32] in 64 bit mode is not encodable.
+    case InstructionDescription::G_INC_DEC:
+    {
+      if (o0->isRegMem())
+      {
+        const Operand& dst = reinterpret_cast<const Operand&>(*o0);
+
+        // INC [r16|r32] in 64-bit mode is not encodable.
 #if defined(ASMJIT_X86)
-        if ((dst.isReg()) && (dst.isRegType(REG_GPW) || dst.isRegType(REG_GPD)))
+        if ((dst.isReg()) && (dst.isRegType(REG_TYPE_GPW) || dst.isRegType(REG_TYPE_GPD)))
         {
-          _emitX86Inl(id.opCode1,
-            dst.isRegType(REG_GPW), 
-            0, reinterpret_cast<const BaseReg&>(dst).code());
-          return;
+          _emitX86Inl(id->opCode[0],
+            dst.isRegType(REG_TYPE_GPW),
+            0, reinterpret_cast<const BaseReg&>(dst).getRegCode(),
+            false);
+          goto end;
         }
 #endif // ASMJIT_X86
 
-        _emitX86RM(id.opCode2 + (dst.size() != 1),
-          dst.size() == 2,
-          dst.size() == 8, (UInt8)id.opCodeR, dst,
-          0);
-        return; 
+        _emitX86RM(id->opCode[1] + (dst.getSize() != 1),
+          dst.getSize() == 2,
+          dst.getSize() == 8, (uint8_t)id->opCodeR, dst,
+          0, forceRexPrefix);
+        goto end;
       }
 
       break;
     }
 
-    case I_J:
+    case InstructionDescription::G_J:
     {
-      if (o1->isLabel())
+      if (o0->isLabel())
       {
-        Label* label = (Label*)(o1);
-        UInt32 hint = 0;
-        bool isShortJump = (code >= INST_J_SHORT && code <= INST_JMP_SHORT);
+        LabelData& l_data = _labelData[reinterpret_cast<const Label*>(o0)->getId() & OPERAND_ID_VALUE_MASK];
 
-        if (o2->isImm()) hint = reinterpret_cast<const Immediate&>(*o2).value();
+        uint32_t hint = (uint32_t)(o1->isImm() ? reinterpret_cast<const Imm&>(*o1).getValue() : 0);
+        bool isShortJump = (_emitOptions & EMIT_OPTION_SHORT_JUMP) != 0;
 
         // Emit jump hint if configured for that.
-        if ((hint & (HINT_TAKEN | HINT_NOT_TAKEN)) && 
-            (_properties & (1 << PROPERTY_X86_JCC_HINTS)))
+        if ((hint & (HINT_TAKEN | HINT_NOT_TAKEN)) && (_properties & (1 << PROPERTY_JUMP_HINTS)))
         {
           if (hint & HINT_TAKEN)
             _emitByte(HINT_BYTE_VALUE_TAKEN);
@@ -1793,316 +1295,341 @@ void Assembler::_emitX86(UInt32 code, const Operand* o1, const Operand* o2, cons
             _emitByte(HINT_BYTE_VALUE_NOT_TAKEN);
         }
 
-        if (label->isBound())
+        if (l_data.offset != -1)
         {
-          const SysInt rel8_size = 2;
-          const SysInt rel32_size = 6;
-          SysInt offs = label->position() - offset();
+          // Bound label.
+          static const sysint_t rel8_size = 2;
+          static const sysint_t rel32_size = 6;
+          sysint_t offs = l_data.offset - getOffset();
 
           ASMJIT_ASSERT(offs <= 0);
 
-          if (isInt8(offs - rel8_size))
+          if (Util::isInt8(offs - rel8_size))
           {
-            _emitByte(0x70 | (UInt8)id.opCode1);
-            _emitByte((UInt8)(Int8)(offs - rel8_size));
+            _emitByte(0x70 | (uint8_t)id->opCode[0]);
+            _emitByte((uint8_t)(int8_t)(offs - rel8_size));
+
+            // Change the emit options so logger can log instruction correctly.
+            _emitOptions |= EMIT_OPTION_SHORT_JUMP;
           }
           else
           {
             if (isShortJump && _logger)
             {
-              _logger->log("; WARNING: Emitting long conditional jump, but short jump instruction forced!");
+              _logger->logString("*** ASSEMBLER WARNING: Emitting long conditional jump, but short jump instruction forced!\n");
+              _emitOptions &= ~EMIT_OPTION_SHORT_JUMP;
             }
 
             _emitByte(0x0F);
-            _emitByte(0x80 | (UInt8)id.opCode1);
-            _emitInt32((Int32)(offs - rel32_size));
+            _emitByte(0x80 | (uint8_t)id->opCode[0]);
+            _emitInt32((int32_t)(offs - rel32_size));
           }
         }
         else
         {
+          // Non-bound label.
           if (isShortJump)
           {
-            _emitByte(0x70 | (UInt8)id.opCode1);
-            _emitDisplacement(label, -1, 1);
+            _emitByte(0x70 | (uint8_t)id->opCode[0]);
+            _emitDisplacement(l_data, -1, 1);
           }
           else
           {
             _emitByte(0x0F);
-            _emitByte(0x80 | (UInt8)id.opCode1);
-            _emitDisplacement(label, -4, 4);
+            _emitByte(0x80 | (uint8_t)id->opCode[0]);
+            _emitDisplacement(l_data, -4, 4);
           }
         }
-        return;
+        goto end;
       }
 
       break;
     }
 
-    case I_JMP:
+    case InstructionDescription::G_JMP:
     {
-      if (o1->isRegMem())
+      if (o0->isRegMem())
       {
-        const Operand& dst = reinterpret_cast<const Operand&>(*o1);
+        const Operand& dst = reinterpret_cast<const Operand&>(*o0);
 
         _emitX86RM(0xFF,
           0,
           0, 4, dst,
-          0);
-        return; 
+          0, forceRexPrefix);
+        goto end;
       }
 
-      if (o1->isImm())
+      if (o0->isImm())
       {
-        const Immediate& imm = reinterpret_cast<const Immediate&>(*o1);
+        const Imm& imm = reinterpret_cast<const Imm&>(*o0);
         _emitByte(0xE9);
-        _emitJmpOrCallReloc(I_JMP, (void*)imm.value());
-        return;
+        _emitJmpOrCallReloc(InstructionDescription::G_JMP, (void*)imm.getValue());
+        goto end;
       }
 
-      if (o1->isLabel())
+      if (o0->isLabel())
       {
-        Label* label = (Label*)(o1);
-        bool isShortJump = (code == INST_JMP_SHORT);
+        LabelData& l_data = _labelData[reinterpret_cast<const Label*>(o0)->getId() & OPERAND_ID_VALUE_MASK];
+        bool isShortJump = (_emitOptions & EMIT_OPTION_SHORT_JUMP) != 0;
 
-        if (label->isBound())
+        if (l_data.offset != -1)
         {
-          const SysInt rel8_size = 2;
-          const SysInt rel32_size = 5;
-          SysInt offs = label->position() - offset();
+          // Bound label.
+          const sysint_t rel8_size = 2;
+          const sysint_t rel32_size = 5;
+          sysint_t offs = l_data.offset - getOffset();
 
-          if (isInt8(offs - rel8_size))
+          if (Util::isInt8(offs - rel8_size))
           {
             _emitByte(0xEB);
-            _emitByte((UInt8)(Int8)(offs - rel8_size));
+            _emitByte((uint8_t)(int8_t)(offs - rel8_size));
+
+            // Change the emit options so logger can log instruction correctly.
+            _emitOptions |= EMIT_OPTION_SHORT_JUMP;
           }
           else
           {
-            if (isShortJump && _logger)
+            if (isShortJump)
             {
-              _logger->log("; WARNING: Emitting long jump, but short jump instruction forced!");
+              if (_logger && _logger->isUsed())
+              {
+                _logger->logString("*** ASSEMBLER WARNING: Emitting long jump, but short jump instruction forced!\n");
+                _emitOptions &= ~EMIT_OPTION_SHORT_JUMP;
+              }
             }
 
             _emitByte(0xE9);
-            _emitInt32((Int32)(offs - rel32_size));
+            _emitInt32((int32_t)(offs - rel32_size));
           }
         }
         else
         {
+          // Non-bound label.
           if (isShortJump)
           {
             _emitByte(0xEB);
-            _emitDisplacement(label, -1, 1);
+            _emitDisplacement(l_data, -1, 1);
           }
           else
           {
             _emitByte(0xE9);
-            _emitDisplacement(label, -4, 4);
+            _emitDisplacement(l_data, -4, 4);
           }
         }
-        return;
+        goto end;
       }
 
       break;
     }
 
-    case I_LEA:
+    case InstructionDescription::G_LEA:
     {
-      if (o1->isReg() && o2->isMem())
+      if (o0->isReg() && o1->isMem())
       {
-        const Register& dst = reinterpret_cast<const Register&>(*o1);
-        const Mem& src = reinterpret_cast<const Mem&>(*o2);
-        _emitX86RM(0x8D, 
-          dst.isRegType(REG_GPW), 
-          dst.isRegType(REG_GPQ), dst.code(), src,
-          0);
-        return; 
+        const GPReg& dst = reinterpret_cast<const GPReg&>(*o0);
+        const Mem& src = reinterpret_cast<const Mem&>(*o1);
+        _emitX86RM(0x8D,
+          dst.isRegType(REG_TYPE_GPW),
+          dst.isRegType(REG_TYPE_GPQ), dst.getRegCode(), src,
+          0, forceRexPrefix);
+        goto end;
       }
 
       break;
     }
 
-    case I_M:
+    case InstructionDescription::G_M:
     {
-      if (o1->isMem())
+      if (o0->isMem())
       {
-        _emitX86RM(id.opCode1, 0, (UInt8)id.opCode2, id.opCodeR, reinterpret_cast<const Mem&>(*o1), 0);
-        return;
+        _emitX86RM(id->opCode[0], 0, (uint8_t)id->opCode[1], (uint8_t)id->opCodeR, reinterpret_cast<const Mem&>(*o0), 0, forceRexPrefix);
+        goto end;
       }
       break;
     }
-    
-    case I_MOV:
-    { 
-      const Operand& dst = *o1;
-      const Operand& src = *o2;
 
-      switch (dst.op() << 4 | src.op())
+    case InstructionDescription::G_MOV:
+    {
+      const Operand& dst = *o0;
+      const Operand& src = *o1;
+
+      switch (dst.getType() << 4 | src.getType())
       {
         // Reg <- Reg/Mem
-        case (OP_REG << 4) | OP_REG:
+        case (OPERAND_REG << 4) | OPERAND_REG:
         {
-          ASMJIT_ASSERT(src.isRegType(REG_GPB) || src.isRegType(REG_GPW) ||
-                        src.isRegType(REG_GPD) || src.isRegType(REG_GPQ));
+          ASMJIT_ASSERT(src.isRegType(REG_TYPE_GPB_LO) ||
+                        src.isRegType(REG_TYPE_GPB_HI) ||
+                        src.isRegType(REG_TYPE_GPW   ) ||
+                        src.isRegType(REG_TYPE_GPD   ) ||
+                        src.isRegType(REG_TYPE_GPQ   ) );
           // ... fall through ...
         }
-        case (OP_REG << 4) | OP_MEM:
+        case (OPERAND_REG << 4) | OPERAND_MEM:
         {
-          ASMJIT_ASSERT(dst.isRegType(REG_GPB) || dst.isRegType(REG_GPW) ||
-                        dst.isRegType(REG_GPD) || dst.isRegType(REG_GPQ));
+          ASMJIT_ASSERT(dst.isRegType(REG_TYPE_GPB_LO) ||
+                        dst.isRegType(REG_TYPE_GPB_HI) ||
+                        dst.isRegType(REG_TYPE_GPW   ) ||
+                        dst.isRegType(REG_TYPE_GPD   ) ||
+                        dst.isRegType(REG_TYPE_GPQ   ) );
 
-          _emitX86RM(0x0000008A + !dst.isRegType(REG_GPB),
-            dst.isRegType(REG_GPW),
-            dst.isRegType(REG_GPQ),
-            reinterpret_cast<const Register&>(dst).code(),
+          _emitX86RM(0x0000008A + (dst.getSize() != 1),
+            dst.isRegType(REG_TYPE_GPW),
+            dst.isRegType(REG_TYPE_GPQ),
+            reinterpret_cast<const GPReg&>(dst).getRegCode(),
             reinterpret_cast<const Operand&>(src),
-            0);
-          return;
+            0, forceRexPrefix);
+          goto end;
         }
 
         // Reg <- Imm
-        case (OP_REG << 4) | OP_IMM:
+        case (OPERAND_REG << 4) | OPERAND_IMM:
         {
-          const Register& dst = reinterpret_cast<const Register&>(*o1);
-          const Immediate& src = reinterpret_cast<const Immediate&>(*o2);
+          const GPReg& dst = reinterpret_cast<const GPReg&>(*o0);
+          const Imm& src = reinterpret_cast<const Imm&>(*o1);
 
-          // in 64 bit mode immediate can be 8 byte long!
-          Int32 immSize = dst.size();
+          // In 64-bit mode immediate can be 64-bits long if destination operand
+          // is register (otherwise 32-bits).
+          int32_t immSize = dst.getSize();
 
 #if defined(ASMJIT_X64)
-          // Optimize instruction size by using 32 bit immediate if value can
-          // fit to it
-          if (immSize == 8 && isInt32(src.value()) && src.relocMode() == RELOC_NONE)
+          // Optimize instruction size by using 32-bit immediate if value can
+          // fit to it.
+          if (immSize == 8 && Util::isInt32(src.getValue()))
           {
             _emitX86RM(0xC7,
-              dst.isRegType(REG_GPW),
-              dst.isRegType(REG_GPQ),
+              dst.isRegType(REG_TYPE_GPW),
+              dst.isRegType(REG_TYPE_GPQ),
               0,
               dst,
-              0);
+              0, forceRexPrefix);
             immSize = 4;
           }
           else
           {
 #endif // ASMJIT_X64
-            _emitX86Inl((dst.size() == 1 ? 0xB0 : 0xB8),
-              dst.isRegType(REG_GPW),
-              dst.isRegType(REG_GPQ),
-              dst.code());
+            _emitX86Inl((dst.getSize() == 1 ? 0xB0 : 0xB8),
+              dst.isRegType(REG_TYPE_GPW),
+              dst.isRegType(REG_TYPE_GPQ),
+              dst.getRegCode(), forceRexPrefix);
 #if defined(ASMJIT_X64)
           }
 #endif // ASMJIT_X64
 
-          _emitImmediate(src, (UInt32)immSize);
-          return;
+          _emitImmediate(src, (uint32_t)immSize);
+          goto end;
         }
 
         // Mem <- Reg
-        case (OP_MEM << 4) | OP_REG:
+        case (OPERAND_MEM << 4) | OPERAND_REG:
         {
-          ASMJIT_ASSERT(src.isRegType(REG_GPB) || src.isRegType(REG_GPW) ||
-                        src.isRegType(REG_GPD) || src.isRegType(REG_GPQ));
+          ASMJIT_ASSERT(src.isRegType(REG_TYPE_GPB_LO) ||
+                        src.isRegType(REG_TYPE_GPB_HI) ||
+                        src.isRegType(REG_TYPE_GPW   ) ||
+                        src.isRegType(REG_TYPE_GPD   ) ||
+                        src.isRegType(REG_TYPE_GPQ   ) );
 
-          _emitX86RM(0x88 + !src.isRegType(REG_GPB),
-            src.isRegType(REG_GPW),
-            src.isRegType(REG_GPQ),
-            reinterpret_cast<const Register&>(src).code(), 
+          _emitX86RM(0x88 + (src.getSize() != 1),
+            src.isRegType(REG_TYPE_GPW),
+            src.isRegType(REG_TYPE_GPQ),
+            reinterpret_cast<const GPReg&>(src).getRegCode(),
             reinterpret_cast<const Operand&>(dst),
-            0);
-          return;
+            0, forceRexPrefix);
+          goto end;
         }
 
         // Mem <- Imm
-        case (OP_MEM << 4) | OP_IMM:
+        case (OPERAND_MEM << 4) | OPERAND_IMM:
         {
-          Int32 immSize = dst.size() <= 4 ? dst.size() : 4;
+          int32_t immSize = dst.getSize() <= 4 ? dst.getSize() : 4;
 
-          _emitX86RM(0xC6 + (dst.size() != 1),
-            dst.size() == 2,
-            dst.size() == 8,
+          _emitX86RM(0xC6 + (dst.getSize() != 1),
+            dst.getSize() == 2,
+            dst.getSize() == 8,
             0,
             reinterpret_cast<const Operand&>(dst),
-            immSize);
-          _emitImmediate(reinterpret_cast<const Immediate&>(src), 
-            (UInt32)immSize);
-          return;
+            immSize, forceRexPrefix);
+          _emitImmediate(reinterpret_cast<const Imm&>(src),
+            (uint32_t)immSize);
+          goto end;
         }
       }
 
       break;
     }
 
-    case I_MOV_PTR:
+    case InstructionDescription::G_MOV_PTR:
     {
-      if ((o1->isReg() && o2->isImm()) || (o1->isImm() && o2->isReg()))
+      if ((o0->isReg() && o1->isImm()) || (o0->isImm() && o1->isReg()))
       {
-        bool reverse = o1->op() == OP_REG;
-        UInt8 opCode = !reverse ? 0xA0 : 0xA2;
-        const Register& reg = reinterpret_cast<const Register&>(!reverse ? *o1 : *o2);
-        const Immediate& imm = reinterpret_cast<const Immediate&>(!reverse ? *o2 : *o1);
+        bool reverse = o1->getType() == OPERAND_REG;
+        uint8_t opCode = !reverse ? 0xA0 : 0xA2;
+        const GPReg& reg = reinterpret_cast<const GPReg&>(!reverse ? *o0 : *o1);
+        const Imm& imm = reinterpret_cast<const Imm&>(!reverse ? *o1 : *o0);
 
-        if (reg.index() != 0) goto illegalInstruction;
+        if (reg.getRegIndex() != 0) goto illegalInstruction;
 
-        if (reg.isRegType(REG_GPW)) _emitByte(0x66);
+        if (reg.isRegType(REG_TYPE_GPW)) _emitByte(0x66);
 #if defined(ASMJIT_X64)
-        _emitRexR(reg.size() == 8, 0, 0);
+        _emitRexR(reg.getSize() == 8, 0, 0, forceRexPrefix);
 #endif // ASMJIT_X64
-        _emitByte(opCode + (reg.size() != 1));
-        _emitImmediate(imm, sizeof(SysInt));
-        return; 
+        _emitByte(opCode + (reg.getSize() != 1));
+        _emitImmediate(imm, sizeof(sysint_t));
+        goto end;
       }
 
       break;
     }
 
-    case I_MOVSX_MOVZX:
+    case InstructionDescription::G_MOVSX_MOVZX:
     {
-      if (o1->isReg() && o2->isRegMem())
+      if (o0->isReg() && o1->isRegMem())
       {
-        const Register& dst = reinterpret_cast<const Register&>(*o1);
-        const Operand& src = reinterpret_cast<const Operand&>(*o2);
+        const GPReg& dst = reinterpret_cast<const GPReg&>(*o0);
+        const Operand& src = reinterpret_cast<const Operand&>(*o1);
 
-        if (dst.isRegType(REG_GPB)) goto illegalInstruction;
-        if (src.size() != 1 && src.size() != 2) goto illegalInstruction;
-        if (src.size() == 2 && dst.isRegType(REG_GPW)) goto illegalInstruction;
+        if (dst.getSize() == 1) goto illegalInstruction;
+        if (src.getSize() != 1 && src.getSize() != 2) goto illegalInstruction;
+        if (src.getSize() == 2 && dst.getSize() == 2) goto illegalInstruction;
 
-        _emitX86RM(id.opCode1 + (src.size() != 1),
-          dst.isRegType(REG_GPW),
-          dst.isRegType(REG_GPQ),
-          dst.code(),
+        _emitX86RM(id->opCode[0] + (src.getSize() != 1),
+          dst.isRegType(REG_TYPE_GPW),
+          dst.isRegType(REG_TYPE_GPQ),
+          dst.getRegCode(),
           src,
-          0);
-        return; 
+          0, forceRexPrefix);
+        goto end;
       }
 
       break;
     }
-    
+
 #if defined(ASMJIT_X64)
-    case I_MOVSXD:
-    { 
-      if (o1->isReg() && o2->isRegMem())
+    case InstructionDescription::G_MOVSXD:
+    {
+      if (o0->isReg() && o1->isRegMem())
       {
-        const Register& dst = reinterpret_cast<const Register&>(*o1);
-        const Operand& src = reinterpret_cast<const Operand&>(*o2);
+        const GPReg& dst = reinterpret_cast<const GPReg&>(*o0);
+        const Operand& src = reinterpret_cast<const Operand&>(*o1);
         _emitX86RM(0x00000063,
           0,
-          1, dst.code(), src,
-          0);
-        return; 
+          1, dst.getRegCode(), src,
+          0, forceRexPrefix);
+        goto end;
       }
 
       break;
     }
 #endif // ASMJIT_X64
 
-    case I_PUSH:
+    case InstructionDescription::G_PUSH:
     {
       // This section is only for immediates, memory/register operands are handled in I_POP.
-      if (o1->isImm())
+      if (o0->isImm())
       {
-        const Immediate& imm = reinterpret_cast<const Immediate&>(*o1);
+        const Imm& imm = reinterpret_cast<const Imm&>(*o0);
 
-        if (isInt8(imm.value()) && imm.relocMode() == RELOC_NONE)
+        if (Util::isInt8(imm.getValue()))
         {
           _emitByte(0x6A);
           _emitImmediate(imm, 1);
@@ -2112,104 +1639,123 @@ void Assembler::_emitX86(UInt32 code, const Operand* o1, const Operand* o2, cons
           _emitByte(0x68);
           _emitImmediate(imm, 4);
         }
-        return;
+        goto end;
       }
 
       // ... goto I_POP ...
     }
 
-    case I_POP:
+    case InstructionDescription::G_POP:
     {
-      if (o1->isReg())
+      if (o0->isReg())
       {
-        ASMJIT_ASSERT(o1->isRegType(REG_GPW) || o1->isRegType(REG_GPN));
-        _emitX86Inl(id.opCode1, o1->isRegType(REG_GPW), 0, reinterpret_cast<const Register&>(*o1).code());
-        return;
+        ASMJIT_ASSERT(o0->isRegType(REG_TYPE_GPW) || o0->isRegType(REG_TYPE_GPN));
+        _emitX86Inl(id->opCode[0], o0->isRegType(REG_TYPE_GPW), 0, reinterpret_cast<const GPReg&>(*o0).getRegCode(), forceRexPrefix);
+        goto end;
       }
 
-      if (o1->isMem())
+      if (o0->isMem())
       {
-        _emitX86RM(id.opCode2, o1->size() == 2, 0, id.opCodeR, reinterpret_cast<const Operand&>(*o1), 0);
-        return;
-      }
-
-      break;
-    }
-
-    case I_R_RM:
-    {
-      if (o1->isReg() && o2->isRegMem())
-      {
-        const Register& dst = reinterpret_cast<const Register&>(*o1);
-        ASMJIT_ASSERT(dst.type() != REG_GPB);
-        const Operand& src = reinterpret_cast<const Operand&>(*o2);
-
-        _emitX86RM(id.opCode1,
-          dst.type() == REG_GPW, 
-          dst.type() == REG_GPQ, dst.code(), src,
-          0);
-        return;
+        _emitX86RM(id->opCode[1], o0->getSize() == 2, 0, (uint8_t)id->opCodeR, reinterpret_cast<const Operand&>(*o0), 0, forceRexPrefix);
+        goto end;
       }
 
       break;
     }
 
-    case I_RM_B:
+    case InstructionDescription::G_R_RM:
     {
-      if (o1->isRegMem())
+      if (o0->isReg() && o1->isRegMem())
       {
-        const Operand& op = reinterpret_cast<const Operand&>(*o1);
-        _emitX86RM(id.opCode1, false, false, 0, op, 0);
-        return;
+        const GPReg& dst = reinterpret_cast<const GPReg&>(*o0);
+        const Operand& src = reinterpret_cast<const Operand&>(*o1);
+        ASMJIT_ASSERT(dst.getSize() != 1);
+
+        _emitX86RM(id->opCode[0],
+          dst.getRegType() == REG_TYPE_GPW,
+          dst.getRegType() == REG_TYPE_GPQ, dst.getRegCode(), src,
+          0, forceRexPrefix);
+        goto end;
       }
 
       break;
     }
 
-    case I_RM:
+    case InstructionDescription::G_RM_B:
     {
-      if (o1->isRegMem())
+      if (o0->isRegMem())
       {
-        const Operand& op = reinterpret_cast<const Operand&>(*o1);
-        _emitX86RM(id.opCode1 + (op.size() != 1),
-          op.size() == 2,
-          op.size() == 8, (UInt8)id.opCodeR, op,
-          0);
-        return;
+        const Operand& op = reinterpret_cast<const Operand&>(*o0);
+        _emitX86RM(id->opCode[0], false, false, 0, op, 0, forceRexPrefix);
+        goto end;
       }
 
       break;
     }
-    
-    case I_RM_R:
+
+    case InstructionDescription::G_RM:
     {
-      if (o1->isRegMem() && o2->isReg())
+      if (o0->isRegMem())
       {
-        const Operand& dst = reinterpret_cast<const Operand&>(*o1);
-        const Register& src = reinterpret_cast<const Register&>(*o2);
-        _emitX86RM(id.opCode1 + src.type() != REG_GPB,
-          src.type() == REG_GPW, 
-          src.type() == REG_GPQ, src.code(), dst,
-          0);
-        return;
+        const Operand& op = reinterpret_cast<const Operand&>(*o0);
+        _emitX86RM(id->opCode[0] + (op.getSize() != 1),
+          op.getSize() == 2,
+          op.getSize() == 8, (uint8_t)id->opCodeR, op,
+          0, forceRexPrefix);
+        goto end;
       }
 
       break;
     }
-    
-    case I_RET:
+
+    case InstructionDescription::G_RM_R:
     {
-      if (o1->isNone())
+      if (o0->isRegMem() && o1->isReg())
+      {
+        const Operand& dst = reinterpret_cast<const Operand&>(*o0);
+        const GPReg& src = reinterpret_cast<const GPReg&>(*o1);
+        _emitX86RM(id->opCode[0] + (src.getSize() != 1),
+          src.getRegType() == REG_TYPE_GPW,
+          src.getRegType() == REG_TYPE_GPQ, src.getRegCode(), dst,
+          0, forceRexPrefix);
+        goto end;
+      }
+
+      break;
+    }
+
+    case InstructionDescription::G_REP:
+    {
+      uint32_t opCode = id->opCode[0];
+      uint32_t opSize = id->opCode[1];
+
+      // Emit REP prefix (1 BYTE).
+      _emitByte(opCode >> 24);
+
+      if (opSize != 1) opCode++; // D, Q and W form.
+      if (opSize == 2) _emitByte(0x66); // 16-bit prefix.
+#if defined(ASMJIT_X64)
+      else if (opSize == 8) _emitByte(0x48); // REX.W prefix.
+#endif // ASMJIT_X64
+
+      // Emit opcode (1 BYTE).
+      _emitByte(opCode & 0xFF);
+      goto end;
+    }
+
+    case InstructionDescription::G_RET:
+    {
+      if (o0->isNone())
       {
         _emitByte(0xC3);
-        return;
+        goto end;
       }
-      else if (o1->isImm())
+      else if (o0->isImm())
       {
-        const Immediate& imm = reinterpret_cast<const Immediate&>(*o1);
-        ASMJIT_ASSERT(isUInt16(imm.value()));
+        const Imm& imm = reinterpret_cast<const Imm&>(*o0);
+        ASMJIT_ASSERT(Util::isUInt16(imm.getValue()));
 
-        if (imm.value() == 0 && imm.relocMode() == RELOC_NONE)
+        if (imm.getValue() == 0)
         {
           _emitByte(0xC3);
         }
@@ -2218,192 +1764,173 @@ void Assembler::_emitX86(UInt32 code, const Operand* o1, const Operand* o2, cons
           _emitByte(0xC2);
           _emitImmediate(imm, 2);
         }
-        return;
+        goto end;
       }
 
       break;
     }
 
-    case I_ROT:
+    case InstructionDescription::G_ROT:
     {
-      if (o1->isRegMem() && (o2->isRegCode(REG_CL) || o2->isImm()))
+      if (o0->isRegMem() && (o1->isRegCode(REG_CL) || o1->isImm()))
       {
         // generate opcode. For these operations is base 0xC0 or 0xD0.
-        bool useImm8 = (o2->isImm() && 
-                       (reinterpret_cast<const Immediate&>(*o2).value() != 1 || 
-                        reinterpret_cast<const Immediate&>(*o2).relocMode() != RELOC_NONE));
-        UInt32 opCode = useImm8 ? 0xC0 : 0xD0;
+        bool useImm8 = o1->isImm() && reinterpret_cast<const Imm&>(*o1).getValue() != 1;
+        uint32_t opCode = useImm8 ? 0xC0 : 0xD0;
 
         // size and operand type modifies the opcode
-        if (o1->size() != 1) opCode |= 0x01;
-        if (o2->op() == OP_REG) opCode |= 0x02;
+        if (o0->getSize() != 1) opCode |= 0x01;
+        if (o1->getType() == OPERAND_REG) opCode |= 0x02;
 
         _emitX86RM(opCode,
-          o1->size() == 2,
-          o1->size() == 8,
-          id.opCodeR, reinterpret_cast<const Operand&>(*o1),
-          useImm8 ? 1 : 0);
+          o0->getSize() == 2,
+          o0->getSize() == 8,
+          (uint8_t)id->opCodeR, reinterpret_cast<const Operand&>(*o0),
+          useImm8 ? 1 : 0, forceRexPrefix);
         if (useImm8)
-          _emitImmediate(reinterpret_cast<const Immediate&>(*o2), 1);
-        return;
+          _emitImmediate(reinterpret_cast<const Imm&>(*o1), 1);
+        goto end;
       }
 
       break;
     }
 
-    case I_SHLD_SHRD:
+    case InstructionDescription::G_SHLD_SHRD:
     {
-      if (o1->isRegMem() && o2->isReg() && (o3->isImm() || (o3->isReg() && o3->isRegCode(REG_CL))))
+      if (o0->isRegMem() && o1->isReg() && (o2->isImm() || (o2->isReg() && o2->isRegCode(REG_CL))))
       {
-        const Operand& dst = reinterpret_cast<const Operand&>(*o1);
-        const Register& src1 = reinterpret_cast<const Register&>(*o2);
-        const Operand& src2 = reinterpret_cast<const Operand&>(*o3);
+        const Operand& dst = reinterpret_cast<const Operand&>(*o0);
+        const GPReg& src1 = reinterpret_cast<const GPReg&>(*o1);
+        const Operand& src2 = reinterpret_cast<const Operand&>(*o2);
 
-        ASMJIT_ASSERT(dst.size() == src1.size());
+        ASMJIT_ASSERT(dst.getSize() == src1.getSize());
 
-        _emitX86RM(id.opCode1 + src2.isReg(),
-          src1.isRegType(REG_GPW),
-          src1.isRegType(REG_GPQ),
-          src1.code(), dst,
-          src2.isImm() ? 1 : 0);
-        if (src2.isImm()) 
-          _emitImmediate(reinterpret_cast<const Immediate&>(src2), 1);
-        return;
+        _emitX86RM(id->opCode[0] + src2.isReg(),
+          src1.isRegType(REG_TYPE_GPW),
+          src1.isRegType(REG_TYPE_GPQ),
+          src1.getRegCode(), dst,
+          src2.isImm() ? 1 : 0, forceRexPrefix);
+        if (src2.isImm())
+          _emitImmediate(reinterpret_cast<const Imm&>(src2), 1);
+        goto end;
       }
 
       break;
     }
 
-    case I_TEST:
+    case InstructionDescription::G_TEST:
     {
-      if (o1->isRegMem() && o2->isReg())
+      if (o0->isRegMem() && o1->isReg())
       {
-        ASMJIT_ASSERT(o1->size() == o2->size());
-        _emitX86RM(0x84 + (o2->size() != 1),
-          o2->size() == 2, o2->size() == 8, 
-          reinterpret_cast<const BaseReg&>(*o2).code(), 
-          reinterpret_cast<const Operand&>(*o1),
-          0);
-        return;
+        ASMJIT_ASSERT(o0->getSize() == o1->getSize());
+        _emitX86RM(0x84 + (o1->getSize() != 1),
+          o1->getSize() == 2, o1->getSize() == 8,
+          reinterpret_cast<const BaseReg&>(*o1).getRegCode(),
+          reinterpret_cast<const Operand&>(*o0),
+          0, forceRexPrefix);
+        goto end;
       }
 
-      if (o1->isRegIndex(0) && o2->isImm())
+      if (o0->isRegIndex(0) && o1->isImm())
       {
-        Int32 immSize = o1->size() <= 4 ? o1->size() : 4;
+        int32_t immSize = o0->getSize() <= 4 ? o0->getSize() : 4;
 
-        if (o1->size() == 2) _emitByte(0x66); // 16 bit
+        if (o0->getSize() == 2) _emitByte(0x66); // 16-bit.
 #if defined(ASMJIT_X64)
-        _emitRexRM(o1->size() == 8, 0, reinterpret_cast<const Operand&>(*o1));
+        _emitRexRM(o0->getSize() == 8, 0, reinterpret_cast<const Operand&>(*o0), forceRexPrefix);
 #endif // ASMJIT_X64
-        _emitByte(0xA8 + (o1->size() != 1));
-        _emitImmediate(reinterpret_cast<const Immediate&>(*o2), (UInt32)immSize);
-        return;
+        _emitByte(0xA8 + (o0->getSize() != 1));
+        _emitImmediate(reinterpret_cast<const Imm&>(*o1), (uint32_t)immSize);
+        goto end;
       }
 
-      if (o1->isRegMem() && o2->isImm())
+      if (o0->isRegMem() && o1->isImm())
       {
-        Int32 immSize = o1->size() <= 4 ? o1->size() : 4;
+        int32_t immSize = o0->getSize() <= 4 ? o0->getSize() : 4;
 
-        if (o1->size() == 2) _emitByte(0x66); // 16 bit
-        _emitSegmentPrefix(reinterpret_cast<const Operand&>(*o1)); // segment prefix
+        if (o0->getSize() == 2) _emitByte(0x66); // 16-bit.
+        _emitSegmentPrefix(reinterpret_cast<const Operand&>(*o0)); // Segment prefix.
 #if defined(ASMJIT_X64)
-        _emitRexRM(o1->size() == 8, 0, reinterpret_cast<const Operand&>(*o1));
+        _emitRexRM(o0->getSize() == 8, 0, reinterpret_cast<const Operand&>(*o0), forceRexPrefix);
 #endif // ASMJIT_X64
-        _emitByte(0xF6 + (o1->size() != 1));
-        _emitModRM(0, reinterpret_cast<const Operand&>(*o1), immSize);
-        _emitImmediate(reinterpret_cast<const Immediate&>(*o2), (UInt32)immSize);
-        return;
+        _emitByte(0xF6 + (o0->getSize() != 1));
+        _emitModRM(0, reinterpret_cast<const Operand&>(*o0), immSize);
+        _emitImmediate(reinterpret_cast<const Imm&>(*o1), (uint32_t)immSize);
+        goto end;
       }
 
       break;
     }
 
-    case I_XCHG:
+    case InstructionDescription::G_XCHG:
     {
-      if (o1->isRegMem() && o2->isReg())
+      if (o0->isRegMem() && o1->isReg())
       {
-        const Operand& dst = reinterpret_cast<const Operand&>(*o1);
-        const Register& src = reinterpret_cast<const Register&>(*o2);
+        const Operand& dst = reinterpret_cast<const Operand&>(*o0);
+        const GPReg& src = reinterpret_cast<const GPReg&>(*o1);
 
-        if (src.isRegType(REG_GPW)) _emitByte(0x66); // 16 bit
+        if (src.isRegType(REG_TYPE_GPW)) _emitByte(0x66); // 16-bit.
         _emitSegmentPrefix(dst); // segment prefix
 #if defined(ASMJIT_X64)
-        _emitRexRM(src.isRegType(REG_GPQ), src.code(), dst);
+        _emitRexRM(src.isRegType(REG_TYPE_GPQ), src.getRegCode(), dst, forceRexPrefix);
 #endif // ASMJIT_X64
 
-        // Special opcode for index 0 registers (AX, EAX, RAX vs register)
-        if ((dst.op() == OP_REG && dst.size() > 1) && 
-            (reinterpret_cast<const Register&>(dst).code() == 0 || 
-             reinterpret_cast<const Register&>(src).code() == 0 ))
+        // Special opcode for index 0 registers (AX, EAX, RAX vs register).
+        if ((dst.getType() == OPERAND_REG && dst.getSize() > 1) &&
+            (reinterpret_cast<const GPReg&>(dst).getRegCode() == 0 ||
+             reinterpret_cast<const GPReg&>(src).getRegCode() == 0 ))
         {
-          UInt8 index = reinterpret_cast<const Register&>(dst).code() | src.code();
+          uint8_t index = reinterpret_cast<const GPReg&>(dst).getRegCode() | src.getRegCode();
           _emitByte(0x90 + index);
-          return;
+          goto end;
         }
 
-        _emitByte(0x86 + (!src.isRegType(REG_GPB)));
-        _emitModRM(src.code(), dst, 0);
-        return; 
+        _emitByte(0x86 + (src.getSize() != 1));
+        _emitModRM(src.getRegCode(), dst, 0);
+        goto end;
       }
 
       break;
     }
-    
-    case I_REP_INST:
+
+    case InstructionDescription::G_MOVBE:
     {
-      UInt32 opCode = id.opCode1;
-      UInt32 opSize = id.opCode2;
-
-      _emitByte(opCode >> 24); // Emit REP prefix (1 BYTE).
-
-      if (opSize != 1) opCode++;
-      if (opSize == 2) _emitByte(0x66);
-#if defined(ASMJIT_X64)
-      else if (opSize == 8) _emitByte(0x48);
-#endif // ASMJIT_X64
-
-      _emitByte(opCode & 0xFF); // Emit opcode (1 BYTE).
-      return;
-    }
-
-    case I_MOVBE:
-    {
-      if (o1->isReg() && o2->isMem())
+      if (o0->isReg() && o1->isMem())
       {
         _emitX86RM(0x000F38F0,
-          o1->isRegType(REG_GPW), 
-          o1->isRegType(REG_GPQ), 
-          reinterpret_cast<const Register&>(*o1).code(), 
-          reinterpret_cast<const Mem&>(*o2),
-          0);
-        return;
+          o0->isRegType(REG_TYPE_GPW),
+          o0->isRegType(REG_TYPE_GPQ),
+          reinterpret_cast<const GPReg&>(*o0).getRegCode(),
+          reinterpret_cast<const Mem&>(*o1),
+          0, forceRexPrefix);
+        goto end;
       }
 
-      if (o1->isMem() && o2->isReg())
+      if (o0->isMem() && o1->isReg())
       {
         _emitX86RM(0x000F38F1,
-          o2->isRegType(REG_GPW),
-          o2->isRegType(REG_GPQ),
-          reinterpret_cast<const Register&>(*o2).code(),
-          reinterpret_cast<const Mem&>(*o1),
-          0);
-        return;
+          o1->isRegType(REG_TYPE_GPW),
+          o1->isRegType(REG_TYPE_GPQ),
+          reinterpret_cast<const GPReg&>(*o1).getRegCode(),
+          reinterpret_cast<const Mem&>(*o0),
+          0, forceRexPrefix);
+        goto end;
       }
 
       break;
     }
 
-    case I_X87_FPU:
+    case InstructionDescription::G_X87_FPU:
     {
-      if (o1->isRegType(REG_X87))
+      if (o0->isRegType(REG_TYPE_X87))
       {
-        UInt8 i1 = reinterpret_cast<const X87Register&>(*o1).index();
-        UInt8 i2 = 0;
+        uint8_t i1 = reinterpret_cast<const X87Reg&>(*o0).getRegIndex();
+        uint8_t i2 = 0;
 
         if (code != INST_FCOM && code != INST_FCOMP)
         {
-          if (!o2->isRegType(REG_X87)) goto illegalInstruction;
-          i2 = reinterpret_cast<const X87Register&>(*o2).index();
+          if (!o1->isRegType(REG_TYPE_X87)) goto illegalInstruction;
+          i2 = reinterpret_cast<const X87Reg&>(*o1).getRegIndex();
         }
         else if (i1 != 0 && i2 != 0)
         {
@@ -2411,96 +1938,96 @@ void Assembler::_emitX86(UInt32 code, const Operand* o1, const Operand* o2, cons
         }
 
         _emitByte(i1 == 0
-          ? ((id.opCode1 & 0xFF000000) >> 24) 
-          : ((id.opCode1 & 0x00FF0000) >> 16));
-        _emitByte(i1 == 0 
-          ? ((id.opCode1 & 0x0000FF00) >>  8) + i2
-          : ((id.opCode1 & 0x000000FF)      ) + i1);
-        return;
+          ? ((id->opCode[0] & 0xFF000000) >> 24)
+          : ((id->opCode[0] & 0x00FF0000) >> 16));
+        _emitByte(i1 == 0
+          ? ((id->opCode[0] & 0x0000FF00) >>  8) + i2
+          : ((id->opCode[0] & 0x000000FF)      ) + i1);
+        goto end;
       }
 
-      if (o1->isMem() && (o1->size() == 4 || o1->size() == 8) && o2->isNone())
+      if (o0->isMem() && (o0->getSize() == 4 || o0->getSize() == 8) && o1->isNone())
       {
-        const Mem& m = reinterpret_cast<const Mem&>(*o1);
+        const Mem& m = reinterpret_cast<const Mem&>(*o0);
 
         // segment prefix
         _emitSegmentPrefix(m);
 
-        _emitByte(o1->size() == 4 
-          ? ((id.opCode1 & 0xFF000000) >> 24) 
-          : ((id.opCode1 & 0x00FF0000) >> 16));
-        _emitModM(id.opCodeR, m, 0);
-        return;
+        _emitByte(o0->getSize() == 4
+          ? ((id->opCode[0] & 0xFF000000) >> 24)
+          : ((id->opCode[0] & 0x00FF0000) >> 16));
+        _emitModM((uint8_t)id->opCodeR, m, 0);
+        goto end;
       }
 
       break;
     }
 
-    case I_X87_STI:
+    case InstructionDescription::G_X87_STI:
     {
-      if (o1->isRegType(REG_X87))
+      if (o0->isRegType(REG_TYPE_X87))
       {
-        UInt8 i = reinterpret_cast<const X87Register&>(*o1).index();
-        _emitByte((UInt8)((id.opCode1 & 0x0000FF00) >> 8));
-        _emitByte((UInt8)((id.opCode1 & 0x000000FF) + i));
-        return;
+        uint8_t i = reinterpret_cast<const X87Reg&>(*o0).getRegIndex();
+        _emitByte((uint8_t)((id->opCode[0] & 0x0000FF00) >> 8));
+        _emitByte((uint8_t)((id->opCode[0] & 0x000000FF) + i));
+        goto end;
       }
       break;
     }
 
-    case I_X87_FSTSW:
+    case InstructionDescription::G_X87_FSTSW:
     {
-      if (o1->isReg() && 
-          reinterpret_cast<const BaseReg&>(*o1).type() <= REG_GPQ && 
-          reinterpret_cast<const BaseReg&>(*o1).index() == 0)
+      if (o0->isReg() &&
+          reinterpret_cast<const BaseReg&>(*o0).getRegType() <= REG_TYPE_GPQ &&
+          reinterpret_cast<const BaseReg&>(*o0).getRegIndex() == 0)
       {
-        _emitOpCode(id.opCode2);
-        return;
+        _emitOpCode(id->opCode[1]);
+        goto end;
       }
 
-      if (o1->isMem())
+      if (o0->isMem())
       {
-        _emitX86RM(id.opCode1, 0, 0, id.opCodeR, reinterpret_cast<const Mem&>(*o1), 0);
-        return;
+        _emitX86RM(id->opCode[0], 0, 0, (uint8_t)id->opCodeR, reinterpret_cast<const Mem&>(*o0), 0, forceRexPrefix);
+        goto end;
       }
 
       break;
     }
 
-    case I_X87_MEM_STI:
+    case InstructionDescription::G_X87_MEM_STI:
     {
-      if (o1->isRegType(REG_X87))
+      if (o0->isRegType(REG_TYPE_X87))
       {
-        _emitByte((UInt8)((id.opCode2 & 0xFF000000) >> 24));
-        _emitByte((UInt8)((id.opCode2 & 0x00FF0000) >> 16) + 
-          reinterpret_cast<const X87Register&>(*o1).index());
-        return;
+        _emitByte((uint8_t)((id->opCode[1] & 0xFF000000) >> 24));
+        _emitByte((uint8_t)((id->opCode[1] & 0x00FF0000) >> 16) +
+          reinterpret_cast<const X87Reg&>(*o0).getRegIndex());
+        goto end;
       }
 
       // ... fall through to I_X87_MEM ...
     }
 
-    case I_X87_MEM:
+    case InstructionDescription::G_X87_MEM:
     {
-      if (!o1->isMem()) goto illegalInstruction;
-      const Mem& m = reinterpret_cast<const Mem&>(*o1);
+      if (!o0->isMem()) goto illegalInstruction;
+      const Mem& m = reinterpret_cast<const Mem&>(*o0);
 
-      UInt8 opCode = 0x00, mod = 0;
+      uint8_t opCode = 0x00, mod = 0;
 
-      if (o1->size() == 2 && id.o1Flags & O_FM_2)
+      if (o0->getSize() == 2 && (id->oflags[0] & InstructionDescription::O_FM_2))
       {
-        opCode = (UInt8)((id.opCode1 & 0xFF000000) >> 24); 
-        mod    = id.opCodeR;
+        opCode = (uint8_t)((id->opCode[0] & 0xFF000000) >> 24);
+        mod    = (uint8_t)id->opCodeR;
       }
-      if (o1->size() == 4 && id.o1Flags & O_FM_4)
+      if (o0->getSize() == 4 && (id->oflags[0] & InstructionDescription::O_FM_4))
       {
-        opCode = (UInt8)((id.opCode1 & 0x00FF0000) >> 16); 
-        mod    = id.opCodeR;
+        opCode = (uint8_t)((id->opCode[0] & 0x00FF0000) >> 16);
+        mod    = (uint8_t)id->opCodeR;
       }
-      if (o1->size() == 8 && id.o1Flags & O_FM_8)
+      if (o0->getSize() == 8 && (id->oflags[0] & InstructionDescription::O_FM_8))
       {
-        opCode = (UInt8)((id.opCode1 & 0x0000FF00) >>  8); 
-        mod    = (UInt8)((id.opCode1 & 0x000000FF)      );
+        opCode = (uint8_t)((id->opCode[0] & 0x0000FF00) >>  8);
+        mod    = (uint8_t)((id->opCode[0] & 0x000000FF)      );
       }
 
       if (opCode)
@@ -2508,376 +2035,376 @@ void Assembler::_emitX86(UInt32 code, const Operand* o1, const Operand* o2, cons
         _emitSegmentPrefix(m);
         _emitByte(opCode);
         _emitModM(mod, m, 0);
-        return;
+        goto end;
       }
 
       break;
     }
 
-    case I_MMU_MOV:
+    case InstructionDescription::G_MMU_MOV:
     {
-      ASMJIT_ASSERT(id.o1Flags != 0);
-      ASMJIT_ASSERT(id.o2Flags != 0);
+      ASMJIT_ASSERT(id->oflags[0] != 0);
+      ASMJIT_ASSERT(id->oflags[1] != 0);
 
       // Check parameters (X)MM|GP32_64 <- (X)MM|GP32_64|Mem|Imm
-      if ((o1->isMem()            && (id.o1Flags & O_MEM) == 0) ||
-          (o1->isRegType(REG_MM ) && (id.o1Flags & O_MM ) == 0) ||
-          (o1->isRegType(REG_XMM) && (id.o1Flags & O_XMM) == 0) ||
-          (o1->isRegType(REG_GPD) && (id.o1Flags & O_G32) == 0) ||
-          (o1->isRegType(REG_GPQ) && (id.o1Flags & O_G64) == 0) ||
-          (o2->isRegType(REG_MM ) && (id.o2Flags & O_MM ) == 0) ||
-          (o2->isRegType(REG_XMM) && (id.o2Flags & O_XMM) == 0) ||
-          (o2->isRegType(REG_GPD) && (id.o2Flags & O_G32) == 0) ||
-          (o2->isRegType(REG_GPQ) && (id.o2Flags & O_G64) == 0) ||
-          (o2->isMem()            && (id.o2Flags & O_MEM) == 0) )
+      if ((o0->isMem()                 && (id->oflags[0] & InstructionDescription::O_MEM) == 0) ||
+          (o0->isRegType(REG_TYPE_MM ) && (id->oflags[0] & InstructionDescription::O_MM ) == 0) ||
+          (o0->isRegType(REG_TYPE_XMM) && (id->oflags[0] & InstructionDescription::O_XMM) == 0) ||
+          (o0->isRegType(REG_TYPE_GPD) && (id->oflags[0] & InstructionDescription::O_GD ) == 0) ||
+          (o0->isRegType(REG_TYPE_GPQ) && (id->oflags[0] & InstructionDescription::O_GQ ) == 0) ||
+          (o1->isRegType(REG_TYPE_MM ) && (id->oflags[1] & InstructionDescription::O_MM ) == 0) ||
+          (o1->isRegType(REG_TYPE_XMM) && (id->oflags[1] & InstructionDescription::O_XMM) == 0) ||
+          (o1->isRegType(REG_TYPE_GPD) && (id->oflags[1] & InstructionDescription::O_GD ) == 0) ||
+          (o1->isRegType(REG_TYPE_GPQ) && (id->oflags[1] & InstructionDescription::O_GQ ) == 0) ||
+          (o1->isMem()                 && (id->oflags[1] & InstructionDescription::O_MEM) == 0) )
       {
         goto illegalInstruction;
       }
 
-      // Illegal
-      if (o1->isMem() && o2->isMem()) goto illegalInstruction;
+      // Illegal.
+      if (o0->isMem() && o1->isMem()) goto illegalInstruction;
 
-      UInt8 rexw = ((id.o1Flags|id.o2Flags) & O_NOREX) 
-        ? 0 
-        : o1->isRegType(REG_GPQ) | o1->isRegType(REG_GPQ);
+      uint8_t rexw = ((id->oflags[0]|id->oflags[1]) & InstructionDescription::O_NOREX)
+        ? 0
+        : o0->isRegType(REG_TYPE_GPQ) | o0->isRegType(REG_TYPE_GPQ);
 
       // (X)MM|Reg <- (X)MM|Reg
-      if (o1->isReg() && o2->isReg())
+      if (o0->isReg() && o1->isReg())
       {
-        _emitMmu(id.opCode1, rexw,
-          reinterpret_cast<const BaseReg&>(*o1).code(),
-          reinterpret_cast<const BaseReg&>(*o2),
-          0); 
-        return;
+        _emitMmu(id->opCode[0], rexw,
+          reinterpret_cast<const BaseReg&>(*o0).getRegCode(),
+          reinterpret_cast<const BaseReg&>(*o1),
+          0);
+        goto end;
       }
-      
+
       // (X)MM|Reg <- Mem
-      if (o1->isReg() && o2->isMem())
+      if (o0->isReg() && o1->isMem())
       {
-        _emitMmu(id.opCode1, rexw,
-          reinterpret_cast<const BaseReg&>(*o1).code(),
-          reinterpret_cast<const Mem&>(*o2),
-          0); 
-        return;
+        _emitMmu(id->opCode[0], rexw,
+          reinterpret_cast<const BaseReg&>(*o0).getRegCode(),
+          reinterpret_cast<const Mem&>(*o1),
+          0);
+        goto end;
       }
 
       // Mem <- (X)MM|Reg
-      if (o1->isMem() && o2->isReg())
+      if (o0->isMem() && o1->isReg())
       {
-        _emitMmu(id.opCode2, rexw,
-          reinterpret_cast<const BaseReg&>(*o2).code(),
-          reinterpret_cast<const Mem&>(*o1),
-          0); 
-        return;
+        _emitMmu(id->opCode[1], rexw,
+          reinterpret_cast<const BaseReg&>(*o1).getRegCode(),
+          reinterpret_cast<const Mem&>(*o0),
+          0);
+        goto end;
       }
 
       break;
     }
 
-    case I_MMU_MOVD:
+    case InstructionDescription::G_MMU_MOVD:
     {
-      if ((o1->isRegType(REG_MM) || o1->isRegType(REG_XMM)) && (o2->isRegType(REG_GPD) || o2->isMem()))
+      if ((o0->isRegType(REG_TYPE_MM) || o0->isRegType(REG_TYPE_XMM)) && (o1->isRegType(REG_TYPE_GPD) || o1->isMem()))
       {
-        _emitMmu(o1->isRegType(REG_XMM) ? 0x66000F6E : 0x00000F6E, 0,
-          reinterpret_cast<const BaseReg&>(*o1).code(), 
-          reinterpret_cast<const Operand&>(*o2),
-          0);
-        return;
-      }
-
-      if ((o1->isRegType(REG_GPD) || o1->isMem()) && (o2->isRegType(REG_MM) || o2->isRegType(REG_XMM)))
-      {
-        _emitMmu(o2->isRegType(REG_XMM) ? 0x66000F7E : 0x00000F7E, 0,
-          reinterpret_cast<const BaseReg&>(*o2).code(), 
+        _emitMmu(o0->isRegType(REG_TYPE_XMM) ? 0x66000F6E : 0x00000F6E, 0,
+          reinterpret_cast<const BaseReg&>(*o0).getRegCode(),
           reinterpret_cast<const Operand&>(*o1),
           0);
-        return;
+        goto end;
+      }
+
+      if ((o0->isRegType(REG_TYPE_GPD) || o0->isMem()) && (o1->isRegType(REG_TYPE_MM) || o1->isRegType(REG_TYPE_XMM)))
+      {
+        _emitMmu(o1->isRegType(REG_TYPE_XMM) ? 0x66000F7E : 0x00000F7E, 0,
+          reinterpret_cast<const BaseReg&>(*o1).getRegCode(),
+          reinterpret_cast<const Operand&>(*o0),
+          0);
+        goto end;
       }
 
       break;
     }
 
-    case I_MMU_MOVQ:
+    case InstructionDescription::G_MMU_MOVQ:
     {
-      if (o1->isRegType(REG_MM) && o2->isRegType(REG_MM))
+      if (o0->isRegType(REG_TYPE_MM) && o1->isRegType(REG_TYPE_MM))
       {
         _emitMmu(0x00000F6F, 0,
-          reinterpret_cast<const MMRegister&>(*o1).code(),
-          reinterpret_cast<const MMRegister&>(*o2),
+          reinterpret_cast<const MMReg&>(*o0).getRegCode(),
+          reinterpret_cast<const MMReg&>(*o1),
           0);
-        return;
+        goto end;
       }
 
-      if (o1->isRegType(REG_XMM) && o2->isRegType(REG_XMM))
+      if (o0->isRegType(REG_TYPE_XMM) && o1->isRegType(REG_TYPE_XMM))
       {
         _emitMmu(0xF3000F7E, 0,
-          reinterpret_cast<const XMMRegister&>(*o1).code(),
-          reinterpret_cast<const XMMRegister&>(*o2),
+          reinterpret_cast<const XMMReg&>(*o0).getRegCode(),
+          reinterpret_cast<const XMMReg&>(*o1),
           0);
-        return;
+        goto end;
       }
 
       // Convenience - movdq2q
-      if (o1->isRegType(REG_MM) && o2->isRegType(REG_XMM))
+      if (o0->isRegType(REG_TYPE_MM) && o1->isRegType(REG_TYPE_XMM))
       {
         _emitMmu(0xF2000FD6, 0,
-          reinterpret_cast<const MMRegister&>(*o1).code(),
-          reinterpret_cast<const XMMRegister&>(*o2),
+          reinterpret_cast<const MMReg&>(*o0).getRegCode(),
+          reinterpret_cast<const XMMReg&>(*o1),
           0);
-        return;
+        goto end;
       }
 
       // Convenience - movq2dq
-      if (o1->isRegType(REG_XMM) && o2->isRegType(REG_MM))
+      if (o0->isRegType(REG_TYPE_XMM) && o1->isRegType(REG_TYPE_MM))
       {
         _emitMmu(0xF3000FD6, 0,
-          reinterpret_cast<const XMMRegister&>(*o1).code(),
-          reinterpret_cast<const MMRegister&>(*o2),
+          reinterpret_cast<const XMMReg&>(*o0).getRegCode(),
+          reinterpret_cast<const MMReg&>(*o1),
           0);
-        return;
+        goto end;
       }
 
-      if (o1->isRegType(REG_MM) && o2->isMem())
+      if (o0->isRegType(REG_TYPE_MM) && o1->isMem())
       {
         _emitMmu(0x00000F6F, 0,
-          reinterpret_cast<const MMRegister&>(*o1).code(),
-          reinterpret_cast<const Mem&>(*o2),
+          reinterpret_cast<const MMReg&>(*o0).getRegCode(),
+          reinterpret_cast<const Mem&>(*o1),
           0);
-        return;
+        goto end;
       }
 
-      if (o1->isRegType(REG_XMM) && o2->isMem())
+      if (o0->isRegType(REG_TYPE_XMM) && o1->isMem())
       {
         _emitMmu(0xF3000F7E, 0,
-          reinterpret_cast<const XMMRegister&>(*o1).code(),
-          reinterpret_cast<const Mem&>(*o2),
+          reinterpret_cast<const XMMReg&>(*o0).getRegCode(),
+          reinterpret_cast<const Mem&>(*o1),
           0);
-        return;
+        goto end;
       }
 
-      if (o1->isMem() && o2->isRegType(REG_MM))
+      if (o0->isMem() && o1->isRegType(REG_TYPE_MM))
       {
         _emitMmu(0x00000F7F, 0,
-          reinterpret_cast<const MMRegister&>(*o2).code(),
-          reinterpret_cast<const Mem&>(*o1),
+          reinterpret_cast<const MMReg&>(*o1).getRegCode(),
+          reinterpret_cast<const Mem&>(*o0),
           0);
-        return;
+        goto end;
       }
 
-      if (o1->isMem() && o2->isRegType(REG_XMM))
+      if (o0->isMem() && o1->isRegType(REG_TYPE_XMM))
       {
         _emitMmu(0x66000FD6, 0,
-          reinterpret_cast<const XMMRegister&>(*o2).code(),
-          reinterpret_cast<const Mem&>(*o1),
+          reinterpret_cast<const XMMReg&>(*o1).getRegCode(),
+          reinterpret_cast<const Mem&>(*o0),
           0);
-        return;
+        goto end;
       }
 
 #if defined(ASMJIT_X64)
-      if ((o1->isRegType(REG_MM) || o1->isRegType(REG_XMM)) && (o2->isRegType(REG_GPQ) || o2->isMem()))
+      if ((o0->isRegType(REG_TYPE_MM) || o0->isRegType(REG_TYPE_XMM)) && (o1->isRegType(REG_TYPE_GPQ) || o1->isMem()))
       {
-        _emitMmu(o1->isRegType(REG_XMM) ? 0x66000F6E : 0x00000F6E, 1,
-          reinterpret_cast<const BaseReg&>(*o1).code(), 
-          reinterpret_cast<const Operand&>(*o2),
-          0);
-        return;
-      }
-
-      if ((o1->isRegType(REG_GPQ) || o1->isMem()) && (o2->isRegType(REG_MM) || o2->isRegType(REG_XMM)))
-      {
-        _emitMmu(o2->isRegType(REG_XMM) ? 0x66000F7E : 0x00000F7E, 1,
-          reinterpret_cast<const BaseReg&>(*o2).code(), 
+        _emitMmu(o0->isRegType(REG_TYPE_XMM) ? 0x66000F6E : 0x00000F6E, 1,
+          reinterpret_cast<const BaseReg&>(*o0).getRegCode(),
           reinterpret_cast<const Operand&>(*o1),
           0);
-        return;
+        goto end;
+      }
+
+      if ((o0->isRegType(REG_TYPE_GPQ) || o0->isMem()) && (o1->isRegType(REG_TYPE_MM) || o1->isRegType(REG_TYPE_XMM)))
+      {
+        _emitMmu(o1->isRegType(REG_TYPE_XMM) ? 0x66000F7E : 0x00000F7E, 1,
+          reinterpret_cast<const BaseReg&>(*o1).getRegCode(),
+          reinterpret_cast<const Operand&>(*o0),
+          0);
+        goto end;
       }
 #endif // ASMJIT_X64
 
       break;
     }
 
-    case I_MMU_PREFETCH:
+    case InstructionDescription::G_MMU_PREFETCH:
     {
-      if (o1->isMem() && o2->isImm())
+      if (o0->isMem() && o1->isImm())
       {
-        const Mem& mem = reinterpret_cast<const Mem&>(*o1);
-        const Immediate& hint = reinterpret_cast<const Immediate&>(*o2);
+        const Mem& mem = reinterpret_cast<const Mem&>(*o0);
+        const Imm& hint = reinterpret_cast<const Imm&>(*o1);
 
-        _emitMmu(0x00000F18, 0, (UInt8)hint.value(), mem, 0);
-        return;
+        _emitMmu(0x00000F18, 0, (uint8_t)hint.getValue(), mem, 0);
+        goto end;
       }
 
       break;
     }
 
-    case I_MMU_PEXTR:
+    case InstructionDescription::G_MMU_PEXTR:
     {
-      if (!(o1->isRegMem() && 
-           (o2->isRegType(REG_XMM) || (code == INST_PEXTRW && o2->isRegType(REG_MM))) && 
-            o3->isImm()))
+      if (!(o0->isRegMem() &&
+           (o1->isRegType(REG_TYPE_XMM) || (code == INST_PEXTRW && o1->isRegType(REG_TYPE_MM))) &&
+            o2->isImm()))
       {
         goto illegalInstruction;
       }
 
-      UInt32 opCode = id.opCode1;
-      UInt8 isGpdGpq = o1->isRegType(REG_GPD) | o1->isRegType(REG_GPQ);
+      uint32_t opCode = id->opCode[0];
+      uint8_t isGpdGpq = o0->isRegType(REG_TYPE_GPD) | o0->isRegType(REG_TYPE_GPQ);
 
-      if (code == INST_PEXTRB && (o1->size() != 0 && o1->size() != 1) && !isGpdGpq) goto illegalInstruction;
-      if (code == INST_PEXTRW && (o1->size() != 0 && o1->size() != 2) && !isGpdGpq) goto illegalInstruction;
-      if (code == INST_PEXTRD && (o1->size() != 0 && o1->size() != 4) && !isGpdGpq) goto illegalInstruction;
-      if (code == INST_PEXTRQ && (o1->size() != 0 && o1->size() != 8) && !isGpdGpq) goto illegalInstruction;
+      if (code == INST_PEXTRB && (o0->getSize() != 0 && o0->getSize() != 1) && !isGpdGpq) goto illegalInstruction;
+      if (code == INST_PEXTRW && (o0->getSize() != 0 && o0->getSize() != 2) && !isGpdGpq) goto illegalInstruction;
+      if (code == INST_PEXTRD && (o0->getSize() != 0 && o0->getSize() != 4) && !isGpdGpq) goto illegalInstruction;
+      if (code == INST_PEXTRQ && (o0->getSize() != 0 && o0->getSize() != 8) && !isGpdGpq) goto illegalInstruction;
 
-      if (o2->isRegType(REG_XMM)) opCode |= 0x66000000;
+      if (o1->isRegType(REG_TYPE_XMM)) opCode |= 0x66000000;
 
+      if (o0->isReg())
+      {
+        _emitMmu(opCode, id->opCodeR | (uint8_t)o0->isRegType(REG_TYPE_GPQ),
+          reinterpret_cast<const BaseReg&>(*o1).getRegCode(),
+          reinterpret_cast<const BaseReg&>(*o0), 1);
+        _emitImmediate(
+          reinterpret_cast<const Imm&>(*o2), 1);
+        goto end;
+      }
+
+      if (o0->isMem())
+      {
+        _emitMmu(opCode, (uint8_t)id->opCodeR,
+          reinterpret_cast<const BaseReg&>(*o1).getRegCode(),
+          reinterpret_cast<const Mem&>(*o0), 1);
+        _emitImmediate(
+          reinterpret_cast<const Imm&>(*o2), 1);
+        goto end;
+      }
+
+      break;
+    }
+
+    case InstructionDescription::G_MMU_RMI:
+    {
+      ASMJIT_ASSERT(id->oflags[0] != 0);
+      ASMJIT_ASSERT(id->oflags[1] != 0);
+
+      // Check parameters (X)MM|GP32_64 <- (X)MM|GP32_64|Mem|Imm
+      if (!o0->isReg() ||
+          (o0->isRegType(REG_TYPE_MM ) && (id->oflags[0] & InstructionDescription::O_MM ) == 0) ||
+          (o0->isRegType(REG_TYPE_XMM) && (id->oflags[0] & InstructionDescription::O_XMM) == 0) ||
+          (o0->isRegType(REG_TYPE_GPD) && (id->oflags[0] & InstructionDescription::O_GD ) == 0) ||
+          (o0->isRegType(REG_TYPE_GPQ) && (id->oflags[0] & InstructionDescription::O_GQ ) == 0) ||
+          (o1->isRegType(REG_TYPE_MM ) && (id->oflags[1] & InstructionDescription::O_MM ) == 0) ||
+          (o1->isRegType(REG_TYPE_XMM) && (id->oflags[1] & InstructionDescription::O_XMM) == 0) ||
+          (o1->isRegType(REG_TYPE_GPD) && (id->oflags[1] & InstructionDescription::O_GD ) == 0) ||
+          (o1->isRegType(REG_TYPE_GPQ) && (id->oflags[1] & InstructionDescription::O_GQ ) == 0) ||
+          (o1->isMem()                 && (id->oflags[1] & InstructionDescription::O_MEM) == 0) ||
+          (o1->isImm()                 && (id->oflags[1] & InstructionDescription::O_IMM) == 0))
+      {
+        goto illegalInstruction;
+      }
+
+      uint32_t prefix =
+        ((id->oflags[0] & InstructionDescription::O_MM_XMM) == InstructionDescription::O_MM_XMM && o0->isRegType(REG_TYPE_XMM)) ||
+        ((id->oflags[1] & InstructionDescription::O_MM_XMM) == InstructionDescription::O_MM_XMM && o1->isRegType(REG_TYPE_XMM))
+          ? 0x66000000
+          : 0x00000000;
+      uint8_t rexw = ((id->oflags[0]|id->oflags[1]) & InstructionDescription::O_NOREX)
+        ? 0
+        : o0->isRegType(REG_TYPE_GPQ) | o0->isRegType(REG_TYPE_GPQ);
+
+      // (X)MM <- (X)MM (opcode0)
       if (o1->isReg())
       {
-        _emitMmu(opCode, id.opCodeR | o1->isRegType(REG_GPQ),
-          reinterpret_cast<const BaseReg&>(*o2).code(),
-          reinterpret_cast<const BaseReg&>(*o1), 1);
-        _emitImmediate(
-          reinterpret_cast<const Immediate&>(*o3), 1);
-        return;
+        if ((id->oflags[1] & (InstructionDescription::O_MM_XMM | InstructionDescription::O_GQD)) == 0) goto illegalInstruction;
+        _emitMmu(id->opCode[0] | prefix, rexw,
+          reinterpret_cast<const BaseReg&>(*o0).getRegCode(),
+          reinterpret_cast<const BaseReg&>(*o1), 0);
+        goto end;
       }
-
+      // (X)MM <- Mem (opcode0)
       if (o1->isMem())
       {
-        _emitMmu(opCode, id.opCodeR,
-          reinterpret_cast<const BaseReg&>(*o2).code(),
-          reinterpret_cast<const Mem&>(*o1), 1); 
+        if ((id->oflags[1] & InstructionDescription::O_MEM) == 0) goto illegalInstruction;
+        _emitMmu(id->opCode[0] | prefix, rexw,
+          reinterpret_cast<const BaseReg&>(*o0).getRegCode(),
+          reinterpret_cast<const Mem&>(*o1), 0);
+        goto end;
+      }
+      // (X)MM <- Imm (opcode1+opcodeR)
+      if (o1->isImm())
+      {
+        if ((id->oflags[1] & InstructionDescription::O_IMM) == 0) goto illegalInstruction;
+        _emitMmu(id->opCode[1] | prefix, rexw,
+          (uint8_t)id->opCodeR,
+          reinterpret_cast<const BaseReg&>(*o0), 1);
         _emitImmediate(
-          reinterpret_cast<const Immediate&>(*o3), 1);
-        return;
+          reinterpret_cast<const Imm&>(*o1), 1);
+        goto end;
       }
 
       break;
     }
 
-    case I_MMU_RMI:
+    case InstructionDescription::G_MMU_RM_IMM8:
     {
-      ASMJIT_ASSERT(id.o1Flags != 0);
-      ASMJIT_ASSERT(id.o2Flags != 0);
+      ASMJIT_ASSERT(id->oflags[0] != 0);
+      ASMJIT_ASSERT(id->oflags[1] != 0);
 
       // Check parameters (X)MM|GP32_64 <- (X)MM|GP32_64|Mem|Imm
-      if (!o1->isReg() ||
-          (o1->isRegType(REG_MM ) && (id.o1Flags & O_MM ) == 0) ||
-          (o1->isRegType(REG_XMM) && (id.o1Flags & O_XMM) == 0) ||
-          (o1->isRegType(REG_GPD) && (id.o1Flags & O_G32) == 0) ||
-          (o1->isRegType(REG_GPQ) && (id.o1Flags & O_G64) == 0) ||
-          (o2->isRegType(REG_MM ) && (id.o2Flags & O_MM ) == 0) ||
-          (o2->isRegType(REG_XMM) && (id.o2Flags & O_XMM) == 0) ||
-          (o2->isRegType(REG_GPD) && (id.o2Flags & O_G32) == 0) ||
-          (o2->isRegType(REG_GPQ) && (id.o2Flags & O_G64) == 0) ||
-          (o2->isMem()            && (id.o2Flags & O_MEM) == 0) ||
-          (o2->isImm()            && (id.o2Flags & O_IMM) == 0))
+      if (!o0->isReg() ||
+          (o0->isRegType(REG_TYPE_MM ) && (id->oflags[0] & InstructionDescription::O_MM ) == 0) ||
+          (o0->isRegType(REG_TYPE_XMM) && (id->oflags[0] & InstructionDescription::O_XMM) == 0) ||
+          (o0->isRegType(REG_TYPE_GPD) && (id->oflags[0] & InstructionDescription::O_GD ) == 0) ||
+          (o0->isRegType(REG_TYPE_GPQ) && (id->oflags[0] & InstructionDescription::O_GQ ) == 0) ||
+          (o1->isRegType(REG_TYPE_MM ) && (id->oflags[1] & InstructionDescription::O_MM ) == 0) ||
+          (o1->isRegType(REG_TYPE_XMM) && (id->oflags[1] & InstructionDescription::O_XMM) == 0) ||
+          (o1->isRegType(REG_TYPE_GPD) && (id->oflags[1] & InstructionDescription::O_GD ) == 0) ||
+          (o1->isRegType(REG_TYPE_GPQ) && (id->oflags[1] & InstructionDescription::O_GQ ) == 0) ||
+          (o1->isMem()                 && (id->oflags[1] & InstructionDescription::O_MEM) == 0) ||
+          !o2->isImm())
       {
         goto illegalInstruction;
       }
 
-      UInt32 prefix = 
-        ((id.o1Flags & O_MM_XMM) == O_MM_XMM && o1->isRegType(REG_XMM)) ||
-        ((id.o2Flags & O_MM_XMM) == O_MM_XMM && o2->isRegType(REG_XMM))
-          ? 0x66000000 
+      uint32_t prefix =
+        ((id->oflags[0] & InstructionDescription::O_MM_XMM) == InstructionDescription::O_MM_XMM && o0->isRegType(REG_TYPE_XMM)) ||
+        ((id->oflags[1] & InstructionDescription::O_MM_XMM) == InstructionDescription::O_MM_XMM && o1->isRegType(REG_TYPE_XMM))
+          ? 0x66000000
           : 0x00000000;
-      UInt8 rexw = ((id.o1Flags|id.o2Flags) & O_NOREX) 
-        ? 0 
-        : o1->isRegType(REG_GPQ) | o1->isRegType(REG_GPQ);
+      uint8_t rexw = ((id->oflags[0]|id->oflags[1]) & InstructionDescription::O_NOREX)
+        ? 0
+        : o0->isRegType(REG_TYPE_GPQ) | o0->isRegType(REG_TYPE_GPQ);
 
-      // (X)MM <- (X)MM (opcode1)
-      if (o2->isReg())
+      // (X)MM <- (X)MM (opcode0)
+      if (o1->isReg())
       {
-        if ((id.o2Flags & (O_MM_XMM | O_G32_64)) == 0) goto illegalInstruction;
-        _emitMmu(id.opCode1 | prefix, rexw,
-          reinterpret_cast<const BaseReg&>(*o1).code(),
-          reinterpret_cast<const BaseReg&>(*o2), 0); 
-        return;
-      }
-      // (X)MM <- Mem (opcode1)
-      if (o2->isMem())
-      {
-        if ((id.o2Flags & O_MEM) == 0) goto illegalInstruction;
-        _emitMmu(id.opCode1 | prefix, rexw,
-          reinterpret_cast<const BaseReg&>(*o1).code(),
-          reinterpret_cast<const Mem&>(*o2), 0); 
-        return;
-      }
-      // (X)MM <- Imm (opcode2+opcodeR)
-      if (o2->isImm())
-      {
-        if ((id.o2Flags & O_IMM) == 0) goto illegalInstruction;
-        _emitMmu(id.opCode2 | prefix, rexw,
-          id.opCodeR,
+        if ((id->oflags[1] & (InstructionDescription::O_MM_XMM | InstructionDescription::O_GQD)) == 0) goto illegalInstruction;
+        _emitMmu(id->opCode[0] | prefix, rexw,
+          reinterpret_cast<const BaseReg&>(*o0).getRegCode(),
           reinterpret_cast<const BaseReg&>(*o1), 1);
-        _emitImmediate(
-          reinterpret_cast<const Immediate&>(*o2), 1);
-        return;
+        _emitImmediate(reinterpret_cast<const Imm &>(*o2), 1);
+        goto end;
+      }
+      // (X)MM <- Mem (opcode0)
+      if (o1->isMem())
+      {
+        if ((id->oflags[1] & InstructionDescription::O_MEM) == 0) goto illegalInstruction;
+        _emitMmu(id->opCode[0] | prefix, rexw,
+          reinterpret_cast<const BaseReg&>(*o0).getRegCode(),
+          reinterpret_cast<const Mem&>(*o1), 1);
+        _emitImmediate(reinterpret_cast<const Imm &>(*o2), 1);
+        goto end;
       }
 
       break;
     }
 
-    case I_MMU_RM_IMM8:
+    case InstructionDescription::G_MMU_RM_3DNOW:
     {
-      ASMJIT_ASSERT(id.o1Flags != 0);
-      ASMJIT_ASSERT(id.o2Flags != 0);
-
-      // Check parameters (X)MM|GP32_64 <- (X)MM|GP32_64|Mem|Imm
-      if (!o1->isReg() ||
-          (o1->isRegType(REG_MM ) && (id.o1Flags & O_MM ) == 0) ||
-          (o1->isRegType(REG_XMM) && (id.o1Flags & O_XMM) == 0) ||
-          (o1->isRegType(REG_GPD) && (id.o1Flags & O_G32) == 0) ||
-          (o1->isRegType(REG_GPQ) && (id.o1Flags & O_G64) == 0) ||
-          (o2->isRegType(REG_MM ) && (id.o2Flags & O_MM ) == 0) ||
-          (o2->isRegType(REG_XMM) && (id.o2Flags & O_XMM) == 0) ||
-          (o2->isRegType(REG_GPD) && (id.o2Flags & O_G32) == 0) ||
-          (o2->isRegType(REG_GPQ) && (id.o2Flags & O_G64) == 0) ||
-          (o2->isMem()            && (id.o2Flags & O_MEM) == 0) ||
-          !o3->isImm())
+      if (o0->isRegType(REG_TYPE_MM) && (o1->isRegType(REG_TYPE_MM) || o1->isMem()))
       {
-        goto illegalInstruction;
-      }
-
-      UInt32 prefix = 
-        ((id.o1Flags & O_MM_XMM) == O_MM_XMM && o1->isRegType(REG_XMM)) ||
-        ((id.o2Flags & O_MM_XMM) == O_MM_XMM && o2->isRegType(REG_XMM)) 
-          ? 0x66000000 
-          : 0x00000000;
-      UInt8 rexw = ((id.o1Flags|id.o2Flags) & O_NOREX) 
-        ? 0 
-        : o1->isRegType(REG_GPQ) | o1->isRegType(REG_GPQ);
-
-      // (X)MM <- (X)MM (opcode1)
-      if (o2->isReg())
-      {
-        if ((id.o2Flags & (O_MM_XMM | O_G32_64)) == 0) goto illegalInstruction;
-        _emitMmu(id.opCode1 | prefix, rexw,
-          reinterpret_cast<const BaseReg&>(*o1).code(),
-          reinterpret_cast<const BaseReg&>(*o2), 1); 
-        _emitImmediate(reinterpret_cast<const Immediate &>(*o3), 1);
-        return; 
-      }
-      // (X)MM <- Mem (opcode1)
-      if (o2->isMem())
-      {
-        if ((id.o2Flags & O_MEM) == 0) goto illegalInstruction;
-        _emitMmu(id.opCode1 | prefix, rexw,
-          reinterpret_cast<const BaseReg&>(*o1).code(),
-          reinterpret_cast<const Mem&>(*o2), 1);
-        _emitImmediate(reinterpret_cast<const Immediate &>(*o3), 1);
-        return;
-      }
-
-      break;
-    }
-
-    case I_MMU_RM_3DNOW:
-    {
-      if (o1->isRegType(REG_MM) && (o2->isRegType(REG_MM) || o2->isMem()))
-      {
-        _emitMmu(id.opCode1, 0,
-          reinterpret_cast<const BaseReg&>(*o1).code(),
-          reinterpret_cast<const Mem&>(*o2), 1); 
-        _emitByte((UInt8)id.opCode2);
-        return;
+        _emitMmu(id->opCode[0], 0,
+          reinterpret_cast<const BaseReg&>(*o0).getRegCode(),
+          reinterpret_cast<const Mem&>(*o1), 1);
+        _emitByte((uint8_t)id->opCode[1]);
+        goto end;
       }
 
       break;
@@ -2889,23 +2416,171 @@ illegalInstruction:
   // must inform about invalid state.
   setError(ERROR_ILLEGAL_INSTRUCTION);
 
-  // We raise an assertion failure, because in debugging this just shouldn't
-  // happen.
-  ASMJIT_ASSERT(0);
+#if defined(ASMJIT_DEBUG)
+  assertIllegal = true;
+#endif // ASMJIT_DEBUG
+
+end:
+  if ((_logger && _logger->isUsed())
+#if defined(ASMJIT_DEBUG)
+      || assertIllegal
+#endif // ASMJIT_DEBUG
+     )
+  {
+    char bufStorage[512];
+    char* buf = bufStorage;
+    
+    buf = dumpInstruction(buf, code, _emitOptions, o0, o1, o2);
+
+    if (_logger->getLogBinary())
+      buf = dumpComment(buf, (sysuint_t)(buf - bufStorage), getCode() + beginOffset, getOffset() - beginOffset, _comment);
+    else
+      buf = dumpComment(buf, (sysuint_t)(buf - bufStorage), NULL, 0, _comment);
+
+    // We don't need to NULL terminate the resulting string.
+#if defined(ASMJIT_DEBUG)
+    if (_logger)
+#endif // ASMJIT_DEBUG
+      _logger->logString(bufStorage, (sysuint_t)(buf - bufStorage));
+
+#if defined(ASMJIT_DEBUG)
+    if (assertIllegal)
+    {
+      // Here we need to NULL terminate.
+      buf[0] = '\0';
+
+      // We raise an assertion failure, because in debugging this just shouldn't
+      // happen.
+      assertionFailure(__FILE__, __LINE__, bufStorage);
+    }
+#endif // ASMJIT_DEBUG
+  }
+
+cleanup:
+  _comment = NULL;
+  _emitOptions = 0;
+}
+
+void AssemblerCore::_emitJcc(uint32_t code, const Label* label, uint32_t hint) ASMJIT_NOTHROW
+{
+  if (!hint)
+  {
+    _emitInstruction(code, label, NULL, NULL);
+  }
+  else
+  {
+    Imm imm(hint);
+    _emitInstruction(code, label, &imm, NULL);
+  }
 }
 
 // ============================================================================
-// [AsmJit::Assembler - Embed]
+// [AsmJit::AssemblerCore - Relocation helpers]
 // ============================================================================
 
-void Assembler::_embed(const void* data, SysUInt size) ASMJIT_NOTHROW
+void AssemblerCore::relocCode(void* _dst, sysuint_t addressBase) const ASMJIT_NOTHROW
+{
+  // Copy code to virtual memory (this is a given _dst pointer).
+  uint8_t* dst = reinterpret_cast<uint8_t*>(_dst);
+
+  sysint_t coff = _buffer.getOffset();
+  sysint_t csize = getCodeSize();
+
+  // We are copying exactly size of generated code. Extra code for trampolines
+  // is generated on-the-fly by relocator (this code not exists at this moment).
+  memcpy(dst, _buffer.getData(), coff);
+
+#if defined(ASMJIT_X64)
+  // Trampoline pointer.
+  uint8_t* tramp = dst + coff;
+#endif // ASMJIT_X64
+
+  // Relocate all recorded locations.
+  sysint_t i;
+  sysint_t len = _relocData.getLength();
+
+  for (i = 0; i < len; i++)
+  {
+    const RelocData& r = _relocData[i];
+    sysint_t val;
+
+#if defined(ASMJIT_X64)
+    // Whether to use trampoline, can be only used if relocation type is
+    // ABSOLUTE_TO_RELATIVE_TRAMPOLINE.
+    bool useTrampoline = false;
+#endif // ASMJIT_X64
+
+    // Be sure that reloc data structure is correct.
+    ASMJIT_ASSERT((sysint_t)(r.offset + r.size) <= csize);
+
+    switch (r.type)
+    {
+      case RelocData::ABSOLUTE_TO_ABSOLUTE:
+        val = (sysint_t)(r.address);
+        break;
+
+      case RelocData::RELATIVE_TO_ABSOLUTE:
+        val = (sysint_t)(addressBase + r.destination);
+        break;
+
+      case RelocData::ABSOLUTE_TO_RELATIVE:
+      case RelocData::ABSOLUTE_TO_RELATIVE_TRAMPOLINE:
+        val = (sysint_t)( (sysuint_t)r.address - ((sysuint_t)addressBase + (sysuint_t)r.offset + 4) );
+
+#if defined(ASMJIT_X64)
+        if (r.type == RelocData::ABSOLUTE_TO_RELATIVE_TRAMPOLINE && !Util::isInt32(val))
+        {
+          val = (sysint_t)( (sysuint_t)tramp - ((sysuint_t)addressBase + (sysuint_t)r.offset + 4) );
+          useTrampoline = true;
+        }
+#endif // ASMJIT_X64
+        break;
+
+      default:
+        ASMJIT_ASSERT(0);
+    }
+
+    switch (r.size)
+    {
+      case 4:
+        *reinterpret_cast<int32_t*>(dst + r.offset) = (int32_t)val;
+        break;
+
+      case 8:
+        *reinterpret_cast<int64_t*>(dst + r.offset) = (int64_t)val;
+        break;
+
+      default:
+        ASMJIT_ASSERT(0);
+    }
+
+#if defined(ASMJIT_X64)
+    if (useTrampoline)
+    {
+      if (getLogger() && getLogger()->isUsed())
+      {
+        getLogger()->logFormat("; Trampoline from %p -> %p\n", (int8_t*)addressBase + r.offset, r.address);
+      }
+
+      TrampolineWriter::writeTrampoline(tramp, r.address);
+      tramp += TrampolineWriter::TRAMPOLINE_SIZE;
+    }
+#endif // ASMJIT_X64
+  }
+}
+
+// ============================================================================
+// [AsmJit::AssemblerCore - Embed]
+// ============================================================================
+
+void AssemblerCore::embed(const void* data, sysuint_t size) ASMJIT_NOTHROW
 {
   if (!canEmit()) return;
 
-  if (_logger && _logger->enabled())
+  if (_logger && _logger->isUsed())
   {
-    SysUInt i, j;
-    SysUInt max;
+    sysuint_t i, j;
+    sysuint_t max;
     char buf[128];
     char dot[] = ".data ";
     char* p;
@@ -2918,70 +2593,68 @@ void Assembler::_embed(const void* data, SysUInt size) ASMJIT_NOTHROW
       p = buf + ASMJIT_ARRAY_SIZE(dot) - 1;
 
       for (j = 0; j < max; j++)
-        p += sprintf(p, "%0.2X", reinterpret_cast<const UInt8 *>(data)[i+j]);
+        p += sprintf(p, "%0.2X", reinterpret_cast<const uint8_t *>(data)[i+j]);
 
       *p++ = '\n';
       *p = '\0';
 
-      _logger->log(buf);
+      _logger->logString(buf);
     }
   }
 
   _buffer.emitData(data, size);
 }
 
-void Assembler::_embedLabel(Label* label) ASMJIT_NOTHROW
+void AssemblerCore::embedLabel(const Label& label) ASMJIT_NOTHROW
 {
+  ASMJIT_ASSERT(label.getId() != INVALID_VALUE);
   if (!canEmit()) return;
 
-  if (_logger && _logger->enabled())
+  LabelData& l_data = _labelData[label.getId() & OPERAND_ID_VALUE_MASK];
+  RelocData r_data;
+
+  if (_logger && _logger->isUsed())
   {
-    char buf[1024];
-    char* p = buf;
-    memcpy(p, ".data ", 6);
-    p = Logger::dumpLabel(p + 6, label);
-    *p++ = '\n';
-    *p = '\0';
-    _logger->log(buf);
+    _logger->logFormat(sizeof(sysint_t) == 4 ? ".dd L.%u\n" : ".dq L.%u\n", (uint32_t)label.getId() & OPERAND_ID_VALUE_MASK);
   }
 
-  RelocData rd;
-  rd.type = RelocData::RELATIVE_TO_ABSOLUTE;
-  rd.size = sizeof(void*);
-  rd.offset = offset();
-  rd.destination = 0;
+  r_data.type = RelocData::RELATIVE_TO_ABSOLUTE;
+  r_data.size = sizeof(sysint_t);
+  r_data.offset = getOffset();
+  r_data.destination = 0;
 
-  if (label->isBound())
+  if (l_data.offset != -1)
   {
-    rd.destination = label->position();
+    // Bound label.
+    r_data.destination = l_data.offset;
   }
   else
   {
-    // Chain with label
-    LinkData* link = _newLinkData();
-    link->prev = (LinkData*)label->_lbl.link;
-    link->offset = offset();
-    link->displacement = 0;
-    link->relocId = _relocData.length();
+    // Non-bound label. Need to chain.
+    LabelLink* link = _newLabelLink();
 
-    label->_lbl.link = link;
-    label->_lbl.state = LABEL_STATE_LINKED;
+    link->prev = (LabelLink*)l_data.links;
+    link->offset = getOffset();
+    link->displacement = 0;
+    link->relocId = _relocData.getLength();
+
+    l_data.links = link;
   }
 
-  _relocData.append(rd);
+  _relocData.append(r_data);
 
   // Emit dummy sysint (4 or 8 bytes that depends to address size).
   _emitSysInt(0);
 }
 
 // ============================================================================
-// [AsmJit::Assembler - Align]
+// [AsmJit::AssemblerCore - Align]
 // ============================================================================
 
-void Assembler::align(SysInt m) ASMJIT_NOTHROW
+void AssemblerCore::align(uint32_t m) ASMJIT_NOTHROW
 {
   if (!canEmit()) return;
-  if (_logger) _logger->logAlign(m);
+  if (_logger && _logger->isUsed()) _logger->logFormat(".align %u", (uint)m);
 
   if (!m) return;
 
@@ -2991,12 +2664,12 @@ void Assembler::align(SysInt m) ASMJIT_NOTHROW
     return;
   }
 
-  SysInt i = m - (offset() % m);
+  sysint_t i = m - (getOffset() % m);
   if (i == m) return;
 
   if (_properties & (1 << PROPERTY_OPTIMIZE_ALIGN))
   {
-    const CpuInfo* ci = cpuInfo();
+    const CpuInfo* ci = getCpuInfo();
 
     // NOPs optimized for Intel:
     //   Intel 64 and IA-32 Architectures Software Developer's Manual
@@ -3008,25 +2681,25 @@ void Assembler::align(SysInt m) ASMJIT_NOTHROW
     //   Software Optimization Guide for AMD Family 10h Processors (Quad-Core)
     //   - 4.13 - Code Padding with Operand-Size Override and Multibyte NOP
 
-    // Intel and AMD
-    static const UInt8 nop1[] = { 0x90 };
-    static const UInt8 nop2[] = { 0x66, 0x90 };
-    static const UInt8 nop3[] = { 0x0F, 0x1F, 0x00 };
-    static const UInt8 nop4[] = { 0x0F, 0x1F, 0x40, 0x00 };
-    static const UInt8 nop5[] = { 0x0F, 0x1F, 0x44, 0x00, 0x00 };
-    static const UInt8 nop6[] = { 0x66, 0x0F, 0x1F, 0x44, 0x00, 0x00 };
-    static const UInt8 nop7[] = { 0x0F, 0x1F, 0x80, 0x00, 0x00, 0x00, 0x00 };
-    static const UInt8 nop8[] = { 0x0F, 0x1F, 0x84, 0x00, 0x00, 0x00, 0x00, 0x00 };
-    static const UInt8 nop9[] = { 0x66, 0x0F, 0x1F, 0x84, 0x00, 0x00, 0x00, 0x00, 0x00 };
+    // Intel and AMD.
+    static const uint8_t nop1[] = { 0x90 };
+    static const uint8_t nop2[] = { 0x66, 0x90 };
+    static const uint8_t nop3[] = { 0x0F, 0x1F, 0x00 };
+    static const uint8_t nop4[] = { 0x0F, 0x1F, 0x40, 0x00 };
+    static const uint8_t nop5[] = { 0x0F, 0x1F, 0x44, 0x00, 0x00 };
+    static const uint8_t nop6[] = { 0x66, 0x0F, 0x1F, 0x44, 0x00, 0x00 };
+    static const uint8_t nop7[] = { 0x0F, 0x1F, 0x80, 0x00, 0x00, 0x00, 0x00 };
+    static const uint8_t nop8[] = { 0x0F, 0x1F, 0x84, 0x00, 0x00, 0x00, 0x00, 0x00 };
+    static const uint8_t nop9[] = { 0x66, 0x0F, 0x1F, 0x84, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
-    // AMD
-    static const UInt8 nop10[] = { 0x66, 0x66, 0x0F, 0x1F, 0x84, 0x00, 0x00, 0x00, 0x00, 0x00 };
-    static const UInt8 nop11[] = { 0x66, 0x66, 0x66, 0x0F, 0x1F, 0x84, 0x00, 0x00, 0x00, 0x00, 0x00 };
+    // AMD.
+    static const uint8_t nop10[] = { 0x66, 0x66, 0x0F, 0x1F, 0x84, 0x00, 0x00, 0x00, 0x00, 0x00 };
+    static const uint8_t nop11[] = { 0x66, 0x66, 0x66, 0x0F, 0x1F, 0x84, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
-    const UInt8* p;
-    SysInt n;
+    const uint8_t* p;
+    sysint_t n;
 
-    if (ci->vendorId == CpuInfo::Vendor_INTEL && 
+    if (ci->vendorId == CPU_VENDOR_INTEL && 
        ((ci->family & 0x0F) == 6 || 
         (ci->family & 0x0F) == 15)
        )
@@ -3052,7 +2725,7 @@ void Assembler::align(SysInt m) ASMJIT_NOTHROW
       return;
     }
 
-    if (ci->vendorId == CpuInfo::Vendor_AMD && 
+    if (ci->vendorId == CPU_VENDOR_AMD && 
         ci->family >= 0x0F)
     {
       do {
@@ -3099,126 +2772,131 @@ void Assembler::align(SysInt m) ASMJIT_NOTHROW
 }
 
 // ============================================================================
-// [AsmJit::Assembler - Labels]
+// [AsmJit::AssemblerCore - Label]
 // ============================================================================
 
-Label* Assembler::newLabel() ASMJIT_NOTHROW
+Label AssemblerCore::newLabel() ASMJIT_NOTHROW
 {
-  Label* label = new(_zoneAlloc(sizeof(Label))) Label();
+  Label label;
+  label._base.id = (uint32_t)_labelData.getLength() | OPERAND_ID_TYPE_LABEL;
+
+  LabelData l_data;
+  l_data.offset = -1;
+  l_data.links = NULL;
+  _labelData.append(l_data);
+
   return label;
 }
 
-// ============================================================================
-// [AsmJit::Assembler - Bind]
-// ============================================================================
-
-void Assembler::bind(Label* label) ASMJIT_NOTHROW
+void AssemblerCore::registerLabels(sysuint_t count) ASMJIT_NOTHROW
 {
-  // label can only be bound once
-  ASMJIT_ASSERT(!label->isBound());
+  // Duplicated newLabel() code, but we are not creating Label instances.
+  LabelData l_data;
+  l_data.offset = -1;
+  l_data.links = NULL;
 
-  if (_logger) _logger->logLabel(label);
-  bindTo(label, offset());
+  for (sysuint_t i = 0; i < count; i++) _labelData.append(l_data);
 }
 
-void Assembler::bindTo(Label* label, SysInt pos) ASMJIT_NOTHROW
+void AssemblerCore::bind(const Label& label) ASMJIT_NOTHROW
 {
-  // pos is signed integer, but I it should be never negative (because it
-  // means count of bytes in assembler stream from the start).
+  // Only labels created by newLabel() can be used by Assembler.
+  ASMJIT_ASSERT(label.getId() != INVALID_VALUE);
+  // Never go out of bounds.
+  ASMJIT_ASSERT((label.getId() & OPERAND_ID_VALUE_MASK) < _labelData.getLength());
 
-  if (label->isLinked())
+  // Get label data based on label id.
+  LabelData& l_data = _labelData[label.getId() & OPERAND_ID_VALUE_MASK];
+
+  // Label can be bound only once.
+  ASMJIT_ASSERT(l_data.offset == -1);
+
+  // Log.
+  if (_logger && _logger->isUsed()) _logger->logFormat("L.%u:\n", (uint32_t)label.getId() & OPERAND_ID_VALUE_MASK);
+
+  sysint_t pos = getOffset();
+
+  LabelLink* link = l_data.links;
+  LabelLink* prev = NULL;
+
+  while (link)
   {
-    LinkData* link = (LinkData*)label->_lbl.link;
-    LinkData* prev = NULL;
+    sysint_t offset = link->offset;
 
-    while (link)
+    if (link->relocId != -1)
     {
-      SysInt offset = link->offset;
+      // If linked label points to RelocData then instead of writing relative
+      // displacement to assembler stream, we will write it to RelocData.
+      _relocData[link->relocId].destination += pos;
+    }
+    else
+    {
+      // Not using relocId, this means that we overwriting real displacement
+      // in assembler stream.
+      int32_t patchedValue = (int32_t)(pos - offset + link->displacement);
+      uint32_t size = getByteAt(offset);
 
-      if (link->relocId != -1)
+      // Only these size specifiers are allowed.
+      ASMJIT_ASSERT(size == 1 || size == 4);
+
+      if (size == 4)
       {
-        // If linked label points to RelocData then instead of writing relative
-        // displacement to assembler stream, we will write it to RelocData.
-        _relocData[link->relocId].destination += pos;
+        setInt32At(offset, patchedValue);
       }
-      else
+      else // if (size == 1)
       {
-        // Not using relocId, this means that we overwriting real displacement
-        // in assembler stream.
-        Int32 patchedValue = (Int32)(pos - offset + link->displacement);
-        UInt32 size = getByteAt(offset);
-
-        // Only these size specifiers are allowed.
-        ASMJIT_ASSERT(size == 1 || size == 4);
-
-        if (size == 1)
+        if (Util::isInt8(patchedValue))
         {
-          if (isInt8(patchedValue))
-          {
-            setByteAt(offset, (UInt8)(Int8)patchedValue);
-          }
-          else
-          {
-            // Fatal error.
-            setError(ERROR_ILLEGAL_SHORT_JUMP);
-          }
+          setByteAt(offset, (uint8_t)(int8_t)patchedValue);
         }
         else
         {
-          setInt32At(offset, patchedValue);
+          // Fatal error.
+          setError(ERROR_ILLEGAL_SHORT_JUMP);
         }
       }
-
-      prev = link->prev;
-      link = prev;
     }
 
-    // Add to unused list.
-    link = (LinkData*)label->_lbl.link;
+    prev = link->prev;
+    link = prev;
+  }
+
+  // Chain unused links.
+  link = l_data.links;
+  if (link)
+  {
     if (prev == NULL) prev = link;
 
     prev->prev = _unusedLinks;
     _unusedLinks = link;
-
-    // unlink label
-    label->_lbl.link = NULL;
   }
 
-  label->setStatePos(LABEL_STATE_BOUND, pos);
+  // Unlink label if it was linked.
+  l_data.offset = pos;
+  l_data.links = NULL;
 }
 
 // ============================================================================
-// [AsmJit::Assembler - Make]
+// [AsmJit::AssemblerCore - Make]
 // ============================================================================
 
-void* Assembler::make(MemoryManager* memoryManager, UInt32 allocType) ASMJIT_NOTHROW
+void* AssemblerCore::make() ASMJIT_NOTHROW
 {
   // Do nothing on error state or when no instruction was emitted.
-  if (error() || codeSize() == 0) return NULL;
+  if (_error || getCodeSize() == 0) return NULL;
 
-  // Switch to global memory manager if not provided.
-  if (memoryManager == NULL) memoryManager = MemoryManager::global();
-
-  // Try to allocate memory and check if everything is ok.
-  void* p = memoryManager->alloc(codeSize(), allocType);
-  if (p == NULL)
-  {
-    setError(ERROR_NO_VIRTUAL_MEMORY);
-    return NULL;
-  }
-
-  // This is last step. Relocate code and return generated code.
-  relocCode(p);
+  void* p;
+  _error = _codeGenerator->generate(&p, reinterpret_cast<Assembler*>(this));
   return p;
 }
 
 // ============================================================================
-// [AsmJit::Assembler - Links]
+// [AsmJit::AssemblerCore - Links]
 // ============================================================================
 
-Assembler::LinkData* Assembler::_newLinkData() ASMJIT_NOTHROW
+AssemblerCore::LabelLink* AssemblerCore::_newLabelLink() ASMJIT_NOTHROW
 {
-  LinkData* link = _unusedLinks;
+  LabelLink* link = _unusedLinks;
 
   if (link)
   {
@@ -3226,7 +2904,7 @@ Assembler::LinkData* Assembler::_newLinkData() ASMJIT_NOTHROW
   }
   else
   {
-    link = (LinkData*)_zoneAlloc(sizeof(LinkData));
+    link = (LabelLink*)_zone.zalloc(sizeof(LabelLink));
     if (link == NULL) return NULL;
   }
 
@@ -3239,13 +2917,20 @@ Assembler::LinkData* Assembler::_newLinkData() ASMJIT_NOTHROW
   return link;
 }
 
-void Assembler::_freeLinkData(LinkData* link) ASMJIT_NOTHROW
+// ============================================================================
+// [AsmJit::Assembler - Construction / Destruction]
+// ============================================================================
+
+Assembler::Assembler(CodeGenerator* codeGenerator) ASMJIT_NOTHROW :
+  AssemblerIntrinsics(codeGenerator)
 {
-  link->prev = _unusedLinks;
-  _unusedLinks = link;
+}
+
+Assembler::~Assembler() ASMJIT_NOTHROW
+{
 }
 
 } // AsmJit namespace
 
-// [Warnings-Pop]
-#include "WarningsPop.h"
+// [Api-End]
+#include "ApiEnd.h"

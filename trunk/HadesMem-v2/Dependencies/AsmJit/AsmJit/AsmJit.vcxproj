@@ -19,40 +19,42 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ApiBegin.h" />
+    <ClInclude Include="ApiEnd.h" />
     <ClInclude Include="AsmJit.h" />
     <ClInclude Include="Assembler.h" />
     <ClInclude Include="AssemblerX86X64.h" />
     <ClInclude Include="Build.h" />
+    <ClInclude Include="CodeGenerator.h" />
     <ClInclude Include="Compiler.h" />
     <ClInclude Include="CompilerX86X64.h" />
     <ClInclude Include="Config.h" />
     <ClInclude Include="CpuInfo.h" />
     <ClInclude Include="Defs.h" />
     <ClInclude Include="DefsX86X64.h" />
-    <ClInclude Include="Lock.h" />
     <ClInclude Include="Logger.h" />
-    <ClInclude Include="LoggerX86X64.h" />
     <ClInclude Include="MemoryManager.h" />
-    <ClInclude Include="Serializer.h" />
-    <ClInclude Include="SerializerX86X64.h" />
+    <ClInclude Include="Operand.h" />
+    <ClInclude Include="OperandX86X64.h" />
+    <ClInclude Include="Platform.h" />
     <ClInclude Include="Util.h" />
-    <ClInclude Include="VirtualMemory.h" />
-    <ClInclude Include="WarningsPop.h" />
-    <ClInclude Include="WarningsPush.h" />
+    <ClInclude Include="Util_p.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Assembler.cpp" />
     <ClCompile Include="AssemblerX86X64.cpp" />
+    <ClCompile Include="CodeGenerator.cpp" />
+    <ClCompile Include="Compiler.cpp" />
     <ClCompile Include="CompilerX86X64.cpp" />
     <ClCompile Include="CpuInfo.cpp" />
     <ClCompile Include="Defs.cpp" />
-    <ClCompile Include="Lock.cpp" />
+    <ClCompile Include="DefsX86X64.cpp" />
     <ClCompile Include="Logger.cpp" />
-    <ClCompile Include="LoggerX86X64.cpp" />
-    <ClCompile Include="LoggerX86X64Dump.cpp" />
     <ClCompile Include="MemoryManager.cpp" />
-    <ClCompile Include="SerializerX86X64.cpp" />
+    <ClCompile Include="Operand.cpp" />
+    <ClCompile Include="OperandX86X64.cpp" />
+    <ClCompile Include="Platform.cpp" />
     <ClCompile Include="Util.cpp" />
-    <ClCompile Include="VirtualMemory.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{49705369-60F0-4E91-9828-CE20826C0241}</ProjectGuid>

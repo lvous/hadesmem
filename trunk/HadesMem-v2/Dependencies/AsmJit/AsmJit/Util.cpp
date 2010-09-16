@@ -1,6 +1,6 @@
 // AsmJit - Complete JIT Assembler for C++ Language.
 
-// Copyright (c) 2008-2009, Petr Kobalicek <kobalicek.petr@gmail.com>
+// Copyright (c) 2008-2010, Petr Kobalicek <kobalicek.petr@gmail.com>
 //
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
@@ -25,40 +25,108 @@
 
 // [Dependencies]
 #include "Build.h"
-#include "Util.h"
+#include "Util_p.h"
 
-// [Warnings-Push]
-#include "WarningsPush.h"
+// [Api-Begin]
+#include "ApiBegin.h"
 
 namespace AsmJit {
+
+// ============================================================================
+// [AsmJit::Util]
+// ============================================================================
+
+static const char letters[] = "0123456789ABCDEF";
+
+char* Util::mycpy(char* dst, const char* src, sysuint_t len) ASMJIT_NOTHROW
+{
+  if (src == NULL) return dst;
+
+  if (len == (sysuint_t)-1)
+  {
+    while (*src) *dst++ = *src++;
+  }
+  else
+  {
+    memcpy(dst, src, len);
+    dst += len;
+  }
+
+  return dst;
+}
+
+char* Util::myfill(char* dst, const int c, sysuint_t len) ASMJIT_NOTHROW
+{
+  memset(dst, c, len);
+  return dst + len;
+}
+
+char* Util::myhex(char* dst, const uint8_t* src, sysuint_t len) ASMJIT_NOTHROW
+{
+  for (sysuint_t i = len; i; i--, dst += 2, src += 1)
+  {
+    dst[0] = letters[(src[0] >> 4) & 0xF];
+    dst[1] = letters[(src[0]     ) & 0xF];
+  }
+
+  return dst;
+}
+
+// Not too efficient, but this is mainly for debugging:)
+char* Util::myutoa(char* dst, sysuint_t i, sysuint_t base) ASMJIT_NOTHROW
+{
+  ASMJIT_ASSERT(base <= 16);
+
+  char buf[128];
+  char* p = buf + 128;
+
+  do {
+    sysint_t b = i % base;
+    *--p = letters[b];
+    i /= base;
+  } while (i);
+
+  return Util::mycpy(dst, p, (sysuint_t)(buf + 128 - p));
+}
+
+char* Util::myitoa(char* dst, sysint_t i, sysuint_t base) ASMJIT_NOTHROW
+{
+  if (i < 0)
+  {
+    *dst++ = '-';
+    i = -i;
+  }
+
+  return Util::myutoa(dst, (sysuint_t)i, base);
+}
 
 // ============================================================================
 // [AsmJit::Buffer]
 // ============================================================================
 
-void Buffer::emitData(const void* dataPtr, SysUInt dataLen) ASMJIT_NOTHROW
+void Buffer::emitData(const void* dataPtr, sysuint_t dataLen) ASMJIT_NOTHROW
 {
-  SysInt max = capacity() - offset();
-  if ((SysUInt)max < dataLen)
+  sysint_t max = getCapacity() - getOffset();
+  if ((sysuint_t)max < dataLen)
   {
-    if (!realloc(offset() + dataLen)) return;
+    if (!realloc(getOffset() + dataLen)) return;
   }
 
   memcpy(_cur, dataPtr, dataLen);
   _cur += dataLen;
 }
 
-bool Buffer::realloc(SysInt to) ASMJIT_NOTHROW
+bool Buffer::realloc(sysint_t to) ASMJIT_NOTHROW
 {
-  if (capacity() < to)
+  if (getCapacity() < to)
   {
-    SysInt len = offset();
+    sysint_t len = getOffset();
 
-    UInt8 *newdata;
+    uint8_t *newdata;
     if (_data)
-      newdata = (UInt8*)ASMJIT_REALLOC(_data, to);
+      newdata = (uint8_t*)ASMJIT_REALLOC(_data, to);
     else
-      newdata = (UInt8*)ASMJIT_MALLOC(to);
+      newdata = (uint8_t*)ASMJIT_MALLOC(to);
     if (!newdata) return false;
 
     _data = newdata;
@@ -74,7 +142,7 @@ bool Buffer::realloc(SysInt to) ASMJIT_NOTHROW
 
 bool Buffer::grow() ASMJIT_NOTHROW
 {
-  SysInt to = _capacity;
+  sysint_t to = _capacity;
 
   if (to < 512)
     to = 1024;
@@ -102,9 +170,9 @@ void Buffer::free() ASMJIT_NOTHROW
   _capacity = 0;
 }
 
-UInt8* Buffer::take() ASMJIT_NOTHROW
+uint8_t* Buffer::take() ASMJIT_NOTHROW
 {
-  UInt8* data = _data;
+  uint8_t* data = _data;
 
   _data = NULL;
   _cur = NULL;
@@ -118,7 +186,7 @@ UInt8* Buffer::take() ASMJIT_NOTHROW
 // [AsmJit::Zone]
 // ============================================================================
 
-Zone::Zone(SysUInt chunkSize) ASMJIT_NOTHROW
+Zone::Zone(sysuint_t chunkSize) ASMJIT_NOTHROW
 {
   _chunks = NULL;
   _total = 0;
@@ -130,16 +198,16 @@ Zone::~Zone() ASMJIT_NOTHROW
   freeAll();
 }
 
-void* Zone::alloc(SysUInt size) ASMJIT_NOTHROW
+void* Zone::zalloc(sysuint_t size) ASMJIT_NOTHROW
 {
-  // Align to 4 or 8 bytes
-  size = (size + sizeof(SysInt)-1) & ~(sizeof(SysInt)-1);
+  // Align to 4 or 8 bytes.
+  size = (size + sizeof(sysint_t)-1) & ~(sizeof(sysint_t)-1);
 
   Chunk* cur = _chunks;
 
-  if (!cur || cur->remain() < size)
+  if (!cur || cur->getRemainingBytes() < size)
   {
-    SysUInt chSize = _chunkSize;
+    sysuint_t chSize = _chunkSize;
     if (chSize < size) chSize = size;
 
     cur = (Chunk*)ASMJIT_MALLOC(sizeof(Chunk) - sizeof(void*) + chSize);
@@ -151,10 +219,31 @@ void* Zone::alloc(SysUInt size) ASMJIT_NOTHROW
     _chunks = cur;
   }
 
-  UInt8* p = cur->data + cur->pos;
+  uint8_t* p = cur->data + cur->pos;
   cur->pos += size;
   _total += size;
   return (void*)p;
+}
+
+char* Zone::zstrdup(const char* str) ASMJIT_NOTHROW
+{
+  if (str == NULL) return NULL;
+
+  sysuint_t len = strlen(str);
+  if (len == 0) return NULL;
+
+  // Include NULL terminator.
+  len++;
+
+  // Limit string length.
+  if (len > 256) len = 256;
+
+  char* m = reinterpret_cast<char*>(zalloc((len + 15) & ~15));
+  if (!m) return NULL;
+
+  memcpy(m, str, len);
+  m[len-1] = '\0';
+  return m;
 }
 
 void Zone::clear() ASMJIT_NOTHROW
@@ -162,34 +251,35 @@ void Zone::clear() ASMJIT_NOTHROW
   Chunk* cur = _chunks;
   if (!cur) return;
 
-  while (cur->prev)
+  _chunks->pos = 0;
+  _chunks->prev = NULL;
+  _total = 0;
+
+  cur = cur->prev;
+  while (cur)
   {
     Chunk* prev = cur->prev;
     ASMJIT_FREE(cur);
     cur = prev;
   }
-
-  _chunks = cur;
-  _chunks->pos = 0;
-  _total = 0;
 }
 
 void Zone::freeAll() ASMJIT_NOTHROW
 {
   Chunk* cur = _chunks;
-  if (!cur) return;
-
-  do {
-    Chunk* prev = cur->prev;
-    ASMJIT_FREE(cur);
-    cur = prev;
-  } while (cur);
 
   _chunks = NULL;
   _total = 0;
+
+  while (cur)
+  {
+    Chunk* prev = cur->prev;
+    ASMJIT_FREE(cur);
+    cur = prev;
+  }
 }
 
 } // AsmJit namespace
 
-// [Warnings-Pop]
-#include "WarningsPop.h"
+// [Api-End]
+#include "ApiEnd.h"
