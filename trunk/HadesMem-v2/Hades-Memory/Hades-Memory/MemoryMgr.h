@@ -96,9 +96,9 @@ namespace Hades
 
       // Read memory (vector types)
       template <typename T>
-      T Read(PVOID Address, typename std::vector<typename T::value_type>::
-        size_type Size, typename boost::enable_if<std::is_same<T, std::vector<
-        typename T::value_type>>>::type* Dummy = 0) const;
+      T Read(PVOID Address, std::size_t Size, typename boost::enable_if<
+        std::is_same<T, std::vector<typename T::value_type>>>::type* 
+        Dummy = 0) const;
 
       // Write memory (POD types)
       template <typename T>
@@ -146,7 +146,7 @@ namespace Hades
         const;
 
       // Flush instruction cache
-      inline void FlushCache(LPCVOID Address, SIZE_T Size) const;
+      inline void FlushCache(PVOID Address, SIZE_T Size) const;
 
     private:
       // Target process
@@ -289,40 +289,81 @@ namespace Hades
       // Return
       MyJitFunc.ret();
 #elif defined(_M_IX86) 
-      // Check calling convention
-      if (MyCallConv == CallConv_X64)
-      {
-        BOOST_THROW_EXCEPTION(Error() << 
-          ErrorFunction("MemoryMgr::Call") << 
-          ErrorString("Invalid calling convention."));
-      }
-      if (MyCallConv == CallConv_FASTCALL)
-      {
-        BOOST_THROW_EXCEPTION(Error() << 
-          ErrorFunction("MemoryMgr::Call") << 
-          ErrorString("Currently unsupported calling convention."));
-      }
-
       // Prologue
       MyJitFunc.push(AsmJit::ebp);
       MyJitFunc.mov(AsmJit::ebp, AsmJit::esp);
 
       // Get stack arguments offset
-      int StackArgOffs = MyCallConv == CallConv_THISCALL ? 1 : 0;
-
-      // Pass first arg in through ECX if __thiscall is specified
-      if (MyCallConv == CallConv_THISCALL)
+      std::size_t StackArgOffs = 0;
+      switch (MyCallConv)
       {
-        MyJitFunc.mov(AsmJit::ecx, reinterpret_cast<DWORD_PTR>(Args[0]));
+        case CallConv_THISCALL:
+          StackArgOffs = 1;
+          break;
+
+        case CallConv_FASTCALL:
+          StackArgOffs = 2;
+          break;
+
+        case CallConv_CDECL:
+        case CallConv_STDCALL:
+        case CallConv_Default:
+          StackArgOffs = 0;
+          break;
+
+        default:
+          BOOST_THROW_EXCEPTION(Error() << 
+            ErrorFunction("MemoryMgr::Call") << 
+            ErrorString("Invalid calling convention."));
       }
 
-      // Set up args
-      std::for_each(Args.rbegin(), Args.rend() - StackArgOffs, 
-        [&MyJitFunc] (PVOID Arg)
+      // Pass first arg in through ECX if 'thiscall' is specified
+      if (MyCallConv == CallConv_THISCALL)
       {
-        MyJitFunc.mov(AsmJit::eax, reinterpret_cast<DWORD_PTR>(Arg));
-        MyJitFunc.push(AsmJit::eax);
-      });
+        if (NumArgs)
+        {
+          MyJitFunc.mov(AsmJit::ecx, reinterpret_cast<DWORD_PTR>(Args[0]));
+        }
+        else
+        {
+          MyJitFunc.mov(AsmJit::ecx, AsmJit::Imm(0));
+        }
+      }
+
+      // Pass first two args in through ECX and EDX if 'fastcall' is specified
+      if (MyCallConv == CallConv_FASTCALL)
+      {
+        // Ensure there is an arg to pass
+        if (NumArgs)
+        {
+          MyJitFunc.mov(AsmJit::ecx, reinterpret_cast<DWORD_PTR>(Args[0]));
+        }
+        else
+        {
+          MyJitFunc.mov(AsmJit::ecx, AsmJit::Imm(0));
+        }
+
+        // Ensure there is an arg to pass
+        if (NumArgs > 1)
+        {
+          MyJitFunc.mov(AsmJit::edx, reinterpret_cast<DWORD_PTR>(Args[1]));
+        }
+        else
+        {
+          MyJitFunc.mov(AsmJit::edx, AsmJit::Imm(0));
+        }
+      }
+
+      // Pass all remaining args on stack if there are any left to process.
+      if (NumArgs > StackArgOffs)
+      {
+        std::for_each(Args.rbegin(), Args.rend() - StackArgOffs, 
+          [&] (PVOID Arg)
+        {
+          MyJitFunc.mov(AsmJit::eax, reinterpret_cast<DWORD_PTR>(Arg));
+          MyJitFunc.push(AsmJit::eax);
+        });
+      }
 
       // Call target
       MyJitFunc.mov(AsmJit::eax, reinterpret_cast<DWORD_PTR>(Address));
@@ -495,9 +536,9 @@ namespace Hades
 
     // Read memory (vector types)
     template <typename T>
-    T MemoryMgr::Read(PVOID Address, typename std::vector<typename T::
-      value_type>::size_type Size, typename boost::enable_if<std::is_same<T, 
-      std::vector<typename T::value_type>>>::type* /*Dummy*/) const
+    T MemoryMgr::Read(PVOID Address, std::size_t Size, typename boost::
+      enable_if<std::is_same<T, std::vector<typename T::value_type>>>::type* 
+      /*Dummy*/) const
     {
       // Create buffer
       T Buffer(Size);
@@ -806,7 +847,7 @@ namespace Hades
     }
 
     // Flush instruction cache
-    void MemoryMgr::FlushCache(LPCVOID Address, SIZE_T Size) const
+    void MemoryMgr::FlushCache(PVOID Address, SIZE_T Size) const
     {
       if (!FlushInstructionCache(m_Process.GetHandle(), Address, Size))
       {

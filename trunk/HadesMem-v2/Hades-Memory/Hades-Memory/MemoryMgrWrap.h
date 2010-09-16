@@ -145,7 +145,7 @@ namespace Hades
         // MemoryMgr::FlushCache wrapper
         void FlushCache(DWORD_PTR Address, SIZE_T Size)
         {
-          return MemoryMgr::FlushCache(reinterpret_cast<LPCVOID>(Address), 
+          return MemoryMgr::FlushCache(reinterpret_cast<LPVOID>(Address), 
             Size);
         }
 
