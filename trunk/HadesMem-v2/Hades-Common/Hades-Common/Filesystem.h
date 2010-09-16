@@ -94,7 +94,8 @@ namespace Hades
       DWORD const SelfPathSize = MAX_PATH;
       std::wstring SelfFullPath;
       if (!GetModuleFileName(ModMe, Util::MakeStringBuffer(SelfFullPath, 
-        SelfPathSize), SelfPathSize))
+        SelfPathSize), SelfPathSize) || GetLastError() == 
+        ERROR_INSUFFICIENT_BUFFER)
       {
         DWORD LastError = GetLastError();
         BOOST_THROW_EXCEPTION(HadesError() << 
@@ -104,9 +105,7 @@ namespace Hades
       }
 
       // Path to self dir
-      auto const SelfDirPath(boost::filesystem::path(SelfFullPath).
-        parent_path());
-      return SelfDirPath;
+      return boost::filesystem::path(SelfFullPath).parent_path();
     }
 
     // Get path to self (directory)
@@ -119,7 +118,8 @@ namespace Hades
       DWORD const SelfPathSize = MAX_PATH;
       std::wstring SelfFullPath;
       if (!GetModuleFileName(ModMe, Util::MakeStringBuffer(SelfFullPath, 
-        SelfPathSize), SelfPathSize))
+        SelfPathSize), SelfPathSize) || GetLastError() == 
+        ERROR_INSUFFICIENT_BUFFER)
       {
         DWORD LastError = GetLastError();
         BOOST_THROW_EXCEPTION(HadesError() << 
