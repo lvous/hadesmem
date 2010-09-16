@@ -408,6 +408,12 @@ void __bea_callspec__ Addr_disp32(ARGTYPE* pMyArgument, PDISASM pMyDisasm)
             if (GV.ImmediatSize == 32) {
                 MyNumber += 4;
             }
+            if (GV.ImmediatSize == 16) {
+                MyNumber += 2;
+            }
+            if (GV.ImmediatSize == 8) {
+                MyNumber += 1;
+            }
             if ((*pMyDisasm).Instruction.Opcode >= 0x0F3800) {      /* add two bytes if opcode is a 3-bytes */
                 MyNumber +=2;
             }

@@ -25,7 +25,7 @@
 
 #include <stddef.h>
 
-#if defined(__GNUC__) || defined (__INTEL_COMPILER) || defined(__LCC__)
+#if defined(__GNUC__) || defined (__INTEL_COMPILER) || defined(__LCC__) || defined(__POCC__)
 #include <stdint.h>
 #endif
 
@@ -45,6 +45,27 @@
 		#define BEA_PTR_IS_64_BIT 1
 		typedef signed __int64     IntPtr;
 		typedef unsigned __int64   UIntPtr;
+	#else
+		typedef signed long        IntPtr;
+		typedef size_t             UIntPtr;
+	#endif
+	#define BEA_HAVE_INT64 1
+#elif defined(__POCC__)
+	/*
+	* PellesC
+	*/
+	typedef signed char            Int8;
+	typedef unsigned char          UInt8;
+	typedef signed short           Int16;
+	typedef unsigned short         UInt16;
+	typedef signed int             Int32;
+	typedef unsigned int           UInt32;
+	typedef signed long long       Int64;
+	typedef unsigned long long     UInt64;
+	#if defined(_WIN64)
+		#define BEA_PTR_IS_64_BIT 1
+		typedef signed long long   IntPtr;
+		typedef unsigned long long UIntPtr;
 	#else
 		typedef signed long        IntPtr;
 		typedef size_t             UIntPtr;

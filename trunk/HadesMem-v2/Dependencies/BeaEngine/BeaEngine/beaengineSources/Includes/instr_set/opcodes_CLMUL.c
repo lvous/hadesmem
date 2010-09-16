@@ -24,9 +24,10 @@ void __bea_callspec__ pclmulqdq_(PDISASM pMyDisasm)
     /* ========== 0x66 */
     if (GV.OperandSize == 16) {
         (*pMyDisasm).Prefix.OperandSize = MandatoryPrefix;
-        GV.MemDecoration = 0;
+        GV.MemDecoration = Arg2dqword;
         (*pMyDisasm).Instruction.Category = CLMUL_INSTRUCTION;
 
+        GV.ImmediatSize = 8;
         GV.SSE_ = 1;
         GxEx(pMyDisasm);
         GV.SSE_ = 0;
@@ -34,7 +35,7 @@ void __bea_callspec__ pclmulqdq_(PDISASM pMyDisasm)
         if (!Security(0, pMyDisasm)) return;
 
         (*pMyDisasm).Instruction.Immediat = *((UInt8*)(UIntPtr) (GV.EIP_- 1));
-        GV.ImmediatSize = 8;
+
         if ((*pMyDisasm).Instruction.Immediat == 0) {
             #ifndef BEA_LIGHT_DISASSEMBLY
                (void) strcpy ((*pMyDisasm).Instruction.Mnemonic, "pclmullqlqdq ");

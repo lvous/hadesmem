@@ -2855,6 +2855,7 @@ void __bea_callspec__ imul_GvEvIv(PDISASM pMyDisasm)
         else {
             GV.MemDecoration = Arg2dword;
         }
+        GV.ImmediatSize = 32;
         MOD_RM(&(*pMyDisasm).Argument2, pMyDisasm);
         Reg_Opcode(&(*pMyDisasm).Argument1, pMyDisasm);
         GV.EIP_+= GV.DECALAGE_EIP+6;
@@ -2866,11 +2867,12 @@ void __bea_callspec__ imul_GvEvIv(PDISASM pMyDisasm)
         #endif
         (*pMyDisasm).Argument3.ArgType = CONSTANT_TYPE+ABSOLUTE_;
         (*pMyDisasm).Argument3.ArgSize = 32;
-        GV.ImmediatSize = 32;
+
         FillFlags(pMyDisasm, 38);
     }
     else {
         GV.MemDecoration = Arg2word;
+        GV.ImmediatSize = 16;
         MOD_RM(&(*pMyDisasm).Argument2, pMyDisasm);
         Reg_Opcode(&(*pMyDisasm).Argument1, pMyDisasm);
         GV.EIP_+= GV.DECALAGE_EIP+4;
@@ -2882,7 +2884,7 @@ void __bea_callspec__ imul_GvEvIv(PDISASM pMyDisasm)
         #endif
         (*pMyDisasm).Argument3.ArgType = CONSTANT_TYPE+ABSOLUTE_;
         (*pMyDisasm).Argument3.ArgSize = 16;
-        GV.ImmediatSize = 16;
+
         FillFlags(pMyDisasm, 38);
     }
 }
@@ -2903,6 +2905,7 @@ void __bea_callspec__ imul_GvEvIb(PDISASM pMyDisasm)
         else {
             GV.MemDecoration = Arg2dword;
         }
+        GV.ImmediatSize = 8;
         MOD_RM(&(*pMyDisasm).Argument2, pMyDisasm);
         Reg_Opcode(&(*pMyDisasm).Argument1, pMyDisasm);
         GV.EIP_+= GV.DECALAGE_EIP+3;
@@ -2914,11 +2917,12 @@ void __bea_callspec__ imul_GvEvIb(PDISASM pMyDisasm)
         #endif
         (*pMyDisasm).Argument3.ArgType = CONSTANT_TYPE+ABSOLUTE_;
         (*pMyDisasm).Argument3.ArgSize = 8;
-        GV.ImmediatSize = 8;
+
         FillFlags(pMyDisasm, 38);
     }
     else {
         GV.MemDecoration = Arg2word;
+        GV.ImmediatSize = 8;
         MOD_RM(&(*pMyDisasm).Argument2, pMyDisasm);
         Reg_Opcode(&(*pMyDisasm).Argument1, pMyDisasm);
         GV.EIP_+= GV.DECALAGE_EIP+3;
@@ -2930,7 +2934,7 @@ void __bea_callspec__ imul_GvEvIb(PDISASM pMyDisasm)
         #endif
         (*pMyDisasm).Argument3.ArgType = CONSTANT_TYPE+ABSOLUTE_;
         (*pMyDisasm).Argument3.ArgSize = 8;
-        GV.ImmediatSize = 8;
+
         FillFlags(pMyDisasm, 38);
     }
 }

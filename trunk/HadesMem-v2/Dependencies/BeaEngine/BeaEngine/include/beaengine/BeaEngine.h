@@ -5,8 +5,6 @@
 #include <beaengine/export.h>
 #include <beaengine/basic_types.h>
 
-#define BEA_ENGINE_STATIC
-
 #if !defined(BEA_ENGINE_STATIC)
 	#if defined(BUILD_BEA_ENGINE_DLL)
 		#define BEA_API bea__api_export__
@@ -140,6 +138,7 @@ typedef struct {
    Int32 TAB_;
    Int32 ERROR_OPCODE;
    REX_Struct REX;
+   Int32 OutOfBlock;
 } InternalDatas;
 #pragma pack()
 
