@@ -176,6 +176,11 @@ namespace Hades
       }
 
       // Ensure target file exists
+      // Note: Only performing this check when path resolution is enabled, 
+      // because otherwise we would need to perform the check in the context 
+      // of the remote process, which is not possible to do without 
+      // introducing race conditions and other potential problems. So we just 
+      // let LoadLibraryW do the check for us.
       if (PathResolution && !boost::filesystem::exists(PathReal))
       {
         BOOST_THROW_EXCEPTION(Error() << 
