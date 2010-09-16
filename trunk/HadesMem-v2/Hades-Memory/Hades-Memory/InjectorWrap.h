@@ -36,6 +36,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // HadesMem
 #include "Injector.h"
 #include "MemoryMgr.h"
+#include "MemoryMgrWrap.h"
 #include "Hades-Common/I18n.h"
 
 namespace Hades
@@ -46,7 +47,7 @@ namespace Hades
     {
       struct CreateAndInjectInfo
       {
-        boost::shared_ptr<MemoryMgr> Memory;
+        boost::shared_ptr<Wrappers::MemoryMgrWrappers> Memory;
         DWORD_PTR ModBase;
         DWORD ExportRet;
       };
@@ -67,7 +68,8 @@ namespace Hades
           &ExportRet);
 
         CreateAndInjectInfo MyInfo;
-        MyInfo.Memory = MyMemory;
+        MyInfo.Memory = boost::static_pointer_cast<Wrappers::
+          MemoryMgrWrappers>(MyMemory);
         MyInfo.ModBase = reinterpret_cast<DWORD_PTR>(ModBase);
         MyInfo.ExportRet = ExportRet;
 
