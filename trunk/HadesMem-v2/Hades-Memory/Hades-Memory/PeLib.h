@@ -23,5 +23,6 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include "PeFile.h"
 #include "Section.h"
 #include "DosHeader.h"
+#include "ExportDir.h"
 #include "NtHeaders.h"
 #include "SectionEnum.h"

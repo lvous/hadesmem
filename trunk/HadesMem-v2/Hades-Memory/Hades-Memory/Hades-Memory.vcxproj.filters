@@ -122,5 +122,8 @@
     <ClInclude Include="PeLib.h">
       <Filter>Header Files\External\PELib</Filter>
     </ClInclude>
+    <ClInclude Include="ExportDir.h">
+      <Filter>Header Files\External\PELib</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

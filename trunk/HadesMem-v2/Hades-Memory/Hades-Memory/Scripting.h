@@ -688,6 +688,11 @@ namespace Hades
           .def(luabind::constructor<PeFile const&>())
           .def("First", &SectionEnum::First)
           .def("Next", &SectionEnum::Next)
+
+          // Bind ExportDir class
+          ,luabind::class_<ExportDir>("ExportDir")
+          .def(luabind::constructor<PeFile const&>())
+          .def("GetName", &ExportDir::GetName)
         ];
       }
 
