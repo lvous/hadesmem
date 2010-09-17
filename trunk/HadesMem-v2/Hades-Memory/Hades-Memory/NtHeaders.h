@@ -169,7 +169,7 @@ namespace Hades
 
       // Set base of data
       inline void SetBaseOfData(DWORD BaseOfData);
-#else 
+#endif
 
       // Get base of code
       inline ULONG_PTR GetImageBase() const;
