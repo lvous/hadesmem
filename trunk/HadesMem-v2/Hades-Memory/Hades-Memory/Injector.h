@@ -168,12 +168,15 @@ namespace Hades
 
       // Check whether we need to convert the path from a relative to 
       // an absolute
-      if (PathResolution && Path.is_relative())
+      if (PathResolution && PathReal.is_relative())
       {
         // Convert relative path to absolute path
-        PathReal = boost::filesystem::absolute(Path, Hades::Windows::
+        PathReal = boost::filesystem::absolute(PathReal, Hades::Windows::
           GetSelfDirPath());
       }
+
+      // Convert path to preferred format
+      PathReal.make_preferred();
 
       // Ensure target file exists
       // Note: Only performing this check when path resolution is enabled, 
