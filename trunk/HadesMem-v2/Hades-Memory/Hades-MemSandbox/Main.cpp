@@ -91,15 +91,15 @@ int wmain(int argc, wchar_t* argv[], wchar_t* /*envp*/[])
     // Create script manager
     Hades::Memory::ScriptMgr MyScriptMgr;
 
-    // If user has passed in a command then run it
+    // If user has passed in a file-name then run it
     if (argc == 2)
     {
       // Get command
-      std::string const Input(boost::lexical_cast<std::string, std::wstring>(
+      std::string const File(boost::lexical_cast<std::string, std::wstring>(
         argv[1]));
 
       // Run script
-      MyScriptMgr.RunString(Input);
+      MyScriptMgr.RunFile(File);
     }
     // Otherwise process commands from user
     else

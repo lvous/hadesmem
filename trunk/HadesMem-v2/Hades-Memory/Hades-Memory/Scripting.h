@@ -61,7 +61,7 @@ extern "C"
 #include "DosHeader.h"
 #include "NtHeaders.h"
 #include "PeFileWrap.h"
-#include "ModuleWrap.h"
+#include "ModuleWrap.h" 
 #include "RegionWrap.h"
 #include "SectionEnum.h"
 #include "ScannerWrap.h"
@@ -545,9 +545,31 @@ namespace Hades
         ];
       }
 
+      // Custom LuaBind exception filter
       void TranslateException(lua_State* L, std::exception const& e)
       {
-        lua_pushstring(L, boost::diagnostic_information(e).c_str());
+        // Get debug information
+        lua_Debug d;
+        lua_getstack(L, 1, &d);
+        lua_getinfo(L, "Sln", &d);
+
+        // Error message
+        std::stringstream ErrorMsg;
+
+        // Add file and line name to error message
+        ErrorMsg << d.short_src << ":" << d.currentline;
+
+        // Add 'function' name/type to error message
+        if (d.name != 0)
+        {
+          ErrorMsg << "(" << d.namewhat << " " << d.name << ")";
+        }
+
+        // Add exception data to error message
+        ErrorMsg << "\n" << boost::diagnostic_information(e);
+
+        // Push error message onto lua stack
+        lua_pushstring(L, ErrorMsg.str().c_str());
       }
     };
   }
