@@ -28,6 +28,12 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include <iostream>
 #include <exception>
 
+// Boost
+#pragma warning(push, 1)
+#pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
+#include <boost/filesystem.hpp>
+#pragma warning(pop)
+
 // Hades
 #include "Hades-Memory/Memory.h"
 #include "Hades-Memory/Scripting.h"
@@ -94,12 +100,17 @@ int wmain(int argc, wchar_t* argv[], wchar_t* /*envp*/[])
     // If user has passed in a file-name then run it
     if (argc == 2)
     {
-      // Get command
-      std::string const File(boost::lexical_cast<std::string, std::wstring>(
-        argv[1]));
+      // Get file
+      boost::filesystem::path const FilePath(argv[1]);
+      if (!boost::filesystem::exists(FilePath))
+      {
+        BOOST_THROW_EXCEPTION(Hades::HadesError() << 
+          Hades::ErrorFunction("wmain") << 
+          Hades::ErrorString("Requested file could not be found."));
+      }
 
       // Run script
-      MyScriptMgr.RunFile(File);
+      MyScriptMgr.RunFile(FilePath.string());
     }
     // Otherwise process commands from user
     else
