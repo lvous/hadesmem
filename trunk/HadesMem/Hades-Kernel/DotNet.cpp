@@ -260,7 +260,7 @@ namespace Hades
       {
         BOOST_THROW_EXCEPTION(DotNetMgrError() << 
           ErrorFunction("DotNetMgr::DotNetMgr") << 
-          ErrorString("Could start CLR.") << 
+          ErrorString("Could not start CLR.") << 
           ErrorCodeWin(StartClrResult));
       }
 
