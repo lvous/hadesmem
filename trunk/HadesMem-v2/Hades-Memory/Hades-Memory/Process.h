@@ -56,12 +56,9 @@ namespace Hades
       inline explicit Process(DWORD ProcID);
 
       // Open process from process name
-      inline explicit Process(std::string const& ProcName);
       inline explicit Process(std::wstring const& ProcName);
 
       // Open process from window name and class
-      inline explicit Process(std::string const& WindowName, 
-        std::string const& ClassName);
       inline explicit Process(std::wstring const& WindowName, 
         std::wstring const& ClassName);
 
@@ -117,7 +114,7 @@ namespace Hades
         TH32CS_SNAPPROCESS, 0));
       if (Snap == INVALID_HANDLE_VALUE)
       {
-        DWORD LastError = GetLastError();
+        DWORD const LastError(GetLastError());
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Process::Process") << 
           ErrorString("Could not get process snapshot.") << 
@@ -129,63 +126,12 @@ namespace Hades
 
       // Search for process
       PROCESSENTRY32 ProcEntry = { sizeof(ProcEntry) };
-      bool Found = false;
+      bool Found(false);
       for (BOOL MoreMods = Process32First(Snap, &ProcEntry); MoreMods; 
         MoreMods = Process32Next(Snap, &ProcEntry)) 
       {
-        Found = (boost::to_lower_copy(std::wstring(ProcEntry.szExeFile)) == 
-          ProcNameLower);
-        if (Found)
-        {
-          break;
-        }
-      }
-
-      // Check process was found
-      if (!Found)
-      {
-        BOOST_THROW_EXCEPTION(Error() << 
-          ErrorFunction("Process::Process") << 
-          ErrorString("Could not find process."));
-      }
-
-      // Open process
-      m_ID = ProcEntry.th32ProcessID;
-      Open(m_ID);
-    }
-
-    // Open process from process name
-    Process::Process(std::string const& ProcName) 
-      : m_Handle(nullptr), 
-      m_ID(0) 
-    {
-      // Get SeDebugPrivilege
-      GetSeDebugPrivilege();
-
-      // Grab a new snapshot of the process
-      Windows::EnsureCloseSnap const Snap(CreateToolhelp32Snapshot(
-        TH32CS_SNAPPROCESS, 0));
-      if (Snap == INVALID_HANDLE_VALUE)
-      {
-        DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(Error() << 
-          ErrorFunction("Process::Process") << 
-          ErrorString("Could not get process snapshot.") << 
-          ErrorCodeWin(LastError));
-      }
-
-      // Convert process name to lowercase
-      std::wstring const ProcNameLower(boost::to_lower_copy(
-        boost::lexical_cast<std::wstring>(ProcName)));
-
-      // Search for process
-      PROCESSENTRY32 ProcEntry = { sizeof(ProcEntry) };
-      bool Found = false;
-      for (BOOL MoreMods = Process32First(Snap, &ProcEntry); MoreMods; 
-        MoreMods = Process32Next(Snap, &ProcEntry)) 
-      {
-        Found = (boost::to_lower_copy(std::wstring(ProcEntry.szExeFile)) == 
-          ProcNameLower);
+        Found = (boost::to_lower_copy(static_cast<std::wstring>(ProcEntry.
+          szExeFile)) == ProcNameLower);
         if (Found)
         {
           break;
@@ -215,10 +161,10 @@ namespace Hades
       GetSeDebugPrivilege();
 
       // Find window
-      HWND const MyWnd = FindWindow(ClassName.c_str(), WindowName.c_str());
+      HWND const MyWnd(FindWindow(ClassName.c_str(), WindowName.c_str()));
       if (!MyWnd)
       {
-        DWORD LastError = GetLastError();
+        DWORD const LastError(GetLastError());
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Process::Process") << 
           ErrorString("Could not find window.") << 
@@ -229,44 +175,7 @@ namespace Hades
       GetWindowThreadProcessId(MyWnd, &m_ID);
       if (!m_ID)
       {
-        DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(Error() << 
-          ErrorFunction("Process::Process") << 
-          ErrorString("Could not get process id from window.") << 
-          ErrorCodeWin(LastError));
-      }
-
-      // Open process
-      Open(m_ID);
-    }
-
-    // Open process from window name and class
-    Process::Process(std::string const& WindowName, 
-      std::string const& ClassName) 
-      : m_Handle(nullptr), 
-      m_ID(0) 
-    {
-      // Get SeDebugPrivilege
-      GetSeDebugPrivilege();
-
-      // Find window
-      HWND const MyWnd = FindWindow(
-        boost::lexical_cast<std::wstring>(ClassName).c_str(), 
-        boost::lexical_cast<std::wstring>(WindowName).c_str());
-      if (!MyWnd)
-      {
-        DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(Error() << 
-          ErrorFunction("Process::Process") << 
-          ErrorString("Could not find window.") << 
-          ErrorCodeWin(LastError));
-      }
-
-      // Get process ID from window
-      GetWindowThreadProcessId(MyWnd, &m_ID);
-      if (!m_ID)
-      {
-        DWORD LastError = GetLastError();
+        DWORD const LastError(GetLastError());
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Process::Process") << 
           ErrorString("Could not get process id from window.") << 
@@ -290,7 +199,7 @@ namespace Hades
         ProcID);
       if (!m_Handle)
       {
-        DWORD LastError = GetLastError();
+        DWORD const LastError(GetLastError());
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Process::Open") << 
           ErrorString("Could not open process.") << 
@@ -298,10 +207,10 @@ namespace Hades
       }
 
       // Get WoW64 status of self
-      BOOL IsWoW64Me = FALSE;
+      BOOL IsWoW64Me(FALSE);
       if (!IsWow64Process(GetCurrentProcess(), &IsWoW64Me))
       {
-        DWORD LastError = GetLastError();
+        DWORD const LastError(GetLastError());
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Process::Open") << 
           ErrorString("Could not detect WoW64 status of current process.") << 
@@ -309,10 +218,10 @@ namespace Hades
       }
 
       // Get WoW64 status of target process
-      BOOL IsWoW64 = FALSE;
+      BOOL IsWoW64(FALSE);
       if (!IsWow64Process(m_Handle, &IsWoW64))
       {
-        DWORD LastError = GetLastError();
+        DWORD const LastError(GetLastError());
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Process::Open") << 
           ErrorString("Could not detect WoW64 status of target process.") << 
@@ -333,12 +242,12 @@ namespace Hades
     void Process::GetSeDebugPrivilege()
     {
       // Open current process token with adjust rights
-      HANDLE TempToken = 0;
-      BOOL const RetVal = OpenProcessToken(GetCurrentProcess(), 
-        TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &TempToken);
+      HANDLE TempToken(0);
+      BOOL const RetVal(OpenProcessToken(GetCurrentProcess(), 
+        TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &TempToken));
       if (!RetVal) 
       {
-        DWORD LastError = GetLastError();
+        DWORD const LastError(GetLastError());
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Process::GetSeDebugPrivilege") << 
           ErrorString("Could not open process token.") << 
@@ -350,7 +259,7 @@ namespace Hades
       LUID Luid = { 0 }; // Locally unique identifier
       if (!LookupPrivilegeValue(NULL, SE_DEBUG_NAME, &Luid)) 
       {
-        DWORD LastError = GetLastError();
+        DWORD const LastError(GetLastError());
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Process::GetSeDebugPrivilege") << 
           ErrorString("Could not look up privilege value for SeDebugName.") << 
@@ -358,7 +267,7 @@ namespace Hades
       }
       if (Luid.LowPart == 0 && Luid.HighPart == 0) 
       {
-        DWORD LastError = GetLastError();
+        DWORD const LastError(GetLastError());
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Process::GetSeDebugPrivilege") << 
           ErrorString("Could not get LUID for SeDebugName.") << 
@@ -376,7 +285,7 @@ namespace Hades
       if (!AdjustTokenPrivileges(Token, FALSE, &Privileges, sizeof(Privileges), 
         NULL, NULL)) 
       {
-        DWORD LastError = GetLastError();
+        DWORD const LastError(GetLastError());
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Process::GetSeDebugPrivilege") << 
           ErrorString("Could not adjust token privileges.") << 
