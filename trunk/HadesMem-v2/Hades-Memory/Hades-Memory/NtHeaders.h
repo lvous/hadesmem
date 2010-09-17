@@ -163,6 +163,14 @@ namespace Hades
       // Set base of code
       inline void SetBaseOfCode(DWORD BaseOfCode);
 
+#if defined(_M_IX86) 
+      // Get base of data
+      inline DWORD GetBaseOfData() const;
+
+      // Set base of data
+      inline void SetBaseOfData(DWORD BaseOfData);
+#else 
+
       // Get base of code
       inline ULONG_PTR GetImageBase() const;
 
@@ -723,6 +731,31 @@ namespace Hades
           ErrorString("Could not set data. Verification mismatch."));
       }
     }
+
+#if defined(_M_IX86) 
+    // Get base of data
+    DWORD NtHeaders::GetBaseOfData() const
+    {
+      auto pBase(static_cast<PBYTE>(GetBase()));
+      return m_Memory.Read<DWORD>(pBase + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+        OptionalHeader.BaseOfData));
+    }
+
+    // Set base of data
+    void NtHeaders::SetBaseOfData(DWORD BaseOfData)
+    {
+      auto pBase(static_cast<PBYTE>(GetBase()));
+      m_Memory.Write(pBase + FIELD_OFFSET(IMAGE_NT_HEADERS, OptionalHeader.
+        BaseOfData), BaseOfData);
+
+      if (GetBaseOfData() != BaseOfData)
+      {
+        BOOST_THROW_EXCEPTION(Error() << 
+          ErrorFunction("NtHeaders::SetBaseOfData") << 
+          ErrorString("Could not set data. Verification mismatch."));
+      }
+    }
+#endif
 
     // Get image base
     ULONG_PTR NtHeaders::GetImageBase() const
