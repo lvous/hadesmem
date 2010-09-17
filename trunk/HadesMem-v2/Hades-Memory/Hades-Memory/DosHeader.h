@@ -19,6 +19,9 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+// C++ Standard Library
+#include <array>
+
 // Hades
 #include "PeFile.h"
 

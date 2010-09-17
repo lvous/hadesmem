@@ -59,6 +59,18 @@ namespace Hades
       // Set number of sections
       inline void SetNumberOfSections(WORD NumberOfSections);
 
+      // Get base of code
+      inline DWORD GetBaseOfCode() const;
+
+      // Set base of code
+      inline void SetBaseOfCode(DWORD BaseOfCode);
+
+      // Get size of image
+      inline DWORD GetSizeOfImage() const;
+      
+      // Set size of image
+      inline void SetSizeOfImage(DWORD SizeOfImage);
+
       // Get raw NT headers
       inline IMAGE_NT_HEADERS GetHeadersRaw() const;
 
@@ -113,7 +125,7 @@ namespace Hades
     // Get signature
     DWORD NtHeaders::GetSignature() const
     {
-      PBYTE pBase(static_cast<PBYTE>(GetBase()));
+      auto pBase(static_cast<PBYTE>(GetBase()));
       return m_Memory.Read<DWORD>(pBase + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         Signature));
     }
@@ -121,7 +133,7 @@ namespace Hades
     // Set signature
     void NtHeaders::SetSignature(DWORD Signature)
     {
-      PBYTE pBase(static_cast<PBYTE>(GetBase()));
+      auto pBase(static_cast<PBYTE>(GetBase()));
       m_Memory.Write(pBase + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         Signature), Signature);
 
@@ -136,7 +148,7 @@ namespace Hades
     // Get number of sections
     WORD NtHeaders::GetNumberOfSections() const
     {
-      PBYTE pBase(static_cast<PBYTE>(GetBase()));
+      auto pBase(static_cast<PBYTE>(GetBase()));
       return m_Memory.Read<WORD>(pBase + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         FileHeader.NumberOfSections));
     }
@@ -144,7 +156,7 @@ namespace Hades
     // Set number of sections
     void NtHeaders::SetNumberOfSections(WORD NumberOfSections)
     {
-      PBYTE pBase(static_cast<PBYTE>(GetBase()));
+      auto pBase(static_cast<PBYTE>(GetBase()));
       m_Memory.Write(pBase + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         FileHeader.NumberOfSections), NumberOfSections);
 
@@ -154,6 +166,52 @@ namespace Hades
           ErrorFunction("NtHeaders::SetNumberOfSections") << 
           ErrorString("Could not set numer of sections. Verification "
           "mismatch."));
+      }
+    }
+    
+    // Get base of code
+    DWORD NtHeaders::GetBaseOfCode() const
+    {
+      auto pBase(static_cast<PBYTE>(GetBase()));
+      return m_Memory.Read<DWORD>(pBase + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+        OptionalHeader.BaseOfCode));
+    }
+
+    // Set base of code
+    void NtHeaders::SetBaseOfCode(DWORD BaseOfCode)
+    {
+      auto pBase(static_cast<PBYTE>(GetBase()));
+      m_Memory.Write(pBase + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+        OptionalHeader.BaseOfCode), BaseOfCode);
+
+      if (GetBaseOfCode() != BaseOfCode)
+      {
+        BOOST_THROW_EXCEPTION(Error() << 
+          ErrorFunction("NtHeaders::SetBaseOfCode") << 
+          ErrorString("Could not set base of code. Verification mismatch."));
+      }
+    }
+
+    // Get size of image
+    DWORD NtHeaders::GetSizeOfImage() const
+    {
+      auto pBase(static_cast<PBYTE>(GetBase()));
+      return m_Memory.Read<DWORD>(pBase + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+        OptionalHeader.SizeOfImage));
+    }
+
+    // Set size of image
+    void NtHeaders::SetSizeOfImage(DWORD SizeOfImage)
+    {
+      auto pBase(static_cast<PBYTE>(GetBase()));
+      m_Memory.Write(pBase + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+        OptionalHeader.SizeOfImage), SizeOfImage);
+
+      if (GetSizeOfImage() != SizeOfImage)
+      {
+        BOOST_THROW_EXCEPTION(Error() << 
+          ErrorFunction("NtHeaders::SetSizeOfImage") << 
+          ErrorString("Could not set size of image. Verification mismatch."));
       }
     }
 

@@ -37,8 +37,11 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 // Hades
 #include "Types.h"
+#include "PeFile.h"
 #include "Module.h"
 #include "Region.h"
+#include "DosHeader.h"
+#include "NtHeaders.h"
 #include "MemoryMgr.h"
 
 namespace Hades
@@ -55,47 +58,43 @@ namespace Hades
 
       // Constructor
       inline explicit Scanner(MemoryMgr const& MyMemory);
-      inline explicit Scanner(MemoryMgr const& MyMemory, HMODULE Module);
-      inline explicit Scanner(MemoryMgr const& MyMemory, PVOID Start, 
-        PVOID End);
+      inline Scanner(MemoryMgr const& MyMemory, HMODULE Module);
+      inline Scanner(MemoryMgr const& MyMemory, PVOID Start, PVOID End);
 
       // Search memory (POD types)
       template <typename T>
-      PVOID Find(T const& Data, PVOID Start = 0, PVOID End = 0, 
-        typename boost::enable_if<std::is_pod<T>>::type* Dummy = 0) const;
+      PVOID Find(T const& Data, typename boost::enable_if<std::is_pod<T>>::
+        type* Dummy = 0) const;
 
       // Search memory (string types)
       template <typename T>
-      PVOID Find(T const& Data, PVOID Start = 0, PVOID End = 0, typename 
-        boost::enable_if<std::is_same<T, std::basic_string<typename T::
-        value_type>>>::type* Dummy = 0) const;
+      PVOID Find(T const& Data, typename boost::enable_if<std::is_same<T, std::
+        basic_string<typename T::value_type>>>::type* Dummy = 0) const;
 
       // Search memory (vector types)
       template <typename T>
-      PVOID Find(T const& Data, std::wstring const& Mask = L"", 
-        PVOID Start = 0, PVOID End = 0, typename boost::enable_if<std::is_same<
-        T, std::vector<typename T::value_type>>>::type* Dummy1 = 0, typename 
-        boost::enable_if<std::is_pod<typename T::value_type>>::type* 
-        Dummy2 = 0) const;
+      PVOID Find(T const& Data, std::wstring const& Mask = L"", typename boost::
+        enable_if<std::is_same<T, std::vector<typename T::value_type>>>::type* 
+        Dummy1 = 0, typename boost::enable_if<std::is_pod<typename T::
+        value_type>>::type* Dummy2 = 0) const;
 
       // Search memory (POD types)
       template <typename T>
-      std::vector<PVOID> FindAll(T const& data, PVOID Start = 0, PVOID End = 0, 
-        typename boost::enable_if<std::is_pod<T>>::type* Dummy = 0) const;
+      std::vector<PVOID> FindAll(T const& data, typename boost::enable_if<std::
+        is_pod<T>>::type* Dummy = 0) const;
 
       // Search memory (string types)
       template <typename T>
-      std::vector<PVOID> FindAll(T const& Data, PVOID Start = 0, PVOID End = 0, 
-        typename boost::enable_if<std::is_same<T, std::basic_string<typename T::
-        value_type>>>::type* Dummy = 0) const;
+      std::vector<PVOID> FindAll(T const& Data, typename boost::enable_if<std::
+        is_same<T, std::basic_string<typename T::value_type>>>::type* Dummy 
+        = 0) const;
 
       // Search memory (vector types)
       template <typename T>
       std::vector<PVOID> FindAll(T const& Data, std::wstring const& Mask = L"", 
-        PVOID Start = 0, PVOID End = 0, typename boost::enable_if<std::is_same<
-        T, std::vector<typename T::value_type>>>::type* Dummy1 = 0, typename 
-        boost::enable_if<std::is_pod<typename T::value_type>>::type* Dummy2 = 
-        0) const;
+        typename boost::enable_if<std::is_same<T, std::vector<typename T::
+        value_type>>>::type* Dummy1 = 0, typename boost::enable_if<std::is_pod<
+        typename T::value_type>>::type* Dummy2 = 0) const;
 
       // Load patterns from XML file
       inline void LoadFromXML(std::wstring const& Path);
@@ -109,9 +108,6 @@ namespace Hades
     private:
       // Disable assignment
       Scanner& operator= (Scanner const&);
-
-      // Initialize using PE header
-      inline void Initialize();
 
       // Memory manager instance
       MemoryMgr const& m_Memory;
@@ -131,8 +127,19 @@ namespace Hades
       m_End(nullptr), 
       m_Addresses()
     {
-      // Initialize using PE header
-      Initialize();
+      // Get pointer to image headers
+      ModuleEnum MyModuleEnum(m_Memory);
+      auto const pBase(reinterpret_cast<PBYTE>(MyModuleEnum.First()->
+        GetBase()));
+      PeFile MyPeFile(m_Memory, pBase);
+      DosHeader const MyDosHeader(MyPeFile);
+      NtHeaders const MyNtHeaders(MyPeFile);
+
+      // Get base of code section
+      m_Start = pBase + MyNtHeaders.GetBaseOfCode();
+
+      // Calculate end of code section
+      m_End = m_Start + MyNtHeaders.GetSizeOfImage();
     }
 
     // Constructor
@@ -143,28 +150,16 @@ namespace Hades
       m_Addresses()
     {
       // Ensure file is a valid PE file
-      auto pBase = reinterpret_cast<PBYTE>(Module);
-      auto DosHeader = MyMemory.Read<IMAGE_DOS_HEADER>(pBase);
-      if (DosHeader.e_magic != IMAGE_DOS_SIGNATURE)
-      {
-        BOOST_THROW_EXCEPTION(Error() << 
-          ErrorFunction("Scanner::Scanner") << 
-          ErrorString("Target file is not a valid PE file (DOS)."));
-      }
-      auto NtHeader = MyMemory.Read<IMAGE_NT_HEADERS>(pBase + DosHeader.
-        e_lfanew);
-      if (NtHeader.Signature != IMAGE_NT_SIGNATURE)
-      {
-        BOOST_THROW_EXCEPTION(Error() << 
-          ErrorFunction("Scanner::Scanner") << 
-          ErrorString("Target file is not a valid PE file (NT)."));
-      }
+      auto const pBase(reinterpret_cast<PBYTE>(Module));
+      PeFile MyPeFile(m_Memory, pBase);
+      DosHeader const MyDosHeader(MyPeFile);
+      NtHeaders const MyNtHeaders(MyPeFile);
 
       // Get base of code section
-      m_Start = pBase + NtHeader.OptionalHeader.BaseOfCode;
+      m_Start = pBase + MyNtHeaders.GetBaseOfCode();
 
       // Calculate end of code section
-      m_End = m_Start + NtHeader.OptionalHeader.SizeOfImage;
+      m_End = m_Start + MyNtHeaders.GetSizeOfImage();
     }
 
     // Constructor
@@ -185,57 +180,56 @@ namespace Hades
 
     // Search memory (POD types)
     template <typename T>
-    PVOID Scanner::Find(T const& Data, PVOID Start, PVOID End, typename boost::
-      enable_if<std::is_pod<T>>:: type* /*Dummy*/) const
+    PVOID Scanner::Find(T const& Data, typename boost::enable_if<std::is_pod<
+      T>>:: type* /*Dummy*/) const
     {
       // Put data in container
       std::vector<T> Buffer;
       Buffer.push_back(Data);
       // Use vector specialization of FindAll
-      return Find(Buffer, L"", Start, End);
+      return Find(Buffer);
     }
 
     // Search memory (POD types)
     template <typename T>
-    std::vector<PVOID> Scanner::FindAll(T const& Data, PVOID Start, PVOID End, 
-      typename boost::enable_if<std::is_pod<T>>::type* /*Dummy*/) const
+    std::vector<PVOID> Scanner::FindAll(T const& Data, typename boost::
+      enable_if<std::is_pod<T>>::type* /*Dummy*/) const
     {
       // Put data in container
       std::vector<T> Buffer;
       Buffer.push_back(Data);
       // Use vector specialization of FindAll
-      return FindAll(Buffer, L"", Start, End);
+      return FindAll(Buffer);
     }
 
     // Search memory (string types)
     template <typename T>
-    PVOID Scanner::Find(T const& Data, PVOID Start, PVOID End, typename boost::
+    PVOID Scanner::Find(T const& Data, typename boost::enable_if<std::is_same<
+      T, std::basic_string<typename T::value_type>>>::type* /*Dummy*/) const
+    {
+      // Convert string to character buffer
+      std::vector<T::value_type> const MyBuffer(Data.begin(), Data.end());
+      // Use vector specialization of find
+      return Find(MyBuffer);
+    }
+
+    template <typename T>
+    std::vector<PVOID> Scanner::FindAll(T const& Data, typename boost::
       enable_if<std::is_same<T, std::basic_string<typename T::value_type>>>::
       type* /*Dummy*/) const
     {
       // Convert string to character buffer
-      std::vector<T::value_type> MyBuffer(Data.begin(), Data.end());
-      // Use vector specialization of find
-      return Find(MyBuffer, L"", Start, End);
-    }
-
-    template <typename T>
-    std::vector<PVOID> Scanner::FindAll(T const& Data, PVOID Start, PVOID End, 
-      typename boost::enable_if<std::is_same<T, std::basic_string<typename T::
-      value_type>>>::type* /*Dummy*/) const
-    {
-      // Convert string to character buffer
-      std::vector<T::value_type> MyBuffer(Data.begin(), Data.end());
+      std::vector<T::value_type> const MyBuffer(Data.begin(), Data.end());
       // Use vector specialization of find all
-      return FindAll(MyBuffer, L"", Start, End);
+      return FindAll(MyBuffer);
     }
 
     // Search memory (vector types)
     template <typename T>
-    PVOID Scanner::Find(T const& Data, std::wstring const& Mask, PVOID Start, 
-      PVOID End, typename boost::enable_if<std::is_same<T, std::vector<
-      typename T::value_type>>>::type* /*Dummy1*/, typename boost::enable_if<
-      std::is_pod<typename T::value_type>>::type* /*Dummy2*/) const
+    PVOID Scanner::Find(T const& Data, std::wstring const& Mask, typename 
+      boost::enable_if<std::is_same<T, std::vector<typename T::value_type>>>::
+      type* /*Dummy1*/, typename boost::enable_if<std::is_pod<typename T::
+      value_type>>::type* /*Dummy2*/) const
     {
       // Ensure there is data to process
       if (Data.empty())
@@ -253,17 +247,6 @@ namespace Hades
           ErrorString("Mask does not match data."));
       }
 
-      // Get real start and end addresses
-      PBYTE const StartReal = (Start || End) ? static_cast<PBYTE>(Start) : 
-        m_Start;
-      PBYTE const EndReal = (Start || End) ? static_cast<PBYTE>(End) : m_End;
-      if (EndReal < StartReal)
-      {
-        BOOST_THROW_EXCEPTION(Error() << 
-          ErrorFunction("Scanner::Find") << 
-          ErrorString("Start or end address is invalid."));
-      }
-
       // Get system information
       SYSTEM_INFO MySystemInfo = { 0 };
       GetSystemInfo(&MySystemInfo);
@@ -272,19 +255,19 @@ namespace Hades
       PVOID const MaxAddr = MySystemInfo.lpMaximumApplicationAddress;
 
       // Loop over all memory pages
-      for (auto Address = static_cast<PBYTE>(MinAddr); Address < MaxAddr; 
+      for (auto Address(static_cast<PBYTE>(MinAddr)); Address < MaxAddr; 
         Address += PageSize)
       {
         try
         {
           // Skip region if out of bounds
-          if (Address + PageSize < StartReal)
+          if (Address + PageSize < m_Start)
           {
             continue;
           }
 
           // Quit if out of bounds
-          if (Address > EndReal)
+          if (Address > m_End)
           {
             break;
           }
@@ -314,17 +297,17 @@ namespace Hades
             PageSize + Data.size() * sizeof(T::value_type)));
 
           // Loop over entire memory region
-          for (auto Current = &Buffer[0]; Current != &Buffer[0] + 
+          for (auto Current(&Buffer[0]); Current != &Buffer[0] + 
             Buffer.size(); ++Current) 
           {
             // Check if current address matches buffer
-            bool Found = true;
-            for (std::vector<BYTE>::size_type i = 0; i != Data.size(); ++i)
+            bool Found(true);
+            for (std::size_t i(0); i != Data.size(); ++i)
             {
-              auto CurrentTemp = reinterpret_cast<T::value_type const* const>(
-                Current);
-              if ((Mask.empty() || Mask[i] == L'x') && 
-                (CurrentTemp[i] != Data[i]))
+              auto const CurrentTemp(reinterpret_cast<T::value_type const* 
+                const>(Current));
+              if ((Mask.empty() || Mask[i] == L'x') && (CurrentTemp[i] != 
+                Data[i]))
               {
                 Found = false;
                 break;
@@ -338,8 +321,8 @@ namespace Hades
               // current address.
               // Todo: Do this check in the outer loop, and break if possible 
               // rather than continuing.
-              PVOID const AddressReal = Address + (Current - &Buffer[0]);
-              if (AddressReal >= StartReal && AddressReal <= EndReal)
+              PVOID const AddressReal(Address + (Current - &Buffer[0]));
+              if (AddressReal >= m_Start && AddressReal <= m_End)
               {
                 return AddressReal;
               }
@@ -349,7 +332,7 @@ namespace Hades
         // Ignore any memory errors, as there's nothing we can do about them
         // Todo: Detect memory read errors and drop back to a slower but 
         // more reliable implementation.
-        catch (Error const& /*e*/)
+        catch (MemoryMgr::Error const& /*e*/)
         {
           continue;
         }
@@ -361,10 +344,9 @@ namespace Hades
 
     template <typename T>
     std::vector<PVOID> Scanner::FindAll(T const& Data, 
-      std::wstring const& Mask, PVOID Start, PVOID End, typename boost::
-      enable_if<std::is_same<T, std::vector<typename T::value_type>>>::type* 
-      /*Dummy1*/, typename boost::enable_if<std::is_pod<typename T::
-      value_type>>::type* /*Dummy2*/) const
+      std::wstring const& Mask, typename boost::enable_if<std::is_same<T, 
+      std::vector<typename T::value_type>>>::type* /*Dummy1*/, typename boost::
+      enable_if<std::is_pod<typename T::value_type>>::type* /*Dummy2*/) const
     {
       // Ensure there is data to process
       if (Data.empty())
@@ -380,17 +362,6 @@ namespace Hades
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("MemoryMgr::Find") << 
           ErrorString("Mask does not match data."));
-      }
-
-      // Get real start and end addresses
-      PBYTE const StartReal = Start || End ? static_cast<PBYTE>(Start) : 
-        m_Start;
-      PBYTE const EndReal = Start || End ? static_cast<PBYTE>(End) : m_End;
-      if (EndReal < StartReal)
-      {
-        BOOST_THROW_EXCEPTION(Error() << 
-          ErrorFunction("Scanner::Find") << 
-          ErrorString("Start or end address is invalid."));
       }
 
       // Addresses of matches
@@ -410,13 +381,13 @@ namespace Hades
         try
         {
           // Skip region if out of bounds
-          if (Address + PageSize < StartReal)
+          if (Address + PageSize < m_Start)
           {
             continue;
           }
 
           // Quit if out of bounds
-          if (Address > EndReal)
+          if (Address > m_End)
           {
             break;
           }
@@ -446,17 +417,17 @@ namespace Hades
             PageSize + Data.size() * sizeof(T::value_type)));
 
           // Loop over entire memory region
-          for (auto Current = &Buffer[0]; Current != &Buffer[0] + 
+          for (auto Current(&Buffer[0]); Current != &Buffer[0] + 
             Buffer.size(); ++Current) 
           {
             // Check if current address matches buffer
-            bool Found = true;
-            for (std::vector<BYTE>::size_type i = 0; i != Data.size(); ++i)
+            bool Found(true);
+            for (std::size_t i(0); i != Data.size(); ++i)
             {
-              auto CurrentTemp = reinterpret_cast<T::value_type const* const>(
-                Current);
-              if ((Mask.empty() || Mask[i] == L'x') && 
-                (CurrentTemp[i] != Data[i]))
+              auto const CurrentTemp(reinterpret_cast<T::value_type const* 
+                const>(Current));
+              if ((Mask.empty() || Mask[i] == L'x') && (CurrentTemp[i] != 
+                Data[i]))
               {
                 Found = false;
                 break;
@@ -470,8 +441,8 @@ namespace Hades
               // current address.
               // Todo: Do this check in the outer loop, and break if possible 
               // rather than continuing.
-              PVOID const AddressReal = Address + (Current - &Buffer[0]);
-              if (AddressReal >= StartReal && AddressReal <= EndReal)
+              PVOID const AddressReal(Address + (Current - &Buffer[0]));
+              if (AddressReal >= m_Start && AddressReal <= m_End)
               {
                 Matches.push_back(AddressReal);
               }
@@ -504,17 +475,18 @@ namespace Hades
       }
 
       // Copy file to buffer
-      std::istreambuf_iterator<wchar_t> PatFileBeg(PatternFile);
-      std::istreambuf_iterator<wchar_t> PatFileEnd;
+      std::istreambuf_iterator<wchar_t> const PatFileBeg(PatternFile);
+      std::istreambuf_iterator<wchar_t> const PatFileEnd;
       std::vector<wchar_t> PatFileBuf(PatFileBeg, PatFileEnd);
       PatFileBuf.push_back(L'\0');
 
       // Open XML document
-      auto AccountsDoc(std::make_shared<rapidxml::xml_document<wchar_t>>());
+      auto const AccountsDoc(std::make_shared<rapidxml::xml_document<
+        wchar_t>>());
       AccountsDoc->parse<0>(&PatFileBuf[0]);
 
       // Ensure pattern tag is found
-      auto PatternsTag = AccountsDoc->first_node(L"Patterns");
+      auto PatternsTag(AccountsDoc->first_node(L"Patterns"));
       if (!PatternsTag)
       {
         BOOST_THROW_EXCEPTION(Error() << 
@@ -523,17 +495,17 @@ namespace Hades
       }
 
       // Loop over all patterns
-      for (auto Pattern = PatternsTag->first_node(L"Pattern"); Pattern; 
+      for (auto Pattern(PatternsTag->first_node(L"Pattern")); Pattern; 
         Pattern = Pattern->next_sibling(L"Pattern"))
       {
         // Get pattern attributes
-        auto NameNode = Pattern->first_attribute(L"Name");
-        auto MaskNode = Pattern->first_attribute(L"Mask");
-        auto DataNode = Pattern->first_attribute(L"Data");
-        std::wstring Name(NameNode ? NameNode->value() : L"");
-        std::wstring Mask(MaskNode ? MaskNode->value() : L"");
-        std::wstring Data(DataNode ? DataNode->value() : L"");
-        std::string DataReal(boost::lexical_cast<std::string>(Data));
+        auto const NameNode(Pattern->first_attribute(L"Name"));
+        auto const MaskNode(Pattern->first_attribute(L"Mask"));
+        auto const DataNode(Pattern->first_attribute(L"Data"));
+        std::wstring const Name(NameNode ? NameNode->value() : L"");
+        std::wstring const Mask(MaskNode ? MaskNode->value() : L"");
+        std::wstring const Data(DataNode ? DataNode->value() : L"");
+        std::string const DataReal(boost::lexical_cast<std::string>(Data));
 
         // Ensure pattern attributes are valid
         if (Name.empty() || Mask.empty() || Data.empty())
@@ -561,11 +533,11 @@ namespace Hades
 
         // Convert data to byte buffer
         std::vector<BYTE> DataBuf;
-        for (auto i = DataReal.begin(); i != DataReal.end(); i += 2)
+        for (auto i(DataReal.begin()); i != DataReal.end(); i += 2)
         {
-          std::string CurrentStr(i, i + 2);
+          std::string const CurrentStr(i, i + 2);
           std::stringstream Converter(CurrentStr);
-          int Current = 0;
+          int Current(0);
           if (!(Converter >> std::hex >> Current >> std::dec))
           {
             BOOST_THROW_EXCEPTION(Error() << 
@@ -576,25 +548,25 @@ namespace Hades
         }
 
         // Find pattern
-        PBYTE Address = static_cast<PBYTE>(Find(DataBuf, Mask));
+        auto Address(static_cast<PBYTE>(Find(DataBuf, Mask)));
 
         // Only apply options if pattern was found
         if (Address != 0)
         {
           // Loop over all pattern options
-          for (auto PatOpts = Pattern->first_node(); PatOpts; 
-            PatOpts = PatOpts->next_sibling())
+          for (auto PatOpts(Pattern->first_node()); PatOpts; PatOpts = 
+            PatOpts->next_sibling())
           {
             // Get option name
-            std::wstring OptionName(PatOpts->name());
+            std::wstring const OptionName(PatOpts->name());
 
             // Handle 'Add' and 'Sub' options
-            bool IsAdd = std::wstring(OptionName) == L"Add";
-            bool IsSub = std::wstring(OptionName) == L"Sub";
+            bool const IsAdd(OptionName == L"Add");
+            bool const IsSub(OptionName == L"Sub");
             if (IsAdd || IsSub)
             {
               // Get the modification value
-              auto ModVal = PatOpts->first_attribute(L"Value");
+              auto ModVal(PatOpts->first_attribute(L"Value"));
               if (!ModVal)
               {
                 BOOST_THROW_EXCEPTION(Error() << 
@@ -603,8 +575,8 @@ namespace Hades
               }
 
               // Convert value to usable form
-              DWORD_PTR AddValReal = 0;
               std::wstringstream Converter(ModVal->value());
+              DWORD_PTR AddValReal(0);
               if (!(Converter >> std::hex >> AddValReal >> std::dec))
               {
                 BOOST_THROW_EXCEPTION(Error() << 
@@ -638,7 +610,7 @@ namespace Hades
             else if (OptionName == L"Rel")
             {
               // Get instruction size
-              auto SizeAttr = PatOpts->first_attribute(L"Size");
+              auto SizeAttr(PatOpts->first_attribute(L"Size"));
               if (!SizeAttr)
               {
                 BOOST_THROW_EXCEPTION(Error() << 
@@ -648,8 +620,8 @@ namespace Hades
               }
 
               // Convert instruction size to usable format
-              DWORD_PTR Size = 0;
               std::wstringstream SizeConverter(SizeAttr->value());
+              DWORD_PTR Size(0);
               if (!(SizeConverter >> std::hex >> Size >> std::dec))
               {
                 BOOST_THROW_EXCEPTION(Error() << 
@@ -659,7 +631,7 @@ namespace Hades
               }
 
               // Get instruction offset
-              auto OffsetAttr = PatOpts->first_attribute(L"Offset");
+              auto const OffsetAttr(PatOpts->first_attribute(L"Offset"));
               if (!OffsetAttr)
               {
                 BOOST_THROW_EXCEPTION(Error() << 
@@ -669,8 +641,8 @@ namespace Hades
               }
 
               // Convert instruction onffset to usable format
-              DWORD_PTR Offset = 0;
               std::wstringstream OffsetConverter(OffsetAttr->value());
+              DWORD_PTR Offset(0);
               if (!(OffsetConverter >> std::hex >> Offset >> std::dec))
               {
                 BOOST_THROW_EXCEPTION(Error() << 
@@ -680,8 +652,8 @@ namespace Hades
               }
 
               // Perform relative 'dereference'
-              Address = m_Memory.Read<PBYTE>(Address) + 
-                reinterpret_cast<DWORD_PTR>(Address) + Size - Offset;
+              Address = m_Memory.Read<PBYTE>(Address) + reinterpret_cast<
+                DWORD_PTR>(Address) + Size - Offset;
             }
             else
             {
@@ -704,27 +676,10 @@ namespace Hades
       return m_Addresses;
     }
 
-    // Initialize using PE header
-    void Scanner::Initialize()
-    {
-      // Get pointer to image headers
-      ModuleEnum MyModuleEnum(m_Memory);
-      auto pBase = reinterpret_cast<PBYTE>(MyModuleEnum.First()->GetBase());
-      auto DosHeader = m_Memory.Read<IMAGE_DOS_HEADER>(pBase);
-      auto NtHeader = m_Memory.Read<IMAGE_NT_HEADERS>(pBase + DosHeader.
-        e_lfanew);
-
-      // Get base of code section
-      m_Start = pBase + NtHeader.OptionalHeader.BaseOfCode;
-
-      // Calculate end of code section
-      m_End = m_Start + NtHeader.OptionalHeader.SizeOfImage;
-    }
-
     // Operator[] overload to allow retrieving addresses by name
     PVOID Scanner::operator[](std::wstring const& Name) const
     {
-      auto Iter = m_Addresses.find(Name);
+      auto const Iter(m_Addresses.find(Name));
       return Iter != m_Addresses.end() ? Iter->second : nullptr;
     }
   }
