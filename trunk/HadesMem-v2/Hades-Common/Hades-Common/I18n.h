@@ -21,10 +21,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 // C++ Standard Library
 #include <string>
-#include <cctype>
-#include <locale>
-#include <iterator>
-#include <algorithm>
+#include <cvt/wstring>
 
 // Boost
 #pragma warning(push)
@@ -32,58 +29,22 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include <boost/lexical_cast.hpp>
 #pragma warning(pop)
 
-namespace Hades
-{
-  namespace Util
-  {
-    // Convert a wide string to a narrow string
-    inline std::string ConvertStr(std::wstring const& Source)
-    {
-      auto const Loc(std::locale(""));
-      auto const& MyCType(std::use_facet<std::ctype<wchar_t>>(Loc));
-
-      std::string Dest;
-      std::transform(Source.begin(), Source.end(), std::back_inserter(Dest), 
-        [&] (wchar_t Current)
-      {
-        return MyCType.narrow(Current);
-      });
-
-      return Dest;
-    }
-
-    // Convert a narrow string to a wide string
-    inline std::wstring ConvertStr(std::string const& Source)
-    {
-      auto const Loc(std::locale(""));
-      auto const& MyCType(std::use_facet<std::ctype<char>>(Loc));
-
-      std::wstring Dest;
-      std::transform(Source.begin(), Source.end(), std::back_inserter(Dest), 
-        [&] (char Current)
-      {
-        return MyCType.widen(Current);
-      });
-
-      return Dest;
-    }
-  }
-}
-
 // Boost.LexicalCast specialization to allow conversions from wide to narrow 
-// strings. Thanks Xeno123 for the idea.
+// strings.
 template<> 
 inline std::string boost::lexical_cast<std::string, std::wstring>(
   std::wstring const& Source)
 {
-  return Hades::Util::ConvertStr(Source);
+  return stdext::cvt::wstring_convert<std::codecvt<wchar_t, char, 
+    mbstate_t>>().to_bytes(Source);
 }
 
 // Boost.LexicalCast specialization to allow conversions from narrow to wide 
-// strings. Thanks Xeno123 for the idea.
+// strings.
 template<> 
 inline std::wstring boost::lexical_cast<std::wstring, std::string>(
   std::string const& Source)
 {
-  return Hades::Util::ConvertStr(Source);
+  return stdext::cvt::wstring_convert<std::codecvt<wchar_t, char, 
+    mbstate_t>>().from_bytes(Source);
 }
