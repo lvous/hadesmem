@@ -55,15 +55,10 @@ extern "C"
 #pragma warning(pop)
 
 // Hades
-#include "Types.h"
-#include "PeFile.h"
-#include "Section.h"
-#include "DosHeader.h"
-#include "NtHeaders.h"
+#include "Memory.h"
 #include "PeFileWrap.h"
 #include "ModuleWrap.h" 
 #include "RegionWrap.h"
-#include "SectionEnum.h"
 #include "ScannerWrap.h"
 #include "InjectorWrap.h"
 #include "ManualMapWrap.h"
@@ -518,11 +513,44 @@ namespace Hades
           ,luabind::class_<DosHeader>("DosHeader")
           .def(luabind::constructor<PeFile const&>())
           .def("IsMagicValid", &DosHeader::IsMagicValid)
+          .def("EnsureMagicValid", &DosHeader::EnsureMagicValid)
           .def("GetMagic", &DosHeader::GetMagic)
+          .def("GetBytesOnLastPage", &DosHeader::GetBytesOnLastPage)
+          .def("GetPagesInFile", &DosHeader::GetPagesInFile)
+          .def("GetRelocations", &DosHeader::GetRelocations)
+          .def("GetSizeOfHeaderInParagraphs", &DosHeader::GetSizeOfHeaderInParagraphs)
+          .def("GetMinExtraParagraphs", &DosHeader::GetMinExtraParagraphs)
+          .def("GetMaxExtraParagraphs", &DosHeader::GetMaxExtraParagraphs)
+          .def("GetInitialSS", &DosHeader::GetInitialSS)
+          .def("GetInitialSP", &DosHeader::GetInitialSP)
           .def("GetChecksum", &DosHeader::GetChecksum)
+          .def("GetInitialIP", &DosHeader::GetInitialIP)
+          .def("GetInitialCS", &DosHeader::GetInitialCS)
+          .def("GetRelocTableFileAddr", &DosHeader::GetRelocTableFileAddr)
+          .def("GetOverlayNum", &DosHeader::GetOverlayNum)
+          .def("GetReservedWords1", &DosHeader::GetReservedWords1)
+          .def("GetOEMID", &DosHeader::GetOEMID)
+          .def("GetOEMInfo", &DosHeader::GetOEMInfo)
+          .def("GetReservedWords2", &DosHeader::GetReservedWords2)
           .def("GetNewHeaderOffset", &DosHeader::GetNewHeaderOffset)
           .def("SetMagic", &DosHeader::SetMagic)
+          .def("SetBytesOnLastPage", &DosHeader::SetBytesOnLastPage)
+          .def("SetPagesInFile", &DosHeader::SetPagesInFile)
+          .def("SetRelocations", &DosHeader::SetRelocations)
+          .def("SetSizeOfHeaderInParagraphs", &DosHeader::SetSizeOfHeaderInParagraphs)
+          .def("SetMinExtraParagraphs", &DosHeader::SetMinExtraParagraphs)
+          .def("SetMaxExtraParagraphs", &DosHeader::SetMaxExtraParagraphs)
+          .def("SetInitialSS", &DosHeader::SetInitialSS)
+          .def("SetInitialSP", &DosHeader::SetInitialSP)
           .def("SetChecksum", &DosHeader::SetChecksum)
+          .def("SetInitialIP", &DosHeader::SetInitialIP)
+          .def("SetInitialCS", &DosHeader::SetInitialCS)
+          .def("SetRelocTableFileAddr", &DosHeader::SetRelocTableFileAddr)
+          .def("SetOverlayNum", &DosHeader::SetOverlayNum)
+          .def("SetReservedWords1", &DosHeader::SetReservedWords1)
+          .def("SetOEMID", &DosHeader::SetOEMID)
+          .def("SetOEMInfo", &DosHeader::SetOEMInfo)
+          .def("SetReservedWords2", &DosHeader::SetReservedWords2)
           .def("SetNewHeaderOffset", &DosHeader::SetNewHeaderOffset)
 
           // Bind NtHeaders class
