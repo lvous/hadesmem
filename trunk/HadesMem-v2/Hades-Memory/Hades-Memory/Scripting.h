@@ -295,6 +295,8 @@ namespace Hades
         luabind::module(GetState(), "std")
         [
           luabind::class_<std::vector<DWORD_PTR>>("vector_dwordptr")
+          // This is potentially bad. See 17.4.4.4/2.
+          // Todo: Investigate and fix if required.
           .def("push_back", static_cast<void (std::vector<DWORD_PTR>::*)(
             DWORD_PTR const&)>(&std::vector<DWORD_PTR>::push_back))
           .def(luabind::constructor<>())
