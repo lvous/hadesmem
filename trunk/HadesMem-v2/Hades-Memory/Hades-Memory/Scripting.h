@@ -555,10 +555,128 @@ namespace Hades
 
           // Bind NtHeaders class
           ,luabind::class_<NtHeaders>("NtHeaders")
+          .enum_("DataDir")
+          [
+            luabind::value("DataDir_Export", NtHeaders::DataDir_Export),
+            luabind::value("DataDir_Import", NtHeaders::DataDir_Import),
+            luabind::value("DataDir_Resource", NtHeaders::DataDir_Resource),
+            luabind::value("DataDir_Exception", NtHeaders::DataDir_Exception),
+            luabind::value("DataDir_Security", NtHeaders::DataDir_Security),
+            luabind::value("DataDir_BaseReloc", NtHeaders::DataDir_BaseReloc),
+            luabind::value("DataDir_Debug", NtHeaders::DataDir_Debug),
+            luabind::value("DataDir_Architecture", NtHeaders::
+              DataDir_Architecture),
+            luabind::value("DataDir_GlobalPTR", NtHeaders::DataDir_GlobalPTR),
+            luabind::value("DataDir_TLS", NtHeaders::DataDir_TLS),
+            luabind::value("DataDir_LoadConfig", NtHeaders::
+              DataDir_LoadConfig),
+            luabind::value("DataDir_BoundImport", NtHeaders::
+              DataDir_BoundImport),
+            luabind::value("DataDir_IAT", NtHeaders::DataDir_IAT),
+            luabind::value("DataDir_DelayImport", NtHeaders::
+              DataDir_DelayImport),
+            luabind::value("DataDir_COMDescriptor", NtHeaders::
+              DataDir_COMDescriptor)
+          ]
           .def(luabind::constructor<PeFile const&>())
+          .def("GetBase", &NtHeaders::GetBase)
           .def("IsSignatureValid", &NtHeaders::IsSignatureValid)
+          .def("EnsureSignatureValid", &NtHeaders::EnsureSignatureValid)
           .def("GetSignature", &NtHeaders::GetSignature)
           .def("SetSignature", &NtHeaders::SetSignature)
+          .def("GetMachine", &NtHeaders::GetMachine)
+          .def("SetMachine", &NtHeaders::SetMachine)
+          .def("GetNumberOfSections", &NtHeaders::GetNumberOfSections)
+          .def("SetNumberOfSections", &NtHeaders::SetNumberOfSections)
+          .def("GetTimeDateStamp", &NtHeaders::GetTimeDateStamp)
+          .def("SetTimeDateStamp", &NtHeaders::SetTimeDateStamp)
+          .def("GetPointerToSymbolTable", &NtHeaders::GetPointerToSymbolTable)
+          .def("SetPointerToSymbolTable", &NtHeaders::SetPointerToSymbolTable)
+          .def("GetNumberOfSymbols", &NtHeaders::GetNumberOfSymbols)
+          .def("SetNumberOfSymbols", &NtHeaders::SetNumberOfSymbols)
+          .def("GetSizeOfOptionalHeader", &NtHeaders::GetSizeOfOptionalHeader)
+          .def("SetSizeOfOptionalHeader", &NtHeaders::SetSizeOfOptionalHeader)
+          .def("GetCharacteristics", &NtHeaders::GetCharacteristics)
+          .def("SetCharacteristics", &NtHeaders::SetCharacteristics)
+          .def("GetMagic", &NtHeaders::GetMagic)
+          .def("SetMagic", &NtHeaders::SetMagic)
+          .def("GetMajorLinkerVersion", &NtHeaders::GetMajorLinkerVersion)
+          .def("SetMajorLinkerVersion", &NtHeaders::SetMajorLinkerVersion)
+          .def("GetMinorLinkerVersion", &NtHeaders::GetMinorLinkerVersion)
+          .def("SetMinorLinkerVersion", &NtHeaders::SetMinorLinkerVersion)
+          .def("GetSizeOfCode", &NtHeaders::GetSizeOfCode)
+          .def("SetSizeOfCode", &NtHeaders::SetSizeOfCode)
+          .def("GetSizeOfInitializedData", &NtHeaders::
+            GetSizeOfInitializedData)
+          .def("SetSizeOfInitializedData", &NtHeaders::
+            SetSizeOfInitializedData)
+          .def("GetSizeOfUninitializedData", &NtHeaders::
+            GetSizeOfUninitializedData)
+          .def("SetSizeOfUninitializedData", &NtHeaders::
+            SetSizeOfUninitializedData)
+          .def("GetAddressOfEntryPoint", &NtHeaders::GetAddressOfEntryPoint)
+          .def("SetAddressOfEntryPoint", &NtHeaders::SetAddressOfEntryPoint)
+          .def("GetBaseOfCode", &NtHeaders::GetBaseOfCode)
+          .def("SetBaseOfCode", &NtHeaders::SetBaseOfCode)
+#if defined(_M_IX86) 
+          .def("GetBaseOfData", &NtHeaders::GetBaseOfData)
+          .def("SetBaseOfData", &NtHeaders::SetBaseOfData)
+#endif
+          .def("GetImageBase", &NtHeaders::GetImageBase)
+          .def("SetImageBase", &NtHeaders::SetImageBase)
+          .def("GetSectionAlignment", &NtHeaders::GetSectionAlignment)
+          .def("SetSectionAlignment", &NtHeaders::SetSectionAlignment)
+          .def("GetFileAlignment", &NtHeaders::GetFileAlignment)
+          .def("SetFileAlignment", &NtHeaders::SetFileAlignment)
+          .def("GetMajorOperatingSystemVersion", &NtHeaders::
+            GetMajorOperatingSystemVersion)
+          .def("SetMajorOperatingSystemVersion", &NtHeaders::
+            SetMajorOperatingSystemVersion)
+          .def("GetMinorOperatingSystemVersion", &NtHeaders::
+            GetMinorOperatingSystemVersion)
+          .def("SetMinorOperatingSystemVersion", &NtHeaders::
+            SetMinorOperatingSystemVersion)
+          .def("GetMajorImageVersion", &NtHeaders::GetMajorImageVersion)
+          .def("SetMajorImageVersion", &NtHeaders::SetMajorImageVersion)
+          .def("GetMinorImageVersion", &NtHeaders::GetMinorImageVersion)
+          .def("SetMinorImageVersion", &NtHeaders::SetMinorImageVersion)
+          .def("GetMajorSubsystemVersion", &NtHeaders::
+            GetMajorSubsystemVersion)
+          .def("SetMajorSubsystemVersion", &NtHeaders::
+            SetMajorSubsystemVersion)
+          .def("GetMinorSubsystemVersion", &NtHeaders::GetMinorSubsystemVersion)
+          .def("SetMinorSubsystemVersion", &NtHeaders::SetMinorSubsystemVersion)
+          .def("GetWin32VersionValue", &NtHeaders::GetWin32VersionValue)
+          .def("SetWin32VersionValue", &NtHeaders::SetWin32VersionValue)
+          .def("GetSizeOfImage", &NtHeaders::GetSizeOfImage)
+          .def("SetSizeOfImage", &NtHeaders::SetSizeOfImage)
+          .def("GetSizeOfHeaders", &NtHeaders::GetSizeOfHeaders)
+          .def("SetSizeOfHeaders", &NtHeaders::SetSizeOfHeaders)
+          .def("GetCheckSum", &NtHeaders::GetCheckSum)
+          .def("SetCheckSum", &NtHeaders::SetCheckSum)
+          .def("GetSubsystem", &NtHeaders::GetSubsystem)
+          .def("SetSubsystem", &NtHeaders::SetSubsystem)
+          .def("GetDllCharacteristics", &NtHeaders::GetDllCharacteristics)
+          .def("SetDllCharacteristics", &NtHeaders::SetDllCharacteristics)
+          .def("GetSizeOfStackReserve", &NtHeaders::GetSizeOfStackReserve)
+          .def("SetSizeOfStackReserve", &NtHeaders::SetSizeOfStackReserve)
+          .def("GetSizeOfStackCommit", &NtHeaders::GetSizeOfStackCommit)
+          .def("SetSizeOfStackCommit", &NtHeaders::SetSizeOfStackCommit)
+          .def("GetSizeOfHeapReserve", &NtHeaders::GetSizeOfHeapReserve)
+          .def("SetSizeOfHeapReserve", &NtHeaders::SetSizeOfHeapReserve)
+          .def("GetSizeOfHeapCommit", &NtHeaders::GetSizeOfHeapCommit)
+          .def("SetSizeOfHeapCommit", &NtHeaders::SetSizeOfHeapCommit)
+          .def("GetLoaderFlags", &NtHeaders::GetLoaderFlags)
+          .def("SetLoaderFlags", &NtHeaders::SetLoaderFlags)
+          .def("GetNumberOfRvaAndSizes", &NtHeaders::GetNumberOfRvaAndSizes)
+          .def("SetNumberOfRvaAndSizes", &NtHeaders::SetNumberOfRvaAndSizes)
+          .def("GetDataDirectoryVirtualAddress", &NtHeaders::
+            GetDataDirectoryVirtualAddress)
+          .def("SetDataDirectoryVirtualAddress", &NtHeaders::
+            SetDataDirectoryVirtualAddress)
+          .def("GetDataDirectorySize", &NtHeaders::GetDataDirectorySize)
+          .def("SetDataDirectorySize", &NtHeaders::SetDataDirectorySize)
+          .def("GetHeadersRaw", &NtHeaders::GetHeadersRaw)
 
           // Bind Section class
           ,luabind::class_<Section>("Section")
