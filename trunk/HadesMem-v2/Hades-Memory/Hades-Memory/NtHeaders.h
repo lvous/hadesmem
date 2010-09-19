@@ -1200,7 +1200,7 @@ namespace Hades
     DWORD NtHeaders::GetLoaderFlags() const
     {
       auto pBase(static_cast<PBYTE>(GetBase()));
-      return m_pMemory->Read<ULONG_PTR>(pBase + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      return m_pMemory->Read<DWORD>(pBase + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.LoaderFlags));
     }
 
@@ -1223,7 +1223,7 @@ namespace Hades
     DWORD NtHeaders::GetNumberOfRvaAndSizes() const
     {
       auto pBase(static_cast<PBYTE>(GetBase()));
-      return m_pMemory->Read<ULONG_PTR>(pBase + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      return m_pMemory->Read<DWORD>(pBase + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.NumberOfRvaAndSizes));
     }
 
@@ -1246,7 +1246,7 @@ namespace Hades
     DWORD NtHeaders::GetDataDirectoryVirtualAddress(DataDir MyDataDir) const
     {
       auto pBase(static_cast<PBYTE>(GetBase()));
-      return m_pMemory->Read<ULONG_PTR>(pBase + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      return m_pMemory->Read<DWORD>(pBase + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.DataDirectory[0]) + MyDataDir * sizeof(
         IMAGE_DATA_DIRECTORY) + FIELD_OFFSET(IMAGE_DATA_DIRECTORY, 
         VirtualAddress));
@@ -1275,7 +1275,7 @@ namespace Hades
     DWORD NtHeaders::GetDataDirectorySize(DataDir MyDataDir) const
     {
       auto pBase(static_cast<PBYTE>(GetBase()));
-      return m_pMemory->Read<ULONG_PTR>(pBase + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      return m_pMemory->Read<DWORD>(pBase + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.DataDirectory[0]) + MyDataDir * sizeof(
         IMAGE_DATA_DIRECTORY) + FIELD_OFFSET(IMAGE_DATA_DIRECTORY, 
         Size));
