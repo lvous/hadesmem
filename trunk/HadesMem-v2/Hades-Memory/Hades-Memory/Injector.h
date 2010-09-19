@@ -128,7 +128,8 @@ namespace Hades
         if (!Export.empty())
         {
           // Call remote export
-          DWORD const ExportRet(MyInjector.CallExport(Module, ModBase, Export));
+          DWORD const ExportRet(MyInjector.CallExport(Module, ModBase, 
+            Export));
           if (ExportRetOut)
           {
             *ExportRetOut = ExportRet;
@@ -281,6 +282,12 @@ namespace Hades
       // Get export address
       FARPROC const pExportAddr(m_pMemory->GetRemoteProcAddress(ModuleRemote, 
         ModulePath, Export));
+      if (!pExportAddr)
+      {
+        BOOST_THROW_EXCEPTION(Error() << 
+          ErrorFunction("Injector::InjectDll") << 
+          ErrorString("Could not find export in remote module."));
+      }
 
       // Create a remote thread that calls the desired export
       std::vector<PVOID> ExportArgs;
