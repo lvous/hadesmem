@@ -69,6 +69,12 @@ namespace Hades
       inline MemoryMgr(std::wstring const& WindowName, 
         std::wstring const& ClassName);
 
+      // Move constructor
+      inline MemoryMgr(MemoryMgr&& MyMemoryMgr);
+
+      // Move assignment operator
+      inline MemoryMgr& operator=(MemoryMgr&& MyMemoryMgr);
+
       // Calling conventions
       enum CallConv
       {
@@ -220,6 +226,17 @@ namespace Hades
       std::wstring const& ClassName) 
       : m_Process(WindowName, ClassName) 
     { }
+
+    // Move constructor
+    MemoryMgr::MemoryMgr(MemoryMgr&& MyMemoryMgr) 
+      : m_Process(std::move(MyMemoryMgr.m_Process))
+    { }
+
+    // Move assignment operator
+    MemoryMgr& MemoryMgr::operator=(MemoryMgr&& MyMemoryMgr) 
+    {
+      *this = std::move(MyMemoryMgr);
+    }
 
     // Call remote function
     DWORD MemoryMgr::Call(PVOID Address, std::vector<PVOID> const& Args, 
