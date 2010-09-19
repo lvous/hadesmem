@@ -159,16 +159,17 @@ namespace Hades
       Process m_Process;
     };
 
+    // RAII class for remote memory allocation and freeing
     class AllocAndFree : private boost::noncopyable
     {
     public:
-      AllocAndFree(MemoryMgr const& MyMemoryMgr, SIZE_T Size) 
-        : m_Memory(MyMemoryMgr), m_Address(m_Memory.Alloc(Size)) 
+      AllocAndFree(MemoryMgr const* MyMemoryMgr, SIZE_T Size) 
+        : m_pMemory(MyMemoryMgr), m_Address(m_pMemory->Alloc(Size)) 
       { }
 
       ~AllocAndFree()
       {
-        m_Memory.Free(m_Address);
+        m_pMemory->Free(m_Address);
       }
 
       PVOID GetAddress() const 
@@ -177,7 +178,7 @@ namespace Hades
       }
 
     private:
-      MemoryMgr const& m_Memory;
+      MemoryMgr const* m_pMemory;
       PVOID m_Address;
     };
 
@@ -396,7 +397,7 @@ namespace Hades
       DWORD_PTR const StubSize(MyJitFunc.getCodeSize());
 
       // Allocate memory for stub buffer
-      AllocAndFree const StubMemRemote(*this, StubSize);
+      AllocAndFree const StubMemRemote(this, StubSize);
       // Copy loader stub to stub buffer
       std::vector<BYTE> const EpCallBuf(static_cast<PBYTE>(LoaderStub.Get()), 
         static_cast<PBYTE>(LoaderStub.Get()) + StubSize);

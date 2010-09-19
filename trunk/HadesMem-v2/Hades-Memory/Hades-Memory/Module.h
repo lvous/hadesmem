@@ -53,14 +53,14 @@ namespace Hades
       { };
 
       // Create module
-      inline Module(MemoryMgr const& MyMemory, 
+      inline Module(MemoryMgr* MyMemory, 
         MODULEENTRY32 const& ModuleEntry);
 
       // Find module by handle
-      inline Module(MemoryMgr const& MyMemory, HMODULE Handle);
+      inline Module(MemoryMgr* MyMemory, HMODULE Handle);
 
       // Find module by name
-      inline Module(MemoryMgr const& MyMemory, std::wstring const& ModuleName);
+      inline Module(MemoryMgr* MyMemory, std::wstring const& ModuleName);
 
       // Get module base
       inline HMODULE GetBase() const;
@@ -73,11 +73,8 @@ namespace Hades
       inline std::wstring GetPath() const;
 
     private:
-      // Disable assignment
-      Module& operator= (Module const&);
-
       // Memory instance
-      MemoryMgr const& m_Memory;
+      MemoryMgr* m_pMemory;
 
       // Module base address
       HMODULE m_Base;
@@ -94,8 +91,8 @@ namespace Hades
     {
     public:
       // Constructor
-      ModuleEnum(MemoryMgr const& MyMemory) 
-        : m_Memory(MyMemory), 
+      ModuleEnum(MemoryMgr* MyMemory) 
+        : m_pMemory(MyMemory), 
         m_Snap(), 
         m_ModuleEntry()
       {
@@ -107,7 +104,7 @@ namespace Hades
       boost::shared_ptr<Module> First() 
       {
         // Grab a new snapshot of the process
-        m_Snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, m_Memory.
+        m_Snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, m_pMemory->
           GetProcessID());
         if (m_Snap == INVALID_HANDLE_VALUE)
         {
@@ -128,7 +125,7 @@ namespace Hades
             ErrorCodeWin(LastError));
         }
 
-        return boost::make_shared<Module>(m_Memory, m_ModuleEntry);
+        return boost::make_shared<Module>(m_pMemory, m_ModuleEntry);
       }
 
       // Get next module
@@ -137,7 +134,7 @@ namespace Hades
         // Todo: Check GetLastError to ensure EOL and throw an exception 
         // on an actual error.
         return Module32Next(m_Snap, &m_ModuleEntry) ? 
-          boost::make_shared<Module>(m_Memory, m_ModuleEntry) 
+          boost::make_shared<Module>(m_pMemory, m_ModuleEntry) 
           : boost::shared_ptr<Module>(static_cast<Module*>(nullptr));
       }
 
@@ -154,13 +151,8 @@ namespace Hades
         }
 
       private:
-        // Compiler cannot generate assignment operator
-        ModuleListIter& operator= (ModuleListIter const& Rhs)
-        {
-          m_ModuleEnum = Rhs.m_ModuleEnum;
-          m_Current = Rhs.m_Current;
-          return *this;
-        }
+        // Disable assignment
+        ModuleListIter& operator= (ModuleListIter const&);
 
         // Allow Boost.Iterator access to internals
         friend class boost::iterator_core_access;
@@ -186,11 +178,11 @@ namespace Hades
       };
 
     private:
-      // Disable assignmnet
+      // Disable assignment
       ModuleEnum& operator= (ModuleEnum const&);
 
       // Memory instance
-      MemoryMgr const& m_Memory;
+      MemoryMgr* m_pMemory;
 
       // Toolhelp32 snapshot handle
       Windows::EnsureCloseSnap m_Snap;
@@ -200,8 +192,8 @@ namespace Hades
     };
 
     // Find module by name
-    Module::Module(MemoryMgr const& MyMemory, std::wstring const& ModuleName) 
-      : m_Memory(MyMemory), 
+    Module::Module(MemoryMgr* MyMemory, std::wstring const& ModuleName) 
+      : m_pMemory(MyMemory), 
       m_Base(nullptr), 
       m_Size(0), 
       m_Name(), 
@@ -209,7 +201,7 @@ namespace Hades
     {
       // Grab a new snapshot of the process
       Windows::EnsureCloseSnap const Snap(CreateToolhelp32Snapshot(
-        TH32CS_SNAPMODULE, MyMemory.GetProcessID()));
+        TH32CS_SNAPMODULE, MyMemory->GetProcessID()));
       if (Snap == INVALID_HANDLE_VALUE)
       {
         DWORD LastError = GetLastError();
@@ -253,8 +245,8 @@ namespace Hades
     }
 
     // Find module by handle
-    Module::Module(MemoryMgr const& MyMemory, HMODULE Handle) 
-      : m_Memory(MyMemory), 
+    Module::Module(MemoryMgr* MyMemory, HMODULE Handle) 
+      : m_pMemory(MyMemory), 
       m_Base(nullptr), 
       m_Size(0), 
       m_Name(), 
@@ -262,7 +254,7 @@ namespace Hades
     {
       // Grab a new snapshot of the process
       Windows::EnsureCloseSnap const Snap(CreateToolhelp32Snapshot(
-        TH32CS_SNAPMODULE, MyMemory.GetProcessID()));
+        TH32CS_SNAPMODULE, MyMemory->GetProcessID()));
       if (Snap == INVALID_HANDLE_VALUE)
       {
         DWORD LastError = GetLastError();
@@ -300,8 +292,8 @@ namespace Hades
       m_Path = ModEntry.szExePath;
     }
 
-    Module::Module(MemoryMgr const& MyMemory, MODULEENTRY32 const& ModuleEntry) 
-      : m_Memory(MyMemory), 
+    Module::Module(MemoryMgr* MyMemory, MODULEENTRY32 const& ModuleEntry) 
+      : m_pMemory(MyMemory), 
       m_Base(ModuleEntry.hModule), 
       m_Size(ModuleEntry.dwSize), 
       m_Name(ModuleEntry.szModule), 

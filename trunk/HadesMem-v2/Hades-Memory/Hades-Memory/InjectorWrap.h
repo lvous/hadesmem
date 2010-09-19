@@ -83,7 +83,7 @@ namespace Hades
       class InjectorWrappers : public Injector
       {
       public:
-        explicit InjectorWrappers(MemoryMgr const& MyMemory) 
+        explicit InjectorWrappers(MemoryMgr* MyMemory) 
           : Injector(MyMemory)
         { }
 

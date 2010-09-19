@@ -118,7 +118,7 @@ namespace Hades
       };
 
     private:
-      // Disable assignmnet
+      // Disable assignment
       SectionEnum& operator= (SectionEnum const&);
 
       // Memory instance

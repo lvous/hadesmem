@@ -47,11 +47,11 @@ namespace Hades
       class ModuleWrappers : public Module
       {
       public:
-        ModuleWrappers(MemoryMgr const& MyMemory, DWORD_PTR Handle) 
+        ModuleWrappers(MemoryMgr* MyMemory, DWORD_PTR Handle) 
           : Module(MyMemory, reinterpret_cast<HMODULE>(Handle))
         { }
 
-        ModuleWrappers(MemoryMgr const& MyMemory, 
+        ModuleWrappers(MemoryMgr* MyMemory, 
           std::string const& ModuleName) 
           : Module(MyMemory, boost::lexical_cast<std::wstring>(ModuleName))
         { }
@@ -78,7 +78,7 @@ namespace Hades
       class ModuleEnumWrap : public ModuleEnum
       {
       public:
-        ModuleEnumWrap(MemoryMgr const& MyMemory)
+        ModuleEnumWrap(MemoryMgr* MyMemory)
           : ModuleEnum(MyMemory)
         { }
 

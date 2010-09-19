@@ -57,7 +57,7 @@ namespace Hades
       { };
 
       // Constructor
-      inline Injector(MemoryMgr const& MyMemory);
+      inline Injector(MemoryMgr* MyMemory);
 
       // Inject DLL
       inline HMODULE InjectDll(boost::filesystem::path const& Path, 
@@ -68,11 +68,8 @@ namespace Hades
         HMODULE ModuleRemote, std::string const& Export) const;
 
     private:
-      // Disable assignment
-      Injector& operator= (Injector const&);
-
       // MemoryMgr instance
-      MemoryMgr const& m_Memory;
+      MemoryMgr* m_pMemory;
     };
 
     // Create process (as suspended) and inject DLL
@@ -118,7 +115,7 @@ namespace Hades
         MyMemory.reset(new Hades::Memory::MemoryMgr(ProcInfo.dwProcessId));
 
         // Create DLL injector
-        Hades::Memory::Injector const MyInjector(*MyMemory);
+        Hades::Memory::Injector const MyInjector(MyMemory.get());
 
         // Inject DLL
         HMODULE const ModBase(MyInjector.InjectDll(Module));
@@ -155,8 +152,8 @@ namespace Hades
     }
 
     // Constructor
-    Injector::Injector(MemoryMgr const& MyMemory) 
-      : m_Memory(MyMemory)
+    Injector::Injector(MemoryMgr* MyMemory) 
+      : m_pMemory(MyMemory)
     { }
 
     // Inject DLL
@@ -196,7 +193,7 @@ namespace Hades
         sizeof(wchar_t));
 
       // Allocate space in the remote process for the pathname
-      AllocAndFree const LibFileRemote(m_Memory, PathBufSize);
+      AllocAndFree const LibFileRemote(m_pMemory, PathBufSize);
       if (!LibFileRemote.GetAddress())
       {
         DWORD const LastError(GetLastError());
@@ -207,7 +204,7 @@ namespace Hades
       }
 
       // Copy the DLL's pathname to the remote process' address space
-      m_Memory.Write(LibFileRemote.GetAddress(), PathReal.wstring());
+      m_pMemory->Write(LibFileRemote.GetAddress(), PathReal.wstring());
 
       // Get the real address of LoadLibraryW in Kernel32.dll
       HMODULE const hKernel32(GetModuleHandleW(L"Kernel32.dll"));
@@ -232,7 +229,7 @@ namespace Hades
       // Load module in remote process using LoadLibraryW
       std::vector<PVOID> Args;
       Args.push_back(LibFileRemote.GetAddress());
-      if (!m_Memory.Call(pLoadLibraryW, Args))
+      if (!m_pMemory->Call(pLoadLibraryW, Args))
       {
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Injector::InjectDll") << 
@@ -244,7 +241,7 @@ namespace Hades
         wstring()));
 
       // Look for target module
-      ModuleEnum MyModuleList(m_Memory);
+      ModuleEnum MyModuleList(m_pMemory);
       boost::shared_ptr<Module> MyModule;
       for (ModuleEnum::ModuleListIter MyIter(MyModuleList); *MyIter; ++MyIter)
       {
@@ -282,13 +279,13 @@ namespace Hades
       HMODULE ModuleRemote, std::string const& Export) const
     {
       // Get export address
-      FARPROC const pExportAddr(m_Memory.GetRemoteProcAddress(ModuleRemote, 
+      FARPROC const pExportAddr(m_pMemory->GetRemoteProcAddress(ModuleRemote, 
         ModulePath, Export));
 
       // Create a remote thread that calls the desired export
       std::vector<PVOID> ExportArgs;
       ExportArgs.push_back(ModuleRemote);
-      return m_Memory.Call(pExportAddr, ExportArgs);
+      return m_pMemory->Call(pExportAddr, ExportArgs);
     }
   }
 }

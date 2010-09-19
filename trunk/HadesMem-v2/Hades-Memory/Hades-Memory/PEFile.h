@@ -39,10 +39,10 @@ namespace Hades
       { };
 
       // Constructor
-      inline PeFile(MemoryMgr const& MyMemory, PVOID Address);
+      inline PeFile(MemoryMgr* MyMemory, PVOID Address);
 
       // Get memory manager
-      inline MemoryMgr const& GetMemoryMgr() const;
+      inline MemoryMgr* GetMemoryMgr() const;
 
       // Get base address
       inline PVOID GetBase() const;
@@ -55,7 +55,7 @@ namespace Hades
       PeFile& operator= (PeFile const&);
 
       // Memory instance
-      MemoryMgr const& m_Memory;
+      MemoryMgr* m_pMemory;
 
       // Base address
       PVOID m_pBase;
@@ -67,14 +67,14 @@ namespace Hades
     {
     public:
       // Constructor
-      inline PeFileAsData(MemoryMgr const& MyMemory, PVOID Address);
+      inline PeFileAsData(MemoryMgr* MyMemory, PVOID Address);
 
       // Convert RVA to VA
       inline virtual PVOID RvaToVa(DWORD Rva);
     };
 
     // Constructor
-    PeFileAsData::PeFileAsData(MemoryMgr const& MyMemory, PVOID Address) 
+    PeFileAsData::PeFileAsData(MemoryMgr* MyMemory, PVOID Address) 
       : PeFile(MyMemory, Address)
     { }
 
@@ -88,13 +88,13 @@ namespace Hades
       }
 
       // Get memory manager
-      MemoryMgr const& MyMemory(GetMemoryMgr());
+      MemoryMgr* MyMemory(GetMemoryMgr());
 
       // Get PE file base
       PBYTE pBase = static_cast<PBYTE>(GetBase());
 
       // Get DOS header
-      auto DosHeader(MyMemory.Read<IMAGE_DOS_HEADER>(pBase));
+      auto DosHeader(MyMemory->Read<IMAGE_DOS_HEADER>(pBase));
       if (DosHeader.e_magic != IMAGE_DOS_SIGNATURE)
       {
         BOOST_THROW_EXCEPTION(Error() << 
@@ -104,7 +104,7 @@ namespace Hades
 
       // Get NT headers
       auto pNtHeaders(pBase + DosHeader.e_lfanew);
-      auto NtHeadersRaw(MyMemory.Read<IMAGE_NT_HEADERS>(pNtHeaders));
+      auto NtHeadersRaw(MyMemory->Read<IMAGE_NT_HEADERS>(pNtHeaders));
       if (NtHeadersRaw.Signature != IMAGE_NT_SIGNATURE)
       {
         BOOST_THROW_EXCEPTION(Error() << 
@@ -116,7 +116,7 @@ namespace Hades
       auto pSectionHeader(reinterpret_cast<PIMAGE_SECTION_HEADER>(pNtHeaders + 
         sizeof(NtHeadersRaw.FileHeader) + sizeof(NtHeadersRaw.Signature) + 
         NtHeadersRaw.FileHeader.SizeOfOptionalHeader));
-      auto SectionHeader(MyMemory.Read<IMAGE_SECTION_HEADER>(pSectionHeader));
+      auto SectionHeader(MyMemory->Read<IMAGE_SECTION_HEADER>(pSectionHeader));
 
       // Get number of sections
       WORD NumSections = NtHeadersRaw.FileHeader.NumberOfSections;
@@ -136,7 +136,7 @@ namespace Hades
         }
 
         // Get next section
-        SectionHeader = MyMemory.Read<IMAGE_SECTION_HEADER>(++pSectionHeader);
+        SectionHeader = MyMemory->Read<IMAGE_SECTION_HEADER>(++pSectionHeader);
       }
 
       // Conversion failed
@@ -144,15 +144,15 @@ namespace Hades
     }
 
     // Constructor
-    PeFile::PeFile(MemoryMgr const& MyMemory, PVOID Address)
-      : m_Memory(MyMemory), 
+    PeFile::PeFile(MemoryMgr* MyMemory, PVOID Address)
+      : m_pMemory(MyMemory), 
       m_pBase(Address)
     { }
 
     // Get memory manager
-    MemoryMgr const& PeFile::GetMemoryMgr() const
+    MemoryMgr* PeFile::GetMemoryMgr() const
     {
-      return m_Memory;
+      return m_pMemory;
     }
 
     // Get base address

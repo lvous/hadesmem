@@ -49,7 +49,7 @@ namespace Hades
       { };
 
       // Constructor
-      inline ManualMap(MemoryMgr const& MyMemory);
+      inline ManualMap(MemoryMgr* MyMemory);
 
       // Manually map DLL
       inline PVOID Map(std::wstring const& Path, std::string const& Export = 
@@ -73,16 +73,13 @@ namespace Hades
         PIMAGE_NT_HEADERS pNtHeaders, PIMAGE_BASE_RELOCATION pRelocDesc, 
         DWORD RelocDirSize, PVOID RemoteBase) const;
 
-      // Disable assignment
-      ManualMap& operator= (ManualMap const&);
-
       // MemoryMgr instance
-      MemoryMgr const& m_Memory;
+      MemoryMgr* m_pMemory;
     };
 
     // Constructor
-    ManualMap::ManualMap(MemoryMgr const& MyMemory) 
-      : m_Memory(MyMemory)
+    ManualMap::ManualMap(MemoryMgr* MyMemory) 
+      : m_pMemory(MyMemory)
     { }
 
     // Manually map DLL
@@ -110,7 +107,7 @@ namespace Hades
       // Ensure file is a valid PE file
       std::wcout << "Performing PE file format validation." << std::endl;
       auto pBase = &ModuleFileBuf[0];
-      PeFile MyPeFile(MyMemoryLocal, pBase);
+      PeFile MyPeFile(&MyMemoryLocal, pBase);
       DosHeader MyDosHeader(MyPeFile);
       NtHeaders MyNtHeaders(MyPeFile);
       auto pNtHeadersRaw(static_cast<PIMAGE_NT_HEADERS>(MyNtHeaders.
@@ -118,7 +115,7 @@ namespace Hades
 
       // Allocate memory for image
       std::wcout << "Allocating memory for module." << std::endl;
-      PVOID const RemoteBase = m_Memory.Alloc(pNtHeadersRaw->OptionalHeader.
+      PVOID const RemoteBase = m_pMemory->Alloc(pNtHeadersRaw->OptionalHeader.
         SizeOfImage);
       std::wcout << "Module base address: " << RemoteBase << "." << std::endl;
       std::wcout << "Module size: " << std::hex << pNtHeadersRaw->
@@ -179,7 +176,7 @@ namespace Hades
       // Write DOS header to process
       std::wcout << "Writing DOS header." << std::endl;
       std::wcout << "DOS Header: " << pBase << std::endl;
-      m_Memory.Write(RemoteBase, *reinterpret_cast<PIMAGE_DOS_HEADER>(pBase));
+      m_pMemory->Write(RemoteBase, *reinterpret_cast<PIMAGE_DOS_HEADER>(pBase));
 
       // Write PE header to process
       PBYTE const PeHeaderStart = reinterpret_cast<PBYTE>(pNtHeadersRaw);
@@ -190,7 +187,7 @@ namespace Hades
         MyDosHeader.GetNewHeaderOffset();
       std::wcout << "Writing NT header." << std::endl;
       std::wcout << "NT Header: " << TargetAddr << std::endl;
-      m_Memory.Write(TargetAddr, PeHeaderBuf);
+      m_pMemory->Write(TargetAddr, PeHeaderBuf);
 
       // Write sections to process
       MapSections(pNtHeadersRaw, RemoteBase, ModuleFileBuf);
@@ -201,7 +198,7 @@ namespace Hades
       std::wcout << "Entry Point: " << EntryPoint << "." << std::endl;
 
       // Get address of export in remote process
-      PVOID const ExportAddr = m_Memory.GetRemoteProcAddress(
+      PVOID const ExportAddr = m_pMemory->GetRemoteProcAddress(
         reinterpret_cast<HMODULE>(RemoteBase), Path, Export.c_str());
       std::wcout << "Export Address: " << ExportAddr << "." << std::endl;
 
@@ -225,7 +222,7 @@ namespace Hades
         TlsCallArgs.push_back(0);
         TlsCallArgs.push_back(reinterpret_cast<PVOID>(DLL_PROCESS_ATTACH));
         TlsCallArgs.push_back(RemoteBase);
-        DWORD TlsRet = m_Memory.Call(reinterpret_cast<PBYTE>(RemoteBase) + 
+        DWORD TlsRet = m_pMemory->Call(reinterpret_cast<PBYTE>(RemoteBase) + 
           reinterpret_cast<DWORD_PTR>(pCallback), TlsCallArgs);
         std::wcout << "TLS Callback Returned: " << TlsRet << "." << std::endl;
       });
@@ -235,7 +232,7 @@ namespace Hades
       EpArgs.push_back(0);
       EpArgs.push_back(reinterpret_cast<PVOID>(DLL_PROCESS_ATTACH));
       EpArgs.push_back(RemoteBase);
-      DWORD const EpRet = m_Memory.Call(EntryPoint, EpArgs);
+      DWORD const EpRet = m_pMemory->Call(EntryPoint, EpArgs);
       std::wcout << "Entry Point Returned: " << EpRet << "." << std::endl;
 
       // Call remote export (if specified)
@@ -243,7 +240,7 @@ namespace Hades
       {
         std::vector<PVOID> ExpArgs;
         ExpArgs.push_back(RemoteBase);
-        DWORD ExpRet = m_Memory.Call(ExportAddr, ExpArgs);
+        DWORD ExpRet = m_pMemory->Call(ExportAddr, ExpArgs);
         std::wcout << "Export Returned: " << ExpRet << "." << std::endl;
       }
 
@@ -324,11 +321,11 @@ namespace Hades
         std::vector<BYTE> const SectionData(DataStart, DataEnd);
 
         // Write section data to process
-        m_Memory.Write(TargetAddr, SectionData);
+        m_pMemory->Write(TargetAddr, SectionData);
 
         // Set the proper page protections for this section
         DWORD OldProtect;
-        if (!VirtualProtectEx(m_Memory.GetProcessHandle(), TargetAddr, 
+        if (!VirtualProtectEx(m_pMemory->GetProcessHandle(), TargetAddr, 
           VirtualSize, pCurrent->Characteristics & 0x00FFFFFF, &OldProtect))
         {
           DWORD LastError = GetLastError();
@@ -361,7 +358,7 @@ namespace Hades
         std::wcout << "Module Name: " << ModuleNameW << "." << std::endl;
 
         // Check whether dependent module is already loaded
-        ModuleEnum MyModuleList(m_Memory);
+        ModuleEnum MyModuleList(m_pMemory);
         boost::shared_ptr<Module> MyModule;
         for (ModuleEnum::ModuleListIter MyIter(MyModuleList); *MyIter; 
           ++MyIter)
@@ -382,7 +379,7 @@ namespace Hades
         {
           // Inject dependent DLL
           std::wcout << "Injecting dependent DLL." << std::endl;
-          Injector MyInjector(m_Memory);
+          Injector MyInjector(m_pMemory);
           CurModBase = MyInjector.InjectDll(ModuleNameW, false);
           CurModName = ModuleNameW;
         }
@@ -411,7 +408,7 @@ namespace Hades
           bool const ByOrdinal = IMAGE_SNAP_BY_ORDINAL(pNameImport->Hint);
           LPCSTR Function = ByOrdinal ? reinterpret_cast<LPCSTR>(IMAGE_ORDINAL(
             pNameImport->Hint)) : reinterpret_cast<LPCSTR>(pNameImport->Name);
-          FARPROC FuncAddr = m_Memory.GetRemoteProcAddress(CurModBase, 
+          FARPROC FuncAddr = m_pMemory->GetRemoteProcAddress(CurModBase, 
             CurModName, Function);
 
           // Set function address

@@ -52,7 +52,7 @@ namespace Hades
       PeFile const& m_PeFile;
 
       // Memory instance
-      MemoryMgr const& m_Memory;
+      MemoryMgr* m_pMemory;
 
       // Section number
       WORD m_SectionNum;
@@ -61,7 +61,7 @@ namespace Hades
     // Constructor
     Section::Section(PeFile const& MyPeFile, WORD Number)
       : m_PeFile(MyPeFile), 
-      m_Memory(m_PeFile.GetMemoryMgr()), 
+      m_pMemory(m_PeFile.GetMemoryMgr()), 
       m_SectionNum(Number)
     { }
 
@@ -111,7 +111,7 @@ namespace Hades
       pSectionHeader += m_SectionNum;
 
       // Get target raw section header
-      return m_Memory.Read<IMAGE_SECTION_HEADER>(pSectionHeader);
+      return m_pMemory->Read<IMAGE_SECTION_HEADER>(pSectionHeader);
     }
   }
 }

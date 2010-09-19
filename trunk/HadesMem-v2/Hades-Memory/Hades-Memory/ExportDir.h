@@ -52,13 +52,13 @@ namespace Hades
       PeFile const& m_PeFile;
 
       // Memory instance
-      MemoryMgr const& m_Memory;
+      MemoryMgr* m_pMemory;
     };
 
     // Constructor
     ExportDir::ExportDir(PeFile const& MyPeFile)
       : m_PeFile(MyPeFile), 
-      m_Memory(m_PeFile.GetMemoryMgr())
+      m_pMemory(m_PeFile.GetMemoryMgr())
     { }
 
     // Get module name
@@ -77,7 +77,7 @@ namespace Hades
       }
 
       // Read module name
-      return m_Memory.Read<std::string>(static_cast<PBYTE>(m_PeFile.GetBase()) 
+      return m_pMemory->Read<std::string>(static_cast<PBYTE>(m_PeFile.GetBase()) 
         + ExportDirRaw.Name);
     }
 
@@ -103,7 +103,7 @@ namespace Hades
       }
 
       // Get raw export dir
-      return m_Memory.Read<IMAGE_EXPORT_DIRECTORY>(pBase + DataDirVa);
+      return m_pMemory->Read<IMAGE_EXPORT_DIRECTORY>(pBase + DataDirVa);
     }
   }
 }

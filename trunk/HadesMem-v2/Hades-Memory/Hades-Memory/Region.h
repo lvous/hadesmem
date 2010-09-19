@@ -50,10 +50,10 @@ namespace Hades
       { };
 
       // Constructor
-      inline Region(MemoryMgr const& MyMemory, PVOID Address);
+      inline Region(MemoryMgr* MyMemory, PVOID Address);
 
       // Constructor
-      inline Region(MemoryMgr const& MyMemory, 
+      inline Region(MemoryMgr* MyMemory, 
         MEMORY_BASIC_INFORMATION const& MyMbi);
 
       // Get base address
@@ -72,11 +72,8 @@ namespace Hades
       inline DWORD GetType() const;
 
     private:
-      // Disable assignment
-      Region& operator= (Region const&);
-
       // MemoryMgr instance
-      MemoryMgr const& m_Memory;
+      MemoryMgr* m_pMemory;
 
       // Region information
       MEMORY_BASIC_INFORMATION m_RegionInfo;
@@ -87,8 +84,8 @@ namespace Hades
     {
     public:
       // Constructor
-      RegionEnum(MemoryMgr const& MyMemory) 
-        : m_Memory(MyMemory), 
+      RegionEnum(MemoryMgr* MyMemory) 
+        : m_pMemory(MyMemory), 
         m_Address(nullptr), 
         m_Current()
       {
@@ -98,7 +95,7 @@ namespace Hades
       // Get first region
       boost::shared_ptr<Region> First() 
       {
-        if (!VirtualQueryEx(m_Memory.GetProcessHandle(), m_Address, &m_Current, 
+        if (!VirtualQueryEx(m_pMemory->GetProcessHandle(), m_Address, &m_Current, 
           sizeof(m_Current)))
         {
           DWORD LastError = GetLastError();
@@ -108,7 +105,7 @@ namespace Hades
             ErrorCodeWin(LastError));
         }
 
-        return boost::make_shared<Region>(m_Memory, m_Current);
+        return boost::make_shared<Region>(m_pMemory, m_Current);
       }
 
       // Get next region
@@ -122,8 +119,8 @@ namespace Hades
         // Todo: Check GetLastError to ensure EOL and throw an exception 
         // on an actual error.
         return 
-          VirtualQueryEx(m_Memory.GetProcessHandle(), m_Address, &m_Current, 
-          sizeof(m_Current)) ? boost::make_shared<Region>(m_Memory, m_Current) 
+          VirtualQueryEx(m_pMemory->GetProcessHandle(), m_Address, &m_Current, 
+          sizeof(m_Current)) ? boost::make_shared<Region>(m_pMemory, m_Current) 
           : boost::shared_ptr<Region>(static_cast<Region*>(nullptr));
       }
 
@@ -172,11 +169,11 @@ namespace Hades
       };
 
     private:
-      // Disable assignmnet
+      // Disable assignment
       RegionEnum& operator= (RegionEnum const&);
 
       // Memory instance
-      MemoryMgr const& m_Memory;
+      MemoryMgr* m_pMemory;
 
       // Current address
       PVOID m_Address;
@@ -187,7 +184,7 @@ namespace Hades
 
     // Get memory region list
     std::vector<boost::shared_ptr<Region>> GetMemoryRegionList(
-      MemoryMgr const& MyMemory)
+      MemoryMgr* MyMemory)
     {
       // Region list
       std::vector<boost::shared_ptr<Region>> RegionList;
@@ -195,7 +192,7 @@ namespace Hades
       // Loop over all memory regions
       PBYTE Address = nullptr;
       MEMORY_BASIC_INFORMATION MyMbi = { 0 };
-      while (VirtualQueryEx(MyMemory.GetProcessHandle(), Address, &MyMbi, 
+      while (VirtualQueryEx(MyMemory->GetProcessHandle(), Address, &MyMbi, 
         sizeof(MyMbi)))
       {
         // Add current region to list
@@ -211,15 +208,15 @@ namespace Hades
     }
 
     // Constructor
-    Region::Region(MemoryMgr const& MyMemory, PVOID Address) 
-      : m_Memory(MyMemory), 
+    Region::Region(MemoryMgr* MyMemory, PVOID Address) 
+      : m_pMemory(MyMemory), 
       m_RegionInfo() 
     {
       // Clear region info
       ZeroMemory(&m_RegionInfo, sizeof(m_RegionInfo));
 
       // Query region info
-      if (!VirtualQueryEx(m_Memory.GetProcessHandle(), Address, 
+      if (!VirtualQueryEx(m_pMemory->GetProcessHandle(), Address, 
         &m_RegionInfo, sizeof(m_RegionInfo)))
       {
         DWORD LastError = GetLastError();
@@ -231,9 +228,9 @@ namespace Hades
     }
 
     // Constructor
-    Region::Region(MemoryMgr const& MyMemory, 
+    Region::Region(MemoryMgr* MyMemory, 
       MEMORY_BASIC_INFORMATION const& MyMbi) 
-      : m_Memory(MyMemory), 
+      : m_pMemory(MyMemory), 
       m_RegionInfo(MyMbi)
     { }
 

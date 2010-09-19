@@ -57,9 +57,9 @@ namespace Hades
       { };
 
       // Constructor
-      inline explicit Scanner(MemoryMgr const& MyMemory);
-      inline Scanner(MemoryMgr const& MyMemory, HMODULE Module);
-      inline Scanner(MemoryMgr const& MyMemory, PVOID Start, PVOID End);
+      inline explicit Scanner(MemoryMgr* MyMemory);
+      inline Scanner(MemoryMgr* MyMemory, HMODULE Module);
+      inline Scanner(MemoryMgr* MyMemory, PVOID Start, PVOID End);
 
       // Search memory (POD types)
       template <typename T>
@@ -106,11 +106,8 @@ namespace Hades
       inline PVOID operator[](std::wstring const& Name) const;
 
     private:
-      // Disable assignment
-      Scanner& operator= (Scanner const&);
-
       // Memory manager instance
-      MemoryMgr const& m_Memory;
+      MemoryMgr* m_pMemory;
 
       // Start and end addresses of search region
       PBYTE m_Start;
@@ -121,17 +118,17 @@ namespace Hades
     };
 
     // Constructor
-    Scanner::Scanner(MemoryMgr const& MyMemory) 
-      : m_Memory(MyMemory), 
+    Scanner::Scanner(MemoryMgr* MyMemory) 
+      : m_pMemory(MyMemory), 
       m_Start(nullptr), 
       m_End(nullptr), 
       m_Addresses()
     {
       // Get pointer to image headers
-      ModuleEnum MyModuleEnum(m_Memory);
+      ModuleEnum MyModuleEnum(m_pMemory);
       auto const pBase(reinterpret_cast<PBYTE>(MyModuleEnum.First()->
         GetBase()));
-      PeFile MyPeFile(m_Memory, pBase);
+      PeFile MyPeFile(m_pMemory, pBase);
       DosHeader const MyDosHeader(MyPeFile);
       NtHeaders const MyNtHeaders(MyPeFile);
 
@@ -143,15 +140,15 @@ namespace Hades
     }
 
     // Constructor
-    Scanner::Scanner(MemoryMgr const& MyMemory, HMODULE Module) 
-      : m_Memory(MyMemory), 
+    Scanner::Scanner(MemoryMgr* MyMemory, HMODULE Module) 
+      : m_pMemory(MyMemory), 
       m_Start(nullptr), 
       m_End(nullptr), 
       m_Addresses()
     {
       // Ensure file is a valid PE file
       auto const pBase(reinterpret_cast<PBYTE>(Module));
-      PeFile MyPeFile(m_Memory, pBase);
+      PeFile MyPeFile(m_pMemory, pBase);
       DosHeader const MyDosHeader(MyPeFile);
       NtHeaders const MyNtHeaders(MyPeFile);
 
@@ -163,8 +160,8 @@ namespace Hades
     }
 
     // Constructor
-    Scanner::Scanner(MemoryMgr const& MyMemory, PVOID Start, PVOID End) 
-      : m_Memory(MyMemory), 
+    Scanner::Scanner(MemoryMgr* MyMemory, PVOID Start, PVOID End) 
+      : m_pMemory(MyMemory), 
       m_Start(static_cast<PBYTE>(Start)), 
       m_End(static_cast<PBYTE>(End)), 
       m_Addresses()
@@ -274,7 +271,7 @@ namespace Hades
 
           // Check for invalid memory
           MEMORY_BASIC_INFORMATION MyMbi1 = { 0 };
-          if (!VirtualQueryEx(m_Memory.GetProcessHandle(), Address, &MyMbi1, 
+          if (!VirtualQueryEx(m_pMemory->GetProcessHandle(), Address, &MyMbi1, 
             sizeof(MyMbi1)) || (MyMbi1.Protect & PAGE_GUARD) == PAGE_GUARD)
           {
             continue;
@@ -282,7 +279,7 @@ namespace Hades
 
           // Check for invalid memory
           MEMORY_BASIC_INFORMATION MyMbi2 = { 0 };
-          if (!VirtualQueryEx(m_Memory.GetProcessHandle(), Address + PageSize, 
+          if (!VirtualQueryEx(m_pMemory->GetProcessHandle(), Address + PageSize, 
             &MyMbi2, sizeof(MyMbi2)) || (MyMbi2.Protect & PAGE_GUARD) == 
             PAGE_GUARD)
           {
@@ -293,7 +290,7 @@ namespace Hades
           // Todo: If we're reading across a region boundary and we hit 
           // inaccessible memory we should simply read all we can, rather 
           // than skipping the block entirely.
-          auto const Buffer(m_Memory.Read<std::vector<BYTE>>(Address, 
+          auto const Buffer(m_pMemory->Read<std::vector<BYTE>>(Address, 
             PageSize + Data.size() * sizeof(T::value_type)));
 
           // Loop over entire memory region
@@ -394,7 +391,7 @@ namespace Hades
 
           // Check for invalid memory
           MEMORY_BASIC_INFORMATION MyMbi1 = { 0 };
-          if (!VirtualQueryEx(m_Memory.GetProcessHandle(), Address, &MyMbi1, 
+          if (!VirtualQueryEx(m_pMemory->GetProcessHandle(), Address, &MyMbi1, 
             sizeof(MyMbi1)) || (MyMbi1.Protect & PAGE_GUARD) == PAGE_GUARD)
           {
             continue;
@@ -402,7 +399,7 @@ namespace Hades
 
           // Check for invalid memory
           MEMORY_BASIC_INFORMATION MyMbi2 = { 0 };
-          if (!VirtualQueryEx(m_Memory.GetProcessHandle(), Address + PageSize, 
+          if (!VirtualQueryEx(m_pMemory->GetProcessHandle(), Address + PageSize, 
             &MyMbi2, sizeof(MyMbi2)) || (MyMbi2.Protect & PAGE_GUARD) == 
             PAGE_GUARD)
           {
@@ -413,7 +410,7 @@ namespace Hades
           // Todo: If we're reading across a region boundary and we hit 
           // inaccessible memory we should simply read all we can, rather 
           // than skipping the block entirely.
-          auto const Buffer(m_Memory.Read<std::vector<BYTE>>(Address, 
+          auto const Buffer(m_pMemory->Read<std::vector<BYTE>>(Address, 
             PageSize + Data.size() * sizeof(T::value_type)));
 
           // Loop over entire memory region
@@ -604,7 +601,7 @@ namespace Hades
             else if (OptionName == L"Lea")
             {
               // Perform absolute 'dereference'
-              Address = m_Memory.Read<PBYTE>(Address);
+              Address = m_pMemory->Read<PBYTE>(Address);
             }
             // Handle 'Rel' option (rel deref)
             else if (OptionName == L"Rel")
@@ -652,7 +649,7 @@ namespace Hades
               }
 
               // Perform relative 'dereference'
-              Address = m_Memory.Read<PBYTE>(Address) + reinterpret_cast<
+              Address = m_pMemory->Read<PBYTE>(Address) + reinterpret_cast<
                 DWORD_PTR>(Address) + Size - Offset;
             }
             else

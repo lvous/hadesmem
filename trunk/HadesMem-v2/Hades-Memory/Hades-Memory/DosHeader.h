@@ -169,7 +169,7 @@ namespace Hades
       PeFile const& m_PeFile;
 
       // Memory instance
-      MemoryMgr const& m_Memory;
+      MemoryMgr* m_pMemory;
 
       // DOS header base
       PBYTE m_pBase;
@@ -178,7 +178,7 @@ namespace Hades
     // Constructor
     DosHeader::DosHeader(PeFile const& MyPeFile)
       : m_PeFile(MyPeFile), 
-      m_Memory(m_PeFile.GetMemoryMgr()), 
+      m_pMemory(m_PeFile.GetMemoryMgr()), 
       m_pBase(static_cast<PBYTE>(m_PeFile.GetBase()))
     {
       // Ensure magic is valid
@@ -205,21 +205,21 @@ namespace Hades
     // Get magic
     WORD DosHeader::GetMagic() const
     {
-      return m_Memory.Read<WORD>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
+      return m_pMemory->Read<WORD>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
         e_magic));
     }
 
     // Get bytes on last page
     WORD DosHeader::GetBytesOnLastPage() const
     {
-      return m_Memory.Read<WORD>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
+      return m_pMemory->Read<WORD>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
         e_cblp));
     }
 
     // Get pages in file
     WORD DosHeader::GetPagesInFile() const
     {
-      return m_Memory.Read<WORD>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
+      return m_pMemory->Read<WORD>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
         e_cp));
 
     }
@@ -227,119 +227,119 @@ namespace Hades
     // Get relocations
     WORD DosHeader::GetRelocations() const
     {
-      return m_Memory.Read<WORD>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
+      return m_pMemory->Read<WORD>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
         e_crlc));
     }
 
     // Get size of header in paragraphs
     WORD DosHeader::GetSizeOfHeaderInParagraphs() const
     {
-      return m_Memory.Read<WORD>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
+      return m_pMemory->Read<WORD>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
         e_cparhdr));
     }
 
     // Get minimum extra paragraphs needed
     WORD DosHeader::GetMinExtraParagraphs() const
     {
-      return m_Memory.Read<WORD>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
+      return m_pMemory->Read<WORD>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
         e_minalloc));
     }
 
     // Get maximum extra paragraphs needed
     WORD DosHeader::GetMaxExtraParagraphs() const
     {
-      return m_Memory.Read<WORD>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
+      return m_pMemory->Read<WORD>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
         e_maxalloc));
     }
 
     // Get initial SS value
     WORD DosHeader::GetInitialSS() const
     {
-      return m_Memory.Read<WORD>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
+      return m_pMemory->Read<WORD>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
         e_ss));
     }
 
     // Get initial SP value
     WORD DosHeader::GetInitialSP() const
     {
-      return m_Memory.Read<WORD>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
+      return m_pMemory->Read<WORD>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
         e_sp));
     }
 
     // Get checksum
     WORD DosHeader::GetChecksum() const
     {
-      return m_Memory.Read<WORD>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
+      return m_pMemory->Read<WORD>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
         e_csum));
     }
 
     // Get initial IP value
     WORD DosHeader::GetInitialIP() const
     {
-      return m_Memory.Read<WORD>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
+      return m_pMemory->Read<WORD>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
         e_ip));
     }
 
     // Get initial CS value
     WORD DosHeader::GetInitialCS() const
     {
-      return m_Memory.Read<WORD>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
+      return m_pMemory->Read<WORD>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
         e_cs));
     }
 
     // Get file address of reloc table
     WORD DosHeader::GetRelocTableFileAddr() const
     {
-      return m_Memory.Read<WORD>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
+      return m_pMemory->Read<WORD>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
         e_lfarlc));
     }
 
     // Get overlay number
     WORD DosHeader::GetOverlayNum() const
     {
-      return m_Memory.Read<WORD>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
+      return m_pMemory->Read<WORD>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
         e_ovno));
     }
 
     // Get first set of reserved words
     std::array<WORD, 4> DosHeader::GetReservedWords1() const
     {
-      return m_Memory.Read<std::array<WORD, 4>>(m_pBase + FIELD_OFFSET(
+      return m_pMemory->Read<std::array<WORD, 4>>(m_pBase + FIELD_OFFSET(
         IMAGE_DOS_HEADER, e_res));
     }
 
     // Get OEM ID
     WORD DosHeader::GetOEMID() const
     {
-      return m_Memory.Read<WORD>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
+      return m_pMemory->Read<WORD>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
         e_oemid));
     }
 
     // Get OEM info
     WORD DosHeader::GetOEMInfo() const
     {
-      return m_Memory.Read<WORD>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
+      return m_pMemory->Read<WORD>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
         e_oeminfo));
     }
 
     // Get second set of reserved words
     std::array<WORD, 10> DosHeader::GetReservedWords2() const
     {
-      return m_Memory.Read<std::array<WORD, 10>>(m_pBase + FIELD_OFFSET(
+      return m_pMemory->Read<std::array<WORD, 10>>(m_pBase + FIELD_OFFSET(
         IMAGE_DOS_HEADER, e_res2));
     }
 
     // Get new header offset
     LONG DosHeader::GetNewHeaderOffset() const
     {
-      return m_Memory.Read<LONG>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
+      return m_pMemory->Read<LONG>(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, 
         e_lfanew));
     }
 
     // Set magic
     void DosHeader::SetMagic(WORD Magic) 
     {
-      m_Memory.Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_magic), 
+      m_pMemory->Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_magic), 
         Magic);
 
       if (GetMagic() != Magic)
@@ -353,7 +353,7 @@ namespace Hades
     // Set bytes on last page
     void DosHeader::SetBytesOnLastPage(WORD BytesOnLastPage)
     {
-      m_Memory.Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_cblp), 
+      m_pMemory->Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_cblp), 
         BytesOnLastPage);
 
       if (GetBytesOnLastPage() != BytesOnLastPage)
@@ -368,7 +368,7 @@ namespace Hades
     // Set pages in file
     void DosHeader::SetPagesInFile(WORD PagesInFile)
     {
-      m_Memory.Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_cp), 
+      m_pMemory->Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_cp), 
         PagesInFile);
 
       if (GetPagesInFile() != PagesInFile)
@@ -382,7 +382,7 @@ namespace Hades
     // Set relocations
     void DosHeader::SetRelocations(WORD Relocations)
     {
-      m_Memory.Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_crlc), 
+      m_pMemory->Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_crlc), 
         Relocations);
 
       if (GetRelocations() != Relocations)
@@ -396,7 +396,7 @@ namespace Hades
     // Set size of header in paragraphs
     void DosHeader::SetSizeOfHeaderInParagraphs(WORD SizeOfHeaderInParagraphs)
     {
-      m_Memory.Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_cparhdr), 
+      m_pMemory->Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_cparhdr), 
         SizeOfHeaderInParagraphs);
 
       if (GetSizeOfHeaderInParagraphs() != SizeOfHeaderInParagraphs)
@@ -411,7 +411,7 @@ namespace Hades
     // Set min extra paragraphs
     void DosHeader::SetMinExtraParagraphs(WORD MinExtraParagraphs)
     {
-      m_Memory.Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_minalloc), 
+      m_pMemory->Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_minalloc), 
         MinExtraParagraphs);
 
       if (GetMinExtraParagraphs() != MinExtraParagraphs)
@@ -426,7 +426,7 @@ namespace Hades
     // Set max extra paragraphs
     void DosHeader::SetMaxExtraParagraphs(WORD MaxExtraParagraphs)
     {
-      m_Memory.Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_maxalloc), 
+      m_pMemory->Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_maxalloc), 
         MaxExtraParagraphs);
 
       if (GetMaxExtraParagraphs() != MaxExtraParagraphs)
@@ -441,7 +441,7 @@ namespace Hades
     // Set initial SS
     void DosHeader::SetInitialSS(WORD InitialSS)
     {
-      m_Memory.Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_ss), 
+      m_pMemory->Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_ss), 
         InitialSS);
 
       if (GetInitialSS() != InitialSS)
@@ -455,7 +455,7 @@ namespace Hades
     // Set initial SP
     void DosHeader::SetInitialSP(WORD InitialSP)
     {
-      m_Memory.Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_sp), 
+      m_pMemory->Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_sp), 
         InitialSP);
 
       if (GetInitialSP() != InitialSP)
@@ -469,7 +469,7 @@ namespace Hades
     // Set checksum
     void DosHeader::SetChecksum(WORD Checksum) 
     {
-      m_Memory.Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_csum), 
+      m_pMemory->Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_csum), 
         Checksum);
 
       if (GetChecksum() != Checksum)
@@ -483,7 +483,7 @@ namespace Hades
     // Set initial IP
     void DosHeader::SetInitialIP(WORD InitialIP)
     {
-      m_Memory.Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_ip), 
+      m_pMemory->Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_ip), 
         InitialIP);
 
       if (GetInitialIP() != InitialIP)
@@ -497,7 +497,7 @@ namespace Hades
     // Set initial CS
     void DosHeader::SetInitialCS(WORD InitialCS)
     {
-      m_Memory.Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_cs), 
+      m_pMemory->Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_cs), 
         InitialCS);
 
       if (GetInitialCS() != InitialCS)
@@ -511,7 +511,7 @@ namespace Hades
     // Set reloc table file address
     void DosHeader::SetRelocTableFileAddr(WORD RelocTableFileAddr)
     {
-      m_Memory.Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_lfarlc), 
+      m_pMemory->Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_lfarlc), 
         RelocTableFileAddr);
 
       if (GetRelocTableFileAddr() != RelocTableFileAddr)
@@ -526,7 +526,7 @@ namespace Hades
     // Set overlay number
     void DosHeader::SetOverlayNum(WORD OverlayNum)
     {
-      m_Memory.Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_ovno), 
+      m_pMemory->Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_ovno), 
         OverlayNum);
 
       if (GetOverlayNum() != OverlayNum)
@@ -541,7 +541,7 @@ namespace Hades
     void DosHeader::SetReservedWords1(std::array<WORD, 4> const& 
       ReservedWords1)
     {
-      m_Memory.Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_res), 
+      m_pMemory->Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_res), 
         ReservedWords1);
 
       if (GetReservedWords1() != ReservedWords1)
@@ -556,7 +556,7 @@ namespace Hades
     // Set OEM ID
     void DosHeader::SetOEMID(WORD OEMID)
     {
-      m_Memory.Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_oemid), 
+      m_pMemory->Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_oemid), 
         OEMID);
 
       if (GetOEMID() != OEMID)
@@ -570,7 +570,7 @@ namespace Hades
     // Set OEM info
     void DosHeader::SetOEMInfo(WORD OEMInfo)
     {
-      m_Memory.Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_oeminfo), 
+      m_pMemory->Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_oeminfo), 
         OEMInfo);
 
       if (GetOEMInfo() != OEMInfo)
@@ -585,7 +585,7 @@ namespace Hades
     void DosHeader::SetReservedWords2(std::array<WORD, 10> const& 
       ReservedWords2)
     {
-      m_Memory.Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_res2), 
+      m_pMemory->Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_res2), 
         ReservedWords2);
 
       if (GetReservedWords2() != ReservedWords2)
@@ -600,7 +600,7 @@ namespace Hades
     // Set new header offset
     void DosHeader::SetNewHeaderOffset(LONG Offset) 
     {
-      m_Memory.Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_lfanew), 
+      m_pMemory->Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_lfanew), 
         Offset);
 
       if (GetNewHeaderOffset() != Offset)

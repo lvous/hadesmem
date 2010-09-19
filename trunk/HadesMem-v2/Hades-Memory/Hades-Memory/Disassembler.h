@@ -59,7 +59,7 @@ namespace Hades
       { };
 
       // Constructor
-      inline explicit Disassembler(MemoryMgr const& MyMemory);
+      inline explicit Disassembler(MemoryMgr* pMyMemory);
 
       // Disassemble target and get results as strings
       inline std::vector<std::string> DisassembleToStr(PVOID Address, 
@@ -70,16 +70,13 @@ namespace Hades
         DWORD_PTR NumInstructions) const;
 
     private:
-      // Disable assignment
-      Disassembler& operator= (Disassembler const&);
-
       // MemoryMgr instance
-      MemoryMgr const& m_Memory;
+      MemoryMgr* m_pMemory;
     };
 
     // Constructor
-    Disassembler::Disassembler(MemoryMgr const& MyMemory) 
-      : m_Memory(MyMemory)
+    Disassembler::Disassembler(MemoryMgr* pMyMemory) 
+      : m_pMemory(pMyMemory)
     { }
 
     // Test disassembler
@@ -107,8 +104,8 @@ namespace Hades
     {
       // Read data into buffer
       int MaxInstructionSize = 15;
-      auto Buffer(m_Memory.Read<std::vector<BYTE>>(Address, NumInstructions * 
-        MaxInstructionSize));
+      auto Buffer(m_pMemory->Read<std::vector<BYTE>>(Address, 
+        NumInstructions * MaxInstructionSize));
 
       // Set up disasm structure for BeaEngine
       DISASM MyDisasm = { 0 };
@@ -139,8 +136,8 @@ namespace Hades
         DisasmData CurData;
         CurData.Disasm = MyDisasm;
         CurData.Len = Len;
-        CurData.Raw = m_Memory.Read<std::vector<BYTE>>(reinterpret_cast<PVOID>(
-          MyDisasm.EIP), Len);
+        CurData.Raw = m_pMemory->Read<std::vector<BYTE>>(
+          reinterpret_cast<PVOID>(MyDisasm.EIP), Len);
 
         // Add current instruction to list
         Results.push_back(CurData);

@@ -35,7 +35,7 @@ namespace Hades
       class PeFileWrappers : public PeFile
       {
       public:
-        PeFileWrappers(MemoryMgr const& MyMemory, DWORD_PTR Address) 
+        PeFileWrappers(MemoryMgr* MyMemory, DWORD_PTR Address) 
           : PeFile(MyMemory, reinterpret_cast<PVOID>(Address))
         { }
       };
@@ -43,7 +43,7 @@ namespace Hades
       class PeFileAsDataWrappers : public PeFileAsData
       {
       public:
-        PeFileAsDataWrappers(MemoryMgr const& MyMemory, DWORD_PTR Address) 
+        PeFileAsDataWrappers(MemoryMgr* MyMemory, DWORD_PTR Address) 
           : PeFileAsData(MyMemory, reinterpret_cast<PVOID>(Address))
         { }
       };
