@@ -62,6 +62,12 @@ namespace Hades
       inline explicit Process(std::wstring const& WindowName, 
         std::wstring const& ClassName);
 
+      // Move constructor
+      inline Process(Process&& MyProcess);
+
+      // Move assignment
+      inline Process& operator= (Process&& MyProcess);
+
       // Get process handle
       inline HANDLE GetHandle() const;
       
@@ -184,6 +190,21 @@ namespace Hades
 
       // Open process
       Open(m_ID);
+    }
+
+    // Move constructor
+    Process::Process(Process&& MyProcess) 
+      : m_Handle(std::move(MyProcess.m_Handle)), 
+      m_ID(MyProcess.m_ID)
+    {
+      MyProcess.m_Handle = nullptr;
+      MyProcess.m_ID = 0;
+    }
+
+    // Move assignment
+    Process& Process::operator=(Process&& MyProcess)
+    {
+      *this = std::move(MyProcess);
     }
 
     // Open process given process id
