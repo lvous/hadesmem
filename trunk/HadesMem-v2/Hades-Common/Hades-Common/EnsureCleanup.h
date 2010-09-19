@@ -26,6 +26,12 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // C++ Standard Library
 #include <string>
 
+// Boost
+#pragma warning(push, 1)
+#pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
+#include <boost/noncopyable.hpp>
+#pragma warning(pop)
+
 // Notice: Modified version of EnsureCleanup library provided in the 'Windows 
 // via C/C++' sample code. Originally copyright Jeffrey Richter and 
 // Christophe Nasarre.
@@ -41,7 +47,7 @@ namespace Hades
     // Each template instantiation requires a data type, address of cleanup 
     // function, and a value that indicates an invalid value.
     template<typename T, FnCleanup MyCleanup, UINT_PTR Invalid = 0> 
-    class EnsureCleanup 
+    class EnsureCleanup : private boost::noncopyable
     {
     public:
       // Default constructor assumes an invalid value (nothing to cleanup)
@@ -112,10 +118,6 @@ namespace Hades
           m_Handle = Invalid; // We no longer represent a valid object.
         }
       }
-
-    protected:
-      // Disable copying
-      EnsureCleanup(const EnsureCleanup&);
 
     private:
       UINT_PTR m_Handle; // The member representing the object
