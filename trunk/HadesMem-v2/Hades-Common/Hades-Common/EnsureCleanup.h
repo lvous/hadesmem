@@ -87,14 +87,6 @@ namespace Hades
         return *this;  
       }
 
-      // Re-assigning the object forces the current object to be cleaned-up.
-      EnsureCleanup& operator= (EnsureCleanup const& t) 
-      { 
-        Cleanup(); 
-        m_Handle = reinterpret_cast<UINT_PTR>(static_cast<T>(t));
-        return *this;
-      }
-
       // Move assignment
       EnsureCleanup& operator= (EnsureCleanup&& MyEnsureCleanup)
       {
