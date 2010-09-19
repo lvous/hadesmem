@@ -92,7 +92,7 @@ namespace Hades
     public:
       // Constructor
       inline PatchRaw(MemoryMgr* MyMemory, PVOID Target, 
-        std::vector<BYTE> Data);
+        std::vector<BYTE> const& Data);
 
       // Apply patch
       inline virtual void Apply();
@@ -113,7 +113,7 @@ namespace Hades
 
     // Constructor
     PatchRaw::PatchRaw(MemoryMgr* MyMemory, PVOID Target, 
-      std::vector<BYTE> Data) 
+      std::vector<BYTE> const& Data) 
       : Patch(MyMemory), 
       m_Target(Target), 
       m_Data(Data), 
