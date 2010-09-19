@@ -46,15 +46,22 @@ namespace Hades
     public:
       // Default constructor assumes an invalid value (nothing to cleanup)
       EnsureCleanup() 
-        : m_t(Invalid) 
+        : m_Handle(Invalid) 
       { }
 
       // This constructor sets the value to the specified value
       static_assert(sizeof(T) == sizeof(UINT_PTR), "Size of handle type is "
         "incorrect.");
       EnsureCleanup(T t) 
-        : m_t(reinterpret_cast<UINT_PTR>(t)) 
+        : m_Handle(reinterpret_cast<UINT_PTR>(t)) 
       { }
+
+      // Move constructor
+      EnsureCleanup(EnsureCleanup&& MyEnsureCleanup)
+      {
+        m_Handle = MyEnsureCleanup.m_Handle;
+        MyEnsureCleanup.m_Handle = 0;
+      }
 
       // The destructor performs the cleanup.
       ~EnsureCleanup() 
@@ -65,7 +72,7 @@ namespace Hades
       // Helper methods to tell if the value represents a valid object or not..
       BOOL IsValid() const 
       {
-        return m_t != Invalid;
+        return m_Handle != Invalid;
       }
       BOOL IsInvalid() const 
       {
@@ -76,14 +83,30 @@ namespace Hades
       T operator= (T t) 
       { 
         Cleanup(); 
-        m_t = reinterpret_cast<UINT_PTR>(t);
+        m_Handle = reinterpret_cast<UINT_PTR>(t);
         return *this;  
+      }
+
+      // Re-assigning the object forces the current object to be cleaned-up.
+      EnsureCleanup& operator= (EnsureCleanup const& t) 
+      { 
+        Cleanup(); 
+        m_Handle = reinterpret_cast<UINT_PTR>(static_cast<T>(t));
+        return *this;
+      }
+
+      // Move assignment
+      EnsureCleanup& operator= (EnsureCleanup&& MyEnsureCleanup)
+      {
+        Cleanup();
+        m_Handle = MyEnsureCleanup.m_Handle;
+        return *this;
       }
 
       // Returns the value (supports both 32-bit and 64-bit Windows).
       operator T() const 
       {
-        return reinterpret_cast<T>(m_t);
+        return reinterpret_cast<T>(m_Handle);
       }
 
       // Cleanup the object if the value represents a valid object
@@ -93,8 +116,8 @@ namespace Hades
         {
           // In 64-bit Windows, all parameters are 64-bits, 
           // so no casting is required
-          MyCleanup(m_t); // Close the object.
-          m_t = Invalid; // We no longer represent a valid object.
+          MyCleanup(m_Handle); // Close the object.
+          m_Handle = Invalid; // We no longer represent a valid object.
         }
       }
 
@@ -103,7 +126,7 @@ namespace Hades
       EnsureCleanup(const EnsureCleanup&);
 
     private:
-      UINT_PTR m_t; // The member representing the object
+      UINT_PTR m_Handle; // The member representing the object
     };
 
     // Macros to make it easier to declare instances of the template 
