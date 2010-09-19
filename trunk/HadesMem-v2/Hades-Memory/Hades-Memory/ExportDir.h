@@ -61,6 +61,26 @@ namespace Hades
       m_Memory(m_PeFile.GetMemoryMgr())
     { }
 
+    // Get module name
+    std::string ExportDir::GetName() const
+    {
+      // TODO: Implement this in a more efficient manner. (i.e. Read out 
+      // only the data that's necessary rather than the whole structure)
+      
+      // Get export dir
+      auto const ExportDirRaw(GetExportDirRaw());
+
+      // Ensure there is a module name to process
+      if (!ExportDirRaw.Name)
+      {
+        return std::string();
+      }
+
+      // Read module name
+      return m_Memory.Read<std::string>(static_cast<PBYTE>(m_PeFile.GetBase()) 
+        + ExportDirRaw.Name);
+    }
+
     // Get raw export dir
     IMAGE_EXPORT_DIRECTORY ExportDir::GetExportDirRaw() const
     {
@@ -84,22 +104,6 @@ namespace Hades
 
       // Get raw export dir
       return m_Memory.Read<IMAGE_EXPORT_DIRECTORY>(pBase + DataDirVa);
-    }
-
-    std::string ExportDir::GetName() const
-    {
-      // Get export dir
-      auto const ExportDirRaw(GetExportDirRaw());
-
-      // Ensure there is a module name to process
-      if (!ExportDirRaw.Name)
-      {
-        return std::string();
-      }
-
-      // Read module name
-      return m_Memory.Read<std::string>(static_cast<PBYTE>(m_PeFile.GetBase()) 
-        + ExportDirRaw.Name);
     }
   }
 }
