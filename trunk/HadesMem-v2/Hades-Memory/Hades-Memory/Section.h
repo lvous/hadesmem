@@ -36,7 +36,7 @@ namespace Hades
       { };
 
       // Constructor
-      Section(PeFile const& MyPeFile, WORD Number);
+      Section(PeFile* MyPeFile, WORD Number);
 
       // Get name
       std::string GetName() const;
@@ -45,11 +45,8 @@ namespace Hades
       IMAGE_SECTION_HEADER GetSectionHeaderRaw() const;
 
     private:
-      // Disable assignment
-      Section& operator= (Section const&);
-
       // PE file
-      PeFile const& m_PeFile;
+      PeFile* m_pPeFile;
 
       // Memory instance
       MemoryMgr* m_pMemory;
@@ -59,9 +56,9 @@ namespace Hades
     };
 
     // Constructor
-    Section::Section(PeFile const& MyPeFile, WORD Number)
-      : m_PeFile(MyPeFile), 
-      m_pMemory(m_PeFile.GetMemoryMgr()), 
+    Section::Section(PeFile* MyPeFile, WORD Number)
+      : m_pPeFile(MyPeFile), 
+      m_pMemory(m_pPeFile->GetMemoryMgr()), 
       m_SectionNum(Number)
     { }
 
@@ -86,7 +83,7 @@ namespace Hades
     IMAGE_SECTION_HEADER Section::GetSectionHeaderRaw() const
     {
       // Get NT headers
-      NtHeaders MyNtHeaders(m_PeFile);
+      NtHeaders MyNtHeaders(m_pPeFile);
 
       // Ensure section number is valid
       if (m_SectionNum >= MyNtHeaders.GetNumberOfSections())

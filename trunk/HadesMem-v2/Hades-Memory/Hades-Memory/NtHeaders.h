@@ -56,7 +56,7 @@ namespace Hades
       };
 
       // Constructor
-      inline explicit NtHeaders(PeFile const& MyPeFile);
+      inline explicit NtHeaders(PeFile* MyPeFile);
 
       // Get base of NT headers
       inline PVOID GetBase() const;
@@ -317,11 +317,8 @@ namespace Hades
       inline IMAGE_NT_HEADERS GetHeadersRaw() const;
 
     private:
-      // Disable assignment
-      NtHeaders& operator= (NtHeaders const&);
-
       // PE file
-      PeFile const& m_PeFile;
+      PeFile* m_pPeFile;
 
       // Memory instance
       MemoryMgr* m_pMemory;
@@ -331,10 +328,10 @@ namespace Hades
     };
 
     // Constructor
-    NtHeaders::NtHeaders(PeFile const& MyPeFile)
-      : m_PeFile(MyPeFile), 
-      m_pMemory(m_PeFile.GetMemoryMgr()), 
-      m_DosHeader(m_PeFile)
+    NtHeaders::NtHeaders(PeFile* MyPeFile)
+      : m_pPeFile(MyPeFile), 
+      m_pMemory(m_pPeFile->GetMemoryMgr()), 
+      m_DosHeader(m_pPeFile)
     {
       // Ensure signature is valid
       EnsureSignatureValid();
@@ -343,7 +340,7 @@ namespace Hades
     // Get base of NT headers
     PVOID NtHeaders::GetBase() const
     {
-      return static_cast<PBYTE>(m_PeFile.GetBase()) + m_DosHeader.
+      return static_cast<PBYTE>(m_pPeFile->GetBase()) + m_DosHeader.
         GetNewHeaderOffset();
     }
 

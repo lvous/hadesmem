@@ -36,7 +36,7 @@ namespace Hades
       { };
 
       // Constructor
-      ExportDir(PeFile const& MyPeFile);
+      ExportDir(PeFile* MyPeFile);
 
       // Get module name
       std::string GetName() const;
@@ -45,20 +45,17 @@ namespace Hades
       IMAGE_EXPORT_DIRECTORY GetExportDirRaw() const;
 
     private:
-      // Disable assignment
-      ExportDir& operator= (ExportDir const&);
-
       // PE file
-      PeFile const& m_PeFile;
+      PeFile* m_pPeFile;
 
       // Memory instance
       MemoryMgr* m_pMemory;
     };
 
     // Constructor
-    ExportDir::ExportDir(PeFile const& MyPeFile)
-      : m_PeFile(MyPeFile), 
-      m_pMemory(m_PeFile.GetMemoryMgr())
+    ExportDir::ExportDir(PeFile* MyPeFile)
+      : m_pPeFile(MyPeFile), 
+      m_pMemory(m_pPeFile->GetMemoryMgr())
     { }
 
     // Get module name
@@ -77,7 +74,7 @@ namespace Hades
       }
 
       // Read module name
-      return m_pMemory->Read<std::string>(static_cast<PBYTE>(m_PeFile.GetBase()) 
+      return m_pMemory->Read<std::string>(static_cast<PBYTE>(m_pPeFile->GetBase()) 
         + ExportDirRaw.Name);
     }
 
@@ -85,10 +82,10 @@ namespace Hades
     IMAGE_EXPORT_DIRECTORY ExportDir::GetExportDirRaw() const
     {
       // Get PE file base
-      auto pBase(static_cast<PBYTE>(m_PeFile.GetBase()));
+      auto pBase(static_cast<PBYTE>(m_pPeFile->GetBase()));
 
       // Get NT headers
-      NtHeaders MyNtHeaders(m_PeFile);
+      NtHeaders MyNtHeaders(m_pPeFile);
 
       // Get export dir data
       DWORD DataDirSize(MyNtHeaders.GetDataDirectorySize(NtHeaders::

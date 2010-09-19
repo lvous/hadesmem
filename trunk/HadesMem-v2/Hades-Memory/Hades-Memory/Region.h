@@ -137,13 +137,8 @@ namespace Hades
         }
 
       private:
-        // Compiler cannot generate assignment operator
-        RegionListIter& operator= (RegionListIter const& Rhs)
-        {
-          m_RegionEnum = Rhs.m_RegionEnum;
-          m_Current = Rhs.m_Current;
-          return *this;
-        }
+        // Disable assignment
+        RegionListIter& operator= (RegionListIter const&);
 
         // Allow Boost.Iterator access to internals
         friend class boost::iterator_core_access;

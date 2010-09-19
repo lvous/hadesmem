@@ -108,8 +108,8 @@ namespace Hades
       std::wcout << "Performing PE file format validation." << std::endl;
       auto pBase = &ModuleFileBuf[0];
       PeFile MyPeFile(&MyMemoryLocal, pBase);
-      DosHeader MyDosHeader(MyPeFile);
-      NtHeaders MyNtHeaders(MyPeFile);
+      DosHeader MyDosHeader(&MyPeFile);
+      NtHeaders MyNtHeaders(&MyPeFile);
       auto pNtHeadersRaw(static_cast<PIMAGE_NT_HEADERS>(MyNtHeaders.
         GetBase()));
 

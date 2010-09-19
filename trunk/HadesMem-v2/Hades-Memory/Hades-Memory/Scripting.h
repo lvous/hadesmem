@@ -513,7 +513,7 @@ namespace Hades
 
           // Bind DosHeader class
           ,luabind::class_<DosHeader>("DosHeader")
-          .def(luabind::constructor<PeFile const&>())
+          .def(luabind::constructor<PeFile*>())
           .def("IsMagicValid", &DosHeader::IsMagicValid)
           .def("EnsureMagicValid", &DosHeader::EnsureMagicValid)
           .def("GetMagic", &DosHeader::GetMagic)
@@ -580,7 +580,7 @@ namespace Hades
             luabind::value("DataDir_COMDescriptor", NtHeaders::
               DataDir_COMDescriptor)
           ]
-          .def(luabind::constructor<PeFile const&>())
+          .def(luabind::constructor<PeFile*>())
           .def("GetBase", &NtHeaders::GetBase)
           .def("IsSignatureValid", &NtHeaders::IsSignatureValid)
           .def("EnsureSignatureValid", &NtHeaders::EnsureSignatureValid)
@@ -682,18 +682,18 @@ namespace Hades
 
           // Bind Section class
           ,luabind::class_<Section>("Section")
-          .def(luabind::constructor<PeFile const&, WORD>())
+          .def(luabind::constructor<PeFile*, WORD>())
           .def("GetName", &Section::GetName)
 
           // Bind SectionEnum class
           ,luabind::class_<SectionEnum>("SectionEnum")
-          .def(luabind::constructor<PeFile const&>())
+          .def(luabind::constructor<PeFile*>())
           .def("First", &SectionEnum::First)
           .def("Next", &SectionEnum::Next)
 
           // Bind ExportDir class
           ,luabind::class_<ExportDir>("ExportDir")
-          .def(luabind::constructor<PeFile const&>())
+          .def(luabind::constructor<PeFile*>())
           .def("GetName", &ExportDir::GetName)
         ];
       }

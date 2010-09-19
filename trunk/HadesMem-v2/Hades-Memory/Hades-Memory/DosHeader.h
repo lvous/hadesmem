@@ -38,7 +38,7 @@ namespace Hades
       { };
 
       // Constructor
-      inline explicit DosHeader(PeFile const& MyPeFile);
+      inline explicit DosHeader(PeFile* MyPeFile);
 
       // Whether magic is valid
       inline bool IsMagicValid() const;
@@ -162,11 +162,8 @@ namespace Hades
       inline void SetNewHeaderOffset(LONG Offset);
 
     private:
-      // Disable assignment
-      DosHeader& operator= (DosHeader const&);
-
       // PE file
-      PeFile const& m_PeFile;
+      PeFile* m_pPeFile;
 
       // Memory instance
       MemoryMgr* m_pMemory;
@@ -176,10 +173,10 @@ namespace Hades
     };
 
     // Constructor
-    DosHeader::DosHeader(PeFile const& MyPeFile)
-      : m_PeFile(MyPeFile), 
-      m_pMemory(m_PeFile.GetMemoryMgr()), 
-      m_pBase(static_cast<PBYTE>(m_PeFile.GetBase()))
+    DosHeader::DosHeader(PeFile* MyPeFile)
+      : m_pPeFile(MyPeFile), 
+      m_pMemory(m_pPeFile->GetMemoryMgr()), 
+      m_pBase(static_cast<PBYTE>(m_pPeFile->GetBase()))
     {
       // Ensure magic is valid
       EnsureMagicValid();

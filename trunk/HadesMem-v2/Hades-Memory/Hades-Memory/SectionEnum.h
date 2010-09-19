@@ -42,8 +42,8 @@ namespace Hades
     {
     public:
       // Constructor
-      explicit SectionEnum(PeFile const& MyPeFile) 
-        : m_PeFile(MyPeFile), 
+      explicit SectionEnum(PeFile* MyPeFile) 
+        : m_pPeFile(MyPeFile), 
         m_Current(0)
       {
         ZeroMemory(&m_Current, sizeof(m_Current));
@@ -52,10 +52,10 @@ namespace Hades
       // Get first section
       boost::shared_ptr<Section> First() 
       {
-        Hades::Memory::NtHeaders MyNtHeaders(m_PeFile);
+        Hades::Memory::NtHeaders MyNtHeaders(m_pPeFile);
         WORD NumberOfSections(MyNtHeaders.GetNumberOfSections());
 
-        return NumberOfSections ? boost::make_shared<Section>(m_PeFile, 
+        return NumberOfSections ? boost::make_shared<Section>(m_pPeFile, 
           m_Current) : boost::shared_ptr<Section>(static_cast<Section*>(
           nullptr));
       }
@@ -63,13 +63,13 @@ namespace Hades
       // Get next section
       boost::shared_ptr<Section> Next()
       {
-        Hades::Memory::NtHeaders MyNtHeaders(m_PeFile);
+        Hades::Memory::NtHeaders MyNtHeaders(m_pPeFile);
         WORD NumberOfSections(MyNtHeaders.GetNumberOfSections());
 
         ++m_Current;
 
         return (m_Current < NumberOfSections) ? boost::make_shared<Section>(
-          m_PeFile, m_Current) : boost::shared_ptr<Section>(
+          m_pPeFile, m_Current) : boost::shared_ptr<Section>(
           static_cast<Section*>(nullptr));
       }
 
@@ -86,13 +86,8 @@ namespace Hades
         }
 
       private:
-        // Compiler cannot generate assignment operator
-        SectionIter& operator= (SectionIter const& Rhs)
-        {
-          m_SectionEnum = Rhs.m_SectionEnum;
-          m_Current = Rhs.m_Current;
-          return *this;
-        }
+        // Disable assignment
+        SectionIter& operator= (SectionIter const&);
 
         // Allow Boost.Iterator access to internals
         friend class boost::iterator_core_access;
@@ -122,7 +117,7 @@ namespace Hades
       SectionEnum& operator= (SectionEnum const&);
 
       // Memory instance
-      PeFile const& m_PeFile;
+      PeFile* m_pPeFile;
 
       // Current section number
       WORD m_Current;

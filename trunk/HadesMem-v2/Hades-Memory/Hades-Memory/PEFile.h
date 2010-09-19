@@ -51,9 +51,6 @@ namespace Hades
       inline virtual PVOID RvaToVa(DWORD Rva);
 
     private:
-      // Disable assignment
-      PeFile& operator= (PeFile const&);
-
       // Memory instance
       MemoryMgr* m_pMemory;
 
