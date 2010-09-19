@@ -69,6 +69,22 @@ namespace Hades
         MyEnsureCleanup.m_Handle = 0;
       }
 
+      // Move assignment
+      EnsureCleanup& operator= (EnsureCleanup&& MyEnsureCleanup)
+      {
+        Cleanup();
+        m_Handle = MyEnsureCleanup.m_Handle;
+        return *this;
+      }
+
+      // Re-assigning the object forces the current object to be cleaned-up.
+      T operator= (T t) 
+      { 
+        Cleanup(); 
+        m_Handle = reinterpret_cast<UINT_PTR>(t);
+        return *this;  
+      }
+
       // The destructor performs the cleanup.
       ~EnsureCleanup() 
       {
@@ -83,22 +99,6 @@ namespace Hades
       BOOL IsInvalid() const 
       {
         return !IsValid();
-      }
-
-      // Re-assigning the object forces the current object to be cleaned-up.
-      T operator= (T t) 
-      { 
-        Cleanup(); 
-        m_Handle = reinterpret_cast<UINT_PTR>(t);
-        return *this;  
-      }
-
-      // Move assignment
-      EnsureCleanup& operator= (EnsureCleanup&& MyEnsureCleanup)
-      {
-        Cleanup();
-        m_Handle = MyEnsureCleanup.m_Handle;
-        return *this;
       }
 
       // Returns the value (supports both 32-bit and 64-bit Windows).
@@ -181,6 +181,19 @@ namespace Hades
       ~EnsureReleaseRegion() 
       { Cleanup(); }
 
+      EnsureReleaseRegion(EnsureReleaseRegion&& MyEnsureCleanup)
+      {
+        m_pv = MyEnsureCleanup.m_pv;
+        MyEnsureCleanup.m_pv = 0;
+      }
+
+      EnsureReleaseRegion& operator= (EnsureReleaseRegion&& MyEnsureCleanup)
+      {
+        Cleanup();
+        m_pv = MyEnsureCleanup.m_pv;
+        return *this;
+      }
+
       PVOID operator= (PVOID pv) 
       { 
         Cleanup(); 
@@ -211,6 +224,20 @@ namespace Hades
     public:
       EnsureEndUpdateResource(HANDLE File = nullptr) : m_File(File) 
       { }
+
+      EnsureEndUpdateResource(EnsureEndUpdateResource&& MyEnsureCleanup)
+      {
+        m_File = MyEnsureCleanup.m_File;
+        MyEnsureCleanup.m_File = 0;
+      }
+
+      EnsureEndUpdateResource& operator= (
+        EnsureEndUpdateResource&& MyEnsureCleanup)
+      {
+        Cleanup();
+        m_File = MyEnsureCleanup.m_File;
+        return *this;
+      }
 
       ~EnsureEndUpdateResource() 
       { Cleanup(); }
@@ -246,6 +273,23 @@ namespace Hades
       EnsureHeapFree(PVOID pv = nullptr, HANDLE hHeap = GetProcessHeap()) 
         : m_pv(pv), m_hHeap(hHeap) 
       { }
+
+      EnsureHeapFree(EnsureHeapFree&& MyEnsureCleanup)
+      {
+        m_pv = MyEnsureCleanup.m_pv;
+        m_hHeap = MyEnsureCleanup.m_hHeap;
+        MyEnsureCleanup.m_pv = 0;
+        MyEnsureCleanup.m_hHeap = 0;
+      }
+
+      EnsureHeapFree& operator= (EnsureHeapFree&& MyEnsureCleanup)
+      {
+        Cleanup();
+        m_pv = MyEnsureCleanup.m_pv;
+        m_hHeap = MyEnsureCleanup.m_hHeap;
+        return *this;
+      }
+
       ~EnsureHeapFree() 
       { Cleanup(); }
 
@@ -281,6 +325,24 @@ namespace Hades
       EnsureReleaseRegionEx(PVOID pv = nullptr, HANDLE proc = nullptr) 
         : m_pv(pv), m_proc(proc) 
       { }
+
+      EnsureReleaseRegionEx(EnsureReleaseRegionEx&& MyEnsureCleanup)
+      {
+        m_pv = MyEnsureCleanup.m_pv;
+        m_proc = MyEnsureCleanup.m_proc;
+        MyEnsureCleanup.m_pv = 0;
+        MyEnsureCleanup.m_proc = 0;
+      }
+
+      EnsureReleaseRegionEx& operator= (
+        EnsureReleaseRegionEx&& MyEnsureCleanup)
+      {
+        Cleanup();
+        m_pv = MyEnsureCleanup.m_pv;
+        m_proc = MyEnsureCleanup.m_proc;
+        return *this;
+      }
+
       ~EnsureReleaseRegionEx() 
       { Cleanup(); }
 
@@ -315,6 +377,20 @@ namespace Hades
     public:
       EnsureCloseClipboard(BOOL Success) : m_Success(Success) 
       { }
+
+      EnsureCloseClipboard(EnsureCloseClipboard&& MyEnsureCleanup)
+      {
+        m_Success = MyEnsureCleanup.m_Success;
+        MyEnsureCleanup.m_Success = 0;
+      }
+
+      EnsureCloseClipboard& operator= (EnsureCloseClipboard&& MyEnsureCleanup)
+      {
+        Cleanup();
+        m_Success = MyEnsureCleanup.m_Success;
+        return *this;
+      }
+
       ~EnsureCloseClipboard() 
       { Cleanup(); }
 
@@ -348,6 +424,23 @@ namespace Hades
       EnsureUnregisterClassW(const std::wstring& ClassName, HINSTANCE Instance) 
         : m_ClassName(ClassName), m_Instance(Instance) 
       { }
+
+      EnsureUnregisterClassW(EnsureUnregisterClassW&& MyEnsureCleanup)
+      {
+        m_ClassName = MyEnsureCleanup.m_ClassName;
+        m_Instance = MyEnsureCleanup.m_Instance;
+        MyEnsureCleanup.m_ClassName = std::wstring();
+        MyEnsureCleanup.m_Instance = 0;
+      }
+
+      EnsureUnregisterClassW& operator= (EnsureUnregisterClassW&& MyEnsureCleanup)
+      {
+        Cleanup();
+        m_ClassName = MyEnsureCleanup.m_ClassName;
+        m_Instance = MyEnsureCleanup.m_Instance;
+        return *this;
+      }
+
       ~EnsureUnregisterClassW() 
       { Cleanup(); }
 
@@ -379,6 +472,23 @@ namespace Hades
         : m_Wnd(Wnd), 
         m_Dc(Dc) 
       { }
+
+      EnsureReleaseDc(EnsureReleaseDc&& MyEnsureCleanup)
+      {
+        m_Wnd = MyEnsureCleanup.m_Wnd;
+        m_Dc = MyEnsureCleanup.m_Dc;
+        MyEnsureCleanup.m_Wnd = 0;
+        MyEnsureCleanup.m_Dc = 0;
+      }
+
+      EnsureReleaseDc& operator= (EnsureReleaseDc&& MyEnsureCleanup)
+      {
+        Cleanup();
+        m_Wnd = MyEnsureCleanup.m_Wnd;
+        m_Dc = MyEnsureCleanup.m_Dc;
+        return *this;
+      }
+
       ~EnsureReleaseDc() 
       { Cleanup(); }
 
