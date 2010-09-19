@@ -85,30 +85,6 @@ namespace Hades
     }
 
     // Get path to self (directory)
-    inline boost::filesystem::path GetSelfDirPath()
-    {
-      // Get self
-      HMODULE const ModMe(reinterpret_cast<HMODULE>(&__ImageBase));
-
-      // Get path to self
-      DWORD const SelfPathSize = MAX_PATH;
-      std::wstring SelfFullPath;
-      if (!GetModuleFileName(ModMe, Util::MakeStringBuffer(SelfFullPath, 
-        SelfPathSize), SelfPathSize) || GetLastError() == 
-        ERROR_INSUFFICIENT_BUFFER)
-      {
-        DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(HadesError() << 
-          ErrorFunction("GetSelfDirPath") << 
-          ErrorString("Could not get path to self.") << 
-          ErrorCodeWin(LastError));
-      }
-
-      // Path to self dir
-      return boost::filesystem::path(SelfFullPath).parent_path();
-    }
-
-    // Get path to self (directory)
     inline boost::filesystem::path GetSelfPath()
     {
       // Get self
@@ -130,6 +106,13 @@ namespace Hades
 
       // Path to self
       return boost::filesystem::path(SelfFullPath);
+    }
+
+    // Get path to self (directory)
+    inline boost::filesystem::path GetSelfDirPath()
+    {
+      // Path to self dir
+      return GetSelfPath().parent_path();
     }
   }
 }
