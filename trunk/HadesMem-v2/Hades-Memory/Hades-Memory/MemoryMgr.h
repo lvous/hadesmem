@@ -236,7 +236,7 @@ namespace Hades
     // Move assignment operator
     MemoryMgr& MemoryMgr::operator=(MemoryMgr&& MyMemoryMgr) 
     {
-      *this = std::move(MyMemoryMgr);
+      m_Process = std::move(MyMemoryMgr.m_Process);
     }
 
     // Call remote function

@@ -194,17 +194,20 @@ namespace Hades
 
     // Move constructor
     Process::Process(Process&& MyProcess) 
-      : m_Handle(std::move(MyProcess.m_Handle)), 
-      m_ID(MyProcess.m_ID)
+      : m_Handle(nullptr), 
+      m_ID(0)
     {
-      MyProcess.m_Handle = nullptr;
-      MyProcess.m_ID = 0;
+      *this = std::move(MyProcess);
     }
 
     // Move assignment
     Process& Process::operator=(Process&& MyProcess)
     {
-      *this = std::move(MyProcess);
+      this->m_Handle = std::move(MyProcess.m_Handle);
+      this->m_ID = MyProcess.m_ID;
+
+      MyProcess.m_Handle = nullptr;
+      MyProcess.m_ID = 0;
     }
 
     // Open process given process id
