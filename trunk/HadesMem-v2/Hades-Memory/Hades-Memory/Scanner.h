@@ -637,7 +637,7 @@ namespace Hades
                   "option."));
               }
 
-              // Convert instruction onffset to usable format
+              // Convert instruction offset to usable format
               std::wstringstream OffsetConverter(OffsetAttr->value());
               DWORD_PTR Offset(0);
               if (!(OffsetConverter >> std::hex >> Offset >> std::dec))

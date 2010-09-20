@@ -51,8 +51,8 @@ namespace Hades
       inline Region(MemoryMgr* MyMemory, PVOID Address);
 
       // Constructor
-      inline Region(MemoryMgr* MyMemory, 
-        MEMORY_BASIC_INFORMATION const& MyMbi);
+      inline Region(MemoryMgr* MyMemory, MEMORY_BASIC_INFORMATION const& 
+        MyMbi);
 
       // Get base address
       inline PVOID GetBase() const;
@@ -126,7 +126,7 @@ namespace Hades
         std::unique_ptr<Region>, boost::incrementable_traversal_tag>
       {
       public:
-        // Construtor
+        // Constructor
         RegionListIter(RegionEnum& MyRegionEnum) 
           : m_RegionEnum(MyRegionEnum)
         {

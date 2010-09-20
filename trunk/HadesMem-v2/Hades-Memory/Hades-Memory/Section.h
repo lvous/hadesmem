@@ -36,16 +36,16 @@ namespace Hades
       { };
 
       // Constructor
-      Section(PeFile* MyPeFile, WORD Number);
+      inline Section(PeFile* MyPeFile, WORD Number);
 
       // Get name
-      std::string GetName() const;
+      inline std::string GetName() const;
 
       // Get section header base
-      PBYTE GetBase() const;
+      inline PBYTE GetBase() const;
 
       // Get raw section header
-      IMAGE_SECTION_HEADER GetSectionHeaderRaw() const;
+      inline IMAGE_SECTION_HEADER GetSectionHeaderRaw() const;
 
     private:
       // PE file

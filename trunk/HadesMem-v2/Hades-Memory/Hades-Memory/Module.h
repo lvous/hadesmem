@@ -141,7 +141,7 @@ namespace Hades
         std::unique_ptr<Module>, boost::incrementable_traversal_tag>
       {
       public:
-        // Construtor
+        // Constructor
         ModuleListIter(ModuleEnum& MyModuleList) 
           : m_ModuleEnum(MyModuleList)
         {

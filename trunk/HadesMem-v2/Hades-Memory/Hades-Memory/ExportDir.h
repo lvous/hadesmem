@@ -52,25 +52,25 @@ namespace Hades
       { };
 
       // Constructor
-      ExportDir(PeFile* MyPeFile);
+      inline ExportDir(PeFile* MyPeFile);
 
       // Whether export directory is valid
-      bool IsValid() const;
+      inline bool IsValid() const;
 
       // Ensure export directory is valid
-      void EnsureValid() const;
+      inline void EnsureValid() const;
 
       // Get module name
-      std::string GetName() const;
+      inline std::string GetName() const;
 
       // Get all exports
-      std::vector<Export> GetAllExports() const;
+      inline std::vector<Export> GetAllExports() const;
 
       // Get base of export dir
-      PBYTE GetBase() const;
+      inline PBYTE GetBase() const;
 
       // Get raw export dir
-      IMAGE_EXPORT_DIRECTORY GetExportDirRaw() const;
+      inline IMAGE_EXPORT_DIRECTORY GetExportDirRaw() const;
 
     private:
       // PE file

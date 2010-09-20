@@ -75,7 +75,7 @@ namespace Hades
         std::unique_ptr<Section>, boost::incrementable_traversal_tag>
       {
       public:
-        // Construtor
+        // Constructor
         explicit SectionIter(SectionEnum& MySectionEnum) 
           : m_SectionEnum(MySectionEnum)
         {
