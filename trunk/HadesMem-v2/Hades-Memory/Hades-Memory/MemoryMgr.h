@@ -237,6 +237,8 @@ namespace Hades
     MemoryMgr& MemoryMgr::operator=(MemoryMgr&& MyMemoryMgr) 
     {
       m_Process = std::move(MyMemoryMgr.m_Process);
+
+      return *this;
     }
 
     // Call remote function

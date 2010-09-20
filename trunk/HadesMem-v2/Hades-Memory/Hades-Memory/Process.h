@@ -208,6 +208,8 @@ namespace Hades
 
       MyProcess.m_Handle = nullptr;
       MyProcess.m_ID = 0;
+
+      return *this;
     }
 
     // Open process given process id
