@@ -45,7 +45,7 @@ namespace Hades
       inline MemoryMgr* GetMemoryMgr() const;
 
       // Get base address
-      inline PVOID GetBase() const;
+      inline PBYTE GetBase() const;
 
       // Convert RVA to VA
       inline virtual PVOID RvaToVa(DWORD Rva);
@@ -55,7 +55,7 @@ namespace Hades
       MemoryMgr* m_pMemory;
 
       // Base address
-      PVOID m_pBase;
+      PBYTE m_pBase;
     };
 
     // PE file format wrapper
@@ -88,7 +88,7 @@ namespace Hades
       MemoryMgr* MyMemory(GetMemoryMgr());
 
       // Get PE file base
-      PBYTE pBase = static_cast<PBYTE>(GetBase());
+      PBYTE pBase(GetBase());
 
       // Get DOS header
       auto DosHeader(MyMemory->Read<IMAGE_DOS_HEADER>(pBase));
@@ -143,7 +143,7 @@ namespace Hades
     // Constructor
     PeFile::PeFile(MemoryMgr* MyMemory, PVOID Address)
       : m_pMemory(MyMemory), 
-      m_pBase(Address)
+      m_pBase(static_cast<PBYTE>(Address))
     { }
 
     // Get memory manager
@@ -153,7 +153,7 @@ namespace Hades
     }
 
     // Get base address
-    PVOID PeFile::GetBase() const
+    PBYTE PeFile::GetBase() const
     {
       return m_pBase;
     }
@@ -161,7 +161,7 @@ namespace Hades
     // Convert RVA to VA
     PVOID PeFile::RvaToVa(DWORD Rva)
     {
-      return Rva ? static_cast<PBYTE>(m_pBase) + Rva : nullptr;
+      return Rva ? (m_pBase + Rva) : nullptr;
     }
   }
 }

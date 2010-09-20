@@ -55,6 +55,7 @@ extern "C"
 #pragma warning(pop)
 
 // Hades
+#include "PeLib.h"
 #include "Memory.h"
 #include "PeFileWrap.h"
 #include "ModuleWrap.h" 

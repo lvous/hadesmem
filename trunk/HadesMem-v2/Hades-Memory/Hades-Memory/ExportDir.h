@@ -41,6 +41,9 @@ namespace Hades
       // Get module name
       std::string GetName() const;
 
+      // Get base of export dir
+      PBYTE GetBase() const;
+
       // Get raw export dir
       IMAGE_EXPORT_DIRECTORY GetExportDirRaw() const;
 
@@ -61,28 +64,28 @@ namespace Hades
     // Get module name
     std::string ExportDir::GetName() const
     {
-      // TODO: Implement this in a more efficient manner. (i.e. Read out 
-      // only the data that's necessary rather than the whole structure)
-      
-      // Get export dir
-      auto const ExportDirRaw(GetExportDirRaw());
+      // Get base of export dir
+      PBYTE pExpDirBase(GetBase());
+
+      // Read RVA of module name
+      auto NameRva(m_pMemory->Read<DWORD>(pExpDirBase + FIELD_OFFSET(
+        IMAGE_EXPORT_DIRECTORY, Name)));
 
       // Ensure there is a module name to process
-      if (!ExportDirRaw.Name)
+      if (!NameRva)
       {
         return std::string();
       }
 
       // Read module name
-      return m_pMemory->Read<std::string>(static_cast<PBYTE>(m_pPeFile->GetBase()) 
-        + ExportDirRaw.Name);
+      return m_pMemory->Read<std::string>(m_pPeFile->GetBase() + NameRva);
     }
 
-    // Get raw export dir
-    IMAGE_EXPORT_DIRECTORY ExportDir::GetExportDirRaw() const
+    // Get base of export dir
+    PBYTE ExportDir::GetBase() const
     {
       // Get PE file base
-      auto pBase(static_cast<PBYTE>(m_pPeFile->GetBase()));
+      PBYTE pBase(m_pPeFile->GetBase());
 
       // Get NT headers
       NtHeaders MyNtHeaders(m_pPeFile);
@@ -95,12 +98,18 @@ namespace Hades
       if (!DataDirSize || !DataDirVa)
       {
         BOOST_THROW_EXCEPTION(Error() << 
-          ErrorFunction("ExportDir::GetExportDirRaw") << 
+          ErrorFunction("ExportDir::GetBase") << 
           ErrorString("PE file has no export directory."));
       }
 
+      return pBase + DataDirVa;
+    }
+
+    // Get raw export dir
+    IMAGE_EXPORT_DIRECTORY ExportDir::GetExportDirRaw() const
+    {
       // Get raw export dir
-      return m_pMemory->Read<IMAGE_EXPORT_DIRECTORY>(pBase + DataDirVa);
+      return m_pMemory->Read<IMAGE_EXPORT_DIRECTORY>(GetBase());
     }
   }
 }
