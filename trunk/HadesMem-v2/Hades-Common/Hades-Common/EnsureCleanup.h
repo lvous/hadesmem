@@ -1,6 +1,6 @@
 /*
 This file is part of HadesMem.
-Copyright © 2010 Cypherjb (aka Chazwazza, aka Cypher). 
+Copyright © 2010 Cypherjb (aka Chazwazza, aka Cypher).
 <http://www.cypherjb.com/> <cypher.jb@gmail.com>
 
 HadesMem is free software: you can redistribute it and/or modify
@@ -27,145 +27,164 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 
 // Boost
-#pragma warning(push, 1)
-#pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
 #include <boost/noncopyable.hpp>
-#pragma warning(pop)
 
-// Notice: Modified version of EnsureCleanup library provided in the 'Windows 
-// via C/C++' sample code. Originally copyright Jeffrey Richter and 
+// Notice: Modified version of EnsureCleanup library provided in the 'Windows
+// via C/C++' sample code. Originally copyright Jeffrey Richter and
 // Christophe Nasarre.
 
 namespace Hades
 {
   namespace Windows
   {
-    // Data type representing the address of the object's cleanup function.
-    // I used UINT_PTR so that this class works properly in 64-bit Windows.
-    typedef VOID (WINAPI* FnCleanup)(UINT_PTR);
-
-    // Each template instantiation requires a data type, address of cleanup 
-    // function, and a value that indicates an invalid value.
-    template<typename T, FnCleanup MyCleanup, UINT_PTR Invalid = 0> 
+    // Windows RAII helper class template
+    // HandleT = Handle type (e.g. 'HANDLE')
+    // FuncT = Function prototype (e.g. 'BOOL (WINAPI*) (HANDLE)' )
+    // CleanupFn = Cleanup function (e.g. 'CloseHandle')
+    // Invalid = Invalid handle value (e.g. '0')
+    // Note: Invalid is of type DWORD_PTR and not HandleT due to a GCC error
+    template <typename HandleT, typename FuncT, FuncT CleanupFn, 
+      DWORD_PTR Invalid>
     class EnsureCleanup : private boost::noncopyable
     {
     public:
-      // Default constructor assumes an invalid value (nothing to cleanup)
-      EnsureCleanup() 
-        : m_Handle(Invalid) 
-      { }
+      // Ensure size of handle type is valid. Under Windows all handles are 
+      // the size of a pointer.
+      static_assert(sizeof(HandleT) == sizeof(DWORD_PTR), 
+        "Size of handle type is invalid.");
 
-      // This constructor sets the value to the specified value
-      static_assert(sizeof(T) == sizeof(UINT_PTR), "Size of handle type is "
-        "incorrect.");
-      EnsureCleanup(T t) 
-        : m_Handle(reinterpret_cast<UINT_PTR>(t)) 
+      // Constructor
+      EnsureCleanup(HandleT Handle = reinterpret_cast<HandleT>(Invalid))
+        : m_Handle(Handle)
       { }
 
       // Move constructor
-      EnsureCleanup(EnsureCleanup&& MyEnsureCleanup) 
-        : m_Handle(Invalid)
+      EnsureCleanup(EnsureCleanup&& MyEnsureCleanup)
+        : m_Handle(reinterpret_cast<HandleT>(Invalid))
       {
         *this = std::move(MyEnsureCleanup);
       }
 
-      // Move assignment
+      // Move assignment operator
       EnsureCleanup& operator= (EnsureCleanup&& MyEnsureCleanup)
       {
         Cleanup();
 
         this->m_Handle = MyEnsureCleanup.m_Handle;
 
-        MyEnsureCleanup.m_Handle = Invalid;
+        MyEnsureCleanup.m_Handle = reinterpret_cast<HandleT>(Invalid);
 
         return *this;
       }
 
-      // Re-assigning the object forces the current object to be cleaned-up.
-      T operator= (T t) 
-      { 
-        Cleanup(); 
-        m_Handle = reinterpret_cast<UINT_PTR>(t);
-        return *this;  
+      // Assignment operator (for HandleT values)
+      EnsureCleanup& operator= (HandleT Handle)
+      {
+        Cleanup();
+
+        m_Handle = Handle;
+
+        return *this;
       }
 
       // The destructor performs the cleanup.
-      ~EnsureCleanup() 
+      ~EnsureCleanup()
       {
         Cleanup();
       }
 
-      // Helper methods to tell if the value represents a valid object or not..
-      BOOL IsValid() const 
+      // Whether object is valid
+      BOOL IsValid() const
       {
-        return m_Handle != Invalid;
+        return m_Handle != reinterpret_cast<HandleT>(Invalid);
       }
-      BOOL IsInvalid() const 
+
+      // Whether object is invalid
+      BOOL IsInvalid() const
       {
         return !IsValid();
       }
 
-      // Returns the value (supports both 32-bit and 64-bit Windows).
-      operator T() const 
+      // Implicit conversion operator for HandleT
+      operator HandleT() const
       {
-        return reinterpret_cast<T>(m_Handle);
+        return m_Handle;
       }
 
       // Cleanup the object if the value represents a valid object
-      void Cleanup() 
-      { 
+      void Cleanup()
+      {
         if (IsValid())
         {
-          // In 64-bit Windows, all parameters are 64-bits, 
-          // so no casting is required
-          MyCleanup(m_Handle); // Close the object.
-          m_Handle = Invalid; // We no longer represent a valid object.
+          // Close the object.
+          CleanupFn(m_Handle);
+
+          // We no longer represent a valid object.
+          m_Handle = reinterpret_cast<HandleT>(Invalid);
         }
       }
 
     private:
-      UINT_PTR m_Handle; // The member representing the object
+      // Handle being managed
+      HandleT m_Handle;
     };
 
-    // Macros to make it easier to declare instances of the template 
-    // class for specific data types.
-
-#define MakeCleanupClass(className, tData, pfnCleanup) \
-  typedef EnsureCleanup<tData, (FnCleanup) pfnCleanup> className
-
-#define MakeCleanupClassX(className, tData, pfnCleanup, Invalid) \
-  typedef EnsureCleanup<tData, (FnCleanup) pfnCleanup, \
-  (INT_PTR) Invalid> className
+    // Redefining 'INVALID_HANDLE_VALUE' due to a GCC error
+    namespace
+    {
+      DWORD_PTR const INVALID_HANDLE_VALUE_WRAP = static_cast<DWORD_PTR>(-1);
+    }
 
     // Instances of the template C++ class for common data types.
-    MakeCleanupClass(EnsureFindClose, HANDLE, FindClose);
-    MakeCleanupClass(EnsureCloseHandle, HANDLE, CloseHandle);
-    MakeCleanupClassX(EnsureCloseSnap, HANDLE, CloseHandle, 
-      INVALID_HANDLE_VALUE);
-    MakeCleanupClass(EnsureLocalFree, HLOCAL, LocalFree);
-    MakeCleanupClass(EnsureGlobalFree, HGLOBAL, GlobalFree);
-    MakeCleanupClass(EnsureGlobalUnlock, LPVOID, GlobalUnlock);
-    MakeCleanupClass(EnsureRegCloseKey, HKEY, RegCloseKey);
-    MakeCleanupClass(EnsureCloseServiceHandle, SC_HANDLE, CloseServiceHandle);
-    MakeCleanupClass(EnsureCloseWindowStation, HWINSTA, CloseWindowStation);
-    MakeCleanupClass(EnsureCloseDesktop, HDESK, CloseDesktop);
-    MakeCleanupClass(EnsureUnmapViewOfFile, PVOID, UnmapViewOfFile);
-    MakeCleanupClass(EnsureFreeLibrary, HMODULE, FreeLibrary);
-    MakeCleanupClass(EnsureRemoveVEH, PVOID, RemoveVectoredExceptionHandler);
-    MakeCleanupClass(EnsureResumeThread, HANDLE, ResumeThread);
-    MakeCleanupClassX(EnsureCloseFile, HANDLE, CloseHandle, 
-      INVALID_HANDLE_VALUE);
-    MakeCleanupClass(EnsureUnhookWindowsHookEx, HHOOK, UnhookWindowsHookEx);
-    MakeCleanupClass(EnsureDestroyWindow, HWND, DestroyWindow);
-    MakeCleanupClass(EnsureFreeSid, PSID, FreeSid);
-    MakeCleanupClass(EnsureFreeResource, HGLOBAL, FreeResource);
-    MakeCleanupClass(EnsureDeleteDc, HDC, DeleteDC);
-    MakeCleanupClass(EnsureDeleteObject, HBITMAP, DeleteObject);
-    MakeCleanupClass(EnsureDestroyIcon, HICON, DestroyIcon);
-    MakeCleanupClass(EnsureDestroyMenu, HMENU, DestroyMenu);
+    typedef EnsureCleanup<HANDLE, BOOL(WINAPI*)(HANDLE), FindClose, 0> 
+      EnsureFindClose;
+    typedef EnsureCleanup<HANDLE, BOOL(WINAPI*)(HANDLE), CloseHandle, 0> 
+      EnsureCloseHandle;
+    typedef EnsureCleanup<HANDLE, BOOL(WINAPI*)(HANDLE), CloseHandle, 
+      INVALID_HANDLE_VALUE_WRAP> EnsureCloseSnap;
+    typedef EnsureCleanup<HLOCAL, HLOCAL(WINAPI*)(HLOCAL), LocalFree, 0> 
+      EnsureLocalFree;
+    typedef EnsureCleanup<HGLOBAL, HGLOBAL(WINAPI*)(HGLOBAL), GlobalFree, 0> 
+      EnsureGlobalFree;
+    typedef EnsureCleanup<HGLOBAL, BOOL(WINAPI*)(HGLOBAL), GlobalUnlock, 0> 
+      EnsureGlobalUnlock;
+    typedef EnsureCleanup<HKEY, LONG(WINAPI*)(HKEY), RegCloseKey, 0> 
+      EnsureRegCloseKey;
+    typedef EnsureCleanup<SC_HANDLE, BOOL(WINAPI*)(SC_HANDLE), 
+      CloseServiceHandle, 0> EnsureCloseServiceHandle;
+    typedef EnsureCleanup<HWINSTA, BOOL(WINAPI*)(HWINSTA), CloseWindowStation, 
+      0> EnsureCloseWindowStation;
+    typedef EnsureCleanup<HDESK, BOOL(WINAPI*)(HDESK), CloseDesktop, 0> 
+      EnsureCloseDesktop;
+    typedef EnsureCleanup<LPCVOID, BOOL(WINAPI*)(LPCVOID), UnmapViewOfFile, 0> 
+      EnsureUnmapViewOfFile;
+    typedef EnsureCleanup<HMODULE, BOOL(WINAPI*)(HMODULE), FreeLibrary, 0> 
+      EnsureFreeLibrary;
+    typedef EnsureCleanup<PVOID, ULONG(WINAPI*)(PVOID), 
+      RemoveVectoredExceptionHandler, 0> EnsureRemoveVEH;
+    typedef EnsureCleanup<HANDLE, DWORD(WINAPI*)(HANDLE), ResumeThread, 0> 
+      EnsureResumeThread;
+    typedef EnsureCleanup<HANDLE, BOOL(WINAPI*)(HANDLE), CloseHandle, 
+      INVALID_HANDLE_VALUE_WRAP> EnsureCloseFile;
+    typedef EnsureCleanup<HHOOK, BOOL(WINAPI*)(HHOOK), UnhookWindowsHookEx, 0> 
+      EnsureUnhookWindowsHookEx;
+    typedef EnsureCleanup<HWND, BOOL(WINAPI*)(HWND), DestroyWindow, 0> 
+      EnsureDestroyWindow;
+    typedef EnsureCleanup<PSID, PVOID(WINAPI*)(PSID), FreeSid, 0> 
+      EnsureFreeSid;
+    typedef EnsureCleanup<HGLOBAL, BOOL(WINAPI*)(HGLOBAL), FreeResource, 0> 
+      EnsureFreeResource;
+    typedef EnsureCleanup<HDC, BOOL(WINAPI*)(HDC), DeleteDC, 0> 
+      EnsureDeleteDc;
+    typedef EnsureCleanup<HBITMAP, BOOL(WINAPI*)(HGDIOBJ), DeleteObject, 0> 
+      EnsureDeleteObject;
+    typedef EnsureCleanup<HICON, BOOL(WINAPI*)(HICON), DestroyIcon, 0> 
+      EnsureDestroyIcon;
+    typedef EnsureCleanup<HMENU, BOOL(WINAPI*)(HMENU), DestroyMenu, 0> 
+      EnsureDestroyMenu;
 
     // Special class for ensuring COM is uninitialized
-    class EnsureCoUninitialize
+    class EnsureCoUninitialize : private boost::noncopyable
     {
     public:
       ~EnsureCoUninitialize()
@@ -175,23 +194,28 @@ namespace Hades
     };
 
     // Special class for releasing a reserved region.
-    // Special class is required because VirtualFree requires 3 parameters
     class EnsureReleaseRegion : private boost::noncopyable
     {
     public:
-      EnsureReleaseRegion(PVOID pv = nullptr) 
-        : m_pv(pv) 
+      // Constructor
+      EnsureReleaseRegion(PVOID pv = NULL)
+        : m_pv(pv)
       { }
 
-      ~EnsureReleaseRegion() 
-      { Cleanup(); }
+      // Destructor
+      ~EnsureReleaseRegion()
+      {
+        Cleanup();
+      }
 
-      EnsureReleaseRegion(EnsureReleaseRegion&& MyEnsureCleanup) 
-        : m_pv(nullptr)
+      // Move constructor
+      EnsureReleaseRegion(EnsureReleaseRegion&& MyEnsureCleanup)
+        : m_pv(NULL)
       {
         *this = std::move(MyEnsureCleanup);
       }
 
+      // Move assignment operator
       EnsureReleaseRegion& operator= (EnsureReleaseRegion&& MyEnsureCleanup)
       {
         Cleanup();
@@ -203,97 +227,123 @@ namespace Hades
         return *this;
       }
 
-      PVOID operator= (PVOID pv) 
-      { 
-        Cleanup(); 
-        m_pv = pv; 
-        return(m_pv); 
+      // Assignment operator (for PVOID values) 
+      EnsureReleaseRegion& operator= (PVOID pv)
+      {
+        Cleanup();
+
+        m_pv = pv;
+
+        return *this;
       }
 
-      operator PVOID() const 
-      { return(m_pv); }
+      // Implicit conversion operator for PVOID
+      operator PVOID() const
+      {
+        return m_pv;
+      }
 
-      void Cleanup() 
-      { 
-        if (m_pv != nullptr) 
-        { 
-          VirtualFree(m_pv, 0, MEM_RELEASE); 
-          m_pv = nullptr; 
-        } 
+      // Cleanup the object if the value represents a valid object
+      void Cleanup()
+      {
+        if (m_pv != NULL)
+        {
+          VirtualFree(m_pv, 0, MEM_RELEASE);
+
+          m_pv = NULL;
+        }
       }
 
     private:
+      // Handle being managed
       PVOID m_pv;
     };
 
     // Special class for releasing a reserved region.
-    // Special class is required because VirtualFree requires 3 parameters
     class EnsureEndUpdateResource : private boost::noncopyable
     {
     public:
-      EnsureEndUpdateResource(HANDLE File = nullptr) : m_File(File) 
+      // Constructor
+      EnsureEndUpdateResource(HANDLE File = NULL) 
+        : m_File(File)
       { }
 
-      EnsureEndUpdateResource(EnsureEndUpdateResource&& MyEnsureCleanup) 
-        : m_File(nullptr)
+      // Move constructor
+      EnsureEndUpdateResource(EnsureEndUpdateResource&& MyEnsureCleanup)
+        : m_File(NULL)
       {
         *this = std::move(MyEnsureCleanup);
       }
 
-      EnsureEndUpdateResource& operator= (EnsureEndUpdateResource&& 
+      // Move assignment operator
+      EnsureEndUpdateResource& operator= (EnsureEndUpdateResource&&
         MyEnsureCleanup)
       {
         Cleanup();
 
         m_File = MyEnsureCleanup.m_File;
 
-        MyEnsureCleanup.m_File = nullptr;
+        MyEnsureCleanup.m_File = NULL;
 
         return *this;
       }
 
-      ~EnsureEndUpdateResource() 
-      { Cleanup(); }
-
-      PVOID operator= (HANDLE File) 
-      { 
-        Cleanup(); 
-        m_File = File; 
-        return(m_File); 
+      // Destructor
+      ~EnsureEndUpdateResource()
+      {
+        Cleanup();
       }
 
-      operator HANDLE() const 
-      { return(m_File); }
+      // Assignment operator (for HANDLE values) 
+      EnsureEndUpdateResource& operator= (HANDLE File)
+      {
+        Cleanup();
 
-      void Cleanup() 
-      { 
-        if (m_File != nullptr) 
-        { 
-          EndUpdateResource(m_File, FALSE); 
-          m_File = nullptr; 
-        } 
+        m_File = File;
+
+        return *this;
+      }
+
+      // Implicit conversion operator for HANDLE
+      operator HANDLE() const
+      {
+        return m_File;
+      }
+
+      // Cleanup the object if the value represents a valid object
+      void Cleanup()
+      {
+        if (m_File != NULL)
+        {
+          EndUpdateResource(m_File, FALSE);
+
+          m_File = NULL;
+        }
       }
 
     private:
+      // Handle being managed
       HANDLE m_File;
     };
 
     // Special class for freeing a block from a heap
-    // Special class is required because HeapFree requires 3 parameters
     class EnsureHeapFree : private boost::noncopyable
     {
     public:
-      EnsureHeapFree(PVOID pv = nullptr, HANDLE hHeap = GetProcessHeap()) 
-        : m_pv(pv), m_hHeap(hHeap) 
+      // Constructor
+      EnsureHeapFree(PVOID pv = NULL, HANDLE hHeap = GetProcessHeap())
+        : m_pv(pv), m_hHeap(hHeap)
       { }
 
-      EnsureHeapFree(EnsureHeapFree&& MyEnsureCleanup) 
-        : m_pv(nullptr), 
-        m_hHeap(nullptr)
+      // Move constructor
+      EnsureHeapFree(EnsureHeapFree&& MyEnsureCleanup)
+        : m_pv(NULL),
+        m_hHeap(NULL)
       {
         *this = std::move(MyEnsureCleanup);
       }
 
+      // Move assignment operator
       EnsureHeapFree& operator= (EnsureHeapFree&& MyEnsureCleanup)
       {
         Cleanup();
@@ -301,56 +351,71 @@ namespace Hades
         m_pv = MyEnsureCleanup.m_pv;
         m_hHeap = MyEnsureCleanup.m_hHeap;
 
-        MyEnsureCleanup.m_pv = nullptr;
-        MyEnsureCleanup.m_hHeap = nullptr;
+        MyEnsureCleanup.m_pv = NULL;
+        MyEnsureCleanup.m_hHeap = NULL;
 
         return *this;
       }
 
-      ~EnsureHeapFree() 
-      { Cleanup(); }
-
-      PVOID operator= (PVOID pv) 
-      { 
-        Cleanup(); 
-        m_pv = pv; 
-        return(m_pv); 
+      // Destructor
+      ~EnsureHeapFree()
+      {
+        Cleanup();
       }
 
-      operator PVOID() const 
-      { return(m_pv); }
+      // Assignment operator (for PVOID values)
+      EnsureHeapFree& operator= (PVOID pv)
+      {
+        Cleanup();
 
-      void Cleanup() 
-      { 
-        if (m_pv != nullptr) 
-        { 
-          HeapFree(m_hHeap, 0, m_pv); 
-          m_pv = nullptr; 
-        } 
+        m_pv = pv;
+
+        return *this;
+      }
+
+      // Implicit conversion operator for PVOID
+      operator PVOID() const
+      {
+        return m_pv;
+      }
+
+      // Cleanup the object if the value represents a valid object
+      void Cleanup()
+      {
+        if (m_pv != NULL)
+        {
+          HeapFree(m_hHeap, 0, m_pv);
+
+          m_pv = NULL;
+        }
       }
 
     private:
-      HANDLE m_hHeap;
+      // Handles being managed
       PVOID m_pv;
+      HANDLE m_hHeap;
     };
 
-    // Special class for releasing a remote reserved region.
-    // Special class is required because VirtualFreeEx requires 4 parameters
+    // Special class for releasing a remote reserved region
     class EnsureReleaseRegionEx : private boost::noncopyable
     {
     public:
-      EnsureReleaseRegionEx(PVOID pv = nullptr, HANDLE proc = nullptr) 
-        : m_pv(pv), m_proc(proc) 
+      // Constructor
+      EnsureReleaseRegionEx(PVOID pv = NULL, HANDLE proc = NULL)
+        : m_pv(pv), 
+        m_proc(proc)
       { }
 
-      EnsureReleaseRegionEx(EnsureReleaseRegionEx&& MyEnsureCleanup) 
-        : m_pv(nullptr), 
-        m_proc(nullptr)
+      // Move constructor
+      EnsureReleaseRegionEx(EnsureReleaseRegionEx&& MyEnsureCleanup)
+        : m_pv(NULL),
+        m_proc(NULL)
       {
         *this = std::move(MyEnsureCleanup);
       }
 
-      EnsureReleaseRegionEx& operator= (EnsureReleaseRegionEx&& 
+      // Move assignment operator
+      EnsureReleaseRegionEx& operator= (EnsureReleaseRegionEx&&
         MyEnsureCleanup)
       {
         Cleanup();
@@ -358,53 +423,68 @@ namespace Hades
         m_pv = MyEnsureCleanup.m_pv;
         m_proc = MyEnsureCleanup.m_proc;
 
-        MyEnsureCleanup.m_pv = nullptr;
-        MyEnsureCleanup.m_proc = nullptr;
+        MyEnsureCleanup.m_pv = NULL;
+        MyEnsureCleanup.m_proc = NULL;
 
         return *this;
       }
 
-      ~EnsureReleaseRegionEx() 
-      { Cleanup(); }
-
-      PVOID operator= (PVOID pv) 
-      { 
-        Cleanup(); 
-        m_pv = pv; 
-        return(m_pv); 
+      // Destructor
+      ~EnsureReleaseRegionEx()
+      {
+        Cleanup();
       }
 
-      operator PVOID() const 
-      { return(m_pv); }
+      // Assignment operator (for PVOID values)
+      EnsureReleaseRegionEx& operator= (PVOID pv)
+      {
+        Cleanup();
 
-      void Cleanup() 
-      { 
-        if (m_pv != nullptr && m_proc != nullptr) 
-        { 
-          VirtualFreeEx(m_proc, m_pv, 0, MEM_RELEASE); 
-          m_pv = nullptr; 
-        } 
+        m_pv = pv;
+
+        return *this;
+      }
+
+      // Implicit conversion operator for PVOID
+      operator PVOID() const
+      {
+        return m_pv;
+      }
+
+      // Cleanup the object if the value represents a valid object
+      void Cleanup()
+      {
+        if (m_pv != NULL && m_proc != NULL)
+        {
+          VirtualFreeEx(m_proc, m_pv, 0, MEM_RELEASE);
+
+          m_pv = NULL;
+        }
       }
 
     private:
+      // Handles being managed
       PVOID m_pv;
       HANDLE m_proc;
     };
 
-    // Special class for closing the clipboard.
-    // Special class is required because no params are required.
+    // Special class for closing the clipboard
     class EnsureCloseClipboard : private boost::noncopyable
     {
     public:
-      EnsureCloseClipboard(BOOL Success) : m_Success(Success) 
+      // Constructor
+      EnsureCloseClipboard(BOOL Success) 
+        : m_Success(Success)
       { }
-
-      EnsureCloseClipboard(EnsureCloseClipboard&& MyEnsureCleanup) 
+      
+      // Move constructor
+      EnsureCloseClipboard(EnsureCloseClipboard&& MyEnsureCleanup)
         : m_Success(FALSE)
       {
         *this = std::move(MyEnsureCleanup);
       }
 
+      // Move assignment operator
       EnsureCloseClipboard& operator= (EnsureCloseClipboard&& MyEnsureCleanup)
       {
         Cleanup();
@@ -416,49 +496,64 @@ namespace Hades
         return *this;
       }
 
-      ~EnsureCloseClipboard() 
-      { Cleanup(); }
-
-      BOOL operator= (BOOL Success) 
-      { 
-        Cleanup(); 
-        m_Success = Success;
-        return(m_Success); 
+      // Destructor
+      ~EnsureCloseClipboard()
+      {
+        Cleanup();
       }
 
-      operator BOOL() const 
-      { return(m_Success); }
+      // Assignment operator (for BOOL values)
+      EnsureCloseClipboard& operator= (BOOL Success)
+      {
+        Cleanup();
 
-      void Cleanup() 
-      { 
-        if (m_Success) 
+        m_Success = Success;
+
+        return *this;
+      }
+
+      // Implicit conversion operator for BOOL
+      operator BOOL() const
+      {
+        return m_Success;
+      }
+
+      // Cleanup the object if the value represents a valid object
+      void Cleanup()
+      {
+        if (m_Success)
         {
           CloseClipboard();
+
           m_Success = FALSE;
-        } 
+        }
       }
 
     private:
+      // 'Handle' being managed
       BOOL m_Success;
     };
 
-    // Special class for releasing a window class.
+    // Special class for releasing a window class
     class EnsureUnregisterClassW : private boost::noncopyable
     {
     public:
-      EnsureUnregisterClassW(const std::wstring& ClassName, HINSTANCE Instance) 
-        : m_ClassName(ClassName), 
-        m_Instance(Instance) 
+      // Constructor
+      EnsureUnregisterClassW(const std::wstring& ClassName, HINSTANCE Instance)
+        : m_ClassName(ClassName),
+        m_Instance(Instance)
       { }
 
-      EnsureUnregisterClassW(EnsureUnregisterClassW&& MyEnsureCleanup) 
-        : m_ClassName(), 
+      // Move constructor
+      EnsureUnregisterClassW(EnsureUnregisterClassW&& MyEnsureCleanup)
+        : m_ClassName(),
         m_Instance()
       {
         *this = std::move(MyEnsureCleanup);
       }
 
-      EnsureUnregisterClassW& operator= (EnsureUnregisterClassW&& 
+      // Move assignment operator
+      EnsureUnregisterClassW& operator= (EnsureUnregisterClassW&&
         MyEnsureCleanup)
       {
         Cleanup();
@@ -467,46 +562,55 @@ namespace Hades
         m_Instance = MyEnsureCleanup.m_Instance;
 
         MyEnsureCleanup.m_ClassName = std::wstring();
-        MyEnsureCleanup.m_Instance = nullptr;
+        MyEnsureCleanup.m_Instance = NULL;
 
         return *this;
       }
 
-      ~EnsureUnregisterClassW() 
-      { Cleanup(); }
+      // Destructor
+      ~EnsureUnregisterClassW()
+      {
+        Cleanup();
+      }
 
-      void Cleanup() 
-      { 
-        if (!m_ClassName.empty() && m_Instance) 
-        { 
-          UnregisterClass(m_ClassName.c_str(), m_Instance); 
+      // Cleanup the object if the value represents a valid object
+      void Cleanup()
+      {
+        if (!m_ClassName.empty() && m_Instance)
+        {
+          UnregisterClassW(m_ClassName.c_str(), m_Instance);
+
           m_ClassName.clear();
-          m_Instance = 0; 
-        } 
+          m_Instance = 0;
+        }
       }
 
     private:
+      // 'Handles' being managed
       std::wstring m_ClassName;
       HINSTANCE m_Instance;
     };
 
 
-    // Special class for releasing a DC.
+    // Special class for releasing a DC
     class EnsureReleaseDc
     {
     public:
-      EnsureReleaseDc(HWND Wnd = nullptr, HDC Dc = nullptr) 
-        : m_Wnd(Wnd), 
-        m_Dc(Dc) 
+      // Constructor
+      EnsureReleaseDc(HWND Wnd = NULL, HDC Dc = NULL)
+        : m_Wnd(Wnd),
+        m_Dc(Dc)
       { }
 
-      EnsureReleaseDc(EnsureReleaseDc&& MyEnsureCleanup) 
-        : m_Wnd(nullptr), 
-        m_Dc(nullptr)
+      // Move constructor
+      EnsureReleaseDc(EnsureReleaseDc&& MyEnsureCleanup)
+        : m_Wnd(NULL),
+        m_Dc(NULL)
       {
         *this = std::move(MyEnsureCleanup);
       }
 
+      // Move assignment operator
       EnsureReleaseDc& operator= (EnsureReleaseDc&& MyEnsureCleanup)
       {
         Cleanup();
@@ -514,36 +618,48 @@ namespace Hades
         m_Wnd = MyEnsureCleanup.m_Wnd;
         m_Dc = MyEnsureCleanup.m_Dc;
 
-        MyEnsureCleanup.m_Wnd = nullptr;
-        MyEnsureCleanup.m_Dc = nullptr;
+        MyEnsureCleanup.m_Wnd = NULL;
+        MyEnsureCleanup.m_Dc = NULL;
 
         return *this;
       }
 
-      ~EnsureReleaseDc() 
-      { Cleanup(); }
-
-      HDC operator= (HDC Dc) 
-      { 
-        Cleanup(); 
-        m_Dc = Dc; 
-        return m_Dc; 
+      // Destructor
+      ~EnsureReleaseDc()
+      {
+        Cleanup();
       }
 
-      operator HDC() const 
-      { return m_Dc; }
+      // Assignment operator (for HDC values)
+      EnsureReleaseDc& operator= (HDC Dc)
+      {
+        Cleanup();
 
-      void Cleanup() 
-      { 
-        if (m_Wnd != nullptr && m_Dc != nullptr) 
-        { 
-          ReleaseDC(m_Wnd, m_Dc); 
-          m_Wnd = nullptr; 
-          m_Dc = nullptr; 
-        } 
+        m_Dc = Dc;
+
+        return *this;
+      }
+
+      // Implicit conversion operator for BOOL
+      operator HDC() const
+      {
+        return m_Dc;
+      }
+
+      // Cleanup the object if the value represents a valid object
+      void Cleanup()
+      {
+        if (m_Wnd != NULL && m_Dc != NULL)
+        {
+          ReleaseDC(m_Wnd, m_Dc);
+
+          m_Wnd = NULL;
+          m_Dc = NULL;
+        }
       }
 
     private:
+      // Handles being managed
       HWND m_Wnd;
       HDC m_Dc;
     };
