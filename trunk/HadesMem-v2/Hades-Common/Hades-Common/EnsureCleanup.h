@@ -72,6 +72,8 @@ namespace Hades
       // Move assignment
       EnsureCleanup& operator= (EnsureCleanup&& MyEnsureCleanup)
       {
+        Cleanup();
+
         this->m_Handle = MyEnsureCleanup.m_Handle;
 
         MyEnsureCleanup.m_Handle = nullptr;
