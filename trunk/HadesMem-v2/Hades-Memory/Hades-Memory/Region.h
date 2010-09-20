@@ -29,8 +29,6 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Boost
 #pragma warning(push, 1)
 #pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
-#include <boost/shared_ptr.hpp>
-#include <boost/make_shared.hpp>
 #include <boost/iterator/iterator_facade.hpp>
 #pragma warning(pop)
 
@@ -93,7 +91,7 @@ namespace Hades
       }
 
       // Get first region
-      boost::shared_ptr<Region> First() 
+      std::unique_ptr<Region> First() 
       {
         if (!VirtualQueryEx(m_pMemory->GetProcessHandle(), m_Address, &m_Current, 
           sizeof(m_Current)))
@@ -105,11 +103,11 @@ namespace Hades
             ErrorCodeWin(LastError));
         }
 
-        return boost::make_shared<Region>(m_pMemory, m_Current);
+        return std::unique_ptr<Region>(new Region(m_pMemory, m_Current));
       }
 
       // Get next region
-      boost::shared_ptr<Region> Next()
+      std::unique_ptr<Region> Next()
       {
         // Advance to next region
         m_Address = reinterpret_cast<PBYTE>(m_Current.BaseAddress) + 
@@ -118,15 +116,14 @@ namespace Hades
         // Get region info
         // Todo: Check GetLastError to ensure EOL and throw an exception 
         // on an actual error.
-        return 
-          VirtualQueryEx(m_pMemory->GetProcessHandle(), m_Address, &m_Current, 
-          sizeof(m_Current)) ? boost::make_shared<Region>(m_pMemory, m_Current) 
-          : boost::shared_ptr<Region>(static_cast<Region*>(nullptr));
+        return VirtualQueryEx(m_pMemory->GetProcessHandle(), m_Address, 
+          &m_Current, sizeof(m_Current)) ? std::unique_ptr<Region>(new Region(
+          m_pMemory, m_Current)) : std::unique_ptr<Region>(nullptr);
       }
 
       // Region iterator
       class RegionListIter : public boost::iterator_facade<RegionListIter, 
-        boost::shared_ptr<Region>, boost::incrementable_traversal_tag>
+        std::unique_ptr<Region>, boost::incrementable_traversal_tag>
       {
       public:
         // Construtor
@@ -150,7 +147,7 @@ namespace Hades
         }
 
         // For Boost.Iterator
-        boost::shared_ptr<Region>& dereference() const
+        std::unique_ptr<Region>& dereference() const
         {
           return m_Current;
         }
@@ -160,7 +157,7 @@ namespace Hades
 
         // Current region
         // Mutable due to 'dereference' being marked as 'const'
-        mutable boost::shared_ptr<Region> m_Current;
+        mutable std::unique_ptr<Region> m_Current;
       };
 
     private:
@@ -176,31 +173,6 @@ namespace Hades
       // Current region info
       MEMORY_BASIC_INFORMATION m_Current;
     };
-
-    // Get memory region list
-    std::vector<boost::shared_ptr<Region>> GetMemoryRegionList(
-      MemoryMgr* MyMemory)
-    {
-      // Region list
-      std::vector<boost::shared_ptr<Region>> RegionList;
-
-      // Loop over all memory regions
-      PBYTE Address = nullptr;
-      MEMORY_BASIC_INFORMATION MyMbi = { 0 };
-      while (VirtualQueryEx(MyMemory->GetProcessHandle(), Address, &MyMbi, 
-        sizeof(MyMbi)))
-      {
-        // Add current region to list
-        RegionList.push_back(boost::make_shared<Region>(MyMemory, 
-          MyMbi.BaseAddress));
-        // Advance to next region
-        Address = reinterpret_cast<PBYTE>(MyMbi.BaseAddress) + 
-          MyMbi.RegionSize;
-      }
-
-      // Return region list
-      return RegionList;
-    }
 
     // Constructor
     Region::Region(MemoryMgr* MyMemory, PVOID Address) 

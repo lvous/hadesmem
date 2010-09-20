@@ -359,14 +359,14 @@ namespace Hades
 
         // Check whether dependent module is already loaded
         ModuleEnum MyModuleList(m_pMemory);
-        boost::shared_ptr<Module> MyModule;
+        std::unique_ptr<Module> MyModule;
         for (ModuleEnum::ModuleListIter MyIter(MyModuleList); *MyIter; 
           ++MyIter)
         {
           if (boost::to_lower_copy((*MyIter)->GetName()) == ModuleNameLowerW || 
             boost::to_lower_copy((*MyIter)->GetPath()) == ModuleNameLowerW)
           {
-            MyModule = *MyIter;
+            MyModule = std::move(*MyIter);
           }
         }
 

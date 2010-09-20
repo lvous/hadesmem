@@ -49,6 +49,7 @@
     <ClInclude Include="Scripting.h" />
     <ClInclude Include="Section.h" />
     <ClInclude Include="SectionEnum.h" />
+    <ClInclude Include="SectionWrap.h" />
     <ClInclude Include="Types.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

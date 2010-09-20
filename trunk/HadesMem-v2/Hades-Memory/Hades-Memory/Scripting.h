@@ -60,6 +60,7 @@ extern "C"
 #include "PeFileWrap.h"
 #include "ModuleWrap.h" 
 #include "RegionWrap.h"
+#include "SectionWrap.h"
 #include "ScannerWrap.h"
 #include "InjectorWrap.h"
 #include "ManualMapWrap.h"
@@ -687,10 +688,11 @@ namespace Hades
           .def("GetName", &Section::GetName)
 
           // Bind SectionEnum class
-          ,luabind::class_<SectionEnum>("SectionEnum")
+          ,luabind::class_<SectionEnum>("SectionEnumBase")
+          ,luabind::class_<Wrappers::SectionEnumWrap>("SectionEnum")
           .def(luabind::constructor<PeFile*>())
-          .def("First", &SectionEnum::First)
-          .def("Next", &SectionEnum::Next)
+          .def("First", &Wrappers::SectionEnumWrap::First)
+          .def("Next", &Wrappers::SectionEnumWrap::Next)
 
           // Bind ExportDir class
           ,luabind::class_<ExportDir>("ExportDir")

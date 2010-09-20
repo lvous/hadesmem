@@ -74,8 +74,8 @@ namespace Hades
           // 'proper' solution yet, so this should work for now, but needs 
           // to be fixed in the future.
           // Todo: Fix this monstrosity.
-          return boost::static_pointer_cast<RegionWrappers>(RegionEnum::
-            First());
+          return boost::shared_ptr<RegionWrappers>(static_cast<RegionWrappers*>(
+            RegionEnum::First().release()));
         }
 
         boost::shared_ptr<RegionWrappers> Next()
@@ -84,8 +84,8 @@ namespace Hades
           // 'proper' solution yet, so this should work for now, but needs 
           // to be fixed in the future.
           // Todo: Fix this monstrosity.
-          return boost::static_pointer_cast<RegionWrappers>(RegionEnum::
-            Next());
+          return boost::shared_ptr<RegionWrappers>(static_cast<RegionWrappers*>(
+            RegionEnum::Next().release()));
         }
       };
     }

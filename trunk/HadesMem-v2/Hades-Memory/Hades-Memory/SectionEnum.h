@@ -22,8 +22,6 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Boost
 #pragma warning(push, 1)
 #pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
-#include <boost/shared_ptr.hpp>
-#include <boost/make_shared.hpp>
 #include <boost/iterator/iterator_facade.hpp>
 #pragma warning(pop)
 
@@ -50,32 +48,31 @@ namespace Hades
       }
 
       // Get first section
-      boost::shared_ptr<Section> First() 
+      std::unique_ptr<Section> First() 
       {
         Hades::Memory::NtHeaders MyNtHeaders(m_pPeFile);
         WORD NumberOfSections(MyNtHeaders.GetNumberOfSections());
 
-        return NumberOfSections ? boost::make_shared<Section>(m_pPeFile, 
-          m_Current) : boost::shared_ptr<Section>(static_cast<Section*>(
-          nullptr));
+        return NumberOfSections ? std::unique_ptr<Section>(new Section(
+          m_pPeFile, m_Current)) : std::unique_ptr<Section>(nullptr);
       }
 
       // Get next section
-      boost::shared_ptr<Section> Next()
+      std::unique_ptr<Section> Next()
       {
         Hades::Memory::NtHeaders MyNtHeaders(m_pPeFile);
         WORD NumberOfSections(MyNtHeaders.GetNumberOfSections());
 
         ++m_Current;
 
-        return (m_Current < NumberOfSections) ? boost::make_shared<Section>(
-          m_pPeFile, m_Current) : boost::shared_ptr<Section>(
-          static_cast<Section*>(nullptr));
+        return (m_Current < NumberOfSections) ? std::unique_ptr<Section>(
+          new Section(m_pPeFile, m_Current)) : std::unique_ptr<Section>(
+          nullptr);
       }
 
       // Section iterator
       class SectionIter : public boost::iterator_facade<SectionIter, 
-        boost::shared_ptr<Section>, boost::incrementable_traversal_tag>
+        std::unique_ptr<Section>, boost::incrementable_traversal_tag>
       {
       public:
         // Construtor
@@ -99,7 +96,7 @@ namespace Hades
         }
 
         // For Boost.Iterator
-        boost::shared_ptr<Section>& dereference() const
+        std::unique_ptr<Section>& dereference() const
         {
           return m_Current;
         }
@@ -109,7 +106,7 @@ namespace Hades
 
         // Current section
         // Mutable due to 'dereference' being marked as 'const'
-        mutable boost::shared_ptr<Section> m_Current;
+        mutable std::unique_ptr<Section> m_Current;
       };
 
     private:

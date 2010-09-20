@@ -24,6 +24,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 // C++ Standard Library
 #include <array>
+#include <tuple>
 #include <memory>
 #include <string>
 #include <vector>
@@ -31,7 +32,6 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Boost
 #pragma warning(push, 1)
 #pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
-#include <boost/shared_ptr.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
 #pragma warning(pop)
@@ -71,15 +71,45 @@ namespace Hades
       // MemoryMgr instance
       MemoryMgr* m_pMemory;
     };
+    
+    // Data returned by CreateAndInject API
+    struct CreateAndInjectData
+    {
+      CreateAndInjectData() 
+        : pMemory(), 
+        ModuleBase(nullptr), 
+        ExportRet(0)
+      { }
+
+      CreateAndInjectData(CreateAndInjectData&& Other)
+        : pMemory(), 
+        ModuleBase(nullptr), 
+        ExportRet(0)
+      {
+        *this = std::move(Other);
+      }
+
+      CreateAndInjectData& operator=(CreateAndInjectData&& Other)
+      {
+        pMemory = std::move(Other.pMemory);
+        ModuleBase = Other.ModuleBase;
+        ExportRet = Other.ExportRet;
+
+        Other.ModuleBase = nullptr;
+        Other.ExportRet = 0;
+
+        return *this;
+      }
+
+      std::unique_ptr<MemoryMgr> pMemory;
+      HMODULE ModuleBase;
+      DWORD ExportRet;
+    };
 
     // Create process (as suspended) and inject DLL
-    inline boost::shared_ptr<MemoryMgr> CreateAndInject(
-      std::wstring const& Path, 
-      std::wstring const& Args, 
-      std::wstring const& Module, 
-      std::string const& Export, 
-      HMODULE* ModBaseOut = nullptr, 
-      DWORD* ExportRetOut = nullptr)
+    inline CreateAndInjectData CreateAndInject(std::wstring const& Path, 
+      std::wstring const& Args, std::wstring const& Module, 
+      std::string const& Export)
     {
       // Set up args for CreateProcess
       STARTUPINFO StartInfo = { sizeof(StartInfo) };
@@ -106,50 +136,52 @@ namespace Hades
       Windows::EnsureCloseHandle const ProcHandle(ProcInfo.hProcess);
       Windows::EnsureCloseHandle const ThreadHandle(ProcInfo.hThread);
 
-      // Memory manager instance
-      boost::shared_ptr<MemoryMgr> MyMemory;
-
       try
       {
-        // Create memory manager
-        MyMemory.reset(new Hades::Memory::MemoryMgr(ProcInfo.dwProcessId));
+        // Memory manager instance
+        std::unique_ptr<MemoryMgr> MyMemory(new MemoryMgr(ProcInfo.
+          dwProcessId));
 
         // Create DLL injector
         Hades::Memory::Injector const MyInjector(MyMemory.get());
 
         // Inject DLL
         HMODULE const ModBase(MyInjector.InjectDll(Module));
-        if (ModBaseOut)
-        {
-          *ModBaseOut = ModBase;
-        }
 
         // If export has been specified
+        DWORD ExportRet = 0;
         if (!Export.empty())
         {
           // Call remote export
-          DWORD const ExportRet(MyInjector.CallExport(Module, ModBase, 
-            Export));
-          if (ExportRetOut)
-          {
-            *ExportRetOut = ExportRet;
-          }
+          ExportRet = MyInjector.CallExport(Module, ModBase, Export);
         }
+
+        // Success! Let the process continue execution.
+        if (ResumeThread(ProcInfo.hThread) == static_cast<DWORD>(-1))
+        {
+          DWORD const LastError(GetLastError());
+          BOOST_THROW_EXCEPTION(Injector::Error() << 
+            ErrorFunction("CreateAndInject") << 
+            ErrorString("Could not resume process.") << 
+            ErrorCodeWin(LastError));
+        }
+
+        // Return data to caller
+        CreateAndInjectData MyData;
+        MyData.pMemory = std::move(MyMemory);
+        MyData.ModuleBase = ModBase;
+        MyData.ExportRet = ExportRet;
+        return MyData;
       }
       // Catch exceptions
       catch (std::exception const& /*e*/)
       {
         // Terminate process if injection failed
         TerminateProcess(ProcInfo.hProcess, 0);
+
         // Rethrow exception
         throw;
       }
-
-      // Success! Let the process continue execution.
-      ResumeThread(ProcInfo.hThread);
-
-      // Return memory manager instance for use in further calls
-      return MyMemory;
     }
 
     // Constructor
@@ -243,14 +275,14 @@ namespace Hades
 
       // Look for target module
       ModuleEnum MyModuleList(m_pMemory);
-      boost::shared_ptr<Module> MyModule;
+      std::unique_ptr<Module> MyModule;
       for (ModuleEnum::ModuleListIter MyIter(MyModuleList); *MyIter; ++MyIter)
       {
         if (PathResolution)
         {
           if (boost::filesystem::equivalent((*MyIter)->GetPath(), PathReal))
           {
-            MyModule = *MyIter;
+            MyModule = std::move(*MyIter);
           }
         }
         else
@@ -258,7 +290,7 @@ namespace Hades
           if (boost::to_lower_copy((*MyIter)->GetName()) == PathRealLower || 
             boost::to_lower_copy((*MyIter)->GetPath()) == PathRealLower)
           {
-            MyModule = *MyIter;
+            MyModule = std::move(*MyIter);
           }
         }
       }

@@ -57,25 +57,22 @@ namespace Hades
         std::string const& Path, std::string const& Args, 
         std::string const& Module, std::string const& Export)
       {
-        HMODULE ModBase = nullptr;
-        DWORD ExportRet = 0;
-        auto MyMemory = CreateAndInject(
+        CreateAndInjectData MyData(CreateAndInject(
           boost::lexical_cast<std::wstring>(Path), 
           boost::lexical_cast<std::wstring>(Args), 
           boost::lexical_cast<std::wstring>(Module), 
-          Export, 
-          &ModBase, 
-          &ExportRet);
+          Export));
 
         CreateAndInjectInfo MyInfo;
         // This is dangerous, but I haven't had time to think about the 
         // 'proper' solution yet, so this should work for now, but needs 
         // to be fixed in the future.
         // Todo: Fix this monstrosity.
-        MyInfo.Memory = boost::static_pointer_cast<Wrappers::
-          MemoryMgrWrappers>(MyMemory);
-        MyInfo.ModBase = reinterpret_cast<DWORD_PTR>(ModBase);
-        MyInfo.ExportRet = ExportRet;
+        MemoryMgr* pMemory = MyData.pMemory.release();
+        boost::shared_ptr<Wrappers::MemoryMgrWrappers> pMemoryShared(
+          static_cast<Wrappers::MemoryMgrWrappers*>(pMemory));
+        MyInfo.ModBase = reinterpret_cast<DWORD_PTR>(MyData.ModuleBase);
+        MyInfo.ExportRet = MyData.ExportRet;
 
         return MyInfo;
       }

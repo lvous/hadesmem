@@ -31,8 +31,6 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Boost
 #pragma warning(push, 1)
 #pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
-#include <boost/shared_ptr.hpp>
-#include <boost/make_shared.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/iterator/iterator_facade.hpp>
 #pragma warning(pop)
@@ -101,7 +99,7 @@ namespace Hades
       }
 
       // Get first module
-      boost::shared_ptr<Module> First() 
+      std::unique_ptr<Module> First() 
       {
         // Grab a new snapshot of the process
         m_Snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, m_pMemory->
@@ -125,22 +123,22 @@ namespace Hades
             ErrorCodeWin(LastError));
         }
 
-        return boost::make_shared<Module>(m_pMemory, m_ModuleEntry);
+        return std::unique_ptr<Module>(new Module(m_pMemory, m_ModuleEntry));
       }
 
       // Get next module
-      boost::shared_ptr<Module> Next()
+      std::unique_ptr<Module> Next()
       {
         // Todo: Check GetLastError to ensure EOL and throw an exception 
         // on an actual error.
         return Module32Next(m_Snap, &m_ModuleEntry) ? 
-          boost::make_shared<Module>(m_pMemory, m_ModuleEntry) 
-          : boost::shared_ptr<Module>(static_cast<Module*>(nullptr));
+          std::unique_ptr<Module>(new Module(m_pMemory, m_ModuleEntry)) 
+          : std::unique_ptr<Module>(nullptr);
       }
 
       // Module iterator
       class ModuleListIter : public boost::iterator_facade<ModuleListIter, 
-        boost::shared_ptr<Module>, boost::incrementable_traversal_tag>
+        std::unique_ptr<Module>, boost::incrementable_traversal_tag>
       {
       public:
         // Construtor
@@ -164,7 +162,7 @@ namespace Hades
         }
 
         // For Boost.Iterator
-        boost::shared_ptr<Module>& dereference() const
+        std::unique_ptr<Module>& dereference() const
         {
           return m_Current;
         }
@@ -174,7 +172,7 @@ namespace Hades
 
         // Current module
         // Mutable due to 'dereference' being marked as 'const'
-        mutable boost::shared_ptr<Module> m_Current;
+        mutable std::unique_ptr<Module> m_Current;
       };
 
     private:

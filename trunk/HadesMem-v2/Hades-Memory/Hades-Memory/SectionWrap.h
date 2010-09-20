@@ -20,23 +20,20 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 // C++ Standard Library
-#include <string>
 #include <vector>
 
 // Boost
 #pragma warning(push, 1)
 #pragma warning(disable: ALL_CODE_ANALYSIS_WARNINGS)
 #include <boost/shared_ptr.hpp>
-#include <boost/lexical_cast.hpp>
 #pragma warning(pop)
 
 // Windows API
 #include <Windows.h>
 
 // HadesMem
-#include "Module.h"
-#include "MemoryMgr.h"
-#include "Hades-Common/I18n.h"
+#include "PEFile.h"
+#include "SectionEnum.h"
 
 namespace Hades
 {
@@ -44,62 +41,29 @@ namespace Hades
   {
     namespace Wrappers
     {
-      class ModuleWrappers : public Module
+      class SectionEnumWrap : public SectionEnum
       {
       public:
-        ModuleWrappers(MemoryMgr* MyMemory, DWORD_PTR Handle) 
-          : Module(MyMemory, reinterpret_cast<HMODULE>(Handle))
+        SectionEnumWrap(PeFile* pPeFile)
+          : SectionEnum(pPeFile)
         { }
 
-        ModuleWrappers(MemoryMgr* MyMemory, 
-          std::string const& ModuleName) 
-          : Module(MyMemory, boost::lexical_cast<std::wstring>(ModuleName))
-        { }
-
-        // Module::GetBase wrapper
-        DWORD_PTR GetBase()
-        {
-          return reinterpret_cast<DWORD_PTR>(Module::GetBase());
-        }
-
-        // Module::GetName wrapper
-        std::string GetName()
-        {
-          return boost::lexical_cast<std::string>(Module::GetName());
-        }
-
-        // Module::GetPath wrapper
-        std::string GetPath()
-        {
-          return boost::lexical_cast<std::string>(Module::GetPath());
-        }
-      };
-
-      class ModuleEnumWrap : public ModuleEnum
-      {
-      public:
-        ModuleEnumWrap(MemoryMgr* MyMemory)
-          : ModuleEnum(MyMemory)
-        { }
-
-        boost::shared_ptr<ModuleWrappers> First()
+        boost::shared_ptr<Section> First()
         {
           // This is dangerous, but I haven't had time to think about the 
           // 'proper' solution yet, so this should work for now, but needs 
           // to be fixed in the future.
           // Todo: Fix this monstrosity.
-          return boost::shared_ptr<ModuleWrappers>(static_cast<ModuleWrappers*>(
-            ModuleEnum::First().release()));
+          return boost::shared_ptr<Section>(SectionEnum::First().release());
         }
 
-        boost::shared_ptr<ModuleWrappers> Next()
+        boost::shared_ptr<Section> Next()
         {
           // This is dangerous, but I haven't had time to think about the 
           // 'proper' solution yet, so this should work for now, but needs 
           // to be fixed in the future.
           // Todo: Fix this monstrosity.
-          return boost::shared_ptr<ModuleWrappers>(static_cast<ModuleWrappers*>(
-            ModuleEnum::Next().release()));
+          return boost::shared_ptr<Section>(SectionEnum::Next().release());
         }
       };
     }
