@@ -37,6 +37,7 @@ namespace Hades
       DWORD Rva;
       PVOID Va;
       std::string Name;
+      std::string Forwarder;
       WORD Ordinal;
       bool ByName;
       bool Forwarded;
@@ -156,12 +157,8 @@ namespace Hades
 
       for (std::size_t i(0); i < ExportDirRaw.NumberOfFunctions; ++i)
       {
-        DWORD FuncRva = m_pMemory->Read<DWORD>(pFunctions + i);
-
         Export MyExport = { 0 };
-        
-        MyExport.Rva = FuncRva;
-        MyExport.Va = m_pPeFile->GetBase() + FuncRva;
+
         MyExport.Ordinal = static_cast<WORD>(i + ExportDirRaw.Base);
 
         for (std::size_t j(0); j < ExportDirRaw.NumberOfNames; ++j)
@@ -174,9 +171,18 @@ namespace Hades
           }
         }
 
+        DWORD FuncRva = m_pMemory->Read<DWORD>(pFunctions + i);
+
         if (FuncRva >= ExportDirStart && FuncRva <= ExportDirEnd)
         {
           MyExport.Forwarded = true;
+          MyExport.Forwarder = m_pMemory->Read<std::string>(m_pPeFile->
+            GetBase() + FuncRva);
+        }
+        else
+        {
+          MyExport.Rva = FuncRva;
+          MyExport.Va = m_pPeFile->GetBase() + FuncRva;
         }
 
         Exports.push_back(MyExport);
