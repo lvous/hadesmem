@@ -76,7 +76,7 @@ namespace Hades
 
         this->m_Handle = MyEnsureCleanup.m_Handle;
 
-        MyEnsureCleanup.m_Handle = nullptr;
+        MyEnsureCleanup.m_Handle = Invalid;
 
         return *this;
       }
