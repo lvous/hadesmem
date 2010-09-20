@@ -19,6 +19,10 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+// C++ Standard Library
+#include <vector>
+#include <string>
+
 // Hades
 #include "PeFile.h"
 #include "NtHeaders.h"
@@ -27,6 +31,17 @@ namespace Hades
 {
   namespace Memory
   {
+    // PE file export data
+    struct Export
+    {
+      DWORD Rva;
+      PVOID Va;
+      std::string Name;
+      WORD Ordinal;
+      bool ByName;
+      bool Forwarded;
+    };
+
     // PE file export directory
     class ExportDir
     {
@@ -38,8 +53,17 @@ namespace Hades
       // Constructor
       ExportDir(PeFile* MyPeFile);
 
+      // Whether export directory is valid
+      bool IsValid() const;
+
+      // Ensure export directory is valid
+      void EnsureValid() const;
+
       // Get module name
       std::string GetName() const;
+
+      // Get all exports
+      std::vector<Export> GetAllExports() const;
 
       // Get base of export dir
       PBYTE GetBase() const;
@@ -105,11 +129,94 @@ namespace Hades
       return pBase + DataDirVa;
     }
 
+    // Get all exports
+    std::vector<Export> ExportDir::GetAllExports() const
+    {
+      std::vector<Export> Exports;
+
+      DosHeader MyDosHeader(m_pPeFile);
+      NtHeaders MyNtHeaders(m_pPeFile);
+
+      IMAGE_EXPORT_DIRECTORY const ExportDirRaw(GetExportDirRaw());
+
+      WORD* pOrdinals(reinterpret_cast<WORD*>(m_pPeFile->GetBase() + 
+        ExportDirRaw.AddressOfNameOrdinals));
+      DWORD* pFunctions(reinterpret_cast<DWORD*>(m_pPeFile->GetBase() + 
+        ExportDirRaw.AddressOfFunctions));
+      PCHAR* pNames(reinterpret_cast<PCHAR*>(m_pPeFile->GetBase() + 
+        ExportDirRaw.AddressOfNames));
+
+      DWORD const DataDirSize(MyNtHeaders.GetDataDirectorySize(NtHeaders::
+        DataDir_Export));
+      DWORD const DataDirVa(MyNtHeaders.GetDataDirectoryVirtualAddress(
+        NtHeaders::DataDir_Export));
+
+      DWORD const ExportDirStart = DataDirVa;
+      DWORD const ExportDirEnd = ExportDirStart + DataDirSize;
+
+      for (std::size_t i(0); i < ExportDirRaw.NumberOfFunctions; ++i)
+      {
+        DWORD FuncRva = m_pMemory->Read<DWORD>(pFunctions + i);
+
+        Export MyExport = { 0 };
+        
+        MyExport.Rva = FuncRva;
+        MyExport.Va = m_pPeFile->GetBase() + FuncRva;
+        MyExport.Ordinal = static_cast<WORD>(i + ExportDirRaw.Base);
+
+        for (std::size_t j(0); j < ExportDirRaw.NumberOfNames; ++j)
+        {
+          if (pOrdinals[j] == i)
+          {
+            MyExport.ByName = true;
+            MyExport.Name = m_pMemory->Read<std::string>(m_pPeFile->
+              GetBase() + m_pMemory->Read<DWORD>(pNames + j));
+          }
+        }
+
+        if (FuncRva >= ExportDirStart && FuncRva <= ExportDirEnd)
+        {
+          MyExport.Forwarded = true;
+        }
+
+        Exports.push_back(MyExport);
+      }
+
+      return Exports;
+    }
+
     // Get raw export dir
     IMAGE_EXPORT_DIRECTORY ExportDir::GetExportDirRaw() const
     {
       // Get raw export dir
       return m_pMemory->Read<IMAGE_EXPORT_DIRECTORY>(GetBase());
+    }
+
+    // Whether export directory is valid
+    bool ExportDir::IsValid() const
+    {
+      // Get NT headers
+      NtHeaders MyNtHeaders(m_pPeFile);
+
+      // Get export dir data
+      DWORD DataDirSize(MyNtHeaders.GetDataDirectorySize(NtHeaders::
+        DataDir_Export));
+      DWORD DataDirVa(MyNtHeaders.GetDataDirectoryVirtualAddress(NtHeaders::
+        DataDir_Export));
+
+      // Export dir is valid if size and rva are valid
+      return DataDirSize && DataDirVa;
+    }
+
+    // Ensure export directory is valid
+    void ExportDir::EnsureValid() const
+    {
+      if (!IsValid())
+      {
+        BOOST_THROW_EXCEPTION(Error() << 
+          ErrorFunction("ExportDir::EnsureValid") << 
+          ErrorString("Export directory is invalid."));
+      }
     }
   }
 }
