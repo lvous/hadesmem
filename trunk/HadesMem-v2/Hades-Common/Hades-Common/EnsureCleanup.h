@@ -19,6 +19,9 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+// Hades
+#include "Config.h"
+
 // Windows API
 #include <Windows.h>
 #include <Objbase.h>
@@ -27,7 +30,9 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 
 // Boost
+HADES_DISABLE_WARNINGS_PUSH()
 #include <boost/noncopyable.hpp>
+HADES_DISABLE_WARNINGS_POP()
 
 // Notice: Modified version of EnsureCleanup library provided in the 'Windows
 // via C/C++' sample code. Originally copyright Jeffrey Richter and

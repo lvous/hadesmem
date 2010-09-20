@@ -19,32 +19,23 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-// Hades
-#include "Config.h"
+#if defined(_MSC_VER)
+#define HADES_COMPILER_MSVC
+#elif defined(__MINGW32__)
+#define HADES_COMPILER_MINGW
+#else
+static_assert(false, "Unsupported compiler!");
+#endif
 
-// Windows
-#include <Windows.h>
-
-// C++ Standard Library
-#include <string>
-#include <stdexcept>
-
-// Boost
-HADES_DISABLE_WARNINGS_PUSH()
-#include <boost/exception/all.hpp>
-HADES_DISABLE_WARNINGS_POP()
-
-namespace Hades
-{
-  // Error info (function name)
-  typedef boost::error_info<struct TagErrorFunc, std::string> ErrorFunction;
-  // Error info (error string)
-  typedef boost::error_info<struct TagErrorString, std::string> ErrorString;
-  // Error info (Windows error code)
-  typedef boost::error_info<struct TagErrorCodeWin, DWORD> ErrorCodeWin;
-
-  // Base exception class
-  class HadesError : public virtual std::exception, 
-    public virtual boost::exception
-  { };
-}
+#if defined(HADES_COMPILER_MSVC)
+#define HADES_DISABLE_WARNINGS_PUSH() __pragma(warning(push, 1))\
+__pragma(warning (disable: ALL_CODE_ANALYSIS_WARNINGS))\
+__pragma(warning (disable: 4706))\
+__pragma(warning (disable: 4702))
+#define HADES_DISABLE_WARNINGS_POP() __pragma(warning(pop))
+#elif defined(HADES_COMPILER_MINGW)
+#define HADES_DISABLE_WARNINGS_PUSH()
+#define HADES_DISABLE_WARNINGS_POP()
+#else
+static_assert(false, "Unsupported compiler!");
+#endif

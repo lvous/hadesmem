@@ -19,6 +19,11 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+// Hades
+#include "Error.h"
+#include "Config.h"
+#include "StringBuffer.h"
+
 // C++ Standard Library
 #include <string>
 #include <vector>
@@ -26,17 +31,12 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include <iterator>
 
 // Boost
-#pragma warning(push)
-#pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
+HADES_DISABLE_WARNINGS_PUSH()
 #include <boost/filesystem.hpp>
-#pragma warning(pop)
+HADES_DISABLE_WARNINGS_POP()
 
 // Windows API
 #include <Windows.h>
-
-// Hades
-#include "Error.h"
-#include "StringBuffer.h"
 
 // Image base linker 'trick'
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;

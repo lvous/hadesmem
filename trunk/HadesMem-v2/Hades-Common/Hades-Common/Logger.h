@@ -19,6 +19,11 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+// Hades
+#include "Error.h"
+#include "Config.h"
+#include "Filesystem.h"
+
 // C++ Standard Library
 #include <string>
 #include <vector>
@@ -27,23 +32,19 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include <iostream>
 
 // Boost C++ Libraries
-#pragma warning(push, 1)
-#pragma warning(disable: 4702)
-#pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
+HADES_DISABLE_WARNINGS_PUSH()
 #include <boost/thread.hpp>
 #include <boost/format.hpp>
 #include <boost/date_time.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/iostreams/stream.hpp>
 #include <boost/iostreams/categories.hpp>
-#pragma warning(pop)
+HADES_DISABLE_WARNINGS_POP()
 
 // Windows API
 #include <Windows.h>
 
 // Hades
-#include "Error.h"
-#include "Filesystem.h"
 
 #define HADES_LOG_THREAD_SAFE(x)\
 {\

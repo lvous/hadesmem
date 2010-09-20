@@ -19,15 +19,17 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+// Hades
+#include "Config.h"
+
 // C++ Standard Library
 #include <string>
 #include <cvt/wstring>
 
 // Boost
-#pragma warning(push)
-#pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
+HADES_DISABLE_WARNINGS_PUSH()
 #include <boost/lexical_cast.hpp>
-#pragma warning(pop)
+HADES_DISABLE_WARNINGS_POP()
 
 // Boost.LexicalCast specialization to allow conversions from wide to narrow 
 // strings.
