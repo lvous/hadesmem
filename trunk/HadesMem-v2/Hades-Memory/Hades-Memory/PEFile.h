@@ -129,7 +129,7 @@ namespace Hades
           Rva -= SectionHeader.PointerToRawData;
           Rva += SectionHeader.VirtualAddress;
 
-          return reinterpret_cast<PBYTE>(GetBase()) + Rva;
+          return GetBase() + Rva;
         }
 
         // Get next section

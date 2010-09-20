@@ -41,6 +41,9 @@ namespace Hades
       // Get name
       std::string GetName() const;
 
+      // Get section header base
+      PBYTE GetBase() const;
+
       // Get raw section header
       IMAGE_SECTION_HEADER GetSectionHeaderRaw() const;
 
@@ -65,22 +68,26 @@ namespace Hades
     // Get name
     std::string Section::GetName() const
     {
-      // Get section header
-      auto const SectionHeaderRaw(GetSectionHeaderRaw());
+      // Get base of section header
+      PBYTE pSecHdr(GetBase());
+
+      // Read RVA of module name
+      auto NameData(m_pMemory->Read<std::array<char, 8>>(pSecHdr + 
+        FIELD_OFFSET(IMAGE_SECTION_HEADER, Name)));
 
       // Convert section name to string
       std::string Name;
-      for (std::size_t i = 0; i < 8 && SectionHeaderRaw.Name[i]; ++i)
+      for (std::size_t i = 0; i < 8 && NameData[i]; ++i)
       {
-        Name += static_cast<char const>(SectionHeaderRaw.Name[i]);
+        Name += NameData[i];
       }
 
       // Return section name
       return Name;
     }
 
-    // Get raw section header
-    IMAGE_SECTION_HEADER Section::GetSectionHeaderRaw() const
+    // Get section header base
+    PBYTE Section::GetBase() const
     {
       // Get NT headers
       NtHeaders MyNtHeaders(m_pPeFile);
@@ -89,7 +96,7 @@ namespace Hades
       if (m_SectionNum >= MyNtHeaders.GetNumberOfSections())
       {
         BOOST_THROW_EXCEPTION(Error() << 
-          ErrorFunction("Section::GetSectionHeaderRaw") << 
+          ErrorFunction("Section::GetBase") << 
           ErrorString("Invalid section number."));
       }
 
@@ -107,8 +114,15 @@ namespace Hades
       // Adjust pointer to target section
       pSectionHeader += m_SectionNum;
 
+      // Return base of section header
+      return reinterpret_cast<PBYTE>(pSectionHeader);
+    }
+
+    // Get raw section header
+    IMAGE_SECTION_HEADER Section::GetSectionHeaderRaw() const
+    {
       // Get target raw section header
-      return m_pMemory->Read<IMAGE_SECTION_HEADER>(pSectionHeader);
+      return m_pMemory->Read<IMAGE_SECTION_HEADER>(GetBase());
     }
   }
 }

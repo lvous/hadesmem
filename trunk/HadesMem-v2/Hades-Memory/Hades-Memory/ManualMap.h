@@ -110,7 +110,7 @@ namespace Hades
       PeFile MyPeFile(&MyMemoryLocal, pBase);
       DosHeader MyDosHeader(&MyPeFile);
       NtHeaders MyNtHeaders(&MyPeFile);
-      auto pNtHeadersRaw(static_cast<PIMAGE_NT_HEADERS>(MyNtHeaders.
+      auto pNtHeadersRaw(reinterpret_cast<PIMAGE_NT_HEADERS>(MyNtHeaders.
         GetBase()));
 
       // Allocate memory for image

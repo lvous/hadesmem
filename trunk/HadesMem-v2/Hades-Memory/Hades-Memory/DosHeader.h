@@ -176,7 +176,7 @@ namespace Hades
     DosHeader::DosHeader(PeFile* MyPeFile)
       : m_pPeFile(MyPeFile), 
       m_pMemory(m_pPeFile->GetMemoryMgr()), 
-      m_pBase(static_cast<PBYTE>(m_pPeFile->GetBase()))
+      m_pBase(m_pPeFile->GetBase())
     {
       // Ensure magic is valid
       EnsureMagicValid();
