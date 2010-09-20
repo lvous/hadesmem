@@ -143,7 +143,7 @@ namespace Hades
         ExportDirRaw.AddressOfNameOrdinals));
       DWORD* pFunctions(reinterpret_cast<DWORD*>(m_pPeFile->GetBase() + 
         ExportDirRaw.AddressOfFunctions));
-      PCHAR* pNames(reinterpret_cast<PCHAR*>(m_pPeFile->GetBase() + 
+      DWORD* pNames(reinterpret_cast<DWORD*>(m_pPeFile->GetBase() + 
         ExportDirRaw.AddressOfNames));
 
       DWORD const DataDirSize(MyNtHeaders.GetDataDirectorySize(NtHeaders::
@@ -166,7 +166,7 @@ namespace Hades
 
         for (std::size_t j(0); j < ExportDirRaw.NumberOfNames; ++j)
         {
-          if (pOrdinals[j] == i)
+          if (m_pMemory->Read<WORD>(pOrdinals + j) == i)
           {
             MyExport.ByName = true;
             MyExport.Name = m_pMemory->Read<std::string>(m_pPeFile->
