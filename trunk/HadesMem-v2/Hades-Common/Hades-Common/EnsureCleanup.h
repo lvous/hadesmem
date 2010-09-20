@@ -63,17 +63,19 @@ namespace Hades
       { }
 
       // Move constructor
-      EnsureCleanup(EnsureCleanup&& MyEnsureCleanup)
+      EnsureCleanup(EnsureCleanup&& MyEnsureCleanup) 
+        : m_Handle(nullptr)
       {
-        m_Handle = MyEnsureCleanup.m_Handle;
-        MyEnsureCleanup.m_Handle = 0;
+        *this = std::move(MyEnsureCleanup);
       }
 
       // Move assignment
       EnsureCleanup& operator= (EnsureCleanup&& MyEnsureCleanup)
       {
-        Cleanup();
-        m_Handle = MyEnsureCleanup.m_Handle;
+        this->m_Handle = MyEnsureCleanup.m_Handle;
+
+        MyEnsureCleanup.m_Handle = nullptr;
+
         return *this;
       }
 
