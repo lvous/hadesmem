@@ -176,25 +176,30 @@ namespace Hades
 
     // Special class for releasing a reserved region.
     // Special class is required because VirtualFree requires 3 parameters
-    class EnsureReleaseRegion 
+    class EnsureReleaseRegion : private boost::noncopyable
     {
     public:
-      EnsureReleaseRegion(PVOID pv = nullptr) : m_pv(pv) 
+      EnsureReleaseRegion(PVOID pv = nullptr) 
+        : m_pv(pv) 
       { }
 
       ~EnsureReleaseRegion() 
       { Cleanup(); }
 
-      EnsureReleaseRegion(EnsureReleaseRegion&& MyEnsureCleanup)
+      EnsureReleaseRegion(EnsureReleaseRegion&& MyEnsureCleanup) 
+        : m_pv(nullptr)
       {
-        m_pv = MyEnsureCleanup.m_pv;
-        MyEnsureCleanup.m_pv = 0;
+        *this = std::move(MyEnsureCleanup);
       }
 
       EnsureReleaseRegion& operator= (EnsureReleaseRegion&& MyEnsureCleanup)
       {
         Cleanup();
+
         m_pv = MyEnsureCleanup.m_pv;
+
+        MyEnsureCleanup.m_pv = 0;
+
         return *this;
       }
 
@@ -223,23 +228,27 @@ namespace Hades
 
     // Special class for releasing a reserved region.
     // Special class is required because VirtualFree requires 3 parameters
-    class EnsureEndUpdateResource 
+    class EnsureEndUpdateResource : private boost::noncopyable
     {
     public:
       EnsureEndUpdateResource(HANDLE File = nullptr) : m_File(File) 
       { }
 
-      EnsureEndUpdateResource(EnsureEndUpdateResource&& MyEnsureCleanup)
+      EnsureEndUpdateResource(EnsureEndUpdateResource&& MyEnsureCleanup) 
+        : m_File(nullptr)
       {
-        m_File = MyEnsureCleanup.m_File;
-        MyEnsureCleanup.m_File = 0;
+        *this = std::move(MyEnsureCleanup);
       }
 
-      EnsureEndUpdateResource& operator= (
-        EnsureEndUpdateResource&& MyEnsureCleanup)
+      EnsureEndUpdateResource& operator= (EnsureEndUpdateResource&& 
+        MyEnsureCleanup)
       {
         Cleanup();
+
         m_File = MyEnsureCleanup.m_File;
+
+        MyEnsureCleanup.m_File = nullptr;
+
         return *this;
       }
 
@@ -271,26 +280,30 @@ namespace Hades
 
     // Special class for freeing a block from a heap
     // Special class is required because HeapFree requires 3 parameters
-    class EnsureHeapFree 
+    class EnsureHeapFree : private boost::noncopyable
     {
     public:
       EnsureHeapFree(PVOID pv = nullptr, HANDLE hHeap = GetProcessHeap()) 
         : m_pv(pv), m_hHeap(hHeap) 
       { }
 
-      EnsureHeapFree(EnsureHeapFree&& MyEnsureCleanup)
+      EnsureHeapFree(EnsureHeapFree&& MyEnsureCleanup) 
+        : m_pv(nullptr), 
+        m_hHeap(nullptr)
       {
-        m_pv = MyEnsureCleanup.m_pv;
-        m_hHeap = MyEnsureCleanup.m_hHeap;
-        MyEnsureCleanup.m_pv = 0;
-        MyEnsureCleanup.m_hHeap = 0;
+        *this = std::move(MyEnsureCleanup);
       }
 
       EnsureHeapFree& operator= (EnsureHeapFree&& MyEnsureCleanup)
       {
         Cleanup();
+
         m_pv = MyEnsureCleanup.m_pv;
         m_hHeap = MyEnsureCleanup.m_hHeap;
+
+        MyEnsureCleanup.m_pv = nullptr;
+        MyEnsureCleanup.m_hHeap = nullptr;
+
         return *this;
       }
 
@@ -323,27 +336,31 @@ namespace Hades
 
     // Special class for releasing a remote reserved region.
     // Special class is required because VirtualFreeEx requires 4 parameters
-    class EnsureReleaseRegionEx
+    class EnsureReleaseRegionEx : private boost::noncopyable
     {
     public:
       EnsureReleaseRegionEx(PVOID pv = nullptr, HANDLE proc = nullptr) 
         : m_pv(pv), m_proc(proc) 
       { }
 
-      EnsureReleaseRegionEx(EnsureReleaseRegionEx&& MyEnsureCleanup)
+      EnsureReleaseRegionEx(EnsureReleaseRegionEx&& MyEnsureCleanup) 
+        : m_pv(nullptr), 
+        m_proc(nullptr)
       {
-        m_pv = MyEnsureCleanup.m_pv;
-        m_proc = MyEnsureCleanup.m_proc;
-        MyEnsureCleanup.m_pv = 0;
-        MyEnsureCleanup.m_proc = 0;
+        *this = std::move(MyEnsureCleanup);
       }
 
-      EnsureReleaseRegionEx& operator= (
-        EnsureReleaseRegionEx&& MyEnsureCleanup)
+      EnsureReleaseRegionEx& operator= (EnsureReleaseRegionEx&& 
+        MyEnsureCleanup)
       {
         Cleanup();
+
         m_pv = MyEnsureCleanup.m_pv;
         m_proc = MyEnsureCleanup.m_proc;
+
+        MyEnsureCleanup.m_pv = nullptr;
+        MyEnsureCleanup.m_proc = nullptr;
+
         return *this;
       }
 
@@ -376,22 +393,26 @@ namespace Hades
 
     // Special class for closing the clipboard.
     // Special class is required because no params are required.
-    class EnsureCloseClipboard
+    class EnsureCloseClipboard : private boost::noncopyable
     {
     public:
       EnsureCloseClipboard(BOOL Success) : m_Success(Success) 
       { }
 
-      EnsureCloseClipboard(EnsureCloseClipboard&& MyEnsureCleanup)
+      EnsureCloseClipboard(EnsureCloseClipboard&& MyEnsureCleanup) 
+        : m_Success(FALSE)
       {
-        m_Success = MyEnsureCleanup.m_Success;
-        MyEnsureCleanup.m_Success = 0;
+        *this = std::move(MyEnsureCleanup);
       }
 
       EnsureCloseClipboard& operator= (EnsureCloseClipboard&& MyEnsureCleanup)
       {
         Cleanup();
+
         m_Success = MyEnsureCleanup.m_Success;
+
+        MyEnsureCleanup.m_Success = FALSE;
+
         return *this;
       }
 
@@ -422,35 +443,37 @@ namespace Hades
     };
 
     // Special class for releasing a window class.
-    class EnsureUnregisterClassW
+    class EnsureUnregisterClassW : private boost::noncopyable
     {
     public:
       EnsureUnregisterClassW(const std::wstring& ClassName, HINSTANCE Instance) 
-        : m_ClassName(ClassName), m_Instance(Instance) 
+        : m_ClassName(ClassName), 
+        m_Instance(Instance) 
       { }
 
-      EnsureUnregisterClassW(EnsureUnregisterClassW&& MyEnsureCleanup)
+      EnsureUnregisterClassW(EnsureUnregisterClassW&& MyEnsureCleanup) 
+        : m_ClassName(), 
+        m_Instance()
       {
-        m_ClassName = MyEnsureCleanup.m_ClassName;
-        m_Instance = MyEnsureCleanup.m_Instance;
-        MyEnsureCleanup.m_ClassName = std::wstring();
-        MyEnsureCleanup.m_Instance = 0;
+        *this = std::move(MyEnsureCleanup);
       }
 
-      EnsureUnregisterClassW& operator= (EnsureUnregisterClassW&& MyEnsureCleanup)
+      EnsureUnregisterClassW& operator= (EnsureUnregisterClassW&& 
+        MyEnsureCleanup)
       {
         Cleanup();
-        m_ClassName = MyEnsureCleanup.m_ClassName;
+
+        m_ClassName = std::move(MyEnsureCleanup.m_ClassName);
         m_Instance = MyEnsureCleanup.m_Instance;
+
+        MyEnsureCleanup.m_ClassName = std::wstring();
+        MyEnsureCleanup.m_Instance = nullptr;
+
         return *this;
       }
 
       ~EnsureUnregisterClassW() 
       { Cleanup(); }
-
-      // Disable assignment
-    protected:
-      EnsureUnregisterClassW& operator= (const EnsureUnregisterClassW&);
 
       void Cleanup() 
       { 
@@ -477,19 +500,23 @@ namespace Hades
         m_Dc(Dc) 
       { }
 
-      EnsureReleaseDc(EnsureReleaseDc&& MyEnsureCleanup)
+      EnsureReleaseDc(EnsureReleaseDc&& MyEnsureCleanup) 
+        : m_Wnd(nullptr), 
+        m_Dc(nullptr)
       {
-        m_Wnd = MyEnsureCleanup.m_Wnd;
-        m_Dc = MyEnsureCleanup.m_Dc;
-        MyEnsureCleanup.m_Wnd = 0;
-        MyEnsureCleanup.m_Dc = 0;
+        *this = std::move(MyEnsureCleanup);
       }
 
       EnsureReleaseDc& operator= (EnsureReleaseDc&& MyEnsureCleanup)
       {
         Cleanup();
+
         m_Wnd = MyEnsureCleanup.m_Wnd;
         m_Dc = MyEnsureCleanup.m_Dc;
+
+        MyEnsureCleanup.m_Wnd = nullptr;
+        MyEnsureCleanup.m_Dc = nullptr;
+
         return *this;
       }
 
