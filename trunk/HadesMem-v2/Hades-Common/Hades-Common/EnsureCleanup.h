@@ -64,7 +64,7 @@ namespace Hades
 
       // Move constructor
       EnsureCleanup(EnsureCleanup&& MyEnsureCleanup) 
-        : m_Handle(nullptr)
+        : m_Handle(Invalid)
       {
         *this = std::move(MyEnsureCleanup);
       }
