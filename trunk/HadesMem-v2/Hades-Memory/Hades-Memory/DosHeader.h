@@ -38,7 +38,7 @@ namespace Hades
       { };
 
       // Constructor
-      inline explicit DosHeader(PeFile* MyPeFile);
+      inline explicit DosHeader(PeFile& MyPeFile);
 
       // Whether magic is valid
       inline bool IsMagicValid() const;
@@ -173,8 +173,8 @@ namespace Hades
     };
 
     // Constructor
-    DosHeader::DosHeader(PeFile* MyPeFile)
-      : m_pPeFile(MyPeFile), 
+    DosHeader::DosHeader(PeFile& MyPeFile)
+      : m_pPeFile(&MyPeFile), 
       m_pMemory(&m_pPeFile->GetMemoryMgr()), 
       m_pBase(m_pPeFile->GetBase())
     {

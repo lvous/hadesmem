@@ -56,7 +56,7 @@ namespace Hades
       };
 
       // Constructor
-      inline explicit NtHeaders(PeFile* MyPeFile);
+      inline explicit NtHeaders(PeFile& MyPeFile);
 
       // Get base of NT headers
       inline PBYTE GetBase() const;
@@ -328,10 +328,10 @@ namespace Hades
     };
 
     // Constructor
-    NtHeaders::NtHeaders(PeFile* MyPeFile)
-      : m_pPeFile(MyPeFile), 
+    NtHeaders::NtHeaders(PeFile& MyPeFile)
+      : m_pPeFile(&MyPeFile), 
       m_pMemory(&m_pPeFile->GetMemoryMgr()), 
-      m_DosHeader(m_pPeFile)
+      m_DosHeader(MyPeFile)
     {
       // Ensure signature is valid
       EnsureSignatureValid();

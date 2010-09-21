@@ -36,7 +36,7 @@ namespace Hades
       { };
 
       // Constructor
-      inline Section(PeFile* MyPeFile, WORD Number);
+      inline Section(PeFile& MyPeFile, WORD Number);
 
       // Get name
       inline std::string GetName() const;
@@ -59,8 +59,8 @@ namespace Hades
     };
 
     // Constructor
-    Section::Section(PeFile* MyPeFile, WORD Number)
-      : m_pPeFile(MyPeFile), 
+    Section::Section(PeFile& MyPeFile, WORD Number)
+      : m_pPeFile(&MyPeFile), 
       m_pMemory(&m_pPeFile->GetMemoryMgr()), 
       m_SectionNum(Number)
     { }
@@ -90,7 +90,7 @@ namespace Hades
     PBYTE Section::GetBase() const
     {
       // Get NT headers
-      NtHeaders MyNtHeaders(m_pPeFile);
+      NtHeaders MyNtHeaders(*m_pPeFile);
 
       // Ensure section number is valid
       if (m_SectionNum >= MyNtHeaders.GetNumberOfSections())

@@ -129,8 +129,8 @@ namespace Hades
       auto const pBase(reinterpret_cast<PBYTE>(MyModuleEnum.First()->
         GetBase()));
       PeFile MyPeFile(*m_pMemory, pBase);
-      DosHeader const MyDosHeader(&MyPeFile);
-      NtHeaders const MyNtHeaders(&MyPeFile);
+      DosHeader const MyDosHeader(MyPeFile);
+      NtHeaders const MyNtHeaders(MyPeFile);
 
       // Get base of code section
       m_Start = pBase + MyNtHeaders.GetBaseOfCode();
@@ -149,8 +149,8 @@ namespace Hades
       // Ensure file is a valid PE file
       auto const pBase(reinterpret_cast<PBYTE>(Module));
       PeFile MyPeFile(*m_pMemory, pBase);
-      DosHeader const MyDosHeader(&MyPeFile);
-      NtHeaders const MyNtHeaders(&MyPeFile);
+      DosHeader const MyDosHeader(MyPeFile);
+      NtHeaders const MyNtHeaders(MyPeFile);
 
       // Get base of code section
       m_Start = pBase + MyNtHeaders.GetBaseOfCode();

@@ -52,7 +52,7 @@ namespace Hades
       { };
 
       // Constructor
-      inline ExportDir(PeFile* MyPeFile);
+      inline ExportDir(PeFile& MyPeFile);
 
       // Whether export directory is valid
       inline bool IsValid() const;
@@ -81,8 +81,8 @@ namespace Hades
     };
 
     // Constructor
-    ExportDir::ExportDir(PeFile* MyPeFile)
-      : m_pPeFile(MyPeFile), 
+    ExportDir::ExportDir(PeFile& MyPeFile)
+      : m_pPeFile(&MyPeFile), 
       m_pMemory(&m_pPeFile->GetMemoryMgr())
     { }
 
@@ -113,7 +113,7 @@ namespace Hades
       PBYTE pBase(m_pPeFile->GetBase());
 
       // Get NT headers
-      NtHeaders MyNtHeaders(m_pPeFile);
+      NtHeaders MyNtHeaders(*m_pPeFile);
 
       // Get export dir data
       DWORD DataDirSize(MyNtHeaders.GetDataDirectorySize(NtHeaders::
@@ -135,8 +135,8 @@ namespace Hades
     {
       std::vector<Export> Exports;
 
-      DosHeader MyDosHeader(m_pPeFile);
-      NtHeaders MyNtHeaders(m_pPeFile);
+      DosHeader MyDosHeader(*m_pPeFile);
+      NtHeaders MyNtHeaders(*m_pPeFile);
 
       IMAGE_EXPORT_DIRECTORY const ExportDirRaw(GetExportDirRaw());
 
@@ -202,7 +202,7 @@ namespace Hades
     bool ExportDir::IsValid() const
     {
       // Get NT headers
-      NtHeaders MyNtHeaders(m_pPeFile);
+      NtHeaders MyNtHeaders(*m_pPeFile);
 
       // Get export dir data
       DWORD DataDirSize(MyNtHeaders.GetDataDirectorySize(NtHeaders::

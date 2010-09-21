@@ -44,8 +44,8 @@ namespace Hades
       class SectionEnumWrap : public SectionEnum
       {
       public:
-        SectionEnumWrap(PeFile* pPeFile)
-          : SectionEnum(pPeFile)
+        SectionEnumWrap(PeFile& MyPeFile)
+          : SectionEnum(MyPeFile)
         { }
 
         boost::shared_ptr<Section> First()
