@@ -51,14 +51,14 @@ namespace Hades
       { };
 
       // Create module
-      inline Module(MemoryMgr* MyMemory, 
+      inline Module(MemoryMgr& MyMemory, 
         MODULEENTRY32 const& ModuleEntry);
 
       // Find module by handle
-      inline Module(MemoryMgr* MyMemory, HMODULE Handle);
+      inline Module(MemoryMgr& MyMemory, HMODULE Handle);
 
       // Find module by name
-      inline Module(MemoryMgr* MyMemory, std::wstring const& ModuleName);
+      inline Module(MemoryMgr& MyMemory, std::wstring const& ModuleName);
 
       // Get module base
       inline HMODULE GetBase() const;
@@ -89,8 +89,8 @@ namespace Hades
     {
     public:
       // Constructor
-      ModuleEnum(MemoryMgr* MyMemory) 
-        : m_pMemory(MyMemory), 
+      ModuleEnum(MemoryMgr& MyMemory) 
+        : m_pMemory(&MyMemory), 
         m_Snap(), 
         m_ModuleEntry()
       {
@@ -123,7 +123,7 @@ namespace Hades
             ErrorCodeWin(LastError));
         }
 
-        return std::unique_ptr<Module>(new Module(m_pMemory, m_ModuleEntry));
+        return std::unique_ptr<Module>(new Module(*m_pMemory, m_ModuleEntry));
       }
 
       // Get next module
@@ -132,7 +132,7 @@ namespace Hades
         // Todo: Check GetLastError to ensure EOL and throw an exception 
         // on an actual error.
         return Module32Next(m_Snap, &m_ModuleEntry) ? 
-          std::unique_ptr<Module>(new Module(m_pMemory, m_ModuleEntry)) 
+          std::unique_ptr<Module>(new Module(*m_pMemory, m_ModuleEntry)) 
           : std::unique_ptr<Module>(nullptr);
       }
 
@@ -190,8 +190,8 @@ namespace Hades
     };
 
     // Find module by name
-    Module::Module(MemoryMgr* MyMemory, std::wstring const& ModuleName) 
-      : m_pMemory(MyMemory), 
+    Module::Module(MemoryMgr& MyMemory, std::wstring const& ModuleName) 
+      : m_pMemory(&MyMemory), 
       m_Base(nullptr), 
       m_Size(0), 
       m_Name(), 
@@ -199,7 +199,7 @@ namespace Hades
     {
       // Grab a new snapshot of the process
       Windows::EnsureCloseSnap const Snap(CreateToolhelp32Snapshot(
-        TH32CS_SNAPMODULE, MyMemory->GetProcessID()));
+        TH32CS_SNAPMODULE, MyMemory.GetProcessID()));
       if (Snap == INVALID_HANDLE_VALUE)
       {
         DWORD LastError = GetLastError();
@@ -243,8 +243,8 @@ namespace Hades
     }
 
     // Find module by handle
-    Module::Module(MemoryMgr* MyMemory, HMODULE Handle) 
-      : m_pMemory(MyMemory), 
+    Module::Module(MemoryMgr& MyMemory, HMODULE Handle) 
+      : m_pMemory(&MyMemory), 
       m_Base(nullptr), 
       m_Size(0), 
       m_Name(), 
@@ -252,7 +252,7 @@ namespace Hades
     {
       // Grab a new snapshot of the process
       Windows::EnsureCloseSnap const Snap(CreateToolhelp32Snapshot(
-        TH32CS_SNAPMODULE, MyMemory->GetProcessID()));
+        TH32CS_SNAPMODULE, MyMemory.GetProcessID()));
       if (Snap == INVALID_HANDLE_VALUE)
       {
         DWORD LastError = GetLastError();
@@ -290,8 +290,8 @@ namespace Hades
       m_Path = ModEntry.szExePath;
     }
 
-    Module::Module(MemoryMgr* MyMemory, MODULEENTRY32 const& ModuleEntry) 
-      : m_pMemory(MyMemory), 
+    Module::Module(MemoryMgr& MyMemory, MODULEENTRY32 const& ModuleEntry) 
+      : m_pMemory(&MyMemory), 
       m_Base(ModuleEntry.hModule), 
       m_Size(ModuleEntry.dwSize), 
       m_Name(ModuleEntry.szModule), 

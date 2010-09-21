@@ -44,7 +44,7 @@ namespace Hades
       class RegionWrappers : public Region
       {
       public:
-        RegionWrappers(MemoryMgr* MyMemory, DWORD_PTR Address)
+        RegionWrappers(MemoryMgr& MyMemory, DWORD_PTR Address)
           : Region(MyMemory, reinterpret_cast<PVOID>(Address))
         { }
 
@@ -64,7 +64,7 @@ namespace Hades
       class RegionEnumWrap : public RegionEnum
       {
       public:
-        RegionEnumWrap(MemoryMgr* MyMemory)
+        RegionEnumWrap(MemoryMgr& MyMemory)
           : RegionEnum(MyMemory)
         { }
 

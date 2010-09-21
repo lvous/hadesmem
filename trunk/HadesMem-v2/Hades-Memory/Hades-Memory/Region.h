@@ -48,10 +48,10 @@ namespace Hades
       { };
 
       // Constructor
-      inline Region(MemoryMgr* MyMemory, PVOID Address);
+      inline Region(MemoryMgr& MyMemory, PVOID Address);
 
       // Constructor
-      inline Region(MemoryMgr* MyMemory, MEMORY_BASIC_INFORMATION const& 
+      inline Region(MemoryMgr& MyMemory, MEMORY_BASIC_INFORMATION const& 
         MyMbi);
 
       // Get base address
@@ -82,8 +82,8 @@ namespace Hades
     {
     public:
       // Constructor
-      RegionEnum(MemoryMgr* MyMemory) 
-        : m_pMemory(MyMemory), 
+      RegionEnum(MemoryMgr& MyMemory) 
+        : m_pMemory(&MyMemory), 
         m_Address(nullptr), 
         m_Current()
       {
@@ -103,7 +103,7 @@ namespace Hades
             ErrorCodeWin(LastError));
         }
 
-        return std::unique_ptr<Region>(new Region(m_pMemory, m_Current));
+        return std::unique_ptr<Region>(new Region(*m_pMemory, m_Current));
       }
 
       // Get next region
@@ -118,7 +118,7 @@ namespace Hades
         // on an actual error.
         return VirtualQueryEx(m_pMemory->GetProcessHandle(), m_Address, 
           &m_Current, sizeof(m_Current)) ? std::unique_ptr<Region>(new Region(
-          m_pMemory, m_Current)) : std::unique_ptr<Region>(nullptr);
+          *m_pMemory, m_Current)) : std::unique_ptr<Region>(nullptr);
       }
 
       // Region iterator
@@ -175,8 +175,8 @@ namespace Hades
     };
 
     // Constructor
-    Region::Region(MemoryMgr* MyMemory, PVOID Address) 
-      : m_pMemory(MyMemory), 
+    Region::Region(MemoryMgr& MyMemory, PVOID Address) 
+      : m_pMemory(&MyMemory), 
       m_RegionInfo() 
     {
       // Clear region info
@@ -195,9 +195,9 @@ namespace Hades
     }
 
     // Constructor
-    Region::Region(MemoryMgr* MyMemory, 
+    Region::Region(MemoryMgr& MyMemory, 
       MEMORY_BASIC_INFORMATION const& MyMbi) 
-      : m_pMemory(MyMemory), 
+      : m_pMemory(&MyMemory), 
       m_RegionInfo(MyMbi)
     { }
 

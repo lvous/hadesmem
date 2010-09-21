@@ -45,7 +45,7 @@ namespace Hades
       class DisassemblerWrappers : public Disassembler
       {
       public:
-        explicit DisassemblerWrappers(MemoryMgr* pMyMemory) 
+        explicit DisassemblerWrappers(MemoryMgr& pMyMemory) 
           : Disassembler(pMyMemory)
         { }
 

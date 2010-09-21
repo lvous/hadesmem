@@ -384,8 +384,8 @@ namespace Hades
           // Bind Module class
           ,luabind::class_<Module>("ModuleBase")
           ,luabind::class_<Wrappers::ModuleWrappers, Module>("Module")
-          .def(luabind::constructor<MemoryMgr*, DWORD_PTR>())
-          .def(luabind::constructor<MemoryMgr*, std::string>())
+          .def(luabind::constructor<MemoryMgr&, DWORD_PTR>())
+          .def(luabind::constructor<MemoryMgr&, std::string>())
           .def("GetBase", &Wrappers::ModuleWrappers::GetBase)
           .def("GetSize", &Wrappers::ModuleWrappers::GetSize)
           .def("GetName", &Wrappers::ModuleWrappers::GetName)
@@ -393,14 +393,14 @@ namespace Hades
 
           // Bind ModuleEnum class
           ,luabind::class_<Wrappers::ModuleEnumWrap>("ModuleEnum")
-          .def(luabind::constructor<MemoryMgr*>())
+          .def(luabind::constructor<MemoryMgr&>())
           .def("First", &Wrappers::ModuleEnumWrap::First)
           .def("Next", &Wrappers::ModuleEnumWrap::Next)
 
           // Bind Region class
           ,luabind::class_<Region>("RegionBase")
           ,luabind::class_<Wrappers::RegionWrappers, Region>("Region")
-          .def(luabind::constructor<MemoryMgr*, DWORD_PTR>())
+          .def(luabind::constructor<MemoryMgr&, DWORD_PTR>())
           .def("GetBase", &Wrappers::RegionWrappers::GetBaseAddress)
           .def("GetAllocBase", &Wrappers::RegionWrappers::GetAllocationBase)
           .def("GetAllocProtect", &Wrappers::RegionWrappers::GetAllocProtect)
@@ -411,14 +411,14 @@ namespace Hades
 
           // Bind RegionEnum class
           ,luabind::class_<Wrappers::RegionEnumWrap>("RegionEnum")
-          .def(luabind::constructor<MemoryMgr*>())
+          .def(luabind::constructor<MemoryMgr&>())
           .def("First", &Wrappers::RegionEnumWrap::First)
           .def("Next", &Wrappers::RegionEnumWrap::Next)
 
           // Bind Injector class
           ,luabind::class_<Injector>("InjectorBase")
           ,luabind::class_<Wrappers::InjectorWrappers, Injector>("Injector")
-          .def(luabind::constructor<MemoryMgr*>())
+          .def(luabind::constructor<MemoryMgr&>())
           .def("InjectDll", &Wrappers::InjectorWrappers::InjectDll)
           .def("CallExport", &Wrappers::InjectorWrappers::CallExport)
 
@@ -444,16 +444,16 @@ namespace Hades
           ,luabind::class_<Disassembler>("DisassemblerBase")
           ,luabind::class_<Wrappers::DisassemblerWrappers, Disassembler>(
             "Disassembler")
-          .def(luabind::constructor<MemoryMgr*>())
+          .def(luabind::constructor<MemoryMgr&>())
           .def("DisassembleToStr", &Wrappers::DisassemblerWrappers::
             DisassembleToStr)
 
           // Bind Scanner class
           ,luabind::class_<Scanner>("ScannerBase")
           ,luabind::class_<Wrappers::ScannerWrappers, Scanner>("Scanner")
-          .def(luabind::constructor<MemoryMgr*>())
-          .def(luabind::constructor<MemoryMgr*, DWORD_PTR>())
-          .def(luabind::constructor<MemoryMgr*, DWORD_PTR, DWORD_PTR>())
+          .def(luabind::constructor<MemoryMgr&>())
+          .def(luabind::constructor<MemoryMgr&, DWORD_PTR>())
+          .def(luabind::constructor<MemoryMgr&, DWORD_PTR, DWORD_PTR>())
           .def("FindInt8", &Wrappers::ScannerWrappers::FindInt8) 
           .def("FindUInt8", &Wrappers::ScannerWrappers::FindUInt8) 
           .def("FindInt16", &Wrappers::ScannerWrappers::FindInt16) 
@@ -499,19 +499,19 @@ namespace Hades
           // Bind ManualMap class
           ,luabind::class_<ManualMap>("ManualMapBase")
           ,luabind::class_<Wrappers::ManualMapWrappers, ManualMap>("ManualMap")
-          .def(luabind::constructor<MemoryMgr*>())
+          .def(luabind::constructor<MemoryMgr&>())
           .def("Map", &Wrappers::ManualMapWrappers::Map)
 
           // Bind PeFile class
           ,luabind::class_<PeFile>("PeFileBase")
           ,luabind::class_<Wrappers::PeFileWrappers, PeFile>("PeFile")
-          .def(luabind::constructor<MemoryMgr*, DWORD_PTR>())
+          .def(luabind::constructor<MemoryMgr&, DWORD_PTR>())
 
           // Bind PeFileAsData class
           ,luabind::class_<PeFileAsData>("PeFileAsDataBase")
           ,luabind::class_<Wrappers::PeFileAsDataWrappers, PeFileAsData>(
             "PeFileAsData")
-          .def(luabind::constructor<MemoryMgr*, DWORD_PTR>())
+          .def(luabind::constructor<MemoryMgr&, DWORD_PTR>())
 
           // Bind DosHeader class
           ,luabind::class_<DosHeader>("DosHeader")

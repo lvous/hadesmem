@@ -49,7 +49,7 @@ namespace Hades
       { };
 
       // Constructor
-      inline Patch(MemoryMgr* MyMemory);
+      inline Patch(MemoryMgr& MyMemory);
       // Destructor
       inline virtual ~Patch();
 
@@ -70,8 +70,8 @@ namespace Hades
     };
 
     // Constructor
-    Patch::Patch(MemoryMgr* MyMemory) 
-      : m_pMemory(MyMemory), 
+    Patch::Patch(MemoryMgr& MyMemory) 
+      : m_pMemory(&MyMemory), 
       m_Applied(false)
     { }
 
@@ -91,7 +91,7 @@ namespace Hades
     {
     public:
       // Constructor
-      inline PatchRaw(MemoryMgr* MyMemory, PVOID Target, 
+      inline PatchRaw(MemoryMgr& MyMemory, PVOID Target, 
         std::vector<BYTE> const& Data);
 
       // Apply patch
@@ -112,7 +112,7 @@ namespace Hades
     };
 
     // Constructor
-    PatchRaw::PatchRaw(MemoryMgr* MyMemory, PVOID Target, 
+    PatchRaw::PatchRaw(MemoryMgr& MyMemory, PVOID Target, 
       std::vector<BYTE> const& Data) 
       : Patch(MyMemory), 
       m_Target(Target), 
@@ -166,7 +166,7 @@ namespace Hades
     {
     public:
       // Constructor
-      inline PatchDetour(MemoryMgr* MyMemory, PVOID Target, 
+      inline PatchDetour(MemoryMgr& MyMemory, PVOID Target, 
         PVOID Detour);
 
       // Apply patch
@@ -195,7 +195,7 @@ namespace Hades
     };
 
     // Constructor
-    PatchDetour::PatchDetour(MemoryMgr* MyMemory, PVOID Target, 
+    PatchDetour::PatchDetour(MemoryMgr& MyMemory, PVOID Target, 
       PVOID Detour) 
       : Patch(MyMemory), 
       m_Target(Target), 
@@ -221,7 +221,7 @@ namespace Hades
       PBYTE TrampCur = static_cast<PBYTE>(m_Trampoline);
 
       // Disassemble target (for worst case scenario)
-      Disassembler MyDisasm(m_pMemory);
+      Disassembler MyDisasm(*m_pMemory);
       auto MyDisasmData(MyDisasm.Disassemble(m_Target, TrampSize));
 
       // Parse disassembly

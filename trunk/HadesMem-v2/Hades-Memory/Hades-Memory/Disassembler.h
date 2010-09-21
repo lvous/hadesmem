@@ -59,7 +59,7 @@ namespace Hades
       { };
 
       // Constructor
-      inline explicit Disassembler(MemoryMgr* pMyMemory);
+      inline explicit Disassembler(MemoryMgr& pMyMemory);
 
       // Disassemble target and get results as strings
       inline std::vector<std::string> DisassembleToStr(PVOID Address, 
@@ -75,8 +75,8 @@ namespace Hades
     };
 
     // Constructor
-    Disassembler::Disassembler(MemoryMgr* pMyMemory) 
-      : m_pMemory(pMyMemory)
+    Disassembler::Disassembler(MemoryMgr& pMyMemory) 
+      : m_pMemory(&pMyMemory)
     { }
 
     // Test disassembler

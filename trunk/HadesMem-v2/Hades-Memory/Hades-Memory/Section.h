@@ -61,7 +61,7 @@ namespace Hades
     // Constructor
     Section::Section(PeFile* MyPeFile, WORD Number)
       : m_pPeFile(MyPeFile), 
-      m_pMemory(m_pPeFile->GetMemoryMgr()), 
+      m_pMemory(&m_pPeFile->GetMemoryMgr()), 
       m_SectionNum(Number)
     { }
 

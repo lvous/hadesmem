@@ -57,7 +57,7 @@ namespace Hades
       { };
 
       // Constructor
-      inline Injector(MemoryMgr* MyMemory);
+      inline Injector(MemoryMgr& MyMemory);
 
       // Inject DLL
       inline HMODULE InjectDll(boost::filesystem::path const& Path, 
@@ -143,7 +143,7 @@ namespace Hades
           dwProcessId));
 
         // Create DLL injector
-        Hades::Memory::Injector const MyInjector(MyMemory.get());
+        Hades::Memory::Injector const MyInjector(*MyMemory);
 
         // Inject DLL
         HMODULE const ModBase(MyInjector.InjectDll(Module));
@@ -185,8 +185,8 @@ namespace Hades
     }
 
     // Constructor
-    Injector::Injector(MemoryMgr* MyMemory) 
-      : m_pMemory(MyMemory)
+    Injector::Injector(MemoryMgr& MyMemory) 
+      : m_pMemory(&MyMemory)
     { }
 
     // Inject DLL
@@ -274,7 +274,7 @@ namespace Hades
         wstring()));
 
       // Look for target module
-      ModuleEnum MyModuleList(m_pMemory);
+      ModuleEnum MyModuleList(*m_pMemory);
       std::unique_ptr<Module> MyModule;
       for (ModuleEnum::ModuleListIter MyIter(MyModuleList); *MyIter; ++MyIter)
       {

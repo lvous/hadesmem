@@ -45,7 +45,7 @@ namespace Hades
       class ManualMapWrappers : public ManualMap
       {
       public:
-        ManualMapWrappers(MemoryMgr* MyMemory) 
+        ManualMapWrappers(MemoryMgr& MyMemory) 
           : ManualMap(MyMemory)
         { }
 

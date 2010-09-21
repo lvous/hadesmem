@@ -57,9 +57,9 @@ namespace Hades
       { };
 
       // Constructor
-      inline explicit Scanner(MemoryMgr* MyMemory);
-      inline Scanner(MemoryMgr* MyMemory, HMODULE Module);
-      inline Scanner(MemoryMgr* MyMemory, PVOID Start, PVOID End);
+      inline explicit Scanner(MemoryMgr& MyMemory);
+      inline Scanner(MemoryMgr& MyMemory, HMODULE Module);
+      inline Scanner(MemoryMgr& MyMemory, PVOID Start, PVOID End);
 
       // Search memory (POD types)
       template <typename T>
@@ -118,17 +118,17 @@ namespace Hades
     };
 
     // Constructor
-    Scanner::Scanner(MemoryMgr* MyMemory) 
-      : m_pMemory(MyMemory), 
+    Scanner::Scanner(MemoryMgr& MyMemory) 
+      : m_pMemory(&MyMemory), 
       m_Start(nullptr), 
       m_End(nullptr), 
       m_Addresses()
     {
       // Get pointer to image headers
-      ModuleEnum MyModuleEnum(m_pMemory);
+      ModuleEnum MyModuleEnum(*m_pMemory);
       auto const pBase(reinterpret_cast<PBYTE>(MyModuleEnum.First()->
         GetBase()));
-      PeFile MyPeFile(m_pMemory, pBase);
+      PeFile MyPeFile(*m_pMemory, pBase);
       DosHeader const MyDosHeader(&MyPeFile);
       NtHeaders const MyNtHeaders(&MyPeFile);
 
@@ -140,15 +140,15 @@ namespace Hades
     }
 
     // Constructor
-    Scanner::Scanner(MemoryMgr* MyMemory, HMODULE Module) 
-      : m_pMemory(MyMemory), 
+    Scanner::Scanner(MemoryMgr& MyMemory, HMODULE Module) 
+      : m_pMemory(&MyMemory), 
       m_Start(nullptr), 
       m_End(nullptr), 
       m_Addresses()
     {
       // Ensure file is a valid PE file
       auto const pBase(reinterpret_cast<PBYTE>(Module));
-      PeFile MyPeFile(m_pMemory, pBase);
+      PeFile MyPeFile(*m_pMemory, pBase);
       DosHeader const MyDosHeader(&MyPeFile);
       NtHeaders const MyNtHeaders(&MyPeFile);
 
@@ -160,8 +160,8 @@ namespace Hades
     }
 
     // Constructor
-    Scanner::Scanner(MemoryMgr* MyMemory, PVOID Start, PVOID End) 
-      : m_pMemory(MyMemory), 
+    Scanner::Scanner(MemoryMgr& MyMemory, PVOID Start, PVOID End) 
+      : m_pMemory(&MyMemory), 
       m_Start(static_cast<PBYTE>(Start)), 
       m_End(static_cast<PBYTE>(End)), 
       m_Addresses()

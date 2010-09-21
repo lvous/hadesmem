@@ -39,10 +39,10 @@ namespace Hades
       { };
 
       // Constructor
-      inline PeFile(MemoryMgr* MyMemory, PVOID Address);
+      inline PeFile(MemoryMgr& MyMemory, PVOID Address);
 
       // Get memory manager
-      inline MemoryMgr* GetMemoryMgr() const;
+      inline MemoryMgr& GetMemoryMgr() const;
 
       // Get base address
       inline PBYTE GetBase() const;
@@ -64,14 +64,14 @@ namespace Hades
     {
     public:
       // Constructor
-      inline PeFileAsData(MemoryMgr* MyMemory, PVOID Address);
+      inline PeFileAsData(MemoryMgr& MyMemory, PVOID Address);
 
       // Convert RVA to VA
       inline virtual PVOID RvaToVa(DWORD Rva);
     };
 
     // Constructor
-    PeFileAsData::PeFileAsData(MemoryMgr* MyMemory, PVOID Address) 
+    PeFileAsData::PeFileAsData(MemoryMgr& MyMemory, PVOID Address) 
       : PeFile(MyMemory, Address)
     { }
 
@@ -85,7 +85,7 @@ namespace Hades
       }
 
       // Get memory manager
-      MemoryMgr* MyMemory(GetMemoryMgr());
+      MemoryMgr* MyMemory(&GetMemoryMgr());
 
       // Get PE file base
       PBYTE pBase(GetBase());
@@ -141,15 +141,15 @@ namespace Hades
     }
 
     // Constructor
-    PeFile::PeFile(MemoryMgr* MyMemory, PVOID Address)
-      : m_pMemory(MyMemory), 
+    PeFile::PeFile(MemoryMgr& MyMemory, PVOID Address)
+      : m_pMemory(&MyMemory), 
       m_pBase(static_cast<PBYTE>(Address))
     { }
 
     // Get memory manager
-    MemoryMgr* PeFile::GetMemoryMgr() const
+    MemoryMgr& PeFile::GetMemoryMgr() const
     {
-      return m_pMemory;
+      return *m_pMemory;
     }
 
     // Get base address

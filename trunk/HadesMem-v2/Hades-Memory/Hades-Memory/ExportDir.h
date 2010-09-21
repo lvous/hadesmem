@@ -83,7 +83,7 @@ namespace Hades
     // Constructor
     ExportDir::ExportDir(PeFile* MyPeFile)
       : m_pPeFile(MyPeFile), 
-      m_pMemory(m_pPeFile->GetMemoryMgr())
+      m_pMemory(&m_pPeFile->GetMemoryMgr())
     { }
 
     // Get module name

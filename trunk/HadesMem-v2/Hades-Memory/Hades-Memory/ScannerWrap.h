@@ -72,15 +72,15 @@ namespace Hades
       class ScannerWrappers : public Scanner
       {
       public:
-        explicit ScannerWrappers(MemoryMgr* MyMemory) 
+        explicit ScannerWrappers(MemoryMgr& MyMemory) 
           : Scanner(MyMemory)
         { }
 
-        ScannerWrappers(MemoryMgr* MyMemory, DWORD_PTR Module) 
+        ScannerWrappers(MemoryMgr& MyMemory, DWORD_PTR Module) 
           : Scanner(MyMemory, reinterpret_cast<HMODULE>(Module))
         { }
 
-        ScannerWrappers(MemoryMgr* MyMemory, DWORD_PTR Start, 
+        ScannerWrappers(MemoryMgr& MyMemory, DWORD_PTR Start, 
           DWORD_PTR End) 
           : Scanner(MyMemory, reinterpret_cast<PVOID>(Start), 
           reinterpret_cast<PVOID>(End))

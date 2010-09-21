@@ -49,7 +49,7 @@ namespace Hades
       { };
 
       // Constructor
-      inline ManualMap(MemoryMgr* MyMemory);
+      inline ManualMap(MemoryMgr& MyMemory);
 
       // Manually map DLL
       inline PVOID Map(std::wstring const& Path, std::string const& Export = 
@@ -78,8 +78,8 @@ namespace Hades
     };
 
     // Constructor
-    ManualMap::ManualMap(MemoryMgr* MyMemory) 
-      : m_pMemory(MyMemory)
+    ManualMap::ManualMap(MemoryMgr& MyMemory) 
+      : m_pMemory(&MyMemory)
     { }
 
     // Manually map DLL
@@ -107,7 +107,7 @@ namespace Hades
       // Ensure file is a valid PE file
       std::wcout << "Performing PE file format validation." << std::endl;
       auto pBase = &ModuleFileBuf[0];
-      PeFile MyPeFile(&MyMemoryLocal, pBase);
+      PeFile MyPeFile(MyMemoryLocal, pBase);
       DosHeader MyDosHeader(&MyPeFile);
       NtHeaders MyNtHeaders(&MyPeFile);
       auto pNtHeadersRaw(reinterpret_cast<PIMAGE_NT_HEADERS>(MyNtHeaders.
@@ -358,7 +358,7 @@ namespace Hades
         std::wcout << "Module Name: " << ModuleNameW << "." << std::endl;
 
         // Check whether dependent module is already loaded
-        ModuleEnum MyModuleList(m_pMemory);
+        ModuleEnum MyModuleList(*m_pMemory);
         std::unique_ptr<Module> MyModule;
         for (ModuleEnum::ModuleListIter MyIter(MyModuleList); *MyIter; 
           ++MyIter)
@@ -379,7 +379,7 @@ namespace Hades
         {
           // Inject dependent DLL
           std::wcout << "Injecting dependent DLL." << std::endl;
-          Injector MyInjector(m_pMemory);
+          Injector MyInjector(*m_pMemory);
           CurModBase = MyInjector.InjectDll(ModuleNameW, false);
           CurModName = ModuleNameW;
         }

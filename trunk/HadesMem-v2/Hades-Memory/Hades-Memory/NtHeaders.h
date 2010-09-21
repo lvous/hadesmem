@@ -330,7 +330,7 @@ namespace Hades
     // Constructor
     NtHeaders::NtHeaders(PeFile* MyPeFile)
       : m_pPeFile(MyPeFile), 
-      m_pMemory(m_pPeFile->GetMemoryMgr()), 
+      m_pMemory(&m_pPeFile->GetMemoryMgr()), 
       m_DosHeader(m_pPeFile)
     {
       // Ensure signature is valid
