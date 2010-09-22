@@ -130,6 +130,7 @@ namespace Hades
 
         // Open file
         tofstream Out(m_LogPath.c_str(), tofstream::out | tofstream::app);
+        Out.exceptions(std::ios::failbit | std::ios::badbit);
 
         // Check if file access succeeded
         if(Out)
