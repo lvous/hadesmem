@@ -24,7 +24,10 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include <cvt/wstring>
 
 // Boost
+#pragma warning(push, 1)
+#pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
 #include <boost/lexical_cast.hpp>
+#pragma warning(pop)
 
 // Boost.LexicalCast specialization to allow conversions from wide to narrow 
 // strings.

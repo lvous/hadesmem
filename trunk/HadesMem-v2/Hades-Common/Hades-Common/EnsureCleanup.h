@@ -27,7 +27,10 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 
 // Boost
+#pragma warning(push, 1)
+#pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
 #include <boost/noncopyable.hpp>
+#pragma warning(pop)
 
 // Notice: Modified version of EnsureCleanup library provided in the 'Windows
 // via C/C++' sample code. Originally copyright Jeffrey Richter and
