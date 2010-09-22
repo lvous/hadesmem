@@ -90,7 +90,7 @@ namespace Hades
       { }
 
       // Get path to log file
-      std::wstring GetLogPath() const 
+      boost::filesystem::path GetLogPath() const 
       {
         return m_LogPath;
       }
@@ -114,7 +114,7 @@ namespace Hades
         auto const LogPath(LogDirPath / LogFile);
 
         // Return path to log file
-        return LogPath.c_str();
+        return LogPath.wstring();
       }
 
       // Writes n characters from s
@@ -148,7 +148,7 @@ namespace Hades
 
     private:
       // Path to log file
-      std::wstring m_LogPath;
+      boost::filesystem::path m_LogPath;
     };
 
     // Initialize logging. Returns wide path to self.
