@@ -31,7 +31,9 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Boost
 #pragma warning(push, 1)
 #pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
+#include <boost/timer.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/program_options.hpp>
 #pragma warning(pop)
 
 // Hades
@@ -66,6 +68,9 @@ bool GetInput(Hades::Memory::ScriptMgr& MyScriptMgr)
 // Program entry-point.
 int wmain(int argc, wchar_t* argv[], wchar_t* /*envp*/[])
 {
+  // Program timer
+  boost::timer ProgTimer;
+
   try
   {
     // Attempt to detect memory leaks in debug mode
@@ -94,15 +99,58 @@ int wmain(int argc, wchar_t* argv[], wchar_t* /*envp*/[])
     std::wcout << "Built on " << __DATE__ << " at " << __TIME__ << "." << 
       std::endl << std::endl;
 
+    // Auto-close flag (Set by Boost.ProgramOptions)
+    bool KeepOpen = false;
+    // Path to script file (Set by Boost.ProgramOptions)
+    std::wstring FilePath;
+    // Script string (Set by Boost.ProgramOptions)
+    std::wstring ScriptStr;
+
+    // Set program option descriptions
+    boost::program_options::options_description OptsDesc("Allowed options");
+    OptsDesc.add_options()
+      ("help", "display help")
+      ("keep-open", boost::program_options::wvalue<bool>(&KeepOpen)->
+        zero_tokens(), "keep console window open")
+      ("file", boost::program_options::wvalue<std::wstring>(&FilePath), 
+        "file to execute")
+      ("string", boost::program_options::wvalue<std::wstring>(&ScriptStr), 
+        "string to execute")
+      ;
+
+    // Parse program options
+    boost::program_options::variables_map Opts;
+    boost::program_options::store(boost::program_options::parse_command_line(
+      argc, argv, OptsDesc), Opts);
+    boost::program_options::notify(Opts);
+
+    // Print help if requested
+    if (Opts.count("help")) 
+    {
+      // Print help
+      std::cout << OptsDesc << std::endl;
+
+      // Stop window from automatically closing if required
+      if (KeepOpen)
+      {
+        std::wcin.clear();
+        std::wcin.sync();
+        std::wcin.get();
+      }
+
+      // Quit
+      return 1;
+    }
+
     // Create script manager
     Hades::Memory::ScriptMgr MyScriptMgr;
 
     // If user has passed in a file-name then run it
-    if (argc == 2)
+    if (!FilePath.empty())
     {
       // Get file
-      boost::filesystem::path const FilePath(argv[1]);
-      if (!boost::filesystem::exists(FilePath))
+      boost::filesystem::path const FilePathReal(FilePath);
+      if (!boost::filesystem::exists(FilePathReal))
       {
         BOOST_THROW_EXCEPTION(Hades::HadesError() << 
           Hades::ErrorFunction("wmain") << 
@@ -110,7 +158,12 @@ int wmain(int argc, wchar_t* argv[], wchar_t* /*envp*/[])
       }
 
       // Run script
-      MyScriptMgr.RunFile(FilePath.string());
+      MyScriptMgr.RunFile(FilePathReal.string());
+    }
+    // If user has passed in a string then run it
+    else if (!ScriptStr.empty())
+    {
+      MyScriptMgr.RunString(boost::lexical_cast<std::string>(ScriptStr));
     }
     // Otherwise process commands from user
     else
@@ -131,13 +184,27 @@ int wmain(int argc, wchar_t* argv[], wchar_t* /*envp*/[])
         }
       }
     }
+
+    // Print elapsed time
+    std::wcout << "\nElapsed Time: " << ProgTimer.elapsed() << "." << std::endl;
+
+    // Stop window from automatically closing if required
+    if (KeepOpen)
+    {
+      std::wcin.clear();
+      std::wcin.sync();
+      std::wcin.get();
+    }
   }
   catch (std::exception const& e)
   {
     // Dump error information
     std::cout << boost::diagnostic_information(e);
 
-    // Stop window from automatically closing
+    // Print elapsed time
+    std::wcout << "\nElapsed Time: " << ProgTimer.elapsed() << "." << std::endl;
+
+    // Always keep window open in case of an error
     std::wcin.clear();
     std::wcin.sync();
     std::wcin.get();
