@@ -48,7 +48,12 @@ namespace Hades
     {
       // Open file
       std::basic_ofstream<BYTE> File(Path.c_str(), std::ios::binary);
-      File.exceptions(std::ios::failbit | std::ios::badbit);
+      if (!File)
+      {
+        BOOST_THROW_EXCEPTION(HadesError() << 
+          ErrorFunction("FileToBuffer") << 
+          ErrorString("Could not open file."));
+      }
 
       // Copy buffer to file
       File.write(&Buffer[0], Buffer.size());
@@ -60,7 +65,12 @@ namespace Hades
       // Open file
       std::basic_ifstream<BYTE> File(Path.c_str(), std::ios::binary | 
         std::ios::ate);
-      File.exceptions(std::ios::failbit | std::ios::badbit);
+      if (!File)
+      {
+        BOOST_THROW_EXCEPTION(HadesError() << 
+          ErrorFunction("FileToBuffer") << 
+          ErrorString("Could not open file."));
+      }
 
       // Copy file to buffer
       std::vector<BYTE> Buffer(static_cast<std::size_t>(File.tellg()));
