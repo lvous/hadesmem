@@ -21,7 +21,6 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 // Hades
 #include "Error.h"
-#include "Config.h"
 #include "Filesystem.h"
 
 // C++ Standard Library
@@ -32,12 +31,15 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include <iostream>
 
 // Boost C++ Libraries
+#pragma warning(push, 1)
+#pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
 #include <boost/thread.hpp>
 #include <boost/format.hpp>
 #include <boost/date_time.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/iostreams/stream.hpp>
 #include <boost/iostreams/categories.hpp>
+#pragma warning(pop)
 
 // Windows API
 #include <Windows.h>
