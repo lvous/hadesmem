@@ -42,6 +42,10 @@ namespace Hades
 {
   namespace Windows
   {
+    // Filesystem error type
+    class FilesystemError : public virtual HadesError 
+    { };
+
     // Load a file into a buffer
     inline void BufferToFile(std::vector<BYTE> const& Buffer, 
       boost::filesystem::path const& Path)
@@ -50,7 +54,7 @@ namespace Hades
       std::basic_ofstream<BYTE> File(Path.c_str(), std::ios::binary);
       if (!File)
       {
-        BOOST_THROW_EXCEPTION(HadesError() << 
+        BOOST_THROW_EXCEPTION(FilesystemError() << 
           ErrorFunction("FileToBuffer") << 
           ErrorString("Could not open file."));
       }
@@ -67,7 +71,7 @@ namespace Hades
         std::ios::ate);
       if (!File)
       {
-        BOOST_THROW_EXCEPTION(HadesError() << 
+        BOOST_THROW_EXCEPTION(FilesystemError() << 
           ErrorFunction("FileToBuffer") << 
           ErrorString("Could not open file."));
       }

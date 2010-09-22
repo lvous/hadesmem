@@ -57,15 +57,15 @@ namespace Hades
 {
   namespace Util
   {
-    // Logger exception type
-    class LoggerError : public virtual HadesError
-    { };
-
     // Logging class
     template <typename CharT>
     class Logger
     {
     public:
+      // Logger error type
+      class Error : public virtual HadesError 
+      { };
+
       // Get logger mutex
       static boost::mutex& GetMutex()
       {
@@ -130,17 +130,18 @@ namespace Hades
 
         // Open file
         tofstream Out(m_LogPath.c_str(), tofstream::out | tofstream::app);
-        Out.exceptions(std::ios::failbit | std::ios::badbit);
-
-        // Check if file access succeeded
-        if(Out)
+        if(!Out)
         {
-          // Write time as string
-          Out << '[' << TimeStr << "]: ";
-
-          // Write data
-          Out.write(s, n);
+          BOOST_THROW_EXCEPTION(Error() << 
+            ErrorFunction("Logger::write") << 
+            ErrorString("Could not open file."));
         }
+
+        // Write time as string
+        Out << '[' << TimeStr << "]: ";
+
+        // Write data
+        Out.write(s, n);
 
         // Return size
         return n;
