@@ -21,7 +21,6 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 // Hades
 #include "Error.h"
-#include "Config.h"
 #include "StringBuffer.h"
 
 // C++ Standard Library
@@ -31,9 +30,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include <iterator>
 
 // Boost
-HADES_DISABLE_WARNINGS_PUSH()
 #include <boost/filesystem.hpp>
-HADES_DISABLE_WARNINGS_POP()
 
 // Windows API
 #include <Windows.h>

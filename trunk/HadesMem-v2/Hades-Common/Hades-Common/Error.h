@@ -19,9 +19,6 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-// Hades
-#include "Config.h"
-
 // Windows
 #include <Windows.h>
 
@@ -30,9 +27,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include <stdexcept>
 
 // Boost
-HADES_DISABLE_WARNINGS_PUSH()
 #include <boost/exception/all.hpp>
-HADES_DISABLE_WARNINGS_POP()
 
 namespace Hades
 {

@@ -32,14 +32,12 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include <iostream>
 
 // Boost C++ Libraries
-HADES_DISABLE_WARNINGS_PUSH()
 #include <boost/thread.hpp>
 #include <boost/format.hpp>
 #include <boost/date_time.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/iostreams/stream.hpp>
 #include <boost/iostreams/categories.hpp>
-HADES_DISABLE_WARNINGS_POP()
 
 // Windows API
 #include <Windows.h>

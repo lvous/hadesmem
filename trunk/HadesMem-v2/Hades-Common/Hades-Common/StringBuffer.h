@@ -19,17 +19,12 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-// Hades
-#include "Config.h"
-
 // C++ Standard Library
 #include <string>
 #include <vector>
 
 // Boost
-HADES_DISABLE_WARNINGS_PUSH()
 #include <boost/noncopyable.hpp>
-HADES_DISABLE_WARNINGS_POP()
 
 namespace Hades
 {
@@ -42,11 +37,25 @@ namespace Hades
     {
     public:
       // Constructor
-      // Takes a target string and buffer size
       StringBuffer(std::basic_string<CharT>& String, std::size_t Size) 
-        : m_String(String), 
+        : m_String(&String), 
         m_Buffer(Size + 1) 
       { }
+
+      // Move constructor
+      StringBuffer(StringBuffer&& Other)
+      {
+        *this = std::move(Other);
+      }
+
+      // Move assignment operator
+      StringBuffer& operator=(StringBuffer&& Other)
+      {
+        this->m_String = Other.m_String;
+        Other.m_String = 0;
+
+        this->m_Buffer = std::move(Other.m_Buffer);
+      }
 
       // Destructor
       ~StringBuffer()
@@ -73,7 +82,7 @@ namespace Hades
       {
         if (!m_Buffer.empty())
         {
-          m_String = &m_Buffer[0];
+          *m_String = &m_Buffer[0];
           m_Buffer.clear();
         }
       }
@@ -86,7 +95,7 @@ namespace Hades
 
     private:
       // Target string
-      std::basic_string<CharT>& m_String;
+      std::basic_string<CharT>* m_String;
 
       // Temporary buffer
       std::vector<CharT> m_Buffer;
