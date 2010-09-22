@@ -42,25 +42,24 @@ namespace Hades
     // FuncT = Function prototype (e.g. 'BOOL (WINAPI*) (HANDLE)' )
     // CleanupFn = Cleanup function (e.g. 'CloseHandle')
     // Invalid = Invalid handle value (e.g. '0')
-    // Note: Invalid is of type DWORD_PTR and not HandleT due to a GCC error
     template <typename HandleT, typename FuncT, FuncT CleanupFn, 
-      DWORD_PTR Invalid>
+      HandleT Invalid>
     class EnsureCleanup : private boost::noncopyable
     {
     public:
       // Ensure size of handle type is valid. Under Windows all handles are 
       // the size of a pointer.
-      static_assert(sizeof(HandleT) == sizeof(DWORD_PTR), 
+      static_assert(sizeof(HandleT) == sizeof(PVOID), 
         "Size of handle type is invalid.");
 
       // Constructor
-      EnsureCleanup(HandleT Handle = reinterpret_cast<HandleT>(Invalid))
+      EnsureCleanup(HandleT Handle = Invalid)
         : m_Handle(Handle)
       { }
 
       // Move constructor
       EnsureCleanup(EnsureCleanup&& MyEnsureCleanup)
-        : m_Handle(reinterpret_cast<HandleT>(Invalid))
+        : m_Handle(Invalid)
       {
         *this = std::move(MyEnsureCleanup);
       }
@@ -71,8 +70,7 @@ namespace Hades
         Cleanup();
 
         this->m_Handle = MyEnsureCleanup.m_Handle;
-
-        MyEnsureCleanup.m_Handle = reinterpret_cast<HandleT>(Invalid);
+        MyEnsureCleanup.m_Handle = Invalid;
 
         return *this;
       }
@@ -96,7 +94,7 @@ namespace Hades
       // Whether object is valid
       BOOL IsValid() const
       {
-        return m_Handle != reinterpret_cast<HandleT>(Invalid);
+        return m_Handle != Invalid;
       }
 
       // Whether object is invalid
@@ -120,7 +118,7 @@ namespace Hades
           CleanupFn(m_Handle);
 
           // We no longer represent a valid object.
-          m_Handle = reinterpret_cast<HandleT>(Invalid);
+          m_Handle = Invalid;
         }
       }
 
@@ -129,19 +127,13 @@ namespace Hades
       HandleT m_Handle;
     };
 
-    // Redefining 'INVALID_HANDLE_VALUE' due to a GCC error
-    namespace
-    {
-      DWORD_PTR const INVALID_HANDLE_VALUE_WRAP = static_cast<DWORD_PTR>(-1);
-    }
-
     // Instances of the template C++ class for common data types.
     typedef EnsureCleanup<HANDLE, BOOL(WINAPI*)(HANDLE), FindClose, 0> 
       EnsureFindClose;
     typedef EnsureCleanup<HANDLE, BOOL(WINAPI*)(HANDLE), CloseHandle, 0> 
       EnsureCloseHandle;
     typedef EnsureCleanup<HANDLE, BOOL(WINAPI*)(HANDLE), CloseHandle, 
-      INVALID_HANDLE_VALUE_WRAP> EnsureCloseSnap;
+      INVALID_HANDLE_VALUE> EnsureCloseSnap;
     typedef EnsureCleanup<HLOCAL, HLOCAL(WINAPI*)(HLOCAL), LocalFree, 0> 
       EnsureLocalFree;
     typedef EnsureCleanup<HGLOBAL, HGLOBAL(WINAPI*)(HGLOBAL), GlobalFree, 0> 
@@ -165,7 +157,7 @@ namespace Hades
     typedef EnsureCleanup<HANDLE, DWORD(WINAPI*)(HANDLE), ResumeThread, 0> 
       EnsureResumeThread;
     typedef EnsureCleanup<HANDLE, BOOL(WINAPI*)(HANDLE), CloseHandle, 
-      INVALID_HANDLE_VALUE_WRAP> EnsureCloseFile;
+      INVALID_HANDLE_VALUE> EnsureCloseFile;
     typedef EnsureCleanup<HHOOK, BOOL(WINAPI*)(HHOOK), UnhookWindowsHookEx, 0> 
       EnsureUnhookWindowsHookEx;
     typedef EnsureCleanup<HWND, BOOL(WINAPI*)(HWND), DestroyWindow, 0> 
