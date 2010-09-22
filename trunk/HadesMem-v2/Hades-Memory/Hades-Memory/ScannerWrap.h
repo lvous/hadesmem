@@ -51,10 +51,10 @@ DWORD_PTR Find##x(Types::x Data)\
 #define HADESMEM_SCRIPTING_GEN_FIND_ALL(x) \
 DwordPtrList FindAll##x(Types::x Data)\
 {\
-  auto AddrList = Scanner::FindAll(Data);\
+  std::vector<PVOID> AddrList(Scanner::FindAll(Data));\
   DwordPtrList NewList;\
   NewList.List.reserve(AddrList.size());\
-  std::transform(AddrList.begin(), AddrList.end(), std::back_inserter(\
+  std::transform(AddrList.cbegin(), AddrList.cend(), std::back_inserter(\
   NewList.List), \
   [] (PVOID Current)\
   {\
@@ -179,11 +179,11 @@ namespace Hades
               ErrorFunction("Scanner_FindAllCharNarrow") << 
               ErrorString("Value invalid (must be a single character)."));
           }
-          auto AddrList = Scanner::FindAll(Data[0]);
+          std::vector<PVOID> AddrList(Scanner::FindAll(Data[0]));
           DwordPtrList NewList;
           NewList.List.reserve(AddrList.size());
-          std::transform(AddrList.begin(), AddrList.end(), std::back_inserter(
-            NewList.List), 
+          std::transform(AddrList.cbegin(), AddrList.cend(), 
+            std::back_inserter(NewList.List), 
             [] (PVOID Current)
           {
             return reinterpret_cast<DWORD_PTR>(Current);
@@ -200,12 +200,12 @@ namespace Hades
               ErrorFunction("Scanner_FindAllCharWide") << 
               ErrorString("Value invalid (must be a single character)."));
           }
-          auto AddrList = Scanner::FindAll(boost::lexical_cast<Types::StrWide>(
-            Data[0]));
+          std::vector<PVOID> AddrList(Scanner::FindAll(
+            boost::lexical_cast<Types::StrWide>(Data[0])));
           DwordPtrList NewList;
           NewList.List.reserve(AddrList.size());
-          std::transform(AddrList.begin(), AddrList.end(), std::back_inserter(
-            NewList.List), 
+          std::transform(AddrList.cbegin(), AddrList.cend(), 
+            std::back_inserter(NewList.List), 
             [] (PVOID Current)
           {
             return reinterpret_cast<DWORD_PTR>(Current);
@@ -216,12 +216,12 @@ namespace Hades
         // Wrapper function for Scanner::FindAllStrWide
         DwordPtrList FindAllStrWide(std::string const& Data)
         {
-          auto AddrList = Scanner::FindAll(boost::lexical_cast<Types::StrWide>(
-            Data));
+          std::vector<PVOID> AddrList(Scanner::FindAll(
+            boost::lexical_cast<Types::StrWide>(Data[0])));
           DwordPtrList NewList;
           NewList.List.reserve(AddrList.size());
-          std::transform(AddrList.begin(), AddrList.end(), std::back_inserter(
-            NewList.List), 
+          std::transform(AddrList.cbegin(), AddrList.cend(), 
+            std::back_inserter(NewList.List), 
             [] (PVOID Current)
           {
             return reinterpret_cast<DWORD_PTR>(Current);
@@ -232,12 +232,12 @@ namespace Hades
         // Wrapper function for Scanner::FindAllPointer
         DwordPtrList FindAllPointer(DWORD_PTR Data)
         {
-          auto AddrList = Scanner::FindAll(reinterpret_cast<Types::Pointer>(
-            Data));
+          std::vector<PVOID> AddrList(Scanner::FindAll(
+            reinterpret_cast<Types::Pointer>(Data)));
           DwordPtrList NewList;
           NewList.List.reserve(AddrList.size());
-          std::transform(AddrList.begin(), AddrList.end(), std::back_inserter(
-            NewList.List), 
+          std::transform(AddrList.cbegin(), AddrList.cend(), 
+            std::back_inserter(NewList.List), 
             [] (PVOID Current)
           {
             return reinterpret_cast<DWORD_PTR>(Current);

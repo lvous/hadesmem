@@ -126,8 +126,8 @@ namespace Hades
     {
       // Get pointer to image headers
       ModuleEnum MyModuleEnum(*m_pMemory);
-      auto const pBase(reinterpret_cast<PBYTE>(MyModuleEnum.First()->
-        GetBase()));
+      PBYTE const pBase = reinterpret_cast<PBYTE>(MyModuleEnum.First()->
+        GetBase());
       PeFile MyPeFile(*m_pMemory, pBase);
       DosHeader const MyDosHeader(MyPeFile);
       NtHeaders const MyNtHeaders(MyPeFile);
@@ -147,7 +147,7 @@ namespace Hades
       m_Addresses()
     {
       // Ensure file is a valid PE file
-      auto const pBase(reinterpret_cast<PBYTE>(Module));
+      PBYTE const pBase = reinterpret_cast<PBYTE>(Module);
       PeFile MyPeFile(*m_pMemory, pBase);
       DosHeader const MyDosHeader(MyPeFile);
       NtHeaders const MyNtHeaders(MyPeFile);
@@ -205,7 +205,7 @@ namespace Hades
       T, std::basic_string<typename T::value_type>>>::type* /*Dummy*/) const
     {
       // Convert string to character buffer
-      std::vector<T::value_type> const MyBuffer(Data.begin(), Data.end());
+      std::vector<T::value_type> const MyBuffer(Data.cbegin(), Data.cend());
       // Use vector specialization of find
       return Find(MyBuffer);
     }
@@ -216,7 +216,7 @@ namespace Hades
       type* /*Dummy*/) const
     {
       // Convert string to character buffer
-      std::vector<T::value_type> const MyBuffer(Data.begin(), Data.end());
+      std::vector<T::value_type> const MyBuffer(Data.cbegin(), Data.cend());
       // Use vector specialization of find all
       return FindAll(MyBuffer);
     }
@@ -252,7 +252,7 @@ namespace Hades
       PVOID const MaxAddr = MySystemInfo.lpMaximumApplicationAddress;
 
       // Loop over all memory pages
-      for (auto Address(static_cast<PBYTE>(MinAddr)); Address < MaxAddr; 
+      for (PBYTE Address = static_cast<PBYTE>(MinAddr); Address < MaxAddr; 
         Address += PageSize)
       {
         try
@@ -279,9 +279,9 @@ namespace Hades
 
           // Check for invalid memory
           MEMORY_BASIC_INFORMATION MyMbi2 = { 0 };
-          if (!VirtualQueryEx(m_pMemory->GetProcessHandle(), Address + PageSize, 
-            &MyMbi2, sizeof(MyMbi2)) || (MyMbi2.Protect & PAGE_GUARD) == 
-            PAGE_GUARD)
+          if (!VirtualQueryEx(m_pMemory->GetProcessHandle(), Address + 
+            PageSize, &MyMbi2, sizeof(MyMbi2)) || (MyMbi2.Protect & 
+            PAGE_GUARD) == PAGE_GUARD)
           {
             continue;
           }
@@ -290,19 +290,19 @@ namespace Hades
           // Todo: If we're reading across a region boundary and we hit 
           // inaccessible memory we should simply read all we can, rather 
           // than skipping the block entirely.
-          auto const Buffer(m_pMemory->Read<std::vector<BYTE>>(Address, 
-            PageSize + Data.size() * sizeof(T::value_type)));
+          std::vector<BYTE> Buffer(m_pMemory->Read<std::vector<BYTE>>(
+            Address, PageSize + Data.size() * sizeof(T::value_type)));
 
           // Loop over entire memory region
-          for (auto Current(&Buffer[0]); Current != &Buffer[0] + 
+          for (PBYTE Current = &Buffer[0]; Current != &Buffer[0] + 
             Buffer.size(); ++Current) 
           {
             // Check if current address matches buffer
-            bool Found(true);
-            for (std::size_t i(0); i != Data.size(); ++i)
+            bool Found = true;
+            for (std::size_t i = 0; i != Data.size(); ++i)
             {
-              auto const CurrentTemp(reinterpret_cast<T::value_type const* 
-                const>(Current));
+              T::value_type const* CurrentTemp = 
+                reinterpret_cast<T::value_type const*>(Current);
               if ((Mask.empty() || Mask[i] == L'x') && (CurrentTemp[i] != 
                 Data[i]))
               {
@@ -318,7 +318,7 @@ namespace Hades
               // current address.
               // Todo: Do this check in the outer loop, and break if possible 
               // rather than continuing.
-              PVOID const AddressReal(Address + (Current - &Buffer[0]));
+              PVOID const AddressReal = Address + (Current - &Buffer[0]);
               if (AddressReal >= m_Start && AddressReal <= m_End)
               {
                 return AddressReal;
@@ -372,7 +372,7 @@ namespace Hades
       PVOID const MaxAddr = MySystemInfo.lpMaximumApplicationAddress;
 
       // Loop over all memory pages
-      for (auto Address = static_cast<PBYTE>(MinAddr); Address < MaxAddr; 
+      for (PBYTE Address = static_cast<PBYTE>(MinAddr); Address < MaxAddr; 
         Address += PageSize)
       {
         try
@@ -410,19 +410,19 @@ namespace Hades
           // Todo: If we're reading across a region boundary and we hit 
           // inaccessible memory we should simply read all we can, rather 
           // than skipping the block entirely.
-          auto const Buffer(m_pMemory->Read<std::vector<BYTE>>(Address, 
-            PageSize + Data.size() * sizeof(T::value_type)));
+          std::vector<BYTE> Buffer(m_pMemory->Read<std::vector<BYTE>>(
+            Address, PageSize + Data.size() * sizeof(T::value_type)));
 
           // Loop over entire memory region
-          for (auto Current(&Buffer[0]); Current != &Buffer[0] + 
+          for (PBYTE Current = &Buffer[0]; Current != &Buffer[0] + 
             Buffer.size(); ++Current) 
           {
             // Check if current address matches buffer
-            bool Found(true);
-            for (std::size_t i(0); i != Data.size(); ++i)
+            bool Found = true;
+            for (std::size_t i = 0; i != Data.size(); ++i)
             {
-              auto const CurrentTemp(reinterpret_cast<T::value_type const* 
-                const>(Current));
+              T::value_type const* CurrentTemp = 
+                reinterpret_cast<T::value_type const*>(Current);
               if ((Mask.empty() || Mask[i] == L'x') && (CurrentTemp[i] != 
                 Data[i]))
               {
@@ -438,7 +438,7 @@ namespace Hades
               // current address.
               // Todo: Do this check in the outer loop, and break if possible 
               // rather than continuing.
-              PVOID const AddressReal(Address + (Current - &Buffer[0]));
+              PVOID const AddressReal = Address + (Current - &Buffer[0]);
               if (AddressReal >= m_Start && AddressReal <= m_End)
               {
                 Matches.push_back(AddressReal);
@@ -478,12 +478,12 @@ namespace Hades
       PatFileBuf.push_back(L'\0');
 
       // Open XML document
-      auto const AccountsDoc(std::make_shared<rapidxml::xml_document<
-        wchar_t>>());
+      std::shared_ptr<rapidxml::xml_document<wchar_t>> const AccountsDoc(
+        std::make_shared<rapidxml::xml_document<wchar_t>>());
       AccountsDoc->parse<0>(&PatFileBuf[0]);
 
       // Ensure pattern tag is found
-      auto PatternsTag(AccountsDoc->first_node(L"Patterns"));
+      rapidxml::xml_node<wchar_t>* PatternsTag = AccountsDoc->first_node(L"Patterns");
       if (!PatternsTag)
       {
         BOOST_THROW_EXCEPTION(Error() << 
@@ -492,13 +492,16 @@ namespace Hades
       }
 
       // Loop over all patterns
-      for (auto Pattern(PatternsTag->first_node(L"Pattern")); Pattern; 
-        Pattern = Pattern->next_sibling(L"Pattern"))
+      for (rapidxml::xml_node<wchar_t>* Pattern(PatternsTag->first_node(
+        L"Pattern")); Pattern; Pattern = Pattern->next_sibling(L"Pattern"))
       {
         // Get pattern attributes
-        auto const NameNode(Pattern->first_attribute(L"Name"));
-        auto const MaskNode(Pattern->first_attribute(L"Mask"));
-        auto const DataNode(Pattern->first_attribute(L"Data"));
+        rapidxml::xml_attribute<wchar_t> const* NameNode = Pattern->
+          first_attribute(L"Name");
+        rapidxml::xml_attribute<wchar_t> const* MaskNode = Pattern->
+          first_attribute(L"Mask");
+        rapidxml::xml_attribute<wchar_t> const* DataNode = Pattern->
+          first_attribute(L"Data");
         std::wstring const Name(NameNode ? NameNode->value() : L"");
         std::wstring const Mask(MaskNode ? MaskNode->value() : L"");
         std::wstring const Data(DataNode ? DataNode->value() : L"");
@@ -530,7 +533,7 @@ namespace Hades
 
         // Convert data to byte buffer
         std::vector<BYTE> DataBuf;
-        for (auto i(DataReal.begin()); i != DataReal.end(); i += 2)
+        for (auto i = DataReal.cbegin(); i != DataReal.cend(); i += 2)
         {
           std::string const CurrentStr(i, i + 2);
           std::stringstream Converter(CurrentStr);
@@ -545,25 +548,26 @@ namespace Hades
         }
 
         // Find pattern
-        auto Address(static_cast<PBYTE>(Find(DataBuf, Mask)));
+        PBYTE Address = static_cast<PBYTE>(Find(DataBuf, Mask));
 
         // Only apply options if pattern was found
         if (Address != 0)
         {
           // Loop over all pattern options
-          for (auto PatOpts(Pattern->first_node()); PatOpts; PatOpts = 
-            PatOpts->next_sibling())
+          for (rapidxml::xml_node<wchar_t> const* PatOpts = Pattern->
+            first_node(); PatOpts; PatOpts = PatOpts->next_sibling())
           {
             // Get option name
             std::wstring const OptionName(PatOpts->name());
 
             // Handle 'Add' and 'Sub' options
-            bool const IsAdd(OptionName == L"Add");
-            bool const IsSub(OptionName == L"Sub");
+            bool const IsAdd = (OptionName == L"Add");
+            bool const IsSub = (OptionName == L"Sub");
             if (IsAdd || IsSub)
             {
               // Get the modification value
-              auto ModVal(PatOpts->first_attribute(L"Value"));
+              rapidxml::xml_attribute<wchar_t> const* ModVal = PatOpts->
+                first_attribute(L"Value");
               if (!ModVal)
               {
                 BOOST_THROW_EXCEPTION(Error() << 
@@ -573,7 +577,7 @@ namespace Hades
 
               // Convert value to usable form
               std::wstringstream Converter(ModVal->value());
-              DWORD_PTR AddValReal(0);
+              DWORD_PTR AddValReal = 0;
               if (!(Converter >> std::hex >> AddValReal >> std::dec))
               {
                 BOOST_THROW_EXCEPTION(Error() << 
@@ -607,7 +611,8 @@ namespace Hades
             else if (OptionName == L"Rel")
             {
               // Get instruction size
-              auto SizeAttr(PatOpts->first_attribute(L"Size"));
+              rapidxml::xml_attribute<wchar_t> const* SizeAttr = PatOpts->
+                first_attribute(L"Size");
               if (!SizeAttr)
               {
                 BOOST_THROW_EXCEPTION(Error() << 
@@ -628,7 +633,8 @@ namespace Hades
               }
 
               // Get instruction offset
-              auto const OffsetAttr(PatOpts->first_attribute(L"Offset"));
+              rapidxml::xml_attribute<wchar_t> const* OffsetAttr = PatOpts->
+                first_attribute(L"Offset");
               if (!OffsetAttr)
               {
                 BOOST_THROW_EXCEPTION(Error() << 
@@ -676,7 +682,7 @@ namespace Hades
     // Operator[] overload to allow retrieving addresses by name
     PVOID Scanner::operator[](std::wstring const& Name) const
     {
-      auto const Iter(m_Addresses.find(Name));
+      auto const Iter = m_Addresses.find(Name);
       return Iter != m_Addresses.end() ? Iter->second : nullptr;
     }
   }

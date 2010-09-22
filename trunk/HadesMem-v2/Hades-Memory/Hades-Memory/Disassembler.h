@@ -84,11 +84,12 @@ namespace Hades
       DWORD_PTR NumInstructions) const
     {
       // Disassemble target
-      auto MyDisasmData(Disassemble(Address, NumInstructions));
+      std::vector<DisasmData> MyDisasmData(Disassemble(Address, 
+        NumInstructions));
 
       // Container to hold disassembled code as a string
       std::vector<std::string> Results;
-      std::transform(MyDisasmData.begin(), MyDisasmData.end(), 
+      std::transform(MyDisasmData.cbegin(), MyDisasmData.cend(), 
         std::back_inserter(Results), 
         [] (DisasmData const& MyDisasm) 
       {
@@ -104,7 +105,7 @@ namespace Hades
     {
       // Read data into buffer
       int MaxInstructionSize = 15;
-      auto Buffer(m_pMemory->Read<std::vector<BYTE>>(Address, 
+      std::vector<BYTE> Buffer(m_pMemory->Read<std::vector<BYTE>>(Address, 
         NumInstructions * MaxInstructionSize));
 
       // Set up disasm structure for BeaEngine
@@ -126,13 +127,14 @@ namespace Hades
       for (DWORD_PTR i = 0; i < NumInstructions; ++i)
       {
         // DisassembleToStr current instruction
-        int Len = Disasm(&MyDisasm);
+        int const Len = Disasm(&MyDisasm);
         // Ensure disassembly succeeded
         if (Len == UNKNOWN_OPCODE)
         {
           break;
         }
 
+        // Current disasm data
         DisasmData CurData;
         CurData.Disasm = MyDisasm;
         CurData.Len = Len;

@@ -90,11 +90,11 @@ namespace Hades
     std::string ExportDir::GetName() const
     {
       // Get base of export dir
-      PBYTE pExpDirBase(GetBase());
+      PBYTE const pExpDirBase = GetBase();
 
       // Read RVA of module name
-      auto NameRva(m_pMemory->Read<DWORD>(pExpDirBase + FIELD_OFFSET(
-        IMAGE_EXPORT_DIRECTORY, Name)));
+      DWORD const NameRva = m_pMemory->Read<DWORD>(pExpDirBase + FIELD_OFFSET(
+        IMAGE_EXPORT_DIRECTORY, Name));
 
       // Ensure there is a module name to process
       if (!NameRva)
@@ -110,16 +110,16 @@ namespace Hades
     PBYTE ExportDir::GetBase() const
     {
       // Get PE file base
-      PBYTE pBase(m_pPeFile->GetBase());
+      PBYTE const pBase = m_pPeFile->GetBase();
 
       // Get NT headers
-      NtHeaders MyNtHeaders(*m_pPeFile);
+      NtHeaders const MyNtHeaders(*m_pPeFile);
 
       // Get export dir data
-      DWORD DataDirSize(MyNtHeaders.GetDataDirectorySize(NtHeaders::
-        DataDir_Export));
-      DWORD DataDirVa(MyNtHeaders.GetDataDirectoryVirtualAddress(NtHeaders::
-        DataDir_Export));
+      DWORD const DataDirSize = MyNtHeaders.GetDataDirectorySize(NtHeaders::
+        DataDir_Export);
+      DWORD const DataDirVa = MyNtHeaders.GetDataDirectoryVirtualAddress(
+        NtHeaders::DataDir_Export);
       if (!DataDirSize || !DataDirVa)
       {
         BOOST_THROW_EXCEPTION(Error() << 
@@ -135,33 +135,33 @@ namespace Hades
     {
       std::vector<Export> Exports;
 
-      DosHeader MyDosHeader(*m_pPeFile);
-      NtHeaders MyNtHeaders(*m_pPeFile);
+      DosHeader const MyDosHeader(*m_pPeFile);
+      NtHeaders const MyNtHeaders(*m_pPeFile);
 
-      IMAGE_EXPORT_DIRECTORY const ExportDirRaw(GetExportDirRaw());
+      IMAGE_EXPORT_DIRECTORY const ExportDirRaw = GetExportDirRaw();
 
-      WORD* pOrdinals(reinterpret_cast<WORD*>(m_pPeFile->GetBase() + 
-        ExportDirRaw.AddressOfNameOrdinals));
-      DWORD* pFunctions(reinterpret_cast<DWORD*>(m_pPeFile->GetBase() + 
-        ExportDirRaw.AddressOfFunctions));
-      DWORD* pNames(reinterpret_cast<DWORD*>(m_pPeFile->GetBase() + 
-        ExportDirRaw.AddressOfNames));
+      WORD* pOrdinals = reinterpret_cast<WORD*>(m_pPeFile->GetBase() + 
+        ExportDirRaw.AddressOfNameOrdinals);
+      DWORD* pFunctions = reinterpret_cast<DWORD*>(m_pPeFile->GetBase() + 
+        ExportDirRaw.AddressOfFunctions);
+      DWORD* pNames = reinterpret_cast<DWORD*>(m_pPeFile->GetBase() + 
+        ExportDirRaw.AddressOfNames);
 
-      DWORD const DataDirSize(MyNtHeaders.GetDataDirectorySize(NtHeaders::
-        DataDir_Export));
-      DWORD const DataDirVa(MyNtHeaders.GetDataDirectoryVirtualAddress(
-        NtHeaders::DataDir_Export));
+      DWORD const DataDirSize = MyNtHeaders.GetDataDirectorySize(NtHeaders::
+        DataDir_Export);
+      DWORD const DataDirVa = MyNtHeaders.GetDataDirectoryVirtualAddress(
+        NtHeaders::DataDir_Export);
 
       DWORD const ExportDirStart = DataDirVa;
       DWORD const ExportDirEnd = ExportDirStart + DataDirSize;
 
-      for (std::size_t i(0); i < ExportDirRaw.NumberOfFunctions; ++i)
+      for (std::size_t i = 0; i < ExportDirRaw.NumberOfFunctions; ++i)
       {
         Export MyExport = { 0 };
 
         MyExport.Ordinal = static_cast<WORD>(i + ExportDirRaw.Base);
 
-        for (std::size_t j(0); j < ExportDirRaw.NumberOfNames; ++j)
+        for (std::size_t j = 0; j < ExportDirRaw.NumberOfNames; ++j)
         {
           if (m_pMemory->Read<WORD>(pOrdinals + j) == i)
           {
@@ -171,7 +171,7 @@ namespace Hades
           }
         }
 
-        DWORD FuncRva = m_pMemory->Read<DWORD>(pFunctions + i);
+        DWORD const FuncRva = m_pMemory->Read<DWORD>(pFunctions + i);
 
         if (FuncRva >= ExportDirStart && FuncRva <= ExportDirEnd)
         {
@@ -202,13 +202,13 @@ namespace Hades
     bool ExportDir::IsValid() const
     {
       // Get NT headers
-      NtHeaders MyNtHeaders(*m_pPeFile);
+      NtHeaders const MyNtHeaders(*m_pPeFile);
 
       // Get export dir data
-      DWORD DataDirSize(MyNtHeaders.GetDataDirectorySize(NtHeaders::
+      DWORD const DataDirSize(MyNtHeaders.GetDataDirectorySize(NtHeaders::
         DataDir_Export));
-      DWORD DataDirVa(MyNtHeaders.GetDataDirectoryVirtualAddress(NtHeaders::
-        DataDir_Export));
+      DWORD const DataDirVa(MyNtHeaders.GetDataDirectoryVirtualAddress(
+        NtHeaders::DataDir_Export));
 
       // Export dir is valid if size and rva are valid
       return DataDirSize && DataDirVa;

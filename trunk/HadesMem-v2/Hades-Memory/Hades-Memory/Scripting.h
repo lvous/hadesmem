@@ -150,8 +150,8 @@ namespace Hades
       inline std::string ToHexStr(DWORD_PTR Num)
       {
         std::stringstream MyStream;
-        MyStream << "0x" << std::hex << std::setfill('0') << 
-          std::setw(sizeof(PVOID) * 2) << std::uppercase << Num;
+        MyStream << "0x" << std::hex << std::setfill('0') << std::setw(
+          sizeof(PVOID) * 2) << std::uppercase << Num;
         return MyStream.str();
       }
 

@@ -91,11 +91,12 @@ namespace Hades
 
       CreateAndInjectData& operator=(CreateAndInjectData&& Other)
       {
-        pMemory = std::move(Other.pMemory);
-        ModuleBase = Other.ModuleBase;
-        ExportRet = Other.ExportRet;
+        this->pMemory = std::move(Other.pMemory);
 
+        this->ModuleBase = Other.ModuleBase;
         Other.ModuleBase = nullptr;
+
+        this->ExportRet = Other.ExportRet;
         Other.ExportRet = 0;
 
         return *this;
@@ -118,14 +119,14 @@ namespace Hades
       // Construct command line.
       std::wstring const CommandLine(L"\"" + Path + L"\" " + Args);
       // Copy command line to buffer
-      std::vector<wchar_t> ProcArgs(CommandLine.begin(), CommandLine.end());
+      std::vector<wchar_t> ProcArgs(CommandLine.cbegin(), CommandLine.cend());
       ProcArgs.push_back(L'\0');
 
       // Attempt process creation
       if (!CreateProcess(Path.c_str(), &ProcArgs[0], NULL, NULL, FALSE, 
         CREATE_SUSPENDED, NULL, NULL, &StartInfo, &ProcInfo))
       {
-        DWORD const LastError(GetLastError());
+        DWORD const LastError = GetLastError();
         BOOST_THROW_EXCEPTION(Injector::Error() << 
           ErrorFunction("CreateAndInject") << 
           ErrorString("Could not create process.") << 
@@ -146,20 +147,16 @@ namespace Hades
         Hades::Memory::Injector const MyInjector(*MyMemory);
 
         // Inject DLL
-        HMODULE const ModBase(MyInjector.InjectDll(Module));
+        HMODULE const ModBase = MyInjector.InjectDll(Module);
 
         // If export has been specified
-        DWORD ExportRet = 0;
-        if (!Export.empty())
-        {
-          // Call remote export
-          ExportRet = MyInjector.CallExport(Module, ModBase, Export);
-        }
+        DWORD ExportRet = Export.empty() ? 0 : MyInjector.CallExport(Module, 
+          ModBase, Export);
 
         // Success! Let the process continue execution.
         if (ResumeThread(ProcInfo.hThread) == static_cast<DWORD>(-1))
         {
-          DWORD const LastError(GetLastError());
+          DWORD const LastError = GetLastError();
           BOOST_THROW_EXCEPTION(Injector::Error() << 
             ErrorFunction("CreateAndInject") << 
             ErrorString("Could not resume process.") << 
@@ -222,14 +219,14 @@ namespace Hades
       }
 
       // Calculate the number of bytes needed for the DLL's pathname
-      std::size_t const PathBufSize((PathReal.wstring().length() + 1) * 
-        sizeof(wchar_t));
+      std::size_t const PathBufSize = (PathReal.wstring().length() + 1) * 
+        sizeof(wchar_t);
 
       // Allocate space in the remote process for the pathname
       AllocAndFree const LibFileRemote(m_pMemory, PathBufSize);
       if (!LibFileRemote.GetAddress())
       {
-        DWORD const LastError(GetLastError());
+        DWORD const LastError = GetLastError();
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Injector::InjectDll") << 
           ErrorString("Could not allocate memory.") << 
@@ -240,19 +237,19 @@ namespace Hades
       m_pMemory->Write(LibFileRemote.GetAddress(), PathReal.wstring());
 
       // Get the real address of LoadLibraryW in Kernel32.dll
-      HMODULE const hKernel32(GetModuleHandleW(L"Kernel32.dll"));
+      HMODULE const hKernel32 = GetModuleHandleW(L"Kernel32.dll");
       if (!hKernel32)
       {
-        DWORD const LastError(GetLastError());
+        DWORD const LastError = GetLastError();
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Injector::InjectDll") << 
           ErrorString("Could not get handle to Kernel32.") << 
           ErrorCodeWin(LastError));
       }
-      FARPROC const pLoadLibraryW(GetProcAddress(hKernel32, "LoadLibraryW"));
+      FARPROC const pLoadLibraryW = GetProcAddress(hKernel32, "LoadLibraryW");
       if (!pLoadLibraryW)
       {
-        DWORD const LastError(GetLastError());
+        DWORD const LastError = GetLastError();
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Injector::InjectDll") << 
           ErrorString("Could not get pointer to LoadLibraryW.") << 
@@ -312,8 +309,8 @@ namespace Hades
       HMODULE ModuleRemote, std::string const& Export) const
     {
       // Get export address
-      FARPROC const pExportAddr(m_pMemory->GetRemoteProcAddress(ModuleRemote, 
-        ModulePath, Export));
+      FARPROC const pExportAddr = m_pMemory->GetRemoteProcAddress(ModuleRemote, 
+        ModulePath, Export);
       if (!pExportAddr)
       {
         BOOST_THROW_EXCEPTION(Error() << 

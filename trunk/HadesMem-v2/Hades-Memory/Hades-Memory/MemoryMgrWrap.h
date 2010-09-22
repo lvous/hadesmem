@@ -94,7 +94,8 @@ namespace Hades
           CallConv MyCallConv)
         {
           std::vector<PVOID> ArgsNew;
-          std::transform(Args.begin(), Args.end(), std::back_inserter(ArgsNew), 
+          std::transform(Args.cbegin(), Args.cend(), std::back_inserter(
+            ArgsNew), 
             [] (DWORD_PTR Arg)
           {
             return reinterpret_cast<PVOID>(Arg);

@@ -50,8 +50,8 @@ namespace Hades
       // Get first section
       std::unique_ptr<Section> First() 
       {
-        Hades::Memory::NtHeaders MyNtHeaders(*m_pPeFile);
-        WORD NumberOfSections(MyNtHeaders.GetNumberOfSections());
+        NtHeaders const MyNtHeaders(*m_pPeFile);
+        WORD NumberOfSections = MyNtHeaders.GetNumberOfSections();
 
         return NumberOfSections ? std::unique_ptr<Section>(new Section(
           *m_pPeFile, m_Current)) : std::unique_ptr<Section>(nullptr);
@@ -60,8 +60,8 @@ namespace Hades
       // Get next section
       std::unique_ptr<Section> Next()
       {
-        Hades::Memory::NtHeaders MyNtHeaders(*m_pPeFile);
-        WORD NumberOfSections(MyNtHeaders.GetNumberOfSections());
+        NtHeaders const MyNtHeaders(*m_pPeFile);
+        WORD const NumberOfSections = MyNtHeaders.GetNumberOfSections();
 
         ++m_Current;
 

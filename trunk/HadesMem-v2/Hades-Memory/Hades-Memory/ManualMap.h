@@ -106,12 +106,12 @@ namespace Hades
 
       // Ensure file is a valid PE file
       std::wcout << "Performing PE file format validation." << std::endl;
-      auto pBase = &ModuleFileBuf[0];
+      PBYTE const pBase = &ModuleFileBuf[0];
       PeFile MyPeFile(MyMemoryLocal, pBase);
-      DosHeader MyDosHeader(MyPeFile);
-      NtHeaders MyNtHeaders(MyPeFile);
-      auto pNtHeadersRaw(reinterpret_cast<PIMAGE_NT_HEADERS>(MyNtHeaders.
-        GetBase()));
+      DosHeader const MyDosHeader(MyPeFile);
+      NtHeaders const MyNtHeaders(MyPeFile);
+      PIMAGE_NT_HEADERS const pNtHeadersRaw = 
+        reinterpret_cast<PIMAGE_NT_HEADERS>(MyNtHeaders.GetBase());
 
       // Allocate memory for image
       std::wcout << "Allocating memory for module." << std::endl;
@@ -123,13 +123,14 @@ namespace Hades
 
       // Get all TLS callbacks
       std::vector<PIMAGE_TLS_CALLBACK> TlsCallbacks;
-      auto const TlsDirSize = pNtHeadersRaw->OptionalHeader.DataDirectory
+      DWORD const TlsDirSize = pNtHeadersRaw->OptionalHeader.DataDirectory
         [IMAGE_DIRECTORY_ENTRY_TLS].Size;
       if (TlsDirSize)
       {
-        auto const pTlsDir = reinterpret_cast<PIMAGE_TLS_DIRECTORY>(pBase + 
-          RvaToFileOffset(pNtHeadersRaw, pNtHeadersRaw->OptionalHeader.
-          DataDirectory[IMAGE_DIRECTORY_ENTRY_TLS].VirtualAddress));
+        PIMAGE_TLS_DIRECTORY const pTlsDir = 
+          reinterpret_cast<PIMAGE_TLS_DIRECTORY>(pBase + RvaToFileOffset(
+          pNtHeadersRaw, pNtHeadersRaw->OptionalHeader.DataDirectory
+          [IMAGE_DIRECTORY_ENTRY_TLS].VirtualAddress));
 
         std::wcout << "Enumerating TLS callbacks." << std::endl;
         std::wcout << "Image Base: " << reinterpret_cast<PVOID>(pNtHeadersRaw->
@@ -137,9 +138,10 @@ namespace Hades
         std::wcout << "Address Of Callbacks: " << reinterpret_cast<PVOID>(
           pTlsDir->AddressOfCallBacks) << "." << std::endl;
 
-        for (auto pCallbacks = reinterpret_cast<PIMAGE_TLS_CALLBACK*>(pBase + 
-          RvaToFileOffset(pNtHeadersRaw, pTlsDir->AddressOfCallBacks - 
-          pNtHeadersRaw->OptionalHeader.ImageBase)); *pCallbacks; ++pCallbacks)
+        for (PIMAGE_TLS_CALLBACK* pCallbacks = 
+          reinterpret_cast<PIMAGE_TLS_CALLBACK*>(pBase + RvaToFileOffset(
+          pNtHeadersRaw, pTlsDir->AddressOfCallBacks - pNtHeadersRaw->
+          OptionalHeader.ImageBase)); *pCallbacks; ++pCallbacks)
         {
           std::wcout << "TLS Callback: " << *pCallbacks << "." << std::endl;
           TlsCallbacks.push_back(reinterpret_cast<PIMAGE_TLS_CALLBACK>(
@@ -149,25 +151,27 @@ namespace Hades
       }
 
       // Fix import table if applicable
-      auto const ImpDirSize = pNtHeadersRaw->OptionalHeader.DataDirectory
+      DWORD const ImpDirSize = pNtHeadersRaw->OptionalHeader.DataDirectory
         [IMAGE_DIRECTORY_ENTRY_IMPORT].Size;
       if (ImpDirSize)
       {
-        auto const pImpDir = reinterpret_cast<PIMAGE_IMPORT_DESCRIPTOR>(pBase + 
-          RvaToFileOffset(pNtHeadersRaw, pNtHeadersRaw->OptionalHeader.
-          DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress));
+        PIMAGE_IMPORT_DESCRIPTOR const pImpDir = 
+          reinterpret_cast<PIMAGE_IMPORT_DESCRIPTOR>(pBase + RvaToFileOffset(
+          pNtHeadersRaw, pNtHeadersRaw->OptionalHeader.DataDirectory
+          [IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress));
 
         FixImports(ModuleFileBuf, pNtHeadersRaw, pImpDir);
       }
 
       // Fix relocations if applicable
-      auto const RelocDirSize = pNtHeadersRaw->OptionalHeader.DataDirectory
+      DWORD const RelocDirSize = pNtHeadersRaw->OptionalHeader.DataDirectory
         [IMAGE_DIRECTORY_ENTRY_BASERELOC].Size;
       if (RelocDirSize)
       {
-        auto const pRelocDir = reinterpret_cast<PIMAGE_BASE_RELOCATION>(pBase + 
-          RvaToFileOffset(pNtHeadersRaw, pNtHeadersRaw->OptionalHeader.
-          DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC].VirtualAddress));
+        PIMAGE_BASE_RELOCATION const pRelocDir = 
+          reinterpret_cast<PIMAGE_BASE_RELOCATION>(pBase + RvaToFileOffset(
+          pNtHeadersRaw, pNtHeadersRaw->OptionalHeader.DataDirectory
+          [IMAGE_DIRECTORY_ENTRY_BASERELOC].VirtualAddress));
 
         FixRelocations(ModuleFileBuf, pNtHeadersRaw, pRelocDir, RelocDirSize, 
           RemoteBase);
@@ -182,7 +186,7 @@ namespace Hades
       PBYTE const PeHeaderStart = reinterpret_cast<PBYTE>(pNtHeadersRaw);
       PBYTE const PeHeaderEnd = reinterpret_cast<PBYTE>(IMAGE_FIRST_SECTION(
         pNtHeadersRaw));
-      std::vector<BYTE> PeHeaderBuf(PeHeaderStart, PeHeaderEnd);
+      std::vector<BYTE> const PeHeaderBuf(PeHeaderStart, PeHeaderEnd);
       PBYTE const TargetAddr = static_cast<PBYTE>(RemoteBase) + 
         MyDosHeader.GetNewHeaderOffset();
       std::wcout << "Writing NT header." << std::endl;
@@ -215,8 +219,8 @@ namespace Hades
       }
 
       // Call all TLS callbacks
-      std::for_each(TlsCallbacks.begin(), TlsCallbacks.end(), 
-        [this, RemoteBase] (PIMAGE_TLS_CALLBACK pCallback) 
+      std::for_each(TlsCallbacks.cbegin(), TlsCallbacks.cend(), 
+        [&] (PIMAGE_TLS_CALLBACK pCallback) 
       {
         std::vector<PVOID> TlsCallArgs;
         TlsCallArgs.push_back(0);
@@ -300,7 +304,7 @@ namespace Hades
       for(WORD i = 0; i != NumSections; ++i, ++pCurrent) 
       {
         // Debug output
-        std::string Name(pCurrent->Name, pCurrent->Name + 8);
+        std::string const Name(pCurrent->Name, pCurrent->Name + 8);
         std::wcout << "Section Name: " << Name.c_str() << std::endl;
 
         // Calculate target address for section in remote process
@@ -345,16 +349,16 @@ namespace Hades
       std::wcout << "Fixing imports." << std::endl;
 
       // Loop through all the required modules
-      char* ModuleName = nullptr;
-      PBYTE ModBase = &ModBuffer[0];
+      PBYTE const ModBase = &ModBuffer[0];
       for (; pImpDesc && pImpDesc->Name; ++pImpDesc) 
       {
         // Get module name
-        ModuleName = reinterpret_cast<char*>(ModBase + RvaToFileOffset(
-          pNtHeaders, pImpDesc->Name));
+        char const* ModuleName = reinterpret_cast<char*>(ModBase + 
+          RvaToFileOffset(pNtHeaders, pImpDesc->Name));
         std::string const ModuleNameA(ModuleName);
-        auto const ModuleNameW(boost::lexical_cast<std::wstring>(ModuleName));
-        auto const ModuleNameLowerW(boost::to_lower_copy(ModuleNameW));
+        std::wstring const ModuleNameW(boost::lexical_cast<std::wstring>(
+          ModuleName));
+        std::wstring const ModuleNameLowerW(boost::to_lower_copy(ModuleNameW));
         std::wcout << "Module Name: " << ModuleNameW << "." << std::endl;
 
         // Check whether dependent module is already loaded
@@ -391,14 +395,14 @@ namespace Hades
 
         // Lookup the first import thunk for this module
         // Todo: Forwarded import support
-        auto pThunkData = reinterpret_cast<PIMAGE_THUNK_DATA>(ModBase + 
-          RvaToFileOffset(pNtHeaders, pImpDesc->FirstThunk));
+        PIMAGE_THUNK_DATA pThunkData = reinterpret_cast<PIMAGE_THUNK_DATA>(
+          ModBase + RvaToFileOffset(pNtHeaders, pImpDesc->FirstThunk));
         while(pThunkData->u1.AddressOfData) 
         {
           // Get import data
-          auto const pNameImport = reinterpret_cast<PIMAGE_IMPORT_BY_NAME>(
-            ModBase + RvaToFileOffset(pNtHeaders, pThunkData->u1.
-            AddressOfData));
+          PIMAGE_IMPORT_BY_NAME const pNameImport = 
+            reinterpret_cast<PIMAGE_IMPORT_BY_NAME>(ModBase + 
+            RvaToFileOffset(pNtHeaders, pThunkData->u1.AddressOfData));
 
           // Get name of function
           std::string const ImpName(reinterpret_cast<char*>(pNameImport->Name));
@@ -453,7 +457,7 @@ namespace Hades
           IMAGE_BASE_RELOCATION)) / sizeof(WORD); 
 
         // Get pointer to reloc data
-        auto pRelocData = reinterpret_cast<WORD*>(reinterpret_cast<DWORD_PTR>(
+        WORD* pRelocData = reinterpret_cast<WORD*>(reinterpret_cast<DWORD_PTR>(
           pRelocDesc) + sizeof(IMAGE_BASE_RELOCATION));
 
         // Loop over all relocation entries

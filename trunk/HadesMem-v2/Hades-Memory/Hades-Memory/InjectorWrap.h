@@ -92,8 +92,8 @@ namespace Hades
         }
 
         // Injector::CallExport wrapper
-        DWORD CallExport(std::string const& ModulePath, 
-          DWORD_PTR ModuleRemote, std::string const& Export)
+        DWORD CallExport(std::string const& ModulePath, DWORD_PTR ModuleRemote, 
+          std::string const& Export)
         {
           return Injector::CallExport(boost::lexical_cast<std::wstring>(
             ModulePath), reinterpret_cast<HMODULE>(ModuleRemote), 

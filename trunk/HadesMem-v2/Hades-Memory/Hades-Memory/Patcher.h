@@ -222,11 +222,12 @@ namespace Hades
 
       // Disassemble target (for worst case scenario)
       Disassembler MyDisasm(*m_pMemory);
-      auto MyDisasmData(MyDisasm.Disassemble(m_Target, TrampSize));
+      std::vector<DisasmData> MyDisasmData(MyDisasm.Disassemble(m_Target, 
+        TrampSize));
 
       // Parse disassembly
       unsigned int InstrSize = 0;
-      for (auto i = MyDisasmData.begin(); i != MyDisasmData.end(); ++i)
+      for (auto i = MyDisasmData.cbegin(); i != MyDisasmData.cend(); ++i)
       {
         // Break once we've disassembled enough data
         if (InstrSize > GetJumpSize())

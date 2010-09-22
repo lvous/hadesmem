@@ -85,13 +85,14 @@ namespace Hades
       }
 
       // Get memory manager
-      MemoryMgr* MyMemory(&GetMemoryMgr());
+      MemoryMgr* MyMemory = &GetMemoryMgr();
 
       // Get PE file base
-      PBYTE pBase(GetBase());
+      PBYTE const pBase = GetBase();
 
       // Get DOS header
-      auto DosHeader(MyMemory->Read<IMAGE_DOS_HEADER>(pBase));
+      IMAGE_DOS_HEADER const DosHeader = MyMemory->Read<IMAGE_DOS_HEADER>(
+        pBase);
       if (DosHeader.e_magic != IMAGE_DOS_SIGNATURE)
       {
         BOOST_THROW_EXCEPTION(Error() << 
@@ -100,8 +101,9 @@ namespace Hades
       }
 
       // Get NT headers
-      auto pNtHeaders(pBase + DosHeader.e_lfanew);
-      auto NtHeadersRaw(MyMemory->Read<IMAGE_NT_HEADERS>(pNtHeaders));
+      PBYTE const pNtHeaders = pBase + DosHeader.e_lfanew;
+      IMAGE_NT_HEADERS const NtHeadersRaw = MyMemory->Read<IMAGE_NT_HEADERS>(
+        pNtHeaders);
       if (NtHeadersRaw.Signature != IMAGE_NT_SIGNATURE)
       {
         BOOST_THROW_EXCEPTION(Error() << 
@@ -110,10 +112,12 @@ namespace Hades
       }
 
       // Get first section header
-      auto pSectionHeader(reinterpret_cast<PIMAGE_SECTION_HEADER>(pNtHeaders + 
+      PIMAGE_SECTION_HEADER pSectionHeader = 
+        reinterpret_cast<PIMAGE_SECTION_HEADER>(pNtHeaders + 
         sizeof(NtHeadersRaw.FileHeader) + sizeof(NtHeadersRaw.Signature) + 
-        NtHeadersRaw.FileHeader.SizeOfOptionalHeader));
-      auto SectionHeader(MyMemory->Read<IMAGE_SECTION_HEADER>(pSectionHeader));
+        NtHeadersRaw.FileHeader.SizeOfOptionalHeader);
+      IMAGE_SECTION_HEADER SectionHeader = MyMemory->
+        Read<IMAGE_SECTION_HEADER>(pSectionHeader);
 
       // Get number of sections
       WORD NumSections = NtHeadersRaw.FileHeader.NumberOfSections;

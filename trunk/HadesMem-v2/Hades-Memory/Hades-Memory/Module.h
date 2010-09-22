@@ -131,9 +131,9 @@ namespace Hades
       {
         // Todo: Check GetLastError to ensure EOL and throw an exception 
         // on an actual error.
-        return Module32Next(m_Snap, &m_ModuleEntry) ? 
-          std::unique_ptr<Module>(new Module(*m_pMemory, m_ModuleEntry)) 
-          : std::unique_ptr<Module>(nullptr);
+        return Module32Next(m_Snap, &m_ModuleEntry) ? std::unique_ptr<Module>(
+          new Module(*m_pMemory, m_ModuleEntry)) : std::unique_ptr<Module>(
+          nullptr);
       }
 
       // Module iterator

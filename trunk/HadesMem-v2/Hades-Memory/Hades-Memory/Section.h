@@ -69,11 +69,11 @@ namespace Hades
     std::string Section::GetName() const
     {
       // Get base of section header
-      PBYTE pSecHdr(GetBase());
+      PBYTE const pSecHdr = GetBase();
 
       // Read RVA of module name
-      auto NameData(m_pMemory->Read<std::array<char, 8>>(pSecHdr + 
-        FIELD_OFFSET(IMAGE_SECTION_HEADER, Name)));
+      std::array<char, 8> const NameData(m_pMemory->Read<std::array<char, 8>>(
+        pSecHdr + FIELD_OFFSET(IMAGE_SECTION_HEADER, Name)));
 
       // Convert section name to string
       std::string Name;
@@ -90,7 +90,7 @@ namespace Hades
     PBYTE Section::GetBase() const
     {
       // Get NT headers
-      NtHeaders MyNtHeaders(*m_pPeFile);
+      NtHeaders const MyNtHeaders(*m_pPeFile);
 
       // Ensure section number is valid
       if (m_SectionNum >= MyNtHeaders.GetNumberOfSections())
@@ -101,21 +101,23 @@ namespace Hades
       }
 
       // Get raw NT headers
-      auto NtHeadersRaw(MyNtHeaders.GetHeadersRaw());
+      IMAGE_NT_HEADERS const NtHeadersRaw = MyNtHeaders.GetHeadersRaw();
 
       // Get pointer to raw NT headers
-      auto pNtHeaders(static_cast<PBYTE>(MyNtHeaders.GetBase()));
+      PBYTE const pNtHeaders = MyNtHeaders.GetBase();
 
       // Get pointer to first section
-      auto pSectionHeader(reinterpret_cast<PIMAGE_SECTION_HEADER>(pNtHeaders + 
-        sizeof(NtHeadersRaw.FileHeader) + sizeof(NtHeadersRaw.Signature) + 
-        NtHeadersRaw.FileHeader.SizeOfOptionalHeader));
+      PIMAGE_SECTION_HEADER pSectionHeader = 
+        reinterpret_cast<PIMAGE_SECTION_HEADER>(pNtHeaders + sizeof(
+        NtHeadersRaw.FileHeader) + sizeof(NtHeadersRaw.Signature) + 
+        NtHeadersRaw.FileHeader.SizeOfOptionalHeader);
 
       // Adjust pointer to target section
       pSectionHeader += m_SectionNum;
 
       // Return base of section header
-      return reinterpret_cast<PBYTE>(pSectionHeader);
+      PVOID const pTempSectionHeader = pSectionHeader;
+      return static_cast<PBYTE>(pTempSectionHeader);
     }
 
     // Get raw section header

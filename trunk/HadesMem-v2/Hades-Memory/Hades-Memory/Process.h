@@ -120,7 +120,7 @@ namespace Hades
         TH32CS_SNAPPROCESS, 0));
       if (Snap == INVALID_HANDLE_VALUE)
       {
-        DWORD const LastError(GetLastError());
+        DWORD const LastError = GetLastError();
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Process::Process") << 
           ErrorString("Could not get process snapshot.") << 
@@ -132,7 +132,7 @@ namespace Hades
 
       // Search for process
       PROCESSENTRY32 ProcEntry = { sizeof(ProcEntry) };
-      bool Found(false);
+      bool Found = false;
       for (BOOL MoreMods = Process32First(Snap, &ProcEntry); MoreMods; 
         MoreMods = Process32Next(Snap, &ProcEntry)) 
       {
@@ -167,10 +167,10 @@ namespace Hades
       GetSeDebugPrivilege();
 
       // Find window
-      HWND const MyWnd(FindWindow(ClassName.c_str(), WindowName.c_str()));
+      HWND const MyWnd = FindWindow(ClassName.c_str(), WindowName.c_str());
       if (!MyWnd)
       {
-        DWORD const LastError(GetLastError());
+        DWORD const LastError = GetLastError();
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Process::Process") << 
           ErrorString("Could not find window.") << 
@@ -181,7 +181,7 @@ namespace Hades
       GetWindowThreadProcessId(MyWnd, &m_ID);
       if (!m_ID)
       {
-        DWORD const LastError(GetLastError());
+        DWORD const LastError = GetLastError();
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Process::Process") << 
           ErrorString("Could not get process id from window.") << 
@@ -204,9 +204,9 @@ namespace Hades
     Process& Process::operator=(Process&& MyProcess)
     {
       this->m_Handle = std::move(MyProcess.m_Handle);
-      this->m_ID = MyProcess.m_ID;
-
       MyProcess.m_Handle = nullptr;
+
+      this->m_ID = MyProcess.m_ID;
       MyProcess.m_ID = 0;
 
       return *this;
@@ -225,7 +225,7 @@ namespace Hades
         ProcID);
       if (!m_Handle)
       {
-        DWORD const LastError(GetLastError());
+        DWORD const LastError = GetLastError();
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Process::Open") << 
           ErrorString("Could not open process.") << 
@@ -233,10 +233,10 @@ namespace Hades
       }
 
       // Get WoW64 status of self
-      BOOL IsWoW64Me(FALSE);
+      BOOL IsWoW64Me = FALSE;
       if (!IsWow64Process(GetCurrentProcess(), &IsWoW64Me))
       {
-        DWORD const LastError(GetLastError());
+        DWORD const LastError = GetLastError();
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Process::Open") << 
           ErrorString("Could not detect WoW64 status of current process.") << 
@@ -244,10 +244,10 @@ namespace Hades
       }
 
       // Get WoW64 status of target process
-      BOOL IsWoW64(FALSE);
+      BOOL IsWoW64 = FALSE;
       if (!IsWow64Process(m_Handle, &IsWoW64))
       {
-        DWORD const LastError(GetLastError());
+        DWORD const LastError = GetLastError();
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Process::Open") << 
           ErrorString("Could not detect WoW64 status of target process.") << 
@@ -268,12 +268,12 @@ namespace Hades
     void Process::GetSeDebugPrivilege()
     {
       // Open current process token with adjust rights
-      HANDLE TempToken(0);
-      BOOL const RetVal(OpenProcessToken(GetCurrentProcess(), 
-        TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &TempToken));
+      HANDLE TempToken = 0;
+      BOOL const RetVal = OpenProcessToken(GetCurrentProcess(), 
+        TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &TempToken);
       if (!RetVal) 
       {
-        DWORD const LastError(GetLastError());
+        DWORD const LastError = GetLastError();
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Process::GetSeDebugPrivilege") << 
           ErrorString("Could not open process token.") << 
@@ -285,7 +285,7 @@ namespace Hades
       LUID Luid = { 0 }; // Locally unique identifier
       if (!LookupPrivilegeValue(NULL, SE_DEBUG_NAME, &Luid)) 
       {
-        DWORD const LastError(GetLastError());
+        DWORD const LastError = GetLastError();
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Process::GetSeDebugPrivilege") << 
           ErrorString("Could not look up privilege value for SeDebugName.") << 
@@ -293,7 +293,7 @@ namespace Hades
       }
       if (Luid.LowPart == 0 && Luid.HighPart == 0) 
       {
-        DWORD const LastError(GetLastError());
+        DWORD const LastError = GetLastError();
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Process::GetSeDebugPrivilege") << 
           ErrorString("Could not get LUID for SeDebugName.") << 
@@ -311,7 +311,7 @@ namespace Hades
       if (!AdjustTokenPrivileges(Token, FALSE, &Privileges, sizeof(Privileges), 
         NULL, NULL)) 
       {
-        DWORD const LastError(GetLastError());
+        DWORD const LastError = GetLastError();
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Process::GetSeDebugPrivilege") << 
           ErrorString("Could not adjust token privileges.") << 
