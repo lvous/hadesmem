@@ -96,7 +96,7 @@ namespace Hades
         if (!VirtualQueryEx(m_pMemory->GetProcessHandle(), m_Address, &m_Current, 
           sizeof(m_Current)))
         {
-          DWORD LastError = GetLastError();
+          DWORD const LastError = GetLastError();
           BOOST_THROW_EXCEPTION(Module::Error() << 
             ErrorFunction("RegionEnum::First") << 
             ErrorString("Could not get first memory region.") << 
@@ -186,7 +186,7 @@ namespace Hades
       if (!VirtualQueryEx(m_pMemory->GetProcessHandle(), Address, 
         &m_RegionInfo, sizeof(m_RegionInfo)))
       {
-        DWORD LastError = GetLastError();
+        DWORD const LastError = GetLastError();
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Region::Region") << 
           ErrorString("Could not query memory region.") << 

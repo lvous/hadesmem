@@ -332,7 +332,7 @@ namespace Hades
         if (!VirtualProtectEx(m_pMemory->GetProcessHandle(), TargetAddr, 
           VirtualSize, pCurrent->Characteristics & 0x00FFFFFF, &OldProtect))
         {
-          DWORD LastError = GetLastError();
+          DWORD const LastError = GetLastError();
           BOOST_THROW_EXCEPTION(Error() << 
             ErrorFunction("ManualMap::MapSections") << 
             ErrorString("Could not change page protections for section.") << 

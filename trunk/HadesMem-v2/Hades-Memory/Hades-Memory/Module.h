@@ -106,7 +106,7 @@ namespace Hades
           GetProcessID());
         if (m_Snap == INVALID_HANDLE_VALUE)
         {
-          DWORD LastError = GetLastError();
+          DWORD const LastError = GetLastError();
           BOOST_THROW_EXCEPTION(Module::Error() << 
             ErrorFunction("ModuleEnum::First") << 
             ErrorString("Could not get module snapshot.") << 
@@ -116,7 +116,7 @@ namespace Hades
         // Get first module entry
         if (!Module32First(m_Snap, &m_ModuleEntry))
         {
-          DWORD LastError = GetLastError();
+          DWORD const LastError = GetLastError();
           BOOST_THROW_EXCEPTION(Module::Error() << 
             ErrorFunction("ModuleEnum::First") << 
             ErrorString("Could not get module info.") << 
@@ -202,7 +202,7 @@ namespace Hades
         TH32CS_SNAPMODULE, MyMemory.GetProcessID()));
       if (Snap == INVALID_HANDLE_VALUE)
       {
-        DWORD LastError = GetLastError();
+        DWORD const LastError = GetLastError();
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Module::Module") << 
           ErrorString("Could not get module snapshot.") << 
@@ -255,7 +255,7 @@ namespace Hades
         TH32CS_SNAPMODULE, MyMemory.GetProcessID()));
       if (Snap == INVALID_HANDLE_VALUE)
       {
-        DWORD LastError = GetLastError();
+        DWORD const LastError = GetLastError();
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("Module::Module") << 
           ErrorString("Could not get module snapshot.") << 
