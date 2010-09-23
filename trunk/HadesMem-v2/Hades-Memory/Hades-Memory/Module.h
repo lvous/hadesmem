@@ -293,7 +293,7 @@ namespace Hades
     Module::Module(MemoryMgr& MyMemory, MODULEENTRY32 const& ModuleEntry) 
       : m_pMemory(&MyMemory), 
       m_Base(ModuleEntry.hModule), 
-      m_Size(ModuleEntry.dwSize), 
+      m_Size(ModuleEntry.modBaseSize), 
       m_Name(ModuleEntry.szModule), 
       m_Path(ModuleEntry.szExePath)
     { }
