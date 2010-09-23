@@ -134,5 +134,11 @@
     <ClInclude Include="ExportEnum.h">
       <Filter>Header Files\External\PELib</Filter>
     </ClInclude>
+    <ClInclude Include="TlsDir.h">
+      <Filter>Header Files\External\PELib</Filter>
+    </ClInclude>
+    <ClInclude Include="TlsWrap.h">
+      <Filter>Header Files\Scripting\Wrappers\PELib</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

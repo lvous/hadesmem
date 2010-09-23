@@ -52,6 +52,8 @@
     <ClInclude Include="Section.h" />
     <ClInclude Include="SectionEnum.h" />
     <ClInclude Include="SectionWrap.h" />
+    <ClInclude Include="TlsDir.h" />
+    <ClInclude Include="TlsWrap.h" />
     <ClInclude Include="Types.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

@@ -57,6 +57,7 @@ extern "C"
 // Hades
 #include "PeLib.h"
 #include "Memory.h"
+#include "TlsWrap.h"
 #include "PeFileWrap.h"
 #include "ModuleWrap.h" 
 #include "RegionWrap.h"
@@ -717,6 +718,35 @@ namespace Hades
           .def(luabind::constructor<PeFile&>())
           .def("First", &Wrappers::ExportEnumWrap::First)
           .def("Next", &Wrappers::ExportEnumWrap::Next)
+
+          // Bind TlsCallbackList class
+          ,luabind::class_<Wrappers::TlsDirWrappers::TlsCallbackList>(
+            "TlsCallbackList")
+          .def(luabind::constructor<>())
+          .def_readonly("List", &Wrappers::TlsDirWrappers::TlsCallbackList::
+            List, luabind::return_stl_iterator)
+
+          // Bind TlsDir class
+          ,luabind::class_<TlsDir>("TlsDirBase")
+          ,luabind::class_<Wrappers::TlsDirWrappers, TlsDir>("TlsDir")
+          .def(luabind::constructor<PeFile&>())
+          .def("IsValid", &Wrappers::TlsDirWrappers::IsValid)
+          .def("EnsureValid", &Wrappers::TlsDirWrappers::EnsureValid)
+          .def("GetStartAddressOfRawData", &Wrappers::TlsDirWrappers::
+            GetStartAddressOfRawData)
+          .def("GetEndAddressOfRawData", &Wrappers::TlsDirWrappers::
+            GetEndAddressOfRawData)
+          .def("GetAddressOfIndex", &Wrappers::TlsDirWrappers::
+            GetAddressOfIndex)
+          .def("GetAddressOfCallBacks", &Wrappers::TlsDirWrappers::
+            GetAddressOfCallBacks)
+          .def("GetSizeOfZeroFill", &Wrappers::TlsDirWrappers::
+            GetSizeOfZeroFill)
+          .def("GetCharacteristics", &Wrappers::TlsDirWrappers::
+            GetCharacteristics)
+          .def("GetCallbacks", &Wrappers::TlsDirWrappers::GetCallbacks)
+          .def("GetBase", &Wrappers::TlsDirWrappers::GetBase)
+          .def("GetTlsDirRaw", &Wrappers::TlsDirWrappers::GetTlsDirRaw)
         ];
       }
 
