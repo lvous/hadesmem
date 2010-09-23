@@ -31,18 +31,6 @@ namespace Hades
 {
   namespace Memory
   {
-    // PE file export data
-    struct Export
-    {
-      DWORD Rva;
-      PVOID Va;
-      std::string Name;
-      std::string Forwarder;
-      WORD Ordinal;
-      bool ByName;
-      bool Forwarded;
-    };
-
     // PE file export directory
     class ExportDir
     {
@@ -60,11 +48,11 @@ namespace Hades
       // Ensure export directory is valid
       inline void EnsureValid() const;
 
+      // Get number of functions
+      inline DWORD GetNumberOfFunctions() const;
+
       // Get module name
       inline std::string GetName() const;
-
-      // Get all exports
-      inline std::vector<Export> GetAllExports() const;
 
       // Get base of export dir
       inline PBYTE GetBase() const;
@@ -85,6 +73,14 @@ namespace Hades
       : m_pPeFile(&MyPeFile), 
       m_pMemory(&m_pPeFile->GetMemoryMgr())
     { }
+
+    // Get number of functions
+    DWORD ExportDir::GetNumberOfFunctions() const
+    {
+      PBYTE pExportDir = GetBase();
+      return m_pMemory->Read<DWORD>(pExportDir + FIELD_OFFSET(
+        IMAGE_EXPORT_DIRECTORY, NumberOfFunctions));
+    }
 
     // Get module name
     std::string ExportDir::GetName() const
@@ -130,67 +126,6 @@ namespace Hades
       return pBase + DataDirVa;
     }
 
-    // Get all exports
-    std::vector<Export> ExportDir::GetAllExports() const
-    {
-      std::vector<Export> Exports;
-
-      DosHeader const MyDosHeader(*m_pPeFile);
-      NtHeaders const MyNtHeaders(*m_pPeFile);
-
-      IMAGE_EXPORT_DIRECTORY const ExportDirRaw = GetExportDirRaw();
-
-      WORD* pOrdinals = reinterpret_cast<WORD*>(m_pPeFile->GetBase() + 
-        ExportDirRaw.AddressOfNameOrdinals);
-      DWORD* pFunctions = reinterpret_cast<DWORD*>(m_pPeFile->GetBase() + 
-        ExportDirRaw.AddressOfFunctions);
-      DWORD* pNames = reinterpret_cast<DWORD*>(m_pPeFile->GetBase() + 
-        ExportDirRaw.AddressOfNames);
-
-      DWORD const DataDirSize = MyNtHeaders.GetDataDirectorySize(NtHeaders::
-        DataDir_Export);
-      DWORD const DataDirVa = MyNtHeaders.GetDataDirectoryVirtualAddress(
-        NtHeaders::DataDir_Export);
-
-      DWORD const ExportDirStart = DataDirVa;
-      DWORD const ExportDirEnd = ExportDirStart + DataDirSize;
-
-      for (std::size_t i = 0; i < ExportDirRaw.NumberOfFunctions; ++i)
-      {
-        Export MyExport = { 0 };
-
-        MyExport.Ordinal = static_cast<WORD>(i + ExportDirRaw.Base);
-
-        for (std::size_t j = 0; j < ExportDirRaw.NumberOfNames; ++j)
-        {
-          if (m_pMemory->Read<WORD>(pOrdinals + j) == i)
-          {
-            MyExport.ByName = true;
-            MyExport.Name = m_pMemory->Read<std::string>(m_pPeFile->
-              GetBase() + m_pMemory->Read<DWORD>(pNames + j));
-          }
-        }
-
-        DWORD const FuncRva = m_pMemory->Read<DWORD>(pFunctions + i);
-
-        if (FuncRva >= ExportDirStart && FuncRva <= ExportDirEnd)
-        {
-          MyExport.Forwarded = true;
-          MyExport.Forwarder = m_pMemory->Read<std::string>(m_pPeFile->
-            GetBase() + FuncRva);
-        }
-        else
-        {
-          MyExport.Rva = FuncRva;
-          MyExport.Va = m_pPeFile->GetBase() + FuncRva;
-        }
-
-        Exports.push_back(MyExport);
-      }
-
-      return Exports;
-    }
-
     // Get raw export dir
     IMAGE_EXPORT_DIRECTORY ExportDir::GetExportDirRaw() const
     {
@@ -224,5 +159,137 @@ namespace Hades
           ErrorString("Export directory is invalid."));
       }
     }
+
+    // PE file export data
+    class Export
+    {
+    public:
+      explicit Export(PeFile& MyPeFile) 
+        : m_pPeFile(&MyPeFile), 
+        m_pMemory(&MyPeFile.GetMemoryMgr()), 
+        m_Rva(0), 
+        m_Va(nullptr), 
+        m_Name(), 
+        m_Forwarder(), 
+        m_Ordinal(0), 
+        m_ByName(false), 
+        m_Forwarded(false)
+      { }
+
+      Export(PeFile& MyPeFile, DWORD Number) 
+        : m_pPeFile(&MyPeFile), 
+        m_pMemory(&MyPeFile.GetMemoryMgr()), 
+        m_Rva(0), 
+        m_Va(nullptr), 
+        m_Name(), 
+        m_Forwarder(), 
+        m_Ordinal(0), 
+        m_ByName(false), 
+        m_Forwarded(false)
+      {
+        DosHeader const MyDosHeader(*m_pPeFile);
+        NtHeaders const MyNtHeaders(*m_pPeFile);
+
+        ExportDir const MyExportDir(*m_pPeFile);
+
+        IMAGE_EXPORT_DIRECTORY const ExportDirRaw = MyExportDir.
+          GetExportDirRaw();
+
+        WORD* pOrdinals = reinterpret_cast<WORD*>(m_pPeFile->GetBase() + 
+          ExportDirRaw.AddressOfNameOrdinals);
+        DWORD* pFunctions = reinterpret_cast<DWORD*>(m_pPeFile->GetBase() + 
+          ExportDirRaw.AddressOfFunctions);
+        DWORD* pNames = reinterpret_cast<DWORD*>(m_pPeFile->GetBase() + 
+          ExportDirRaw.AddressOfNames);
+
+        DWORD const DataDirSize = MyNtHeaders.GetDataDirectorySize(NtHeaders::
+          DataDir_Export);
+        DWORD const DataDirVa = MyNtHeaders.GetDataDirectoryVirtualAddress(
+          NtHeaders::DataDir_Export);
+
+        DWORD const ExportDirStart = DataDirVa;
+        DWORD const ExportDirEnd = ExportDirStart + DataDirSize;
+
+        if (Number > ExportDirRaw.NumberOfFunctions)
+        {
+          BOOST_THROW_EXCEPTION(ExportDir::Error() << 
+            ErrorFunction("Export::Export") << 
+            ErrorString("Invalid export number."));
+        }
+
+        m_Ordinal = static_cast<WORD>(Number + ExportDirRaw.Base);
+
+        for (std::size_t j = 0; j < ExportDirRaw.NumberOfNames; ++j)
+        {
+          if (m_pMemory->Read<WORD>(pOrdinals + j) == Number)
+          {
+            m_ByName = true;
+            m_Name = m_pMemory->Read<std::string>(m_pPeFile->GetBase() + 
+              m_pMemory->Read<DWORD>(pNames + j));
+          }
+        }
+
+        DWORD const FuncRva = m_pMemory->Read<DWORD>(pFunctions + Number);
+
+        if (FuncRva >= ExportDirStart && FuncRva <= ExportDirEnd)
+        {
+          m_Forwarded = true;
+          m_Forwarder = m_pMemory->Read<std::string>(m_pPeFile->GetBase() + 
+            FuncRva);
+        }
+        else
+        {
+          m_Rva = FuncRva;
+          m_Va = m_pPeFile->GetBase() + FuncRva;
+        }
+      }
+
+      DWORD GetRva() const
+      {
+        return m_Rva;
+      }
+
+      PVOID GetVa() const
+      {
+        return m_Va;
+      }
+
+      std::string GetName() const
+      {
+        return m_Name;
+      }
+
+      std::string GetForwarder() const
+      {
+        return m_Forwarder;
+      }
+
+      WORD GetOrdinal() const
+      {
+        return m_Ordinal;
+      }
+
+      bool ByName() const
+      {
+        return m_ByName;
+      }
+
+      bool Forwarded() const
+      {
+        return m_Forwarded;
+      }
+
+    private:
+      PeFile* m_pPeFile;
+      MemoryMgr* m_pMemory;
+
+      DWORD m_Rva;
+      PVOID m_Va;
+      std::string m_Name;
+      std::string m_Forwarder;
+      WORD m_Ordinal;
+      bool m_ByName;
+      bool m_Forwarded;
+    };
   }
 }

@@ -60,6 +60,7 @@ extern "C"
 #include "PeFileWrap.h"
 #include "ModuleWrap.h" 
 #include "RegionWrap.h"
+#include "ExportWrap.h"
 #include "SectionWrap.h"
 #include "ScannerWrap.h"
 #include "InjectorWrap.h"
@@ -694,10 +695,28 @@ namespace Hades
           .def("First", &Wrappers::SectionEnumWrap::First)
           .def("Next", &Wrappers::SectionEnumWrap::Next)
 
+          // Bind Export class
+          ,luabind::class_<Export>("Export")
+          .def(luabind::constructor<PeFile&, DWORD>())
+          .def("GetRva", &Export::GetRva)
+          .def("GetVa", &Export::GetVa)
+          .def("GetName", &Export::GetName)
+          .def("GetForwarder", &Export::GetForwarder)
+          .def("GetOrdinal", &Export::GetOrdinal)
+          .def("ByName", &Export::ByName)
+          .def("Forwarded", &Export::Forwarded)
+
           // Bind ExportDir class
           ,luabind::class_<ExportDir>("ExportDir")
           .def(luabind::constructor<PeFile&>())
           .def("GetName", &ExportDir::GetName)
+
+          // Bind ExportEnum class
+          ,luabind::class_<ExportEnum>("ExportEnumBase")
+          ,luabind::class_<Wrappers::ExportEnumWrap>("ExportEnum")
+          .def(luabind::constructor<PeFile&>())
+          .def("First", &Wrappers::ExportEnumWrap::First)
+          .def("Next", &Wrappers::ExportEnumWrap::Next)
         ];
       }
 
