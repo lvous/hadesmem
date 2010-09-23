@@ -1,8 +1,7 @@
 HadesMem.WriteLn("Opening WinDbg.");
 MyMem = HadesMem.MemoryMgr("windbg.exe");
 
-MyModEnumTemp = HadesMem.ModuleEnum(MyMem);
-Kernel32Mod = MyModEnumTemp:First(); Kernel32Mod = MyModEnumTemp:Next(); Kernel32Mod = MyModEnumTemp:Next();
+Kernel32Mod = HadesMem.Module(MyMem, "kernel32.dll");
 MyPeFile = HadesMem.PeFile(MyMem, Kernel32Mod:GetBase());
 MyDosHeader = HadesMem.DosHeader(MyPeFile);
 MyNtHeaders = HadesMem.NtHeaders(MyPeFile);
@@ -26,8 +25,12 @@ HadesMem.WriteLn("Dumping exports.");
 MyExportEnum = HadesMem.ExportEnum(MyPeFile);
 MyExport = MyExportEnum:First();
 while MyExport do
-	if (MyExport:ByName()) then
-		HadesMem.WriteLn(MyExport:GetOrdinal() .. " -> " .. MyExport:GetName());
+	if MyExport:ByName() then
+		if MyExport:Forwarded() then
+			HadesMem.WriteLn(MyExport:GetOrdinal() .. " -> " .. MyExport:GetName() .. " -> " .. MyExport:GetForwarder());
+		else
+			HadesMem.WriteLn(MyExport:GetOrdinal() .. " -> " .. MyExport:GetName());
+		end
 	else
 		HadesMem.WriteLn(MyExport:GetOrdinal());
 	end
