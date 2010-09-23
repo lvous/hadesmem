@@ -71,6 +71,7 @@ namespace Hades
         MemoryMgr* pMemory = MyData.pMemory.release();
         boost::shared_ptr<Wrappers::MemoryMgrWrappers> pMemoryShared(
           static_cast<Wrappers::MemoryMgrWrappers*>(pMemory));
+        MyInfo.Memory = pMemoryShared;
         MyInfo.ModBase = reinterpret_cast<DWORD_PTR>(MyData.ModuleBase);
         MyInfo.ExportRet = MyData.ExportRet;
 
