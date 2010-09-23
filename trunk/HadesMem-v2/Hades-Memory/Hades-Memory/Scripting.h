@@ -710,7 +710,21 @@ namespace Hades
           // Bind ExportDir class
           ,luabind::class_<ExportDir>("ExportDir")
           .def(luabind::constructor<PeFile&>())
+          .def("IsValid", &ExportDir::IsValid)
+          .def("EnsureValid", &ExportDir::EnsureValid)
+          .def("GetCharacteristics", &ExportDir::GetCharacteristics)
+          .def("GetTimeDateStamp", &ExportDir::GetTimeDateStamp)
+          .def("GetMajorVersion", &ExportDir::GetMajorVersion)
+          .def("GetMinorVersion", &ExportDir::GetMinorVersion)
           .def("GetName", &ExportDir::GetName)
+          .def("GetOrdinalBase", &ExportDir::GetOrdinalBase)
+          .def("GetNumberOfFunctions", &ExportDir::GetNumberOfFunctions)
+          .def("GetNumberOfNames", &ExportDir::GetNumberOfNames)
+          .def("GetAddressOfFunctions", &ExportDir::GetAddressOfFunctions)
+          .def("GetAddressOfNames", &ExportDir::GetAddressOfNames)
+          .def("GetAddressOfNameOrdinals", &ExportDir::GetAddressOfNameOrdinals)
+          .def("GetBase", &ExportDir::GetBase)
+          .def("GetExportDirRaw", &ExportDir::GetExportDirRaw)
 
           // Bind ExportEnum class
           ,luabind::class_<ExportEnum>("ExportEnumBase")
