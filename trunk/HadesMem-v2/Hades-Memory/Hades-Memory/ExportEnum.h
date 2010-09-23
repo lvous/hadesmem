@@ -57,7 +57,7 @@ namespace Hades
           *m_pPeFile, m_Current)) : std::unique_ptr<Export>(nullptr);
       }
 
-      // Get next sectionaa
+      // Get next section
       std::unique_ptr<Export> Next()
       {
         ExportDir const MyExportDir(*m_pPeFile);
