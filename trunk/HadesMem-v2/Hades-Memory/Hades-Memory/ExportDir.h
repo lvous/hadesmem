@@ -26,6 +26,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Hades
 #include "PeFile.h"
 #include "NtHeaders.h"
+#include "DosHeader.h"
 
 namespace Hades
 {
@@ -263,18 +264,7 @@ namespace Hades
     class Export
     {
     public:
-      explicit Export(PeFile& MyPeFile) 
-        : m_pPeFile(&MyPeFile), 
-        m_pMemory(&MyPeFile.GetMemoryMgr()), 
-        m_Rva(0), 
-        m_Va(nullptr), 
-        m_Name(), 
-        m_Forwarder(), 
-        m_Ordinal(0), 
-        m_ByName(false), 
-        m_Forwarded(false)
-      { }
-
+      // Constructor
       Export(PeFile& MyPeFile, DWORD Number) 
         : m_pPeFile(&MyPeFile), 
         m_pMemory(&MyPeFile.GetMemoryMgr()), 
@@ -286,26 +276,13 @@ namespace Hades
         m_ByName(false), 
         m_Forwarded(false)
       {
-        DosHeader const MyDosHeader(*m_pPeFile);
+        // Get NT headers
         NtHeaders const MyNtHeaders(*m_pPeFile);
 
+        // Get export directory
         ExportDir const MyExportDir(*m_pPeFile);
 
-        WORD* pOrdinals = reinterpret_cast<WORD*>(m_pPeFile->GetBase() + 
-          MyExportDir.GetAddressOfFunctions());
-        DWORD* pFunctions = reinterpret_cast<DWORD*>(m_pPeFile->GetBase() + 
-          MyExportDir.GetAddressOfFunctions());
-        DWORD* pNames = reinterpret_cast<DWORD*>(m_pPeFile->GetBase() + 
-          MyExportDir.GetAddressOfNames());
-
-        DWORD const DataDirSize = MyNtHeaders.GetDataDirectorySize(NtHeaders::
-          DataDir_Export);
-        DWORD const DataDirVa = MyNtHeaders.GetDataDirectoryVirtualAddress(
-          NtHeaders::DataDir_Export);
-
-        DWORD const ExportDirStart = DataDirVa;
-        DWORD const ExportDirEnd = ExportDirStart + DataDirSize;
-
+        // Ensure export number is valid
         if (Number > MyExportDir.GetNumberOfFunctions())
         {
           BOOST_THROW_EXCEPTION(ExportDir::Error() << 
@@ -313,78 +290,128 @@ namespace Hades
             ErrorString("Invalid export number."));
         }
 
+        // Get pointer to function name ordinals
+        WORD* pOrdinals = reinterpret_cast<WORD*>(m_pPeFile->GetBase() + 
+          MyExportDir.GetAddressOfNameOrdinals());
+        // Get pointer to functions
+        DWORD* pFunctions = reinterpret_cast<DWORD*>(m_pPeFile->GetBase() + 
+          MyExportDir.GetAddressOfFunctions());
+        // Get pointer to function names
+        DWORD* pNames = reinterpret_cast<DWORD*>(m_pPeFile->GetBase() + 
+          MyExportDir.GetAddressOfNames());
+
+        // Get data directory size
+        DWORD const DataDirSize = MyNtHeaders.GetDataDirectorySize(NtHeaders::
+          DataDir_Export);
+        // Get data directory VA
+        DWORD const DataDirVa = MyNtHeaders.GetDataDirectoryVirtualAddress(
+          NtHeaders::DataDir_Export);
+
+        // Get start of export dir
+        DWORD const ExportDirStart = DataDirVa;
+        // Get end of export dir
+        DWORD const ExportDirEnd = ExportDirStart + DataDirSize;
+
+        // Set ordinal
         m_Ordinal = static_cast<WORD>(Number + MyExportDir.GetOrdinalBase());
 
+        // Find ordinal name (and set if applicable)
+        // Todo: Find if there's a more efficient way to do this
         for (std::size_t j = 0; j < MyExportDir.GetNumberOfNames(); ++j)
         {
+          // Check if current entry matches target
           if (m_pMemory->Read<WORD>(pOrdinals + j) == Number)
           {
+            // Set export name
             m_ByName = true;
             m_Name = m_pMemory->Read<std::string>(m_pPeFile->GetBase() + 
               m_pMemory->Read<DWORD>(pNames + j));
           }
         }
 
+        // Get function RVA (unchecked)
         DWORD const FuncRva = m_pMemory->Read<DWORD>(pFunctions + Number);
 
+        // Check function RVA. If it lies inside the export dir region 
+        // then it's a forwarded export. Otherwise it's a regular RVA.
         if (FuncRva >= ExportDirStart && FuncRva <= ExportDirEnd)
         {
+          // Set export forwarder
+          // Todo: Provide member which returns the 'split' version of the 
+          // forwarder. (i.e. module and name)
           m_Forwarded = true;
           m_Forwarder = m_pMemory->Read<std::string>(m_pPeFile->GetBase() + 
             FuncRva);
         }
         else
         {
+          // Set export RVA/VA
           m_Rva = FuncRva;
           m_Va = m_pPeFile->GetBase() + FuncRva;
         }
       }
 
+      // Get RVA
       DWORD GetRva() const
       {
         return m_Rva;
       }
 
+      // Get VA
       PVOID GetVa() const
       {
         return m_Va;
       }
 
+      // Get name
       std::string GetName() const
       {
         return m_Name;
       }
 
+      // Get forwarder
       std::string GetForwarder() const
       {
         return m_Forwarder;
       }
 
+      // Get ordinal
       WORD GetOrdinal() const
       {
         return m_Ordinal;
       }
 
+      // If entry is exported by name
       bool ByName() const
       {
         return m_ByName;
       }
 
+      // If entry is forwarded
       bool Forwarded() const
       {
         return m_Forwarded;
       }
 
     private:
+      // PE file instance
       PeFile* m_pPeFile;
+      // Memory instance
       MemoryMgr* m_pMemory;
 
+      // RVA
       DWORD m_Rva;
+      // VA
       PVOID m_Va;
+      // Name
       std::string m_Name;
+      // Forwarder
       std::string m_Forwarder;
+      // Ordinal
       WORD m_Ordinal;
+      // If entry is exported by name
       bool m_ByName;
+      // If entry is forwarded
       bool m_Forwarded;
     };
   }
