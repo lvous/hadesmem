@@ -48,7 +48,11 @@ while MyMod do
 					HadesMem.WriteLn(MyExport:GetOrdinal() .. " -> " .. MyExport:GetName());
 				end
 			else
-				HadesMem.WriteLn("" .. MyExport:GetOrdinal());
+				if MyExport:Forwarded() then
+					HadesMem.WriteLn(MyExport:GetOrdinal() .. " -> " .. MyExport:GetForwarder());
+				else
+					HadesMem.WriteLn(MyExport:GetOrdinal() .. "");
+				end
 			end
 			MyExport = MyExportEnum:Next();
 		end
