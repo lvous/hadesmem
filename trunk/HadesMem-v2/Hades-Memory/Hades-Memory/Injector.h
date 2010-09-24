@@ -244,6 +244,7 @@ namespace Hades
       // Todo: Support 'breaking' the WoW64 barrier and injecting 
       // cross-architecture modules. (See "Heaven's Gate: 64-bit code in 
       // 32-bit file")
+      // Todo: Perform necessary adjustments to module base if necessary.
       HMODULE const hKernel32 = GetModuleHandleW(L"Kernel32.dll");
       if (!hKernel32)
       {
