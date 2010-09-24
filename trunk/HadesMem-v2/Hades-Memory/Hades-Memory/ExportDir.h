@@ -96,8 +96,6 @@ namespace Hades
       MemoryMgr* m_pMemory;
 
       // Base of export dir
-      // Mutable because it is initialized on-demand to avoid throwing in the 
-      // constructor.
       mutable PBYTE m_pBase;
     };
 
@@ -330,18 +328,17 @@ namespace Hades
         m_Ordinal = static_cast<WORD>(Number + MyExportDir.GetOrdinalBase());
 
         // Find ordinal name (and set if applicable)
-        // Todo: Find if there's a more efficient way to do this
         DWORD const NumberOfNames = MyExportDir.GetNumberOfNames();
-        for (std::size_t j = 0; j < NumberOfNames; ++j)
+        std::vector<WORD> NameOrdinals(m_pMemory->Read<std::vector<WORD>>(
+          pOrdinals, NumberOfNames));
+        auto NameOrdIter = std::find(NameOrdinals.begin(), NameOrdinals.end(), 
+          Number);
+        if (NameOrdIter != NameOrdinals.end())
         {
-          // Check if current entry matches target
-          if (m_pMemory->Read<WORD>(pOrdinals + j) == Number)
-          {
-            // Set export name
-            m_ByName = true;
-            m_Name = m_pMemory->Read<std::string>(m_pPeFile->GetBase() + 
-              m_pMemory->Read<DWORD>(pNames + j));
-          }
+          m_ByName = true;
+          m_Name = m_pMemory->Read<std::string>(m_pPeFile->GetBase() + 
+            m_pMemory->Read<DWORD>(pNames + std::distance(
+            NameOrdinals.begin(), NameOrdIter)));
         }
 
         // Get function RVA (unchecked)

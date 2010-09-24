@@ -539,16 +539,59 @@ namespace Hades
       enable_if<std::is_same<T, std::vector<typename T::value_type>>>::type* 
       /*Dummy*/) const
     {
-      // Create value type pointer
-      T::value_type* AddressReal(static_cast<T::value_type*>(Address));
+      // Calculate 'raw' size of data
+      std::size_t RawSize = Size * sizeof(T::value_type);
 
-      // Create buffer
-      T Buffer;
+      // Whether we can read the given address
+      bool const CanReadMem = CanRead(Address);
 
-      // Read data from memory
-      for (std::size_t i = 0; i < Size; ++i)
+      // Set page protection for reading
+      DWORD OldProtect = 0;
+      if (!CanReadMem)
       {
-        Buffer.push_back(this->Read<T::value_type>(AddressReal + i));
+        if (!VirtualProtectEx(m_Process.GetHandle(), Address, RawSize, 
+          PAGE_EXECUTE_READWRITE, &OldProtect))
+        {
+          DWORD const LastError = GetLastError();
+          BOOST_THROW_EXCEPTION(Error() << 
+            ErrorFunction("MemoryMgr::Read") << 
+            ErrorString("Could not change process memory protection.") << 
+            ErrorCodeWin(LastError));
+        }
+      }
+
+      // Read data
+      T Buffer(Size);
+      SIZE_T BytesRead = 0;
+      if (!ReadProcessMemory(m_Process.GetHandle(), Address, &Buffer[0], 
+        RawSize, &BytesRead) || BytesRead != RawSize)
+      {
+        if (!CanReadMem)
+        {
+          // Restore original page protections
+          VirtualProtectEx(m_Process.GetHandle(), Address, RawSize, 
+            OldProtect, &OldProtect);
+        }
+
+        DWORD const LastError = GetLastError();
+        BOOST_THROW_EXCEPTION(Error() << 
+          ErrorFunction("MemoryMgr::Read") << 
+          ErrorString("Could not read process memory.") << 
+          ErrorCodeWin(LastError));
+      }
+
+      // Restore original page protections
+      if (!CanReadMem)
+      {
+        if (!VirtualProtectEx(m_Process.GetHandle(), Address, RawSize, 
+          OldProtect, &OldProtect))
+        {
+          DWORD const LastError = GetLastError();
+          BOOST_THROW_EXCEPTION(Error() << 
+            ErrorFunction("MemoryMgr::Read") << 
+            ErrorString("Could not restore process memory protection.") << 
+            ErrorCodeWin(LastError));
+        }
       }
 
       // Return buffer
