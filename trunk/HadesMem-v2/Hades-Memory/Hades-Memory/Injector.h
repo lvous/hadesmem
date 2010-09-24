@@ -241,6 +241,9 @@ namespace Hades
       // mode and shims are enabled.
       // Todo: Support 'native' processes by using Ntdll.dll!LdrLoadDll 
       // to perform the injection instead.
+      // Todo: Support 'breaking' the WoW64 barrier and injecting 
+      // cross-architecture modules. (See "Heaven's Gate: 64-bit code in 
+      // 32-bit file")
       HMODULE const hKernel32 = GetModuleHandleW(L"Kernel32.dll");
       if (!hKernel32)
       {
