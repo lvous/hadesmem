@@ -323,6 +323,9 @@ namespace Hades
       // Memory instance
       MemoryMgr* m_pMemory;
 
+      // Base address
+      mutable PBYTE m_pBase;
+
       // Dos header
       DosHeader m_DosHeader;
     };
@@ -331,6 +334,7 @@ namespace Hades
     NtHeaders::NtHeaders(PeFile& MyPeFile)
       : m_pPeFile(&MyPeFile), 
       m_pMemory(&m_pPeFile->GetMemoryMgr()), 
+      m_pBase(nullptr), 
       m_DosHeader(MyPeFile)
     {
       // Ensure signature is valid
@@ -340,7 +344,14 @@ namespace Hades
     // Get base of NT headers
     PBYTE NtHeaders::GetBase() const
     {
-      return m_pPeFile->GetBase() + m_DosHeader.GetNewHeaderOffset();
+      // Initialize if necessary
+      if (!m_pBase)
+      {
+        m_pBase = m_pPeFile->GetBase() + m_DosHeader.GetNewHeaderOffset();
+      }
+
+      // Return base address
+      return m_pBase;
     }
 
     // Whether signature is valid

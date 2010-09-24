@@ -94,12 +94,18 @@ namespace Hades
 
       // Memory instance
       MemoryMgr* m_pMemory;
+
+      // Base of export dir
+      // Mutable because it is initialized on-demand to avoid throwing in the 
+      // constructor.
+      mutable PBYTE m_pBase;
     };
 
     // Constructor
     ExportDir::ExportDir(PeFile& MyPeFile)
       : m_pPeFile(&MyPeFile), 
-      m_pMemory(&m_pPeFile->GetMemoryMgr())
+      m_pMemory(&m_pPeFile->GetMemoryMgr()), 
+      m_pBase(nullptr)
     { }
 
     // Whether export directory is valid
@@ -232,25 +238,33 @@ namespace Hades
     // Get base of export dir
     PBYTE ExportDir::GetBase() const
     {
-      // Get PE file base
-      PBYTE const pBase = m_pPeFile->GetBase();
-
-      // Get NT headers
-      NtHeaders const MyNtHeaders(*m_pPeFile);
-
-      // Get export dir data
-      DWORD const DataDirSize = MyNtHeaders.GetDataDirectorySize(NtHeaders::
-        DataDir_Export);
-      DWORD const DataDirVa = MyNtHeaders.GetDataDirectoryVirtualAddress(
-        NtHeaders::DataDir_Export);
-      if (!DataDirSize || !DataDirVa)
+      // Initialize base address if necessary
+      if (!m_pBase)
       {
-        BOOST_THROW_EXCEPTION(Error() << 
-          ErrorFunction("ExportDir::GetBase") << 
-          ErrorString("PE file has no export directory."));
+        // Get PE file base
+        PBYTE const pBase = m_pPeFile->GetBase();
+
+        // Get NT headers
+        NtHeaders const MyNtHeaders(*m_pPeFile);
+
+        // Get export dir data
+        DWORD const DataDirSize = MyNtHeaders.GetDataDirectorySize(NtHeaders::
+          DataDir_Export);
+        DWORD const DataDirVa = MyNtHeaders.GetDataDirectoryVirtualAddress(
+          NtHeaders::DataDir_Export);
+        if (!DataDirSize || !DataDirVa)
+        {
+          BOOST_THROW_EXCEPTION(Error() << 
+            ErrorFunction("ExportDir::GetBase") << 
+            ErrorString("PE file has no export directory."));
+        }
+
+        // Init base address
+        m_pBase = pBase + DataDirVa;
       }
 
-      return pBase + DataDirVa;
+      // Return base address
+      return m_pBase;
     }
 
     // Get raw export dir
@@ -317,7 +331,8 @@ namespace Hades
 
         // Find ordinal name (and set if applicable)
         // Todo: Find if there's a more efficient way to do this
-        for (std::size_t j = 0; j < MyExportDir.GetNumberOfNames(); ++j)
+        DWORD const NumberOfNames = MyExportDir.GetNumberOfNames();
+        for (std::size_t j = 0; j < NumberOfNames; ++j)
         {
           // Check if current entry matches target
           if (m_pMemory->Read<WORD>(pOrdinals + j) == Number)
