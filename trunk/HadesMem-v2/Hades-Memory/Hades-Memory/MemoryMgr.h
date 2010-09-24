@@ -243,6 +243,9 @@ namespace Hades
     }
 
     // Call remote function
+    // Todo: Support hijacking existing thread (rather than creating new one).
+    // Todo: Support 'breaking' the WoW64 barrier and creating threads in 
+    // cross-architecture situations.
     DWORD MemoryMgr::Call(PVOID Address, std::vector<PVOID> const& Args, 
       CallConv MyCallConv) const 
     {

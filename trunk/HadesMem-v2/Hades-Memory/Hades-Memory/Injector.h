@@ -187,6 +187,7 @@ namespace Hades
     { }
 
     // Inject DLL
+    // Todo: Support IAT-based injection.
     HMODULE Injector::InjectDll(boost::filesystem::path const& Path, 
       bool PathResolution) const
     {
