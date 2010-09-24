@@ -236,14 +236,29 @@ namespace Hades
       // Copy the DLL's pathname to the remote process' address space
       m_pMemory->Write(LibFileRemote.GetAddress(), PathReal.wstring());
 
-      // Get the real address of LoadLibraryW in Kernel32.dll
+      // Get address of LoadLibraryW in Kernel32.dll
       // Todo: Handle case where target is running under compatibility 
       // mode and shims are enabled.
       // Todo: Support 'native' processes by using Ntdll.dll!LdrLoadDll 
       // to perform the injection instead.
-      Module Kernel32ModRemote(*m_pMemory, L"kernel32.dll");
-      FARPROC pLoadLibraryW = m_pMemory->GetRemoteProcAddress(
-        Kernel32ModRemote.GetBase(), L"kernel32.dll", "LoadLibraryW");
+      HMODULE const hKernel32 = GetModuleHandleW(L"Kernel32.dll");
+      if (!hKernel32)
+      {
+        DWORD const LastError = GetLastError();
+        BOOST_THROW_EXCEPTION(Error() << 
+          ErrorFunction("Injector::InjectDll") << 
+          ErrorString("Could not get handle to Kernel32.") << 
+          ErrorCodeWin(LastError));
+      }
+      FARPROC const pLoadLibraryW = GetProcAddress(hKernel32, "LoadLibraryW");
+      if (!pLoadLibraryW)
+      {
+        DWORD const LastError = GetLastError();
+        BOOST_THROW_EXCEPTION(Error() << 
+          ErrorFunction("Injector::InjectDll") << 
+          ErrorString("Could not get pointer to LoadLibraryW.") << 
+          ErrorCodeWin(LastError));
+      }
 
       // Load module in remote process using LoadLibraryW
       std::vector<PVOID> Args;
