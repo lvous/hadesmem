@@ -49,7 +49,7 @@ namespace Hades
   namespace Memory
   {
     // DLL injection class
-    class Injector
+    class Injector : private boost::noncopyable
     {
     public:
       // Injector exception type
@@ -73,7 +73,7 @@ namespace Hades
     };
     
     // Data returned by CreateAndInject API
-    struct CreateAndInjectData
+    struct CreateAndInjectData : private boost::noncopyable
     {
       CreateAndInjectData() 
         : pMemory(), 

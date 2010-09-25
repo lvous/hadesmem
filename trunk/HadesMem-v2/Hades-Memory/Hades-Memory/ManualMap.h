@@ -41,7 +41,7 @@ namespace Hades
   namespace Memory
   {
     // Manual mapping class
-    class ManualMap
+    class ManualMap : private boost::noncopyable
     {
     public:
       // ManualMap exception type

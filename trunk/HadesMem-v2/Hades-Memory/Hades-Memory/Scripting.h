@@ -209,7 +209,7 @@ namespace Hades
     };
 
     // Lua managing class
-    class LuaMgr
+    class LuaMgr : private boost::noncopyable
     {
     public:
       // Lua exception type

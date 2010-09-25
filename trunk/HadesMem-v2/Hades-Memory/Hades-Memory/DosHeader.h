@@ -30,7 +30,7 @@ namespace Hades
   namespace Memory
   {
     // PE file DOS header
-    class DosHeader
+    class DosHeader : private boost::noncopyable
     {
     public:
       // DOS header error class

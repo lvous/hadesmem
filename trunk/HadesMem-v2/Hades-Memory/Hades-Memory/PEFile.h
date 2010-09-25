@@ -31,7 +31,7 @@ namespace Hades
   namespace Memory
   {
     // PE file format wrapper
-    class PeFile
+    class PeFile : private boost::noncopyable
     {
     public:
       // PeFile exception type

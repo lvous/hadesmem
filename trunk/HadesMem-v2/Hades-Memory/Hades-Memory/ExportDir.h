@@ -33,7 +33,7 @@ namespace Hades
   namespace Memory
   {
     // PE file export directory
-    class ExportDir
+    class ExportDir : private boost::noncopyable
     {
     public:
       // ExportDir error class

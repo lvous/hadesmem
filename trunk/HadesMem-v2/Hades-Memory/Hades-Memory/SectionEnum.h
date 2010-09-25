@@ -36,7 +36,7 @@ namespace Hades
   namespace Memory
   {
     // Section enumerator
-    class SectionEnum
+    class SectionEnum : private boost::noncopyable
     {
     public:
       // Constructor
@@ -72,7 +72,8 @@ namespace Hades
 
       // Section iterator
       class SectionIter : public boost::iterator_facade<SectionIter, 
-        std::unique_ptr<Section>, boost::incrementable_traversal_tag>
+        std::unique_ptr<Section>, boost::incrementable_traversal_tag>,  
+        private boost::noncopyable
       {
       public:
         // Constructor

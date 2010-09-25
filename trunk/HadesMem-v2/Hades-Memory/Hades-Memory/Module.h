@@ -43,7 +43,7 @@ namespace Hades
   namespace Memory
   {
     // Module managing class
-    class Module
+    class Module : private boost::noncopyable
     {
     public:
       // Module exception type

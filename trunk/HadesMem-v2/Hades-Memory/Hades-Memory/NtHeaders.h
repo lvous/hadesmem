@@ -28,7 +28,7 @@ namespace Hades
   namespace Memory
   {
     // PE file NT headers
-    class NtHeaders
+    class NtHeaders : private boost::noncopyable
     {
     public:
       // NT headers error class

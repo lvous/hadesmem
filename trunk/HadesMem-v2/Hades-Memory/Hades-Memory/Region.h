@@ -40,7 +40,7 @@ namespace Hades
   namespace Memory
   {
     // Memory region managing class
-    class Region
+    class Region : private boost::noncopyable
     {
     public:
       // MemRegion exception type

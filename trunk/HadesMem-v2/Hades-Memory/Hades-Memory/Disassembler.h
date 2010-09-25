@@ -51,7 +51,7 @@ namespace Hades
     };
 
     // Disassembler managing class
-    class Disassembler
+    class Disassembler : private boost::noncopyable
     {
     public:
       // Disassembler exception type

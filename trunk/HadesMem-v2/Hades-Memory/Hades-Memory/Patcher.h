@@ -41,7 +41,7 @@ namespace Hades
   {
     // Patch class.
     // Abstract base class for different patch types.
-    class Patch
+    class Patch : private boost::noncopyable
     {
     public:
       // Patch exception type

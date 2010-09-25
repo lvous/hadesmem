@@ -36,7 +36,7 @@ namespace Hades
   namespace Memory
   {
     // Export enumerator
-    class ExportEnum
+    class ExportEnum : private boost::noncopyable
     {
     public:
       // Constructor
@@ -72,7 +72,8 @@ namespace Hades
 
       // Section iterator
       class ExportIter : public boost::iterator_facade<ExportIter, 
-        std::unique_ptr<Export>, boost::incrementable_traversal_tag>
+        std::unique_ptr<Export>, boost::incrementable_traversal_tag>, 
+        private boost::noncopyable
       {
       public:
         // Constructor

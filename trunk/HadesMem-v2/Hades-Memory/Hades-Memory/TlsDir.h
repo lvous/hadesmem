@@ -33,7 +33,7 @@ namespace Hades
   namespace Memory
   {
     // PE file TLS directory
-    class TlsDir
+    class TlsDir : private boost::noncopyable
     {
     public:
       // TlsDir error class

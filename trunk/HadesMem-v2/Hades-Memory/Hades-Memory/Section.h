@@ -28,7 +28,7 @@ namespace Hades
   namespace Memory
   {
     // PE file section
-    class Section
+    class Section : private boost::noncopyable
     {
     public:
       // Section error class
