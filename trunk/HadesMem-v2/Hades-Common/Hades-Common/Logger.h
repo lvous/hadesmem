@@ -100,18 +100,20 @@ namespace Hades
         std::wstring const& Filename)
       {
         // Get local time
-        auto const Time(boost::posix_time::second_clock::local_time());
+        boost::posix_time::ptime const Time(boost::posix_time::second_clock::
+          local_time());
         // Convert time to string YYYY-MM-DDTHH:MM:SS
-        auto TimeStr(boost::posix_time::to_iso_extended_wstring(Time));
+        std::basic_string<char_type> TimeStr(boost::posix_time::
+          to_iso_extended_wstring(Time));
         // Reformat time YYYY-MM-DD_HH-MM-SS
         TimeStr[10] = '_'; TimeStr[13] = '-'; TimeStr[16] = '-';
 
         // Generate file path relative to initial directory
-        auto const LogFile((boost::wformat(L"%s-%s.log") %Filename %TimeStr).
-          str());
+        std::wstring const LogFile((boost::wformat(L"%s-%s.log") %Filename 
+          %TimeStr).str());
 
         // Make full path to log file
-        auto const LogPath(LogDirPath / LogFile);
+        boost::filesystem::path const LogPath(LogDirPath / LogFile);
 
         // Return path to log file
         return LogPath.wstring();
@@ -121,10 +123,11 @@ namespace Hades
       std::streamsize write(const char_type* s, std::streamsize n)
       {
         // Get time
-        auto const Time(boost::posix_time::second_clock::local_time());
+        boost::posix_time::ptime const Time(boost::posix_time::second_clock::
+          local_time());
         // Convert time to string YYYY-MM-DDTHH:MM:SS
-        auto TimeStr(boost::posix_time::to_iso_extended_string_type<char_type>(
-          Time));
+        std::basic_string<char_type> TimeStr(boost::posix_time::
+          to_iso_extended_string_type<char_type>(Time));
         // Reformat time YYYY-MM-DD_HH-MM-SS
         TimeStr[10] = '_'; TimeStr[13] = '-'; TimeStr[16] = '-';
 
@@ -163,10 +166,10 @@ namespace Hades
       }
 
       // Path to self dir
-      auto const SelfDirPath(Windows::GetSelfDirPath());
+      boost::filesystem::path const SelfDirPath(Windows::GetSelfDirPath());
 
       // Ensure Logs directory exists
-      auto const LogsPath(SelfDirPath / L"/Logs/");
+      boost::filesystem::path const LogsPath(SelfDirPath / L"/Logs/");
       boost::filesystem::create_directory(LogsPath);
 
       // Redirect standard output streams to file
