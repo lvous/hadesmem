@@ -103,10 +103,9 @@ namespace Hades
         boost::posix_time::ptime const Time(boost::posix_time::second_clock::
           local_time());
         // Convert time to string YYYY-MM-DDTHH:MM:SS
-        std::basic_string<char_type> TimeStr(boost::posix_time::
-          to_iso_extended_wstring(Time));
+        std::wstring TimeStr(boost::posix_time::to_iso_extended_wstring(Time));
         // Reformat time YYYY-MM-DD_HH-MM-SS
-        TimeStr[10] = '_'; TimeStr[13] = '-'; TimeStr[16] = '-';
+        TimeStr[10] = L'_'; TimeStr[13] = L'-'; TimeStr[16] = L'-';
 
         // Generate file path relative to initial directory
         std::wstring const LogFile((boost::wformat(L"%s-%s.log") %Filename 
