@@ -57,17 +57,7 @@ extern "C"
 // Hades
 #include "PeLib.h"
 #include "Memory.h"
-#include "TlsWrap.h"
-#include "PeFileWrap.h"
-#include "ModuleWrap.h" 
-#include "RegionWrap.h"
-#include "ExportWrap.h"
-#include "SectionWrap.h"
-#include "ScannerWrap.h"
-#include "InjectorWrap.h"
-#include "ManualMapWrap.h"
-#include "MemoryMgrWrap.h"
-#include "DisassemblerWrap.h"
+#include "Wrappers.h"
 #include "Hades-Common/I18n.h"
 
 // LuaBind extensions for 64-bit number support

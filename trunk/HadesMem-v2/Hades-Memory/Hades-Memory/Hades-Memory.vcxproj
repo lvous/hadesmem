@@ -55,6 +55,7 @@
     <ClInclude Include="TlsDir.h" />
     <ClInclude Include="TlsWrap.h" />
     <ClInclude Include="Types.h" />
+    <ClInclude Include="Wrappers.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{DBCCB990-E271-4263-9460-F9C56152DB7F}</ProjectGuid>

@@ -140,5 +140,8 @@
     <ClInclude Include="TlsWrap.h">
       <Filter>Header Files\Scripting\Wrappers\PELib</Filter>
     </ClInclude>
+    <ClInclude Include="Wrappers.h">
+      <Filter>Header Files\Scripting\Wrappers</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
