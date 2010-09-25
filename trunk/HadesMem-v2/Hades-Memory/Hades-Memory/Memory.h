@@ -32,5 +32,5 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // HadesMem (Internal)
 #include "Patcher.h"
 
-// HadesMem (PELib)
+// HadesMem (PeLib)
 #include "PeLib.h"

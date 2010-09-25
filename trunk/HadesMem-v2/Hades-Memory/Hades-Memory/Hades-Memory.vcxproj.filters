@@ -28,11 +28,11 @@
     <Filter Include="Header Files\Scripting\Wrappers">
       <UniqueIdentifier>{5df4394a-3100-4d90-8f3d-2f0f47ccdef8}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\External\PELib">
-      <UniqueIdentifier>{a75eed69-0702-4e0e-89da-75edacd4c485}</UniqueIdentifier>
+    <Filter Include="Header Files\External\PeLib">
+      <UniqueIdentifier>{ddcd7702-c910-4e83-9b85-d08684a05d87}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Scripting\Wrappers\PELib">
-      <UniqueIdentifier>{f57c58cf-8d53-4db6-a6d7-b090d65c22f8}</UniqueIdentifier>
+    <Filter Include="Header Files\Scripting\Wrappers\PeLib">
+      <UniqueIdentifier>{22f7bc4d-3eb0-42c6-ad60-11a9eb080334}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -80,12 +80,6 @@
     <ClInclude Include="Patcher.h">
       <Filter>Header Files\Internal</Filter>
     </ClInclude>
-    <ClInclude Include="DosHeader.h">
-      <Filter>Header Files\External\PELib</Filter>
-    </ClInclude>
-    <ClInclude Include="PeFile.h">
-      <Filter>Header Files\External\PELib</Filter>
-    </ClInclude>
     <ClInclude Include="DisassemblerWrap.h">
       <Filter>Header Files\Scripting\Wrappers</Filter>
     </ClInclude>
@@ -107,41 +101,47 @@
     <ClInclude Include="ScannerWrap.h">
       <Filter>Header Files\Scripting\Wrappers</Filter>
     </ClInclude>
-    <ClInclude Include="NtHeaders.h">
-      <Filter>Header Files\External\PELib</Filter>
-    </ClInclude>
-    <ClInclude Include="PeFileWrap.h">
-      <Filter>Header Files\Scripting\Wrappers\PELib</Filter>
-    </ClInclude>
-    <ClInclude Include="Section.h">
-      <Filter>Header Files\External\PELib</Filter>
-    </ClInclude>
-    <ClInclude Include="SectionEnum.h">
-      <Filter>Header Files\External\PELib</Filter>
-    </ClInclude>
-    <ClInclude Include="PeLib.h">
-      <Filter>Header Files\External\PELib</Filter>
-    </ClInclude>
-    <ClInclude Include="ExportDir.h">
-      <Filter>Header Files\External\PELib</Filter>
-    </ClInclude>
-    <ClInclude Include="SectionWrap.h">
-      <Filter>Header Files\Scripting\Wrappers\PELib</Filter>
-    </ClInclude>
-    <ClInclude Include="ExportWrap.h">
-      <Filter>Header Files\Scripting\Wrappers\PELib</Filter>
-    </ClInclude>
-    <ClInclude Include="ExportEnum.h">
-      <Filter>Header Files\External\PELib</Filter>
-    </ClInclude>
-    <ClInclude Include="TlsDir.h">
-      <Filter>Header Files\External\PELib</Filter>
-    </ClInclude>
-    <ClInclude Include="TlsWrap.h">
-      <Filter>Header Files\Scripting\Wrappers\PELib</Filter>
-    </ClInclude>
     <ClInclude Include="Wrappers.h">
       <Filter>Header Files\Scripting\Wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="TlsDir.h">
+      <Filter>Header Files\External\PeLib</Filter>
+    </ClInclude>
+    <ClInclude Include="ExportDir.h">
+      <Filter>Header Files\External\PeLib</Filter>
+    </ClInclude>
+    <ClInclude Include="ExportEnum.h">
+      <Filter>Header Files\External\PeLib</Filter>
+    </ClInclude>
+    <ClInclude Include="NtHeaders.h">
+      <Filter>Header Files\External\PeLib</Filter>
+    </ClInclude>
+    <ClInclude Include="PeFile.h">
+      <Filter>Header Files\External\PeLib</Filter>
+    </ClInclude>
+    <ClInclude Include="PeLib.h">
+      <Filter>Header Files\External\PeLib</Filter>
+    </ClInclude>
+    <ClInclude Include="Section.h">
+      <Filter>Header Files\External\PeLib</Filter>
+    </ClInclude>
+    <ClInclude Include="SectionEnum.h">
+      <Filter>Header Files\External\PeLib</Filter>
+    </ClInclude>
+    <ClInclude Include="DosHeader.h">
+      <Filter>Header Files\External\PeLib</Filter>
+    </ClInclude>
+    <ClInclude Include="TlsWrap.h">
+      <Filter>Header Files\Scripting\Wrappers\PeLib</Filter>
+    </ClInclude>
+    <ClInclude Include="ExportWrap.h">
+      <Filter>Header Files\Scripting\Wrappers\PeLib</Filter>
+    </ClInclude>
+    <ClInclude Include="PeFileWrap.h">
+      <Filter>Header Files\Scripting\Wrappers\PeLib</Filter>
+    </ClInclude>
+    <ClInclude Include="SectionWrap.h">
+      <Filter>Header Files\Scripting\Wrappers\PeLib</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
