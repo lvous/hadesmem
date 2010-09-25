@@ -188,6 +188,15 @@ namespace Hades
 
     // Inject DLL
     // Todo: Support IAT-based injection.
+    // Todo: Handle case where target is running under compatibility 
+    // mode and shims are enabled.
+    // Todo: Support 'native' processes by using Ntdll.dll!LdrLoadDll 
+    // to perform the injection instead.
+    // Todo: Support 'breaking' the WoW64 barrier and injecting 
+    // cross-architecture modules. (See "Heaven's Gate: 64-bit code in 
+    // 32-bit file")
+    // Todo: Perform necessary adjustments to module base if necessary.
+    // Todo: Support 'breaking' the session barrier.
     HMODULE Injector::InjectDll(boost::filesystem::path const& Path, 
       bool PathResolution) const
     {
@@ -238,14 +247,6 @@ namespace Hades
       m_pMemory->Write(LibFileRemote.GetAddress(), PathReal.wstring());
 
       // Get address of LoadLibraryW in Kernel32.dll
-      // Todo: Handle case where target is running under compatibility 
-      // mode and shims are enabled.
-      // Todo: Support 'native' processes by using Ntdll.dll!LdrLoadDll 
-      // to perform the injection instead.
-      // Todo: Support 'breaking' the WoW64 barrier and injecting 
-      // cross-architecture modules. (See "Heaven's Gate: 64-bit code in 
-      // 32-bit file")
-      // Todo: Perform necessary adjustments to module base if necessary.
       HMODULE const hKernel32 = GetModuleHandleW(L"Kernel32.dll");
       if (!hKernel32)
       {
