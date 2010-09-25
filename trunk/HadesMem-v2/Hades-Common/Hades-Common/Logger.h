@@ -175,11 +175,11 @@ namespace Hades
       // Redirect standard output streams to file
       if (!OutName.empty())
       {
-        static Logger<char>::Stream AnsiStream;
-        static Logger<wchar_t>::Stream WideStream;
-        AnsiStream.open(Logger<char>(LogsPath, OutName));
+        static Logger<char> AnsiLogger(LogsPath, OutName);
+        static Logger<char>::Stream AnsiStream(AnsiLogger);
+        static Logger<wchar_t> WideLogger(LogsPath, OutName);
+        static Logger<wchar_t>::Stream WideStream(WideLogger);
         std::cout.rdbuf(AnsiStream.rdbuf());
-        WideStream.open(Logger<wchar_t>(LogsPath, OutName));
         std::wcout.rdbuf(WideStream.rdbuf());
 
         std::wcout << "Logger initialized." << std::endl;
@@ -188,12 +188,12 @@ namespace Hades
       // Redirect standard log output streams to file
       if (!LogName.empty())
       {
-        static Logger<char>::Stream AnsiStream;
-        static Logger<wchar_t>::Stream WideStream;
-        AnsiStream.open(Logger<char>(LogsPath, LogName));
-        std::clog.rdbuf(AnsiStream.rdbuf());
-        WideStream.open(Logger<wchar_t>(LogsPath, LogName));
-        std::wclog.rdbuf(WideStream.rdbuf());
+        static Logger<char> AnsiLogger(LogsPath, LogName);
+        static Logger<char>::Stream AnsiStream(AnsiLogger);
+        static Logger<wchar_t> WideLogger(LogsPath, LogName);
+        static Logger<wchar_t>::Stream WideStream(WideLogger);
+        std::cout.rdbuf(AnsiStream.rdbuf());
+        std::wcout.rdbuf(WideStream.rdbuf());
 
         std::wclog << "Logger initialized." << std::endl;
       }
