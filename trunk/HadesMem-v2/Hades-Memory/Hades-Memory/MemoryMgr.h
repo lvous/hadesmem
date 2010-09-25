@@ -676,16 +676,59 @@ namespace Hades
       enable_if<std::is_same<T, std::vector<typename T::value_type>>>::type* 
       /*Dummy*/) const
     {
-      // Create value type pointer
-      T::value_type* AddressReal = static_cast<T::value_type*>(Address);
+      // Calculate 'raw' size of data
+      std::size_t RawSize = Data.size() * sizeof(T::value_type);
 
-      // Write all data in buffer to memory
-      std::for_each(Data.cbegin(), Data.cend(), 
-        [&] (T::value_type const& Current) 
+      // Whether we can write to the given address
+      bool const CanWriteMem = CanWrite(Address);
+
+      // Set page protection for writing
+      DWORD OldProtect = 0;
+      if (!CanWriteMem)
       {
-        // Write current character to memory
-        this->Write(AddressReal++, Current);
-      });
+        if (!VirtualProtectEx(m_Process.GetHandle(), Address, RawSize, 
+          PAGE_EXECUTE_READWRITE, &OldProtect))
+        {
+          DWORD const LastError = GetLastError();
+          BOOST_THROW_EXCEPTION(Error() << 
+            ErrorFunction("MemoryMgr::Write") << 
+            ErrorString("Could not change process memory protection.") << 
+            ErrorCodeWin(LastError));
+        }
+      }
+
+      // Read data
+      SIZE_T BytesWritten = 0;
+      if (!WriteProcessMemory(m_Process.GetHandle(), Address, &Data[0], 
+        RawSize, &BytesWritten) || BytesWritten != RawSize)
+      {
+        if (!CanWriteMem)
+        {
+          // Restore original page protections
+          VirtualProtectEx(m_Process.GetHandle(), Address, RawSize, 
+            OldProtect, &OldProtect);
+        }
+
+        DWORD const LastError = GetLastError();
+        BOOST_THROW_EXCEPTION(Error() << 
+          ErrorFunction("MemoryMgr::Write") << 
+          ErrorString("Could not read process memory.") << 
+          ErrorCodeWin(LastError));
+      }
+
+      // Restore original page protections
+      if (!CanWriteMem)
+      {
+        if (!VirtualProtectEx(m_Process.GetHandle(), Address, RawSize, 
+          OldProtect, &OldProtect))
+        {
+          DWORD const LastError = GetLastError();
+          BOOST_THROW_EXCEPTION(Error() << 
+            ErrorFunction("MemoryMgr::Write") << 
+            ErrorString("Could not restore process memory protection.") << 
+            ErrorCodeWin(LastError));
+        }
+      }
     }
 
     // Whether an address is currently readable
