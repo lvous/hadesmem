@@ -10,6 +10,9 @@ MyModEnum = HadesMem.ModuleEnum(MyMem)
 MyMod = MyModEnum:First();
 
 while MyMod do
+	HadesMem.WriteLn("");
+	HadesMem.WriteLn("Module Name: " .. MyMod:GetName());
+	
 	MyPeFile = HadesMem.PeFile(MyMem, MyMod:GetBase());
 	MyDosHeader = HadesMem.DosHeader(MyPeFile);
 	MyNtHeaders = HadesMem.NtHeaders(MyPeFile);
@@ -39,7 +42,7 @@ while MyMod do
 	MyExportDir = HadesMem.ExportDir(MyPeFile);
 	if MyExportDir:IsValid() then
 		HadesMem.WriteLn("");
-		HadesMem.WriteLn("Export dir module name: " .. MyExportDir:GetName());
+		HadesMem.WriteLn("Export Dir Module Name: " .. MyExportDir:GetName());
 		
 		HadesMem.WriteLn("");
 		HadesMem.WriteLn("Dumping exports.");
