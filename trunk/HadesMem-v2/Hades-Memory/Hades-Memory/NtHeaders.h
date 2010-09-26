@@ -669,7 +669,7 @@ namespace Hades
     DWORD NtHeaders::GetAddressOfEntryPoint() const
     {
       return m_pMemory->Read<DWORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
-        OptionalHeader.SizeOfUninitializedData));
+        OptionalHeader.AddressOfEntryPoint));
     }
 
     // Set address of entry point
