@@ -366,7 +366,8 @@ namespace Hades
             static_cast<DWORD>(pThunkData->u1.AddressOfData)));
 
           // Get name of function
-          std::string const ImpName(reinterpret_cast<char*>(pNameImport->Name));
+          std::string const ImpName(reinterpret_cast<char*>(pNameImport->
+            Name));
           std::cout << "Function Name: " << ImpName << "." << std::endl;
 
           // Get function address in remote process
