@@ -41,6 +41,33 @@ namespace Hades
       // Get name
       inline std::string GetName() const;
 
+      // Get virtual address
+      inline DWORD GetVirtualAddress() const;
+
+      // Get virtual size
+      inline DWORD GetVirtualSize() const;
+
+      // Get size of raw data
+      inline DWORD GetSizeOfRawData() const;
+
+      // Get pointer to raw data
+      inline DWORD GetPointerToRawData() const;
+
+      // Get pointer to relocations
+      inline DWORD GetPointerToRelocations() const;
+
+      // Get pointer to line numbers
+      inline DWORD GetPointerToLinenumbers() const;
+
+      // Get number of relocations
+      inline WORD GetNumberOfRelocations() const;
+
+      // Get number of line numbers
+      inline WORD GetNumberOfLinenumbers() const;
+
+      // Get characteristics
+      inline DWORD GetCharacteristics() const;
+
       // Get section header base
       inline PBYTE GetBase() const;
 
@@ -86,6 +113,78 @@ namespace Hades
       return Name;
     }
 
+    // Get virtual address
+    DWORD Section::GetVirtualAddress() const
+    {
+      PBYTE const pSection = GetBase();
+      return m_pMemory->Read<DWORD>(pSection + FIELD_OFFSET(
+        IMAGE_SECTION_HEADER, VirtualAddress));
+    }
+
+    // Get virtual size
+    DWORD Section::GetVirtualSize() const
+    {
+      PBYTE const pSection = GetBase();
+      return m_pMemory->Read<DWORD>(pSection + FIELD_OFFSET(
+        IMAGE_SECTION_HEADER, Misc.VirtualSize));
+    }
+
+    // Get size of raw data
+    DWORD Section::GetSizeOfRawData() const
+    {
+      PBYTE const pSection = GetBase();
+      return m_pMemory->Read<DWORD>(pSection + FIELD_OFFSET(
+        IMAGE_SECTION_HEADER, SizeOfRawData));
+    }
+
+    // Get pointer to raw data
+    DWORD Section::GetPointerToRawData() const
+    {
+      PBYTE const pSection = GetBase();
+      return m_pMemory->Read<DWORD>(pSection + FIELD_OFFSET(
+        IMAGE_SECTION_HEADER, PointerToRawData));
+    }
+
+    // Get pointer to relocations
+    DWORD Section::GetPointerToRelocations() const
+    {
+      PBYTE const pSection = GetBase();
+      return m_pMemory->Read<DWORD>(pSection + FIELD_OFFSET(
+        IMAGE_SECTION_HEADER, PointerToRelocations));
+    }
+
+    // Get pointer to line numbers
+    DWORD Section::GetPointerToLinenumbers() const
+    {
+      PBYTE const pSection = GetBase();
+      return m_pMemory->Read<DWORD>(pSection + FIELD_OFFSET(
+        IMAGE_SECTION_HEADER, PointerToLinenumbers));
+    }
+
+    // Get number of relocations
+    WORD Section::GetNumberOfRelocations() const
+    {
+      PBYTE const pSection = GetBase();
+      return m_pMemory->Read<WORD>(pSection + FIELD_OFFSET(
+        IMAGE_SECTION_HEADER, NumberOfRelocations));
+    }
+
+    // Get number of line numbers
+    WORD Section::GetNumberOfLinenumbers() const
+    {
+      PBYTE const pSection = GetBase();
+      return m_pMemory->Read<WORD>(pSection + FIELD_OFFSET(
+        IMAGE_SECTION_HEADER, NumberOfLinenumbers));
+    }
+
+    // Get characteristics
+    DWORD Section::GetCharacteristics() const
+    {
+      PBYTE const pSection = GetBase();
+      return m_pMemory->Read<DWORD>(pSection + FIELD_OFFSET(
+        IMAGE_SECTION_HEADER, Characteristics));
+    }
+
     // Get section header base
     PBYTE Section::GetBase() const
     {
@@ -108,9 +207,9 @@ namespace Hades
 
       // Get pointer to first section
       PIMAGE_SECTION_HEADER pSectionHeader = 
-        reinterpret_cast<PIMAGE_SECTION_HEADER>(pNtHeaders + sizeof(
-        NtHeadersRaw.FileHeader) + sizeof(NtHeadersRaw.Signature) + 
-        NtHeadersRaw.FileHeader.SizeOfOptionalHeader);
+        reinterpret_cast<PIMAGE_SECTION_HEADER>(pNtHeaders + FIELD_OFFSET(
+        IMAGE_NT_HEADERS, OptionalHeader) + NtHeadersRaw.FileHeader.
+        SizeOfOptionalHeader);
 
       // Adjust pointer to target section
       pSectionHeader += m_SectionNum;
