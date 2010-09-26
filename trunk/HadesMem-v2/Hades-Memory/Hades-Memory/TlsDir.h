@@ -176,8 +176,8 @@ namespace Hades
 
       // Get pointer to callback list
       PIMAGE_TLS_CALLBACK* pCallbacks = reinterpret_cast<PIMAGE_TLS_CALLBACK*>(
-        m_pPeFile->GetBase() + GetAddressOfCallBacks() - MyNtHeaders.
-        GetImageBase());
+        m_pPeFile->RvaToVa(static_cast<DWORD>(GetAddressOfCallBacks() - 
+        MyNtHeaders.GetImageBase())));
 
       // Loop over all callbacks
       for (PIMAGE_TLS_CALLBACK pCallback = m_pMemory->
@@ -197,9 +197,6 @@ namespace Hades
     // Get base of export dir
     PBYTE TlsDir::GetBase() const
     {
-      // Get PE file base
-      PBYTE const pBase = m_pPeFile->GetBase();
-
       // Get NT headers
       NtHeaders const MyNtHeaders(*m_pPeFile);
 
@@ -215,7 +212,7 @@ namespace Hades
           ErrorString("PE file has no TLS directory."));
       }
 
-      return pBase + DataDirVa;
+      return static_cast<PBYTE>(m_pPeFile->RvaToVa(DataDirVa));
     }
 
     // Get raw TLS dir
