@@ -113,9 +113,9 @@ namespace Hades
 
       // Get first section header
       PIMAGE_SECTION_HEADER pSectionHeader = 
-        reinterpret_cast<PIMAGE_SECTION_HEADER>(pNtHeaders + 
-        sizeof(NtHeadersRaw.FileHeader) + sizeof(NtHeadersRaw.Signature) + 
-        NtHeadersRaw.FileHeader.SizeOfOptionalHeader);
+        reinterpret_cast<PIMAGE_SECTION_HEADER>(pNtHeaders + FIELD_OFFSET(
+        IMAGE_NT_HEADERS, OptionalHeader) + NtHeadersRaw.FileHeader.
+        SizeOfOptionalHeader);
       IMAGE_SECTION_HEADER SectionHeader = MyMemory->
         Read<IMAGE_SECTION_HEADER>(pSectionHeader);
 
@@ -127,11 +127,11 @@ namespace Hades
       {
         // If RVA is in target file/raw data region perform adjustments to 
         // turn it into a VA.
-        if (SectionHeader.PointerToRawData <= Rva && (SectionHeader.
-          PointerToRawData + SectionHeader.SizeOfRawData) > Rva)
+        if (SectionHeader.VirtualAddress <= Rva && (SectionHeader.
+          VirtualAddress + SectionHeader.Misc.VirtualSize) > Rva)
         {
-          Rva -= SectionHeader.PointerToRawData;
-          Rva += SectionHeader.VirtualAddress;
+          Rva -= SectionHeader.VirtualAddress;
+          Rva += SectionHeader.PointerToRawData;
 
           return GetBase() + Rva;
         }
