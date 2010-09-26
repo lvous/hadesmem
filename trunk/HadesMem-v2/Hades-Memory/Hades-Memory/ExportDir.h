@@ -182,7 +182,7 @@ namespace Hades
       }
 
       // Read module name
-      return m_pMemory->Read<std::string>(m_pPeFile->GetBase() + NameRva);
+      return m_pMemory->Read<std::string>(m_pPeFile->RvaToVa(NameRva));
     }
 
     // Get ordinal base
@@ -239,9 +239,6 @@ namespace Hades
       // Initialize base address if necessary
       if (!m_pBase)
       {
-        // Get PE file base
-        PBYTE const pBase = m_pPeFile->GetBase();
-
         // Get NT headers
         NtHeaders const MyNtHeaders(*m_pPeFile);
 
@@ -258,7 +255,7 @@ namespace Hades
         }
 
         // Init base address
-        m_pBase = pBase + DataDirVa;
+        m_pBase = static_cast<PBYTE>(m_pPeFile->RvaToVa(DataDirVa));
       }
 
       // Return base address
@@ -303,14 +300,14 @@ namespace Hades
         }
 
         // Get pointer to function name ordinals
-        WORD* pOrdinals = reinterpret_cast<WORD*>(m_pPeFile->GetBase() + 
-          MyExportDir.GetAddressOfNameOrdinals());
+        WORD* pOrdinals = static_cast<WORD*>(m_pPeFile->RvaToVa(MyExportDir.
+          GetAddressOfNameOrdinals()));
         // Get pointer to functions
-        DWORD* pFunctions = reinterpret_cast<DWORD*>(m_pPeFile->GetBase() + 
-          MyExportDir.GetAddressOfFunctions());
+        DWORD* pFunctions = static_cast<DWORD*>(m_pPeFile->RvaToVa(MyExportDir.
+          GetAddressOfFunctions()));
         // Get pointer to function names
-        DWORD* pNames = reinterpret_cast<DWORD*>(m_pPeFile->GetBase() + 
-          MyExportDir.GetAddressOfNames());
+        DWORD* pNames = static_cast<DWORD*>(m_pPeFile->RvaToVa(MyExportDir.
+          GetAddressOfNames()));
 
         // Get data directory size
         DWORD const DataDirSize = MyNtHeaders.GetDataDirectorySize(NtHeaders::
@@ -336,9 +333,9 @@ namespace Hades
         if (NameOrdIter != NameOrdinals.end())
         {
           m_ByName = true;
-          m_Name = m_pMemory->Read<std::string>(m_pPeFile->GetBase() + 
-            m_pMemory->Read<DWORD>(pNames + std::distance(
-            NameOrdinals.begin(), NameOrdIter)));
+          DWORD const NameRva = m_pMemory->Read<DWORD>(pNames + std::distance(
+            NameOrdinals.begin(), NameOrdIter));
+          m_Name = m_pMemory->Read<std::string>(m_pPeFile->RvaToVa(NameRva));
         }
 
         // Get function RVA (unchecked)
@@ -352,14 +349,14 @@ namespace Hades
           // Todo: Provide member which returns the 'split' version of the 
           // forwarder. (i.e. module and name)
           m_Forwarded = true;
-          m_Forwarder = m_pMemory->Read<std::string>(m_pPeFile->GetBase() + 
-            FuncRva);
+          m_Forwarder = m_pMemory->Read<std::string>(m_pPeFile->RvaToVa(
+            FuncRva));
         }
         else
         {
           // Set export RVA/VA
           m_Rva = FuncRva;
-          m_Va = m_pPeFile->GetBase() + FuncRva;
+          m_Va = m_pPeFile->RvaToVa(FuncRva);
         }
       }
 
