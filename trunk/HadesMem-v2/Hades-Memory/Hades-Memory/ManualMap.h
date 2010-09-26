@@ -30,11 +30,18 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include <iterator>
 #include <iostream>
 
+// Boost
+#pragma warning(push, 1)
+#pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
+#include <boost/filesystem.hpp>
+#pragma warning(pop)
+
 // Hades
 #include "PeLib.h"
 #include "Module.h"
 #include "Injector.h"
 #include "MemoryMgr.h"
+#include "Hades-Common/EnsureCleanup.h"
 
 namespace Hades
 {
@@ -52,26 +59,18 @@ namespace Hades
       inline ManualMap(MemoryMgr& MyMemory);
 
       // Manually map DLL
-      inline PVOID Map(std::wstring const& Path, std::string const& Export = 
-        "", bool InjectHelper = true) const;
+      inline PVOID Map(boost::filesystem::path const& Path, 
+        std::string const& Export = "", bool InjectHelper = true) const;
 
     private:
-      // Convert RVA to file offset
-      inline DWORD_PTR RvaToFileOffset(PIMAGE_NT_HEADERS pNtHeaders, 
-        DWORD_PTR Rva) const;
-
       // Map sections
-      inline void MapSections(PIMAGE_NT_HEADERS pNtHeaders, PVOID RemoteAddr, 
-        std::vector<BYTE> const& ModBuffer) const;
+      inline void MapSections(PeFile& MyPeFile, PVOID RemoteAddr) const;
 
       // Fix imports
-      inline void FixImports(std::vector<BYTE>& ModBuffer, 
-        PIMAGE_NT_HEADERS pNtHeaders, PIMAGE_IMPORT_DESCRIPTOR pImpDesc) const;
+      inline void FixImports(PeFile& MyPeFile) const;
 
       // Fix relocations
-      inline void FixRelocations(std::vector<BYTE>& ModBuffer, 
-        PIMAGE_NT_HEADERS pNtHeaders, PIMAGE_BASE_RELOCATION pRelocDesc, 
-        DWORD RelocDirSize, PVOID RemoteBase) const;
+      inline void FixRelocations(PeFile& MyPeFile, PVOID RemoteAddr) const;
 
       // MemoryMgr instance
       MemoryMgr* m_pMemory;
@@ -83,122 +82,102 @@ namespace Hades
     { }
 
     // Manually map DLL
-    PVOID ManualMap::Map(std::wstring const& Path, std::string const& Export, 
-      bool InjectHelper) const
+    PVOID ManualMap::Map(boost::filesystem::path const& Path, 
+      std::string const& Export, bool InjectHelper) const
     {
       // Open file for reading
-      std::wcout << "Opening module file for reading." << std::endl;
-      std::basic_ifstream<BYTE> ModuleFile(Path.c_str(), std::ios::binary);
+      std::basic_ifstream<BYTE> ModuleFile(Path.c_str(), std::ios::binary | 
+        std::ios::ate);
       if (!ModuleFile)
       {
         BOOST_THROW_EXCEPTION(Error() << 
           ErrorFunction("ManualMap::Map") << 
-          ErrorString("Could not open module file."));
+          ErrorString("Could not open image file."));
       }
 
-      // Read file into buffer
-      std::wcout << "Reading module file into buffer." << std::endl;
-      std::vector<BYTE> ModuleFileBuf((std::istreambuf_iterator<BYTE>(
-        ModuleFile)), std::istreambuf_iterator<BYTE>());
+      // Get file size
+      std::streamsize const FileSize = ModuleFile.tellg();
+
+      // Allocate memory to hold file data
+      // Doing this rather than copying data into a vector to avoid having to 
+      // play with the page protection flags on the heap.
+      PBYTE const pBase = static_cast<PBYTE>(VirtualAlloc(NULL, 
+        static_cast<SIZE_T>(FileSize), MEM_COMMIT | MEM_RESERVE, 
+        PAGE_READWRITE));
+      if (!pBase)
+      {
+        DWORD const LastError = GetLastError();
+        BOOST_THROW_EXCEPTION(Error() << 
+          ErrorFunction("ManualMap::Map") << 
+          ErrorString("Could not allocate memory for image data.") << 
+          ErrorCodeWin(LastError));
+      }
+      Windows::EnsureReleaseRegion const EnsureFreeLocalMod(pBase);
+
+      // Seek to beginning of file
+      ModuleFile.seekg(0, std::ios::beg);
+
+      // Read file into memory
+      ModuleFile.read(pBase, FileSize);
 
       // Create memory manager for local proc
       MemoryMgr MyMemoryLocal(GetCurrentProcessId());
 
       // Ensure file is a valid PE file
       std::wcout << "Performing PE file format validation." << std::endl;
-      PBYTE const pBase = &ModuleFileBuf[0];
-      PeFile MyPeFile(MyMemoryLocal, pBase);
+      PeFileAsData MyPeFile(MyMemoryLocal, pBase);
       DosHeader const MyDosHeader(MyPeFile);
       NtHeaders const MyNtHeaders(MyPeFile);
-      PIMAGE_NT_HEADERS const pNtHeadersRaw = 
-        reinterpret_cast<PIMAGE_NT_HEADERS>(MyNtHeaders.GetBase());
 
       // Allocate memory for image
-      std::wcout << "Allocating memory for module." << std::endl;
-      PVOID const RemoteBase = m_pMemory->Alloc(pNtHeadersRaw->OptionalHeader.
-        SizeOfImage);
-      std::wcout << "Module base address: " << RemoteBase << "." << std::endl;
-      std::wcout << "Module size: " << std::hex << pNtHeadersRaw->
-        OptionalHeader.SizeOfImage << std::dec << "." << std::endl;
+      std::wcout << "Allocating remote memory for image." << std::endl;
+      PVOID const RemoteBase = m_pMemory->Alloc(MyNtHeaders.GetSizeOfImage());
+      std::wcout << "Image base address: " << RemoteBase << "." << std::endl;
+      std::wcout << "Image size: " << std::hex << MyNtHeaders.GetSizeOfImage() 
+        << std::dec << "." << std::endl;
 
       // Get all TLS callbacks
       std::vector<PIMAGE_TLS_CALLBACK> TlsCallbacks;
-      DWORD const TlsDirSize = pNtHeadersRaw->OptionalHeader.DataDirectory
-        [IMAGE_DIRECTORY_ENTRY_TLS].Size;
-      if (TlsDirSize)
+      TlsDir MyTlsDir(MyPeFile);
+      if (MyTlsDir.IsValid())
       {
-        PIMAGE_TLS_DIRECTORY const pTlsDir = 
-          reinterpret_cast<PIMAGE_TLS_DIRECTORY>(pBase + RvaToFileOffset(
-          pNtHeadersRaw, pNtHeadersRaw->OptionalHeader.DataDirectory
-          [IMAGE_DIRECTORY_ENTRY_TLS].VirtualAddress));
-
-        std::wcout << "Enumerating TLS callbacks." << std::endl;
-        std::wcout << "Image Base: " << reinterpret_cast<PVOID>(pNtHeadersRaw->
-          OptionalHeader.ImageBase) << "." << std::endl;
-        std::wcout << "Address Of Callbacks: " << reinterpret_cast<PVOID>(
-          pTlsDir->AddressOfCallBacks) << "." << std::endl;
-
-        for (PIMAGE_TLS_CALLBACK* pCallbacks = 
-          reinterpret_cast<PIMAGE_TLS_CALLBACK*>(pBase + RvaToFileOffset(
-          pNtHeadersRaw, pTlsDir->AddressOfCallBacks - pNtHeadersRaw->
-          OptionalHeader.ImageBase)); *pCallbacks; ++pCallbacks)
+        TlsCallbacks = MyTlsDir.GetCallbacks();
+        std::for_each(TlsCallbacks.cbegin(), TlsCallbacks.cend(), 
+          [&] (PIMAGE_TLS_CALLBACK pCurrent)
         {
-          std::wcout << "TLS Callback: " << *pCallbacks << "." << std::endl;
-          TlsCallbacks.push_back(reinterpret_cast<PIMAGE_TLS_CALLBACK>(
-            reinterpret_cast<DWORD_PTR>(*pCallbacks) - pNtHeadersRaw->
-            OptionalHeader.ImageBase));
-        }
+          std::wcout << "TLS Callback: " << pCurrent << std::endl;
+        });
       }
 
-      // Fix import table if applicable
-      DWORD const ImpDirSize = pNtHeadersRaw->OptionalHeader.DataDirectory
-        [IMAGE_DIRECTORY_ENTRY_IMPORT].Size;
-      if (ImpDirSize)
-      {
-        PIMAGE_IMPORT_DESCRIPTOR const pImpDir = 
-          reinterpret_cast<PIMAGE_IMPORT_DESCRIPTOR>(pBase + RvaToFileOffset(
-          pNtHeadersRaw, pNtHeadersRaw->OptionalHeader.DataDirectory
-          [IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress));
+      // Process import table
+      FixImports(MyPeFile);
 
-        FixImports(ModuleFileBuf, pNtHeadersRaw, pImpDir);
-      }
-
-      // Fix relocations if applicable
-      DWORD const RelocDirSize = pNtHeadersRaw->OptionalHeader.DataDirectory
-        [IMAGE_DIRECTORY_ENTRY_BASERELOC].Size;
-      if (RelocDirSize)
-      {
-        PIMAGE_BASE_RELOCATION const pRelocDir = 
-          reinterpret_cast<PIMAGE_BASE_RELOCATION>(pBase + RvaToFileOffset(
-          pNtHeadersRaw, pNtHeadersRaw->OptionalHeader.DataDirectory
-          [IMAGE_DIRECTORY_ENTRY_BASERELOC].VirtualAddress));
-
-        FixRelocations(ModuleFileBuf, pNtHeadersRaw, pRelocDir, RelocDirSize, 
-          RemoteBase);
-      }
+      // Process relocations
+      FixRelocations(MyPeFile, RemoteBase);
 
       // Write DOS header to process
       std::wcout << "Writing DOS header." << std::endl;
-      std::wcout << "DOS Header: " << pBase << std::endl;
-      m_pMemory->Write(RemoteBase, *reinterpret_cast<PIMAGE_DOS_HEADER>(pBase));
+      std::wcout << "DOS Header: " << RemoteBase << std::endl;
+      m_pMemory->Write(RemoteBase, *reinterpret_cast<PIMAGE_DOS_HEADER>(
+        pBase));
 
-      // Write PE header to process
-      PBYTE const PeHeaderStart = reinterpret_cast<PBYTE>(pNtHeadersRaw);
-      PBYTE const PeHeaderEnd = reinterpret_cast<PBYTE>(IMAGE_FIRST_SECTION(
-        pNtHeadersRaw));
-      std::vector<BYTE> const PeHeaderBuf(PeHeaderStart, PeHeaderEnd);
-      PBYTE const TargetAddr = static_cast<PBYTE>(RemoteBase) + 
-        MyDosHeader.GetNewHeaderOffset();
+      // Write NT headers to process
+      PBYTE const NtHeadersStart = reinterpret_cast<PBYTE>(MyNtHeaders.
+        GetBase());
+      PBYTE const NtHeadersEnd = Section(MyPeFile, 0).GetBase();
+      std::vector<BYTE> const PeHeaderBuf(NtHeadersStart, NtHeadersEnd);
+      PBYTE const TargetAddr = static_cast<PBYTE>(RemoteBase) + MyDosHeader.
+        GetNewHeaderOffset();
       std::wcout << "Writing NT header." << std::endl;
       std::wcout << "NT Header: " << TargetAddr << std::endl;
       m_pMemory->Write(TargetAddr, PeHeaderBuf);
 
       // Write sections to process
-      MapSections(pNtHeadersRaw, RemoteBase, ModuleFileBuf);
+      MapSections(MyPeFile, RemoteBase);
 
       // Calculate module entry point
-      PVOID const EntryPoint = static_cast<PBYTE>(RemoteBase) + pNtHeadersRaw->
-        OptionalHeader.AddressOfEntryPoint;
+      PVOID const EntryPoint = static_cast<PBYTE>(RemoteBase) + 
+        MyNtHeaders.GetAddressOfEntryPoint();
       std::wcout << "Entry Point: " << EntryPoint << "." << std::endl;
 
       // Get address of export in remote process
@@ -252,77 +231,41 @@ namespace Hades
       return RemoteBase;
     }
 
-    // Convert RVA to file offset
-    DWORD_PTR ManualMap::RvaToFileOffset(PIMAGE_NT_HEADERS pNtHeaders, 
-      DWORD_PTR Rva) const
-    {
-      // Santiy check
-      if (!Rva)
-      {
-        return 0;
-      }
-
-      // Get number of sections
-      WORD const NumSections = pNtHeaders->FileHeader.NumberOfSections;
-      // Get pointer to first section
-      PIMAGE_SECTION_HEADER pCurrent = IMAGE_FIRST_SECTION(pNtHeaders);
-
-      // Loop over all sections
-      for (WORD i = 0; i < NumSections; ++i, ++pCurrent)
-      {
-        // Check if the RVA may be inside the current section
-        if (pCurrent->VirtualAddress <= Rva)
-        {
-          // Check if the RVA is inside the current section
-          if ((pCurrent->VirtualAddress + pCurrent->Misc.VirtualSize) > Rva)
-          {
-            // Convert RVA to file (raw) offset
-            Rva -= pCurrent->VirtualAddress;
-            Rva += pCurrent->PointerToRawData;
-            return Rva;
-          }
-        }
-      }
-
-      // Could not perform conversion
-      return 0;
-    }
-
     // Map sections
-    void ManualMap::MapSections(PIMAGE_NT_HEADERS pNtHeaders, PVOID RemoteAddr, 
-      std::vector<BYTE> const& ModBuffer) const
+    void ManualMap::MapSections(PeFile& MyPeFile, PVOID RemoteAddr) const
     {
       // Debug output
       std::wcout << "Mapping sections." << std::endl;
 
-      // Get number of sections
-      WORD const NumSections = pNtHeaders->FileHeader.NumberOfSections;
-      // Get pointer to first section
-      PIMAGE_SECTION_HEADER pCurrent = IMAGE_FIRST_SECTION(pNtHeaders);
-
-      // Loop over all sections
-      for(WORD i = 0; i != NumSections; ++i, ++pCurrent) 
+      // Enumerate all sections
+      SectionEnum MySectionEnum(MyPeFile);
+      for (SectionEnum::SectionIter i(MySectionEnum); *i; ++i)
       {
-        // Debug output
-        std::string const Name(pCurrent->Name, pCurrent->Name + 8);
+        // Get section
+        Section& Current = **i;
+
+        // Get section name
+        std::string const Name(Current.GetName());
         std::wcout << "Section Name: " << Name.c_str() << std::endl;
 
         // Calculate target address for section in remote process
         PVOID const TargetAddr = reinterpret_cast<PBYTE>(RemoteAddr) + 
-          pCurrent->VirtualAddress;
+          Current.GetVirtualAddress();
         std::wcout << "Target Address: " << TargetAddr << std::endl;
 
         // Calculate virtual size of section
-        DWORD const VirtualSize = pCurrent->Misc.VirtualSize; 
-        std::wcout << "Virtual Size: " << TargetAddr << std::endl;
+        DWORD const VirtualSize = Current.GetVirtualSize(); 
+        std::wcout << "Virtual Size: " << std::hex << VirtualSize << std::dec 
+          << std::endl;
 
         // Calculate start and end of section data in buffer
-        PBYTE const DataStart = const_cast<PBYTE>(&ModBuffer[0]) + 
-          pCurrent->PointerToRawData;
-        PBYTE const DataEnd = DataStart + pCurrent->SizeOfRawData;
+        DWORD const SizeOfRawData = Current.GetSizeOfRawData();
+        PBYTE const DataStart = MyPeFile.GetBase() + Current.
+          GetPointerToRawData();
+        PBYTE const DataEnd = DataStart + SizeOfRawData;
 
         // Get section data
-        std::vector<BYTE> const SectionData(DataStart, DataEnd);
+        std::vector<BYTE> SectionData(DataStart, DataEnd);
 
         // Write section data to process
         m_pMemory->Write(TargetAddr, SectionData);
@@ -330,7 +273,8 @@ namespace Hades
         // Set the proper page protections for this section
         DWORD OldProtect;
         if (!VirtualProtectEx(m_pMemory->GetProcessHandle(), TargetAddr, 
-          VirtualSize, pCurrent->Characteristics & 0x00FFFFFF, &OldProtect))
+          SizeOfRawData, Current.GetCharacteristics() & 0x00FFFFFF, 
+          &OldProtect))
         {
           DWORD const LastError = GetLastError();
           BOOST_THROW_EXCEPTION(Error() << 
@@ -342,35 +286,50 @@ namespace Hades
     }
 
     // Fix imports
-    void ManualMap::FixImports(std::vector<BYTE>& ModBuffer, 
-      PIMAGE_NT_HEADERS pNtHeaders, PIMAGE_IMPORT_DESCRIPTOR pImpDesc) const
+    void ManualMap::FixImports(PeFile& MyPeFile) const
     {
+      // Get NT headers
+      NtHeaders const MyNtHeaders(MyPeFile);
+
+      // Get import data dir size and address
+      DWORD const ImpDirSize = MyNtHeaders.GetDataDirectorySize(NtHeaders::
+        DataDir_Import);
+      PIMAGE_IMPORT_DESCRIPTOR pImpDesc = 
+        static_cast<PIMAGE_IMPORT_DESCRIPTOR>(MyPeFile.RvaToVa(MyNtHeaders.
+        GetDataDirectoryVirtualAddress(NtHeaders::DataDir_Import)));
+      if (!ImpDirSize || !pImpDesc)
+      {
+        // Debug output
+        std::wcout << "Image has no imports." << std::endl;
+
+        // Nothing more to do
+        return;
+      }
+
       // Debug output
       std::wcout << "Fixing imports." << std::endl;
 
       // Loop through all the required modules
-      PBYTE const ModBase = &ModBuffer[0];
       for (; pImpDesc && pImpDesc->Name; ++pImpDesc) 
       {
         // Get module name
-        char const* ModuleName = reinterpret_cast<char*>(ModBase + 
-          RvaToFileOffset(pNtHeaders, pImpDesc->Name));
-        std::string const ModuleNameA(ModuleName);
-        std::wstring const ModuleNameW(boost::lexical_cast<std::wstring>(
-          ModuleName));
+        char const* pModuleName = static_cast<char const*>(MyPeFile.RvaToVa(
+          pImpDesc->Name));
+        std::wstring const ModuleNameW(boost::lexical_cast<std::wstring, 
+          std::string>(pModuleName));
         std::wstring const ModuleNameLowerW(boost::to_lower_copy(ModuleNameW));
         std::wcout << "Module Name: " << ModuleNameW << "." << std::endl;
 
         // Check whether dependent module is already loaded
         ModuleEnum MyModuleList(*m_pMemory);
         std::unique_ptr<Module> MyModule;
-        for (ModuleEnum::ModuleListIter MyIter(MyModuleList); *MyIter; 
-          ++MyIter)
+        for (ModuleEnum::ModuleListIter i(MyModuleList); *i; ++i)
         {
-          if (boost::to_lower_copy((*MyIter)->GetName()) == ModuleNameLowerW || 
-            boost::to_lower_copy((*MyIter)->GetPath()) == ModuleNameLowerW)
+          Module& Current = **i;
+          if (boost::to_lower_copy(Current.GetName()) == ModuleNameLowerW || 
+            boost::to_lower_copy(Current.GetPath()) == ModuleNameLowerW)
           {
-            MyModule = std::move(*MyIter);
+            MyModule = std::move(*i);
           }
         }
 
@@ -395,14 +354,14 @@ namespace Hades
 
         // Lookup the first import thunk for this module
         // Todo: Forwarded import support
-        PIMAGE_THUNK_DATA pThunkData = reinterpret_cast<PIMAGE_THUNK_DATA>(
-          ModBase + RvaToFileOffset(pNtHeaders, pImpDesc->FirstThunk));
+        PIMAGE_THUNK_DATA pThunkData = static_cast<PIMAGE_THUNK_DATA>(
+          MyPeFile.RvaToVa(pImpDesc->FirstThunk));
         while(pThunkData->u1.AddressOfData) 
         {
           // Get import data
           PIMAGE_IMPORT_BY_NAME const pNameImport = 
-            reinterpret_cast<PIMAGE_IMPORT_BY_NAME>(ModBase + 
-            RvaToFileOffset(pNtHeaders, pThunkData->u1.AddressOfData));
+            static_cast<PIMAGE_IMPORT_BY_NAME>(MyPeFile.RvaToVa(
+            pThunkData->u1.AddressOfData));
 
           // Get name of function
           std::string const ImpName(reinterpret_cast<char*>(pNameImport->Name));
@@ -419,28 +378,41 @@ namespace Hades
           pThunkData->u1.Function = reinterpret_cast<DWORD_PTR>(FuncAddr);
 
           // Advance to next function
-          pThunkData++;
+          ++pThunkData;
         }
       } 
     }
 
     // Fix relocations
-    void ManualMap::FixRelocations(std::vector<BYTE>& ModBuffer, 
-      PIMAGE_NT_HEADERS pNtHeaders, PIMAGE_BASE_RELOCATION pRelocDesc, 
-      DWORD RelocDirSize, PVOID RemoteBase) const
+    void ManualMap::FixRelocations(PeFile& MyPeFile, PVOID pRemoteBase) const
     {
+      // Get NT headers
+      NtHeaders const MyNtHeaders(MyPeFile);
+
+      // Get import data dir size and address
+      DWORD const RelocDirSize = MyNtHeaders.GetDataDirectorySize(NtHeaders::
+        DataDir_BaseReloc);
+      PIMAGE_BASE_RELOCATION pRelocDir = 
+        static_cast<PIMAGE_BASE_RELOCATION>(MyPeFile.RvaToVa(MyNtHeaders.
+        GetDataDirectoryVirtualAddress(NtHeaders::DataDir_BaseReloc)));
+      if (!RelocDirSize || !pRelocDir)
+      {
+        // Debug output
+        std::wcout << "Image has no relocations." << std::endl;
+
+        // Nothing more to do
+        return;
+      }
+
       // Debug output
       std::wcout << "Fixing relocations." << std::endl;
 
       // Get image base
-      DWORD_PTR const ImageBase = pNtHeaders->OptionalHeader.ImageBase;
+      ULONG_PTR const ImageBase = MyNtHeaders.GetImageBase();
 
       // Calcuate module delta
-      LONG_PTR const Delta = reinterpret_cast<DWORD_PTR>(RemoteBase) - 
+      LONG_PTR const Delta = reinterpret_cast<ULONG_PTR>(pRemoteBase) - 
         ImageBase;
-
-      // Get local module buffer base
-      PBYTE const ModBase = &ModBuffer[0];
 
       // Number of bytes processed
       DWORD BytesProcessed = 0; 
@@ -449,16 +421,15 @@ namespace Hades
       while (BytesProcessed < RelocDirSize)
       {
         // Get base of reloc dir
-        PVOID RelocBase = ModBase + RvaToFileOffset(pNtHeaders, 
-          pRelocDesc->VirtualAddress);
+        PVOID RelocBase = MyPeFile.RvaToVa(pRelocDir->VirtualAddress);
 
         // Get number of relocs
-        DWORD const NumRelocs = (pRelocDesc->SizeOfBlock - sizeof(
+        DWORD const NumRelocs = (pRelocDir->SizeOfBlock - sizeof(
           IMAGE_BASE_RELOCATION)) / sizeof(WORD); 
 
         // Get pointer to reloc data
         WORD* pRelocData = reinterpret_cast<WORD*>(reinterpret_cast<DWORD_PTR>(
-          pRelocDesc) + sizeof(IMAGE_BASE_RELOCATION));
+          pRelocDir) + sizeof(IMAGE_BASE_RELOCATION));
 
         // Loop over all relocation entries
         for(DWORD i = 0; i < NumRelocs; ++i, ++pRelocData) 
@@ -472,10 +443,10 @@ namespace Hades
         }
 
         // Add to number of bytes processed
-        BytesProcessed += pRelocDesc->SizeOfBlock;
+        BytesProcessed += pRelocDir->SizeOfBlock;
 
         // Advance to next reloc info block
-        pRelocDesc = reinterpret_cast<PIMAGE_BASE_RELOCATION>(pRelocData); 
+        pRelocDir = reinterpret_cast<PIMAGE_BASE_RELOCATION>(pRelocData); 
       }
     }
   }
