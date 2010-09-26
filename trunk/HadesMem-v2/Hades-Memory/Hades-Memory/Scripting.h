@@ -678,6 +678,17 @@ namespace Hades
           ,luabind::class_<Section>("Section")
           .def(luabind::constructor<PeFile&, WORD>())
           .def("GetName", &Section::GetName)
+          .def("GetVirtualAddress", &Section::GetVirtualAddress)
+          .def("GetVirtualSize", &Section::GetVirtualSize)
+          .def("GetSizeOfRawData", &Section::GetSizeOfRawData)
+          .def("GetPointerToRawData", &Section::GetPointerToRawData)
+          .def("GetPointerToRelocations", &Section::GetPointerToRelocations)
+          .def("GetPointerToLinenumbers", &Section::GetPointerToLinenumbers)
+          .def("GetNumberOfRelocations", &Section::GetNumberOfRelocations)
+          .def("GetNumberOfLinenumbers", &Section::GetNumberOfLinenumbers)
+          .def("GetCharacteristics", &Section::GetCharacteristics)
+          .def("GetBase", &Section::GetBase)
+          .def("GetSectionHeaderRaw", &Section::GetSectionHeaderRaw)
 
           // Bind SectionEnum class
           ,luabind::class_<SectionEnum>("SectionEnumBase")
