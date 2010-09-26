@@ -359,9 +359,11 @@ namespace Hades
         while(pThunkData->u1.AddressOfData) 
         {
           // Get import data
+          // Todo: Ensure the cast from ULONGULONG to DWORD under x64 is 
+          // safe and intended... Is it actually an RVA?
           PIMAGE_IMPORT_BY_NAME const pNameImport = 
             static_cast<PIMAGE_IMPORT_BY_NAME>(MyPeFile.RvaToVa(
-            pThunkData->u1.AddressOfData));
+            static_cast<DWORD>(pThunkData->u1.AddressOfData)));
 
           // Get name of function
           std::string const ImpName(reinterpret_cast<char*>(pNameImport->Name));
