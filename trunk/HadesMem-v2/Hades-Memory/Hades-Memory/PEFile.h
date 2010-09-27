@@ -19,12 +19,18 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-// Windows API
+// Windows
 #include <Windows.h>
 
+// Boost
+#pragma warning(push, 1)
+#pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
+#include <boost/noncopyable.hpp>
+#pragma warning(pop)
+
 // Hades
+#include "Fwd.h"
 #include "Error.h"
-#include "MemoryMgr.h"
 
 namespace Hades
 {
@@ -39,16 +45,16 @@ namespace Hades
       { };
 
       // Constructor
-      inline PeFile(MemoryMgr& MyMemory, PVOID Address);
+      PeFile(MemoryMgr& MyMemory, PVOID Address);
 
       // Get memory manager
-      inline MemoryMgr& GetMemoryMgr() const;
+      MemoryMgr& GetMemoryMgr() const;
 
       // Get base address
-      inline PBYTE GetBase() const;
+      PBYTE GetBase() const;
 
       // Convert RVA to VA
-      inline virtual PVOID RvaToVa(DWORD Rva);
+      virtual PVOID RvaToVa(DWORD Rva);
 
     private:
       // Memory instance
@@ -64,108 +70,10 @@ namespace Hades
     {
     public:
       // Constructor
-      inline PeFileAsData(MemoryMgr& MyMemory, PVOID Address);
+      PeFileAsData(MemoryMgr& MyMemory, PVOID Address);
 
       // Convert RVA to VA
-      inline virtual PVOID RvaToVa(DWORD Rva);
+      virtual PVOID RvaToVa(DWORD Rva);
     };
-
-    // Constructor
-    PeFileAsData::PeFileAsData(MemoryMgr& MyMemory, PVOID Address) 
-      : PeFile(MyMemory, Address)
-    { }
-
-    // Convert RVA to VA
-    PVOID PeFileAsData::RvaToVa(DWORD Rva)
-    {
-      // Ensure RVA is valid
-      if (!Rva)
-      {
-        return nullptr;
-      }
-
-      // Get memory manager
-      MemoryMgr* MyMemory = &GetMemoryMgr();
-
-      // Get PE file base
-      PBYTE const pBase = GetBase();
-
-      // Get DOS header
-      IMAGE_DOS_HEADER const DosHeader = MyMemory->Read<IMAGE_DOS_HEADER>(
-        pBase);
-      if (DosHeader.e_magic != IMAGE_DOS_SIGNATURE)
-      {
-        BOOST_THROW_EXCEPTION(Error() << 
-          ErrorFunction("PeFileAsData::RvaToVa") << 
-          ErrorString("Invalid DOS header."));
-      }
-
-      // Get NT headers
-      PBYTE const pNtHeaders = pBase + DosHeader.e_lfanew;
-      IMAGE_NT_HEADERS const NtHeadersRaw = MyMemory->Read<IMAGE_NT_HEADERS>(
-        pNtHeaders);
-      if (NtHeadersRaw.Signature != IMAGE_NT_SIGNATURE)
-      {
-        BOOST_THROW_EXCEPTION(Error() << 
-          ErrorFunction("PeFileAsData::RvaToVa") << 
-          ErrorString("Invalid NT headers."));
-      }
-
-      // Get first section header
-      PIMAGE_SECTION_HEADER pSectionHeader = 
-        reinterpret_cast<PIMAGE_SECTION_HEADER>(pNtHeaders + FIELD_OFFSET(
-        IMAGE_NT_HEADERS, OptionalHeader) + NtHeadersRaw.FileHeader.
-        SizeOfOptionalHeader);
-      IMAGE_SECTION_HEADER SectionHeader = MyMemory->
-        Read<IMAGE_SECTION_HEADER>(pSectionHeader);
-
-      // Get number of sections
-      WORD NumSections = NtHeadersRaw.FileHeader.NumberOfSections;
-
-      // Loop over all sections
-      for (WORD i = 0; i < NumSections; ++i)
-      {
-        // If RVA is in target file/raw data region perform adjustments to 
-        // turn it into a VA.
-        if (SectionHeader.VirtualAddress <= Rva && (SectionHeader.
-          VirtualAddress + SectionHeader.Misc.VirtualSize) > Rva)
-        {
-          Rva -= SectionHeader.VirtualAddress;
-          Rva += SectionHeader.PointerToRawData;
-
-          return GetBase() + Rva;
-        }
-
-        // Get next section
-        SectionHeader = MyMemory->Read<IMAGE_SECTION_HEADER>(++pSectionHeader);
-      }
-
-      // Conversion failed
-      return nullptr;
-    }
-
-    // Constructor
-    PeFile::PeFile(MemoryMgr& MyMemory, PVOID Address)
-      : m_pMemory(&MyMemory), 
-      m_pBase(static_cast<PBYTE>(Address))
-    { }
-
-    // Get memory manager
-    MemoryMgr& PeFile::GetMemoryMgr() const
-    {
-      return *m_pMemory;
-    }
-
-    // Get base address
-    PBYTE PeFile::GetBase() const
-    {
-      return m_pBase;
-    }
-
-    // Convert RVA to VA
-    PVOID PeFile::RvaToVa(DWORD Rva)
-    {
-      return Rva ? (m_pBase + Rva) : nullptr;
-    }
   }
 }

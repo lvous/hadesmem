@@ -26,22 +26,15 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include <map>
 #include <string>
 #include <vector>
-#include <fstream>
-#include <sstream>
 
-// RapidXML
+// Boost
 #pragma warning(push, 1)
 #pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
-#include <RapidXML/rapidxml.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/noncopyable.hpp>
 #pragma warning(pop)
 
 // Hades
-#include "Types.h"
-#include "PeFile.h"
-#include "Module.h"
-#include "Region.h"
-#include "DosHeader.h"
-#include "NtHeaders.h"
 #include "MemoryMgr.h"
 
 namespace Hades
@@ -57,9 +50,9 @@ namespace Hades
       { };
 
       // Constructor
-      inline explicit Scanner(MemoryMgr& MyMemory);
-      inline Scanner(MemoryMgr& MyMemory, HMODULE Module);
-      inline Scanner(MemoryMgr& MyMemory, PVOID Start, PVOID End);
+      explicit Scanner(MemoryMgr& MyMemory);
+      Scanner(MemoryMgr& MyMemory, HMODULE Module);
+      Scanner(MemoryMgr& MyMemory, PVOID Start, PVOID End);
 
       // Search memory (POD types)
       template <typename T>
@@ -97,13 +90,13 @@ namespace Hades
         typename T::value_type>>::type* Dummy2 = 0) const;
 
       // Load patterns from XML file
-      inline void LoadFromXML(std::wstring const& Path);
+      void LoadFromXML(boost::filesystem::path const& Path);
 
       // Get address map
-      inline std::map<std::wstring, PVOID> GetAddresses() const;
+      std::map<std::wstring, PVOID> GetAddresses() const;
 
       // Operator[] overload to allow retrieving addresses by name
-      inline PVOID operator[](std::wstring const& Name) const;
+      PVOID operator[](std::wstring const& Name) const;
 
     private:
       // Memory manager instance
@@ -116,64 +109,6 @@ namespace Hades
       // Map to hold addresses
       std::map<std::wstring, PVOID> m_Addresses;
     };
-
-    // Constructor
-    Scanner::Scanner(MemoryMgr& MyMemory) 
-      : m_pMemory(&MyMemory), 
-      m_Start(nullptr), 
-      m_End(nullptr), 
-      m_Addresses()
-    {
-      // Get pointer to image headers
-      ModuleEnum MyModuleEnum(*m_pMemory);
-      PBYTE const pBase = reinterpret_cast<PBYTE>(MyModuleEnum.First()->
-        GetBase());
-      PeFile MyPeFile(*m_pMemory, pBase);
-      DosHeader const MyDosHeader(MyPeFile);
-      NtHeaders const MyNtHeaders(MyPeFile);
-
-      // Get base of code section
-      m_Start = pBase + MyNtHeaders.GetBaseOfCode();
-
-      // Calculate end of code section
-      m_End = m_Start + MyNtHeaders.GetSizeOfImage();
-    }
-
-    // Constructor
-    Scanner::Scanner(MemoryMgr& MyMemory, HMODULE Module) 
-      : m_pMemory(&MyMemory), 
-      m_Start(nullptr), 
-      m_End(nullptr), 
-      m_Addresses()
-    {
-      // Ensure file is a valid PE file
-      PBYTE const pBase = reinterpret_cast<PBYTE>(Module);
-      PeFile MyPeFile(*m_pMemory, pBase);
-      DosHeader const MyDosHeader(MyPeFile);
-      NtHeaders const MyNtHeaders(MyPeFile);
-
-      // Get base of code section
-      m_Start = pBase + MyNtHeaders.GetBaseOfCode();
-
-      // Calculate end of code section
-      m_End = m_Start + MyNtHeaders.GetSizeOfImage();
-    }
-
-    // Constructor
-    Scanner::Scanner(MemoryMgr& MyMemory, PVOID Start, PVOID End) 
-      : m_pMemory(&MyMemory), 
-      m_Start(static_cast<PBYTE>(Start)), 
-      m_End(static_cast<PBYTE>(End)), 
-      m_Addresses()
-    {
-      // Ensure range is valid
-      if (m_End < m_Start)
-      {
-        BOOST_THROW_EXCEPTION(Error() << 
-          ErrorFunction("Scanner::Scanner") << 
-          ErrorString("Start or end address is invalid."));
-      }
-    }
 
     // Search memory (POD types)
     template <typename T>
@@ -457,233 +392,6 @@ namespace Hades
 
       // Return matches
       return Matches;
-    }
-
-    // Load patterns from XML file
-    void Scanner::LoadFromXML(std::wstring const& Path)
-    {
-      // Open current file
-      std::wifstream PatternFile(Path.c_str());
-      if (!PatternFile)
-      {
-        BOOST_THROW_EXCEPTION(Error() << 
-          ErrorFunction("Scanner::LoadFromXML") << 
-          ErrorString("Could not open pattern file."));
-      }
-
-      // Copy file to buffer
-      std::istreambuf_iterator<wchar_t> const PatFileBeg(PatternFile);
-      std::istreambuf_iterator<wchar_t> const PatFileEnd;
-      std::vector<wchar_t> PatFileBuf(PatFileBeg, PatFileEnd);
-      PatFileBuf.push_back(L'\0');
-
-      // Open XML document
-      std::shared_ptr<rapidxml::xml_document<wchar_t>> const AccountsDoc(
-        std::make_shared<rapidxml::xml_document<wchar_t>>());
-      AccountsDoc->parse<0>(&PatFileBuf[0]);
-
-      // Ensure pattern tag is found
-      rapidxml::xml_node<wchar_t>* PatternsTag = AccountsDoc->first_node(L"Patterns");
-      if (!PatternsTag)
-      {
-        BOOST_THROW_EXCEPTION(Error() << 
-          ErrorFunction("Scanner::LoadFromXML") << 
-          ErrorString("Invalid pattern file format."));
-      }
-
-      // Loop over all patterns
-      for (rapidxml::xml_node<wchar_t>* Pattern(PatternsTag->first_node(
-        L"Pattern")); Pattern; Pattern = Pattern->next_sibling(L"Pattern"))
-      {
-        // Get pattern attributes
-        rapidxml::xml_attribute<wchar_t> const* NameNode = Pattern->
-          first_attribute(L"Name");
-        rapidxml::xml_attribute<wchar_t> const* MaskNode = Pattern->
-          first_attribute(L"Mask");
-        rapidxml::xml_attribute<wchar_t> const* DataNode = Pattern->
-          first_attribute(L"Data");
-        std::wstring const Name(NameNode ? NameNode->value() : L"");
-        std::wstring const Mask(MaskNode ? MaskNode->value() : L"");
-        std::wstring const Data(DataNode ? DataNode->value() : L"");
-        std::string const DataReal(boost::lexical_cast<std::string>(Data));
-
-        // Ensure pattern attributes are valid
-        if (Name.empty() || Mask.empty() || Data.empty())
-        {
-          BOOST_THROW_EXCEPTION(Error() << 
-            ErrorFunction("Scanner::LoadFromXML") << 
-            ErrorString("Invalid pattern attributes."));
-        }
-
-        // Ensure data is valid
-        if (Data.size() % 2)
-        {
-          BOOST_THROW_EXCEPTION(Error() << 
-            ErrorFunction("Scanner::LoadFromXML") << 
-            ErrorString("Data size invalid."));
-        }
-
-        // Ensure mask is valid
-        if (Mask.size() * 2 != Data.size())
-        {
-          BOOST_THROW_EXCEPTION(Error() << 
-            ErrorFunction("Scanner::LoadFromXML") << 
-            ErrorString("Mask size invalid."));
-        }
-
-        // Convert data to byte buffer
-        std::vector<BYTE> DataBuf;
-        for (auto i = DataReal.cbegin(); i != DataReal.cend(); i += 2)
-        {
-          std::string const CurrentStr(i, i + 2);
-          std::stringstream Converter(CurrentStr);
-          int Current(0);
-          if (!(Converter >> std::hex >> Current >> std::dec))
-          {
-            BOOST_THROW_EXCEPTION(Error() << 
-              ErrorFunction("Scanner::LoadFromXML") << 
-              ErrorString("Invalid data conversion."));
-          }
-          DataBuf.push_back(static_cast<BYTE>(Current));
-        }
-
-        // Find pattern
-        PBYTE Address = static_cast<PBYTE>(Find(DataBuf, Mask));
-
-        // Only apply options if pattern was found
-        if (Address != 0)
-        {
-          // Loop over all pattern options
-          for (rapidxml::xml_node<wchar_t> const* PatOpts = Pattern->
-            first_node(); PatOpts; PatOpts = PatOpts->next_sibling())
-          {
-            // Get option name
-            std::wstring const OptionName(PatOpts->name());
-
-            // Handle 'Add' and 'Sub' options
-            bool const IsAdd = (OptionName == L"Add");
-            bool const IsSub = (OptionName == L"Sub");
-            if (IsAdd || IsSub)
-            {
-              // Get the modification value
-              rapidxml::xml_attribute<wchar_t> const* ModVal = PatOpts->
-                first_attribute(L"Value");
-              if (!ModVal)
-              {
-                BOOST_THROW_EXCEPTION(Error() << 
-                  ErrorFunction("Scanner::LoadFromXML") << 
-                  ErrorString("No value specified for 'Add' option."));
-              }
-
-              // Convert value to usable form
-              std::wstringstream Converter(ModVal->value());
-              DWORD_PTR AddValReal = 0;
-              if (!(Converter >> std::hex >> AddValReal >> std::dec))
-              {
-                BOOST_THROW_EXCEPTION(Error() << 
-                  ErrorFunction("Scanner::LoadFromXML") << 
-                  ErrorString("Invalid conversion for 'Add' option."));
-              }
-
-              // Perform modification
-              if (IsAdd)
-              {
-                Address += AddValReal;
-              }
-              else if (IsSub)
-              {
-                Address -= AddValReal;
-              }
-              else
-              {
-                BOOST_THROW_EXCEPTION(Error() << 
-                  ErrorFunction("Scanner::LoadFromXML") << 
-                  ErrorString("Unsupported pattern option."));
-              }
-            }
-            // Handle 'Lea' option (abs deref)
-            else if (OptionName == L"Lea")
-            {
-              // Perform absolute 'dereference'
-              Address = m_pMemory->Read<PBYTE>(Address);
-            }
-            // Handle 'Rel' option (rel deref)
-            else if (OptionName == L"Rel")
-            {
-              // Get instruction size
-              rapidxml::xml_attribute<wchar_t> const* SizeAttr = PatOpts->
-                first_attribute(L"Size");
-              if (!SizeAttr)
-              {
-                BOOST_THROW_EXCEPTION(Error() << 
-                  ErrorFunction("Scanner::LoadFromXML") << 
-                  ErrorString("No size specified for 'Size' in 'Rel' "
-                  "option."));
-              }
-
-              // Convert instruction size to usable format
-              std::wstringstream SizeConverter(SizeAttr->value());
-              DWORD_PTR Size(0);
-              if (!(SizeConverter >> std::hex >> Size >> std::dec))
-              {
-                BOOST_THROW_EXCEPTION(Error() << 
-                  ErrorFunction("Scanner::LoadFromXML") << 
-                  ErrorString("Invalid conversion for 'Size' in 'Rel' "
-                  "option."));
-              }
-
-              // Get instruction offset
-              rapidxml::xml_attribute<wchar_t> const* OffsetAttr = PatOpts->
-                first_attribute(L"Offset");
-              if (!OffsetAttr)
-              {
-                BOOST_THROW_EXCEPTION(Error() << 
-                  ErrorFunction("Scanner::LoadFromXML") << 
-                  ErrorString("No value specified for 'Offset' in 'Rel' "
-                  "option."));
-              }
-
-              // Convert instruction offset to usable format
-              std::wstringstream OffsetConverter(OffsetAttr->value());
-              DWORD_PTR Offset(0);
-              if (!(OffsetConverter >> std::hex >> Offset >> std::dec))
-              {
-                BOOST_THROW_EXCEPTION(Error() << 
-                  ErrorFunction("Scanner::LoadFromXML") << 
-                  ErrorString("Invalid conversion for 'Offset' in 'Rel' "
-                  "option."));
-              }
-
-              // Perform relative 'dereference'
-              Address = m_pMemory->Read<PBYTE>(Address) + reinterpret_cast<
-                DWORD_PTR>(Address) + Size - Offset;
-            }
-            else
-            {
-              // Unknown pattern option
-              BOOST_THROW_EXCEPTION(Error() << 
-                ErrorFunction("Scanner::LoadFromXML") << 
-                ErrorString("Unknown pattern option."));
-            }
-          }
-        }
-
-        // Add address to map
-        m_Addresses[Name] = Address;
-      }
-    }
-
-    // Get address map
-    std::map<std::wstring, PVOID> Scanner::GetAddresses() const
-    {
-      return m_Addresses;
-    }
-
-    // Operator[] overload to allow retrieving addresses by name
-    PVOID Scanner::operator[](std::wstring const& Name) const
-    {
-      auto const Iter = m_Addresses.find(Name);
-      return Iter != m_Addresses.end() ? Iter->second : nullptr;
     }
   }
 }

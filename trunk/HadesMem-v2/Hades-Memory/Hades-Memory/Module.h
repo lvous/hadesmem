@@ -25,18 +25,20 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 // C++ Standard Library
 #include <string>
-#include <vector>
-#include <iostream>
+#include <memory>
 
 // Boost
 #pragma warning(push, 1)
 #pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
-#include <boost/algorithm/string.hpp>
 #include <boost/iterator/iterator_facade.hpp>
+#include <boost/noncopyable.hpp>
 #pragma warning(pop)
 
 // Hades
+#include "Fwd.h"
+#include "Error.h"
 #include "MemoryMgr.h"
+#include "Hades-Common/EnsureCleanup.h"
 
 namespace Hades
 {
@@ -51,24 +53,23 @@ namespace Hades
       { };
 
       // Create module
-      inline Module(MemoryMgr& MyMemory, 
-        MODULEENTRY32 const& ModuleEntry);
+      Module(MemoryMgr& MyMemory, MODULEENTRY32 const& ModuleEntry);
 
       // Find module by handle
-      inline Module(MemoryMgr& MyMemory, HMODULE Handle);
+      Module(MemoryMgr& MyMemory, HMODULE Handle);
 
       // Find module by name
-      inline Module(MemoryMgr& MyMemory, std::wstring const& ModuleName);
+      Module(MemoryMgr& MyMemory, std::wstring const& ModuleName);
 
       // Get module base
-      inline HMODULE GetBase() const;
+      HMODULE GetBase() const;
       // Get module size
-      inline DWORD GetSize() const;
+      DWORD GetSize() const;
 
       // Get module name
-      inline std::wstring GetName() const;
+      std::wstring GetName() const;
       // Get module path
-      inline std::wstring GetPath() const;
+      std::wstring GetPath() const;
 
     private:
       // Memory instance
@@ -188,138 +189,5 @@ namespace Hades
       // Current module entry
       MODULEENTRY32 m_ModuleEntry;
     };
-
-    // Find module by name
-    Module::Module(MemoryMgr& MyMemory, std::wstring const& ModuleName) 
-      : m_pMemory(&MyMemory), 
-      m_Base(nullptr), 
-      m_Size(0), 
-      m_Name(), 
-      m_Path()
-    {
-      // Grab a new snapshot of the process
-      Windows::EnsureCloseSnap const Snap(CreateToolhelp32Snapshot(
-        TH32CS_SNAPMODULE, MyMemory.GetProcessID()));
-      if (Snap == INVALID_HANDLE_VALUE)
-      {
-        DWORD const LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(Error() << 
-          ErrorFunction("Module::Module") << 
-          ErrorString("Could not get module snapshot.") << 
-          ErrorCodeWin(LastError));
-      }
-
-      // Convert module name to lowercase
-      std::wstring const ModuleNameLower(boost::to_lower_copy(ModuleName));
-
-      // Search for process
-      MODULEENTRY32 ModEntry = { sizeof(ModEntry) };
-      bool Found = false;
-      for (BOOL MoreMods = Module32First(Snap, &ModEntry); MoreMods; 
-        MoreMods = Module32Next(Snap, &ModEntry)) 
-      {
-        Found = (boost::to_lower_copy(std::wstring(ModEntry.szModule)) == 
-          ModuleNameLower) || (boost::to_lower_copy(std::wstring(
-          ModEntry.szExePath)) == ModuleNameLower);
-        if (Found)
-        {
-          break;
-        }
-      }
-
-      // Check process was found
-      if (!Found)
-      {
-        BOOST_THROW_EXCEPTION(Error() << 
-          ErrorFunction("Module::Module") << 
-          ErrorString("Could not find module."));
-      }
-
-      // Get module data
-      m_Base = ModEntry.hModule;
-      m_Size = ModEntry.modBaseSize;
-      m_Name = ModEntry.szModule;
-      m_Path = ModEntry.szExePath;
-    }
-
-    // Find module by handle
-    Module::Module(MemoryMgr& MyMemory, HMODULE Handle) 
-      : m_pMemory(&MyMemory), 
-      m_Base(nullptr), 
-      m_Size(0), 
-      m_Name(), 
-      m_Path()
-    {
-      // Grab a new snapshot of the process
-      Windows::EnsureCloseSnap const Snap(CreateToolhelp32Snapshot(
-        TH32CS_SNAPMODULE, MyMemory.GetProcessID()));
-      if (Snap == INVALID_HANDLE_VALUE)
-      {
-        DWORD const LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(Error() << 
-          ErrorFunction("Module::Module") << 
-          ErrorString("Could not get module snapshot.") << 
-          ErrorCodeWin(LastError));
-      }
-
-      // Search for process
-      MODULEENTRY32 ModEntry = { sizeof(ModEntry) };
-      bool Found = false;
-      for (BOOL MoreMods = Module32First(Snap, &ModEntry); MoreMods; 
-        MoreMods = Module32Next(Snap, &ModEntry)) 
-      {
-        Found = (ModEntry.hModule == Handle);
-        if (Found)
-        {
-          break;
-        }
-      }
-
-      // Check process was found
-      if (!Found)
-      {
-        BOOST_THROW_EXCEPTION(Error() << 
-          ErrorFunction("Module::Module") << 
-          ErrorString("Could not find module."));
-      }
-
-      // Get module data
-      m_Base = ModEntry.hModule;
-      m_Size = ModEntry.modBaseSize;
-      m_Name = ModEntry.szModule;
-      m_Path = ModEntry.szExePath;
-    }
-
-    Module::Module(MemoryMgr& MyMemory, MODULEENTRY32 const& ModuleEntry) 
-      : m_pMemory(&MyMemory), 
-      m_Base(ModuleEntry.hModule), 
-      m_Size(ModuleEntry.modBaseSize), 
-      m_Name(ModuleEntry.szModule), 
-      m_Path(ModuleEntry.szExePath)
-    { }
-
-    // Get module base address
-    HMODULE Module::GetBase() const
-    {
-      return m_Base;
-    }
-
-    // Get module size
-    DWORD Module::GetSize() const
-    {
-      return m_Size;
-    }
-
-    // Get module name
-    std::wstring Module::GetName() const
-    {
-      return m_Name;
-    }
-
-    // Get module path
-    std::wstring Module::GetPath() const
-    {
-      return m_Path;
-    }
   }
 }

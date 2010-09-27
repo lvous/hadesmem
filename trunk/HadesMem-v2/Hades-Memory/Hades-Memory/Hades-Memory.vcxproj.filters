@@ -34,10 +34,64 @@
     <Filter Include="Header Files\Scripting\Wrappers\PeLib">
       <UniqueIdentifier>{22f7bc4d-3eb0-42c6-ad60-11a9eb080334}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\External">
+      <UniqueIdentifier>{076a74c8-a005-4183-b1db-2c2988209150}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\External\PeLib">
+      <UniqueIdentifier>{1ababb4f-7092-4589-8709-e52c0c2d912f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Internal">
+      <UniqueIdentifier>{c581c5ae-2da0-4123-8cc9-e118cac78158}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Placeholder.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MemoryMgr.cpp">
+      <Filter>Source Files\External</Filter>
+    </ClCompile>
+    <ClCompile Include="Injector.cpp">
+      <Filter>Source Files\External</Filter>
+    </ClCompile>
+    <ClCompile Include="ManualMap.cpp">
+      <Filter>Source Files\External</Filter>
+    </ClCompile>
+    <ClCompile Include="Module.cpp">
+      <Filter>Source Files\External</Filter>
+    </ClCompile>
+    <ClCompile Include="Process.cpp">
+      <Filter>Source Files\External</Filter>
+    </ClCompile>
+    <ClCompile Include="Region.cpp">
+      <Filter>Source Files\External</Filter>
+    </ClCompile>
+    <ClCompile Include="Scanner.cpp">
+      <Filter>Source Files\External</Filter>
+    </ClCompile>
+    <ClCompile Include="DosHeader.cpp">
+      <Filter>Source Files\External\PeLib</Filter>
+    </ClCompile>
+    <ClCompile Include="ExportDir.cpp">
+      <Filter>Source Files\External\PeLib</Filter>
+    </ClCompile>
+    <ClCompile Include="NtHeaders.cpp">
+      <Filter>Source Files\External\PeLib</Filter>
+    </ClCompile>
+    <ClCompile Include="PeFile.cpp">
+      <Filter>Source Files\External\PeLib</Filter>
+    </ClCompile>
+    <ClCompile Include="Section.cpp">
+      <Filter>Source Files\External\PeLib</Filter>
+    </ClCompile>
+    <ClCompile Include="TlsDir.cpp">
+      <Filter>Source Files\External\PeLib</Filter>
+    </ClCompile>
+    <ClCompile Include="Patcher.cpp">
+      <Filter>Source Files\Internal</Filter>
+    </ClCompile>
+    <ClCompile Include="Disassembler.cpp">
+      <Filter>Source Files\External</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -144,6 +198,9 @@
       <Filter>Header Files\Scripting\Wrappers\PeLib</Filter>
     </ClInclude>
     <ClInclude Include="AutoLink.h">
+      <Filter>Header Files\Aux</Filter>
+    </ClInclude>
+    <ClInclude Include="Fwd.h">
       <Filter>Header Files\Aux</Filter>
     </ClInclude>
   </ItemGroup>

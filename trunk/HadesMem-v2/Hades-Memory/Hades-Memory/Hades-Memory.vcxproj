@@ -19,7 +19,22 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Disassembler.cpp" />
+    <ClCompile Include="DosHeader.cpp" />
+    <ClCompile Include="ExportDir.cpp" />
+    <ClCompile Include="Injector.cpp" />
+    <ClCompile Include="ManualMap.cpp" />
+    <ClCompile Include="MemoryMgr.cpp" />
+    <ClCompile Include="Module.cpp" />
+    <ClCompile Include="NtHeaders.cpp" />
+    <ClCompile Include="Patcher.cpp" />
+    <ClCompile Include="PeFile.cpp" />
     <ClCompile Include="Placeholder.cpp" />
+    <ClCompile Include="Process.cpp" />
+    <ClCompile Include="Region.cpp" />
+    <ClCompile Include="Scanner.cpp" />
+    <ClCompile Include="Section.cpp" />
+    <ClCompile Include="TlsDir.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AutoLink.h" />
@@ -30,6 +45,7 @@
     <ClInclude Include="ExportDir.h" />
     <ClInclude Include="ExportEnum.h" />
     <ClInclude Include="ExportWrap.h" />
+    <ClInclude Include="Fwd.h" />
     <ClInclude Include="Injector.h" />
     <ClInclude Include="InjectorWrap.h" />
     <ClInclude Include="ManualMap.h" />
@@ -155,7 +171,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>"../";"../Hades-Common/";</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>"../";"../../Dependencies/AsmJit/";"../../Dependencies/BeaEngine/BeaEngine/include/";"../../Dependencies/Lua/Lua/";"../../Dependencies/LuaBind/LuaBind/";"../../Dependencies/RapidXML/";"../../Dependencies/WTL/";"../../Hades-Common/";</AdditionalIncludeDirectories>
       <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
       <EnablePREfast>true</EnablePREfast>
       <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
@@ -181,7 +197,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>"../";"../Hades-Common/";</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>"../";"../../Dependencies/AsmJit/";"../../Dependencies/BeaEngine/BeaEngine/include/";"../../Dependencies/Lua/Lua/";"../../Dependencies/LuaBind/LuaBind/";"../../Dependencies/RapidXML/";"../../Dependencies/WTL/";"../../Hades-Common/";</AdditionalIncludeDirectories>
       <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
       <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
     </ClCompile>
@@ -209,7 +225,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>"../";"../Hades-Common/";</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>"../";"../../Dependencies/AsmJit/";"../../Dependencies/BeaEngine/BeaEngine/include/";"../../Dependencies/Lua/Lua/";"../../Dependencies/LuaBind/LuaBind/";"../../Dependencies/RapidXML/";"../../Dependencies/WTL/";"../../Hades-Common/";</AdditionalIncludeDirectories>
       <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
       <EnablePREfast>true</EnablePREfast>
       <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
@@ -239,7 +255,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>"../";"../Hades-Common/";</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>"../";"../../Dependencies/AsmJit/";"../../Dependencies/BeaEngine/BeaEngine/include/";"../../Dependencies/Lua/Lua/";"../../Dependencies/LuaBind/LuaBind/";"../../Dependencies/RapidXML/";"../../Dependencies/WTL/";"../../Hades-Common/";</AdditionalIncludeDirectories>
       <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
       <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
     </ClCompile>

@@ -23,16 +23,18 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include <Windows.h>
 
 // C++ Standard Library
-#include <vector>
-#include <iostream>
+#include <memory>
 
 // Boost
 #pragma warning(push, 1)
 #pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
+#include <boost/noncopyable.hpp>
 #include <boost/iterator/iterator_facade.hpp>
 #pragma warning(pop)
 
 // Hades
+#include "Fwd.h"
+#include "Error.h"
 #include "MemoryMgr.h"
 
 namespace Hades
@@ -48,26 +50,31 @@ namespace Hades
       { };
 
       // Constructor
-      inline Region(MemoryMgr& MyMemory, PVOID Address);
+      Region(MemoryMgr& MyMemory, PVOID Address);
 
       // Constructor
-      inline Region(MemoryMgr& MyMemory, MEMORY_BASIC_INFORMATION const& 
-        MyMbi);
+      Region(MemoryMgr& MyMemory, MEMORY_BASIC_INFORMATION const& MyMbi);
 
       // Get base address
-      inline PVOID GetBase() const;
+      PVOID GetBase() const;
+      
       // Get allocation base
-      inline PVOID GetAllocBase() const;
+      PVOID GetAllocBase() const;
+      
       // Get allocation protection
-      inline DWORD GetAllocProtect() const;
+      DWORD GetAllocProtect() const;
+      
       // Get size
-      inline SIZE_T GetSize() const;
+      SIZE_T GetSize() const;
+      
       // Get state
-      inline DWORD GetState() const;
+      DWORD GetState() const;
+      
       // Get protection
-      inline DWORD GetProtect() const;
+      DWORD GetProtect() const;
+      
       // Get type
-      inline DWORD GetType() const;
+      DWORD GetType() const;
 
     private:
       // MemoryMgr instance
@@ -93,11 +100,11 @@ namespace Hades
       // Get first region
       std::unique_ptr<Region> First() 
       {
-        if (!VirtualQueryEx(m_pMemory->GetProcessHandle(), m_Address, &m_Current, 
-          sizeof(m_Current)))
+        if (!VirtualQueryEx(m_pMemory->GetProcessHandle(), m_Address, 
+          &m_Current, sizeof(m_Current)))
         {
           DWORD const LastError = GetLastError();
-          BOOST_THROW_EXCEPTION(Module::Error() << 
+          BOOST_THROW_EXCEPTION(Region::Error() << 
             ErrorFunction("RegionEnum::First") << 
             ErrorString("Could not get first memory region.") << 
             ErrorCodeWin(LastError));
@@ -173,74 +180,5 @@ namespace Hades
       // Current region info
       MEMORY_BASIC_INFORMATION m_Current;
     };
-
-    // Constructor
-    Region::Region(MemoryMgr& MyMemory, PVOID Address) 
-      : m_pMemory(&MyMemory), 
-      m_RegionInfo() 
-    {
-      // Clear region info
-      ZeroMemory(&m_RegionInfo, sizeof(m_RegionInfo));
-
-      // Query region info
-      if (!VirtualQueryEx(m_pMemory->GetProcessHandle(), Address, 
-        &m_RegionInfo, sizeof(m_RegionInfo)))
-      {
-        DWORD const LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(Error() << 
-          ErrorFunction("Region::Region") << 
-          ErrorString("Could not query memory region.") << 
-          ErrorCodeWin(LastError));
-      }
-    }
-
-    // Constructor
-    Region::Region(MemoryMgr& MyMemory, 
-      MEMORY_BASIC_INFORMATION const& MyMbi) 
-      : m_pMemory(&MyMemory), 
-      m_RegionInfo(MyMbi)
-    { }
-
-    // Get base address
-    PVOID Region::GetBase() const
-    {
-      return m_RegionInfo.BaseAddress;
-    }
-
-    // Get allocation base
-    PVOID Region::GetAllocBase() const
-    {
-      return m_RegionInfo.AllocationBase;
-    }
-
-    // Get allocation protection
-    DWORD Region::GetAllocProtect() const
-    {
-      return m_RegionInfo.AllocationProtect;
-    }
-
-    // Get size
-    SIZE_T Region::GetSize() const
-    {
-      return m_RegionInfo.RegionSize;
-    }
-
-    // Get state
-    DWORD Region::GetState() const
-    {
-      return m_RegionInfo.State;
-    }
-
-    // Get protection
-    DWORD Region::GetProtect() const
-    {
-      return m_RegionInfo.Protect;
-    }
-
-    // Get type
-    DWORD Region::GetType() const
-    {
-      return m_RegionInfo.Type;
-    }
   }
 }

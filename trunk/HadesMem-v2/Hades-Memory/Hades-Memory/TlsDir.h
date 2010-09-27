@@ -19,14 +19,21 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+// Windows
+#include <Windows.h>
+
 // C++ Standard Library
 #include <vector>
-#include <string>
+
+// Boost
+#pragma warning(push, 1)
+#pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
+#include <boost/noncopyable.hpp>
+#pragma warning(pop)
 
 // Hades
-#include "PeFile.h"
-#include "NtHeaders.h"
-#include "DosHeader.h"
+#include "Fwd.h"
+#include "Error.h"
 
 namespace Hades
 {
@@ -41,13 +48,13 @@ namespace Hades
       { };
 
       // Constructor
-      inline TlsDir(PeFile& MyPeFile);
+      TlsDir(PeFile& MyPeFile);
 
       // Whether TLS directory is valid
-      inline bool IsValid() const;
+      bool IsValid() const;
 
       // Ensure TLS directory is valid
-      inline void EnsureValid() const;
+      void EnsureValid() const;
 
       // Get start address of raw data
       DWORD_PTR GetStartAddressOfRawData() const;
@@ -71,10 +78,10 @@ namespace Hades
       std::vector<PIMAGE_TLS_CALLBACK> GetCallbacks() const;
 
       // Get base of TLS dir
-      inline PBYTE GetBase() const;
+      PBYTE GetBase() const;
 
       // Get raw TLS dir
-      inline IMAGE_TLS_DIRECTORY GetTlsDirRaw() const;
+      IMAGE_TLS_DIRECTORY GetTlsDirRaw() const;
 
     private:
       // PE file
@@ -83,143 +90,5 @@ namespace Hades
       // Memory instance
       MemoryMgr* m_pMemory;
     };
-
-    // Constructor
-    TlsDir::TlsDir(PeFile& MyPeFile)
-      : m_pPeFile(&MyPeFile), 
-      m_pMemory(&m_pPeFile->GetMemoryMgr())
-    { }
-
-    // Whether TLS directory is valid
-    bool TlsDir::IsValid() const
-    {
-      // Get NT headers
-      NtHeaders const MyNtHeaders(*m_pPeFile);
-
-      // Get TLS dir data
-      DWORD const DataDirSize(MyNtHeaders.GetDataDirectorySize(NtHeaders::
-        DataDir_TLS));
-      DWORD const DataDirVa(MyNtHeaders.GetDataDirectoryVirtualAddress(
-        NtHeaders::DataDir_TLS));
-
-      // TLS dir is valid if size and rva are valid
-      return DataDirSize && DataDirVa;
-    }
-
-    // Ensure export directory is valid
-    void TlsDir::EnsureValid() const
-    {
-      if (!IsValid())
-      {
-        BOOST_THROW_EXCEPTION(Error() << 
-          ErrorFunction("TlsDir::EnsureValid") << 
-          ErrorString("TLS directory is invalid."));
-      }
-    }
-
-    // Get start address of raw data
-    DWORD_PTR TlsDir::GetStartAddressOfRawData() const
-    {
-      PBYTE const pTlsDir = GetBase();
-      return m_pMemory->Read<DWORD_PTR>(pTlsDir + FIELD_OFFSET(
-        IMAGE_TLS_DIRECTORY, StartAddressOfRawData));
-    }
-
-    // Get end address of raw data
-    DWORD_PTR TlsDir::GetEndAddressOfRawData() const
-    {
-      PBYTE const pTlsDir = GetBase();
-      return m_pMemory->Read<DWORD_PTR>(pTlsDir + FIELD_OFFSET(
-        IMAGE_TLS_DIRECTORY, EndAddressOfRawData));
-    }
-
-    // Get address of index
-    DWORD_PTR TlsDir::GetAddressOfIndex() const
-    {
-      PBYTE const pTlsDir = GetBase();
-      return m_pMemory->Read<DWORD_PTR>(pTlsDir + FIELD_OFFSET(
-        IMAGE_TLS_DIRECTORY, AddressOfIndex));
-    }
-
-    // Get address of callbacks
-    DWORD_PTR TlsDir::GetAddressOfCallBacks() const
-    {
-      PBYTE const pTlsDir = GetBase();
-      return m_pMemory->Read<DWORD_PTR>(pTlsDir + FIELD_OFFSET(
-        IMAGE_TLS_DIRECTORY, AddressOfCallBacks));
-    }
-
-    // Get size of zero fill
-    DWORD TlsDir::GetSizeOfZeroFill() const
-    {
-      PBYTE const pTlsDir = GetBase();
-      return m_pMemory->Read<DWORD>(pTlsDir + FIELD_OFFSET(
-        IMAGE_TLS_DIRECTORY, SizeOfZeroFill));
-    }
-
-    // Get characteristics
-    DWORD TlsDir::GetCharacteristics() const
-    {
-      PBYTE const pTlsDir = GetBase();
-      return m_pMemory->Read<DWORD>(pTlsDir + FIELD_OFFSET(
-        IMAGE_TLS_DIRECTORY, Characteristics));
-    }
-
-    // Get list of TLS callbacks
-    std::vector<PIMAGE_TLS_CALLBACK> TlsDir::GetCallbacks() const
-    {
-      // Callback list
-      std::vector<PIMAGE_TLS_CALLBACK> Callbacks;
-
-      // Get NT headers
-      NtHeaders MyNtHeaders(*m_pPeFile);
-
-      // Get pointer to callback list
-      PIMAGE_TLS_CALLBACK* pCallbacks = reinterpret_cast<PIMAGE_TLS_CALLBACK*>(
-        m_pPeFile->RvaToVa(static_cast<DWORD>(GetAddressOfCallBacks() - 
-        MyNtHeaders.GetImageBase())));
-
-      // Loop over all callbacks
-      for (PIMAGE_TLS_CALLBACK pCallback = m_pMemory->
-        Read<PIMAGE_TLS_CALLBACK>(pCallbacks); pCallback; pCallback = 
-        m_pMemory->Read<PIMAGE_TLS_CALLBACK>(++pCallbacks))
-      {
-        PIMAGE_TLS_CALLBACK pCallbackReal = 
-          reinterpret_cast<PIMAGE_TLS_CALLBACK>((reinterpret_cast<PBYTE>(
-          pCallback) - MyNtHeaders.GetImageBase()));
-        Callbacks.push_back(pCallbackReal);
-      }
-
-      // Return callback list
-      return Callbacks;
-    }
-
-    // Get base of export dir
-    PBYTE TlsDir::GetBase() const
-    {
-      // Get NT headers
-      NtHeaders const MyNtHeaders(*m_pPeFile);
-
-      // Get export dir data
-      DWORD const DataDirSize = MyNtHeaders.GetDataDirectorySize(NtHeaders::
-        DataDir_TLS);
-      DWORD const DataDirVa = MyNtHeaders.GetDataDirectoryVirtualAddress(
-        NtHeaders::DataDir_TLS);
-      if (!DataDirSize || !DataDirVa)
-      {
-        BOOST_THROW_EXCEPTION(Error() << 
-          ErrorFunction("TlsDir::GetBase") << 
-          ErrorString("PE file has no TLS directory."));
-      }
-
-      return static_cast<PBYTE>(m_pPeFile->RvaToVa(DataDirVa));
-    }
-
-    // Get raw TLS dir
-    IMAGE_TLS_DIRECTORY TlsDir::GetTlsDirRaw() const
-    {
-      // Get raw TLS dir
-      return m_pMemory->Read<IMAGE_TLS_DIRECTORY>(GetBase());
-    }
   }
 }
