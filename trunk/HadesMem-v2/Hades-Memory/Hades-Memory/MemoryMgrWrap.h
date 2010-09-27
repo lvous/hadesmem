@@ -34,7 +34,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Windows API
 #include <Windows.h>
 
-// HadesMem
+// Hades
 #include "Types.h"
 #include "MemoryMgr.h"
 #include "Hades-Common/I18n.h"

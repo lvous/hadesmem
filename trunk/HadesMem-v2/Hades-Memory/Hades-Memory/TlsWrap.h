@@ -22,7 +22,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // C++ Standard Library
 #include <vector>
 
-// HadesMem
+// Hades
 #include "TlsDir.h"
 
 namespace Hades

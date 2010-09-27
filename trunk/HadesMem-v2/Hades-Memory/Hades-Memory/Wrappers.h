@@ -19,7 +19,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-// HadesMem (Scripting Wrappers)
+// Hades (Scripting Wrappers)
 #include "ModuleWrap.h"
 #include "RegionWrap.h"
 #include "ScannerWrap.h"
@@ -28,7 +28,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include "MemoryMgrWrap.h"
 #include "DisassemblerWrap.h"
 
-// HadesMem (Scripting Wrappers - PeLib)
+// Hades (Scripting Wrappers - PeLib)
 #include "TlsWrap.h"
 #include "ExportWrap.h"
 #include "PeFileWrap.h"

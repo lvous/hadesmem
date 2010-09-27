@@ -31,7 +31,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include <boost/format.hpp>
 #pragma warning(pop)
 
-// HadesMem
+// Hades
 #include "MemoryMgr.h"
 #include "Disassembler.h"
 

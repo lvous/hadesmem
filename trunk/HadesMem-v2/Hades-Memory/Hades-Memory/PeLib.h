@@ -19,7 +19,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-// HadesMem (PeLib)
+// Hades (PeLib)
 #include "PeFile.h"
 #include "TlsDir.h"
 #include "Section.h"

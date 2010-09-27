@@ -22,7 +22,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Windows API
 #include <Windows.h>
 
-// HadesMem
+// Hades
 #include "Error.h"
 #include "MemoryMgr.h"
 

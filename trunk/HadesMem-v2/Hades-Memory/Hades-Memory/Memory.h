@@ -19,7 +19,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-// HadesMem (External)
+// Hades (External)
 #include "Module.h"
 #include "Region.h"
 #include "Process.h"
@@ -29,8 +29,8 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include "MemoryMgr.h"
 #include "Disassembler.h"
 
-// HadesMem (Internal)
+// Hades (Internal)
 #include "Patcher.h"
 
-// HadesMem (PeLib)
+// Hades (PeLib)
 #include "PeLib.h"
