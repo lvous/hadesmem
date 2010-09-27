@@ -143,5 +143,8 @@
     <ClInclude Include="SectionWrap.h">
       <Filter>Header Files\Scripting\Wrappers\PeLib</Filter>
     </ClInclude>
+    <ClInclude Include="AutoLink.h">
+      <Filter>Header Files\Aux</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

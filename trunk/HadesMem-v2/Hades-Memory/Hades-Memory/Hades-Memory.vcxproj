@@ -22,6 +22,7 @@
     <ClCompile Include="Placeholder.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AutoLink.h" />
     <ClInclude Include="Disassembler.h" />
     <ClInclude Include="DisassemblerWrap.h" />
     <ClInclude Include="DosHeader.h" />
