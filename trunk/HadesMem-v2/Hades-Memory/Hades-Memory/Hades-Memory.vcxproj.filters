@@ -43,6 +43,9 @@
     <Filter Include="Source Files\Internal">
       <UniqueIdentifier>{c581c5ae-2da0-4123-8cc9-e118cac78158}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Scripting">
+      <UniqueIdentifier>{4cfe283c-51a3-4cb6-81c0-895245acbf32}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Placeholder.cpp">
@@ -92,6 +95,9 @@
     </ClCompile>
     <ClCompile Include="Disassembler.cpp">
       <Filter>Source Files\External</Filter>
+    </ClCompile>
+    <ClCompile Include="Scripting.cpp">
+      <Filter>Source Files\Scripting</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

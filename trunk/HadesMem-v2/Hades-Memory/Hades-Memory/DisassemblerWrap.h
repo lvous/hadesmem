@@ -50,7 +50,7 @@ namespace Hades
         { }
 
         // Disassembler::DisassembleToStr wrapper
-        inline StringList DisassembleToStr(DWORD_PTR Address, 
+        StringList DisassembleToStr(DWORD_PTR Address, 
           DWORD_PTR NumInstructions)
         {
           StringList MyStringList;
