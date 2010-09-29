@@ -376,6 +376,9 @@ namespace Hades
         return;
       }
 
+      // Get end of reloc dir
+      PVOID pRelocDirEnd = reinterpret_cast<PBYTE>(pRelocDir) + RelocDirSize;
+
       // Debug output
       std::wcout << "Fixing relocations." << std::endl;
 
@@ -386,36 +389,51 @@ namespace Hades
       LONG_PTR const Delta = reinterpret_cast<ULONG_PTR>(pRemoteBase) - 
         ImageBase;
 
-      // Number of bytes processed
-      DWORD BytesProcessed = 0; 
-
       // Ensure we don't read into invalid data
-      while (BytesProcessed < RelocDirSize)
+      while (pRelocDir < pRelocDirEnd && pRelocDir->SizeOfBlock > 0)
       {
         // Get base of reloc dir
-        PVOID const RelocBase = MyPeFile.RvaToVa(pRelocDir->VirtualAddress);
+        PBYTE const RelocBase = static_cast<PBYTE>(MyPeFile.RvaToVa(
+          pRelocDir->VirtualAddress));
 
         // Get number of relocs
         DWORD const NumRelocs = (pRelocDir->SizeOfBlock - sizeof(
           IMAGE_BASE_RELOCATION)) / sizeof(WORD); 
 
         // Get pointer to reloc data
-        WORD* pRelocData = reinterpret_cast<WORD*>(reinterpret_cast<DWORD_PTR>(
-          pRelocDir) + sizeof(IMAGE_BASE_RELOCATION));
+        PWORD pRelocData = reinterpret_cast<PWORD>(pRelocDir + 1);
 
         // Loop over all relocation entries
         for(DWORD i = 0; i < NumRelocs; ++i, ++pRelocData) 
         {
-          // Perform relocation if necessary
-          if ((*pRelocData >> 12) & IMAGE_REL_BASED_HIGHLOW)
+          // Get reloc data
+          BYTE RelocType = *pRelocData >> 12;
+          WORD Offset = *pRelocData & 0xFFF;
+
+          // Process reloc
+          switch (RelocType)
           {
-            *reinterpret_cast<DWORD_PTR*>(static_cast<PBYTE>(RelocBase) + 
-              (*pRelocData & 0x0FFF)) += Delta;
+          case IMAGE_REL_BASED_ABSOLUTE:
+            break;
+
+          case IMAGE_REL_BASED_HIGHLOW:
+            *reinterpret_cast<DWORD32*>(RelocBase + Offset) += 
+              static_cast<DWORD32>(Delta);
+            break;
+
+          case IMAGE_REL_BASED_DIR64:
+            *reinterpret_cast<DWORD64*>(RelocBase + Offset) += Delta;
+            break;
+
+          default:
+            std::wcout << "Unsupported relocation type: " << RelocType << 
+              std::endl;
+
+            BOOST_THROW_EXCEPTION(Error() << 
+              ErrorFunction("ManualMap::FixRelocations") << 
+              ErrorString("Unsuppported relocation type."));
           }
         }
-
-        // Add to number of bytes processed
-        BytesProcessed += pRelocDir->SizeOfBlock;
 
         // Advance to next reloc info block
         pRelocDir = reinterpret_cast<PIMAGE_BASE_RELOCATION>(pRelocData); 

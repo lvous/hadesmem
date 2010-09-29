@@ -68,7 +68,7 @@ extern "C" __declspec(dllexport) DWORD __stdcall Initialize(HMODULE /*Module*/)
   }
 
   // Test return values
-  return 0;
+  return 1234;
 }
 
 BOOL WINAPI DllMain(HINSTANCE /*hinstDLL*/, DWORD /*fdwReason*/, 
