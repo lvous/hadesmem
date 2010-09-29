@@ -336,8 +336,17 @@ namespace Hades
       std::wcout << "Fixing imports." << std::endl;
 
       // Loop through all the required modules
-      for (; pImpDesc && pImpDesc->Name; ++pImpDesc) 
+      for (; pImpDesc->Characteristics; ++pImpDesc) 
       {
+        // Check for forwarded imports
+        if (pImpDesc->ForwarderChain != static_cast<DWORD>(-1) && 
+          pImpDesc->ForwarderChain != 0)
+        {
+          BOOST_THROW_EXCEPTION(Error() << 
+            ErrorFunction("ManualMap::FixImports") << 
+            ErrorString("Image has unhandled forwarded imports."));
+        }
+
         // Get module name
         char const* pModuleName = static_cast<char const*>(MyPeFile.RvaToVa(
           pImpDesc->Name));
