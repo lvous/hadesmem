@@ -339,6 +339,7 @@ namespace Hades
       for (; pImpDesc->Characteristics; ++pImpDesc) 
       {
         // Check for forwarded imports
+        // Todo: Handle forwarded imports
         if (pImpDesc->ForwarderChain != static_cast<DWORD>(-1) && 
           pImpDesc->ForwarderChain != 0)
         {
@@ -388,7 +389,6 @@ namespace Hades
         }
 
         // Lookup the first import thunk for this module
-        // Todo: Forwarded import support
         PIMAGE_THUNK_DATA pThunkData = static_cast<PIMAGE_THUNK_DATA>(
           MyPeFile.RvaToVa(pImpDesc->FirstThunk));
         while (pThunkData->u1.AddressOfData != 0) 
