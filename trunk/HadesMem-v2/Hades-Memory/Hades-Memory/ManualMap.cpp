@@ -107,7 +107,7 @@ namespace Hades
 
       // Get all TLS callbacks
       std::vector<PIMAGE_TLS_CALLBACK> TlsCallbacks;
-      TlsDir MyTlsDir(MyPeFile);
+      TlsDir const MyTlsDir(MyPeFile);
       if (MyTlsDir.IsValid())
       {
         TlsCallbacks = MyTlsDir.GetCallbacks();
@@ -174,8 +174,8 @@ namespace Hades
         TlsCallArgs.push_back(0);
         TlsCallArgs.push_back(reinterpret_cast<PVOID>(DLL_PROCESS_ATTACH));
         TlsCallArgs.push_back(RemoteBase);
-        DWORD TlsRet = m_pMemory->Call(reinterpret_cast<PBYTE>(RemoteBase) + 
-          reinterpret_cast<DWORD_PTR>(pCallback), TlsCallArgs);
+        DWORD const TlsRet = m_pMemory->Call(reinterpret_cast<PBYTE>(
+          RemoteBase) + reinterpret_cast<DWORD_PTR>(pCallback), TlsCallArgs);
         std::wcout << "TLS Callback Returned: " << TlsRet << "." << std::endl;
       });
 
@@ -192,7 +192,7 @@ namespace Hades
       {
         std::vector<PVOID> ExpArgs;
         ExpArgs.push_back(RemoteBase);
-        DWORD ExpRet = m_pMemory->Call(ExportAddr, ExpArgs);
+        DWORD const ExpRet = m_pMemory->Call(ExportAddr, ExpArgs);
         std::wcout << "Export Returned: " << ExpRet << "." << std::endl;
       }
 
@@ -234,7 +234,7 @@ namespace Hades
         PBYTE const DataEnd = DataStart + SizeOfRawData;
 
         // Get section data
-        std::vector<BYTE> SectionData(DataStart, DataEnd);
+        std::vector<BYTE> const SectionData(DataStart, DataEnd);
 
         // Write section data to process
         m_pMemory->Write(TargetAddr, SectionData);
@@ -393,7 +393,7 @@ namespace Hades
       while (BytesProcessed < RelocDirSize)
       {
         // Get base of reloc dir
-        PVOID RelocBase = MyPeFile.RvaToVa(pRelocDir->VirtualAddress);
+        PVOID const RelocBase = MyPeFile.RvaToVa(pRelocDir->VirtualAddress);
 
         // Get number of relocs
         DWORD const NumRelocs = (pRelocDir->SizeOfBlock - sizeof(
