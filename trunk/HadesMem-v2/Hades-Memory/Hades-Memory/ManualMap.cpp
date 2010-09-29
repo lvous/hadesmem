@@ -17,6 +17,9 @@ You should have received a copy of the GNU General Public License
 along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+// Note: This file contains some code from the ReactOS project.
+// Todo: Find and tag all such code.
+
 // C++ Standard Library
 #include <memory>
 #include <string>
@@ -40,6 +43,33 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include "ManualMap.h"
 #include "Hades-Common/I18n.h"
 #include "Hades-Common/EnsureCleanup.h"
+
+namespace 
+{
+  std::array<ULONG, 16> const SectionCharacteristicsToProtect =
+  {
+    PAGE_NOACCESS,          /* 0 = NONE */
+    PAGE_NOACCESS,          /* 1 = SHARED */
+    PAGE_EXECUTE,           /* 2 = EXECUTABLE */
+    PAGE_EXECUTE,           /* 3 = EXECUTABLE, SHARED */
+    PAGE_READONLY,          /* 4 = READABLE */
+    PAGE_READONLY,          /* 5 = READABLE, SHARED */
+    PAGE_EXECUTE_READ,      /* 6 = READABLE, EXECUTABLE */
+    PAGE_EXECUTE_READ,      /* 7 = READABLE, EXECUTABLE, SHARED */
+    /*
+    * FIXME? do we really need the WriteCopy field in segments? can't we use
+    * PAGE_WRITECOPY here?
+    */
+    PAGE_READWRITE,         /* 8 = WRITABLE */
+    PAGE_READWRITE,         /* 9 = WRITABLE, SHARED */
+    PAGE_EXECUTE_READWRITE, /* 10 = WRITABLE, EXECUTABLE */
+    PAGE_EXECUTE_READWRITE, /* 11 = WRITABLE, EXECUTABLE, SHARED */
+    PAGE_READWRITE,         /* 12 = WRITABLE, READABLE */
+    PAGE_READWRITE,         /* 13 = WRITABLE, READABLE, SHARED */
+    PAGE_EXECUTE_READWRITE, /* 14 = WRITABLE, READABLE, EXECUTABLE */
+    PAGE_EXECUTE_READWRITE, /* 15 = WRITABLE, READABLE, EXECUTABLE, SHARED */
+  };
+}
 
 namespace Hades
 {
@@ -239,11 +269,38 @@ namespace Hades
         // Write section data to process
         m_pMemory->Write(TargetAddr, SectionData);
 
+        // Get section characteristics
+        DWORD SecCharacteristics = Current.GetCharacteristics();
+
+        // Handle case where no explicit protection is provided. Infer 
+        // protection flags from section type.
+        if((SecCharacteristics & (IMAGE_SCN_MEM_EXECUTE | IMAGE_SCN_MEM_READ | 
+          IMAGE_SCN_MEM_WRITE)) == 0)
+        {
+          if(SecCharacteristics & IMAGE_SCN_CNT_CODE)
+          {
+            SecCharacteristics |= IMAGE_SCN_MEM_EXECUTE | IMAGE_SCN_MEM_READ;
+          }
+
+          if(SecCharacteristics & IMAGE_SCN_CNT_INITIALIZED_DATA)
+          {
+            SecCharacteristics |= IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE;
+          }
+
+          if(SecCharacteristics & IMAGE_SCN_CNT_UNINITIALIZED_DATA)
+          {
+            SecCharacteristics |= IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE;
+          }
+        }
+
+        // Look up protection flags for section
+        DWORD SecProtect = SectionCharacteristicsToProtect[
+          SecCharacteristics >> 28];
+
         // Set the proper page protections for this section
         DWORD OldProtect;
         if (!VirtualProtectEx(m_pMemory->GetProcessHandle(), TargetAddr, 
-          SizeOfRawData, Current.GetCharacteristics() & 0x00FFFFFF, 
-          &OldProtect))
+          SizeOfRawData, SecProtect, &OldProtect))
         {
           DWORD const LastError = GetLastError();
           BOOST_THROW_EXCEPTION(Error() << 
