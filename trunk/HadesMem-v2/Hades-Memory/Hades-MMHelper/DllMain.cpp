@@ -21,6 +21,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #pragma warning(push, 1)
 #pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
 #include <boost/thread.hpp>
+#include <boost/format.hpp>
 #include <boost/exception/all.hpp>
 #pragma warning(pop)
 
@@ -49,7 +50,7 @@ LONG CALLBACK VectoredHandler(__in PEXCEPTION_POINTERS ExceptionInfo)
   PEXCEPTION_REGISTRATION_RECORD pExceptionList = 
     *reinterpret_cast<PEXCEPTION_REGISTRATION_RECORD*>(pTeb);
 
-  while (pExceptionList->Handler)
+  while (pExceptionList && pExceptionList->Handler)
   {
     DISPATCHER_CONTEXT DispatcherContext = { 0 };
 
@@ -97,6 +98,11 @@ void TestSEH()
 }
 #pragma warning(pop)
 
+void TestRelocs()
+{
+  MessageBoxW(NULL, L"Testing relocations.", L"Hades-MMHelper", MB_OK);
+}
+
 extern "C" __declspec(dllexport) DWORD __stdcall Test(HMODULE /*Module*/)
 {
   // Break to debugger if present
@@ -118,6 +124,11 @@ extern "C" __declspec(dllexport) DWORD __stdcall Test(HMODULE /*Module*/)
   boost::thread_specific_ptr<std::wstring> TlsTest;
   TlsTest.reset(new std::wstring(L"Testing TLS."));
   MessageBoxW(NULL, TlsTest->c_str(), L"Hades-MMHelper", MB_OK);
+
+  // Test relocs
+  typedef void (* tTestRelocs)();
+  tTestRelocs pTestRelocs = reinterpret_cast<tTestRelocs>(&TestRelocs);
+  pTestRelocs();
 
   // Test SEH
   TestSEH();
