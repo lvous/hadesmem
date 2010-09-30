@@ -191,8 +191,8 @@ namespace Hades
         static Logger<char>::Stream AnsiStream(AnsiLogger);
         static Logger<wchar_t> WideLogger(LogsPath, LogName);
         static Logger<wchar_t>::Stream WideStream(WideLogger);
-        std::cout.rdbuf(AnsiStream.rdbuf());
-        std::wcout.rdbuf(WideStream.rdbuf());
+        std::clog.rdbuf(AnsiStream.rdbuf());
+        std::wclog.rdbuf(WideStream.rdbuf());
 
         std::wclog << "Logger initialized." << std::endl;
       }
