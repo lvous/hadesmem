@@ -28,6 +28,75 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include <crtdbg.h>
 #include <Windows.h>
 
+// Hades
+#include "Hades-Common/Logger.h"
+
+typedef struct _EXCEPTION_REGISTRATION_RECORD
+{
+  struct _EXCEPTION_REGISTRATION_RECORD *Next;
+  PEXCEPTION_ROUTINE Handler;
+} EXCEPTION_REGISTRATION_RECORD, *PEXCEPTION_REGISTRATION_RECORD;
+
+typedef struct _DISPATCHER_CONTEXT
+{
+  PEXCEPTION_REGISTRATION_RECORD RegistrationPointer;
+} DISPATCHER_CONTEXT, *PDISPATCHER_CONTEXT;
+
+LONG CALLBACK VectoredHandler(__in PEXCEPTION_POINTERS ExceptionInfo)
+{
+  PVOID pTeb = NtCurrentTeb();
+
+  PEXCEPTION_REGISTRATION_RECORD pExceptionList = 
+    *reinterpret_cast<PEXCEPTION_REGISTRATION_RECORD*>(pTeb);
+
+  while (pExceptionList->Handler)
+  {
+    DISPATCHER_CONTEXT DispatcherContext = { 0 };
+
+    EXCEPTION_DISPOSITION Disposition = pExceptionList->Handler(
+      ExceptionInfo->ExceptionRecord, 
+      pExceptionList, 
+      ExceptionInfo->ContextRecord, 
+      &DispatcherContext);
+
+    switch (Disposition)
+    {
+    case ExceptionContinueExecution:
+      return EXCEPTION_CONTINUE_EXECUTION;
+
+    case ExceptionContinueSearch:
+      pExceptionList = pExceptionList->Next;
+      break;
+
+    case ExceptionNestedException:
+    case ExceptionCollidedUnwind:
+      std::abort();
+
+    default:
+      assert(!"Unknown exception disposition.");
+    }
+  }
+
+  return EXCEPTION_CONTINUE_SEARCH;
+}
+
+#pragma warning(push, 1)
+#pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
+void TestSEH()
+{
+  // Test SEH
+  __try 
+  {
+    int* pInt = 0;
+    *pInt = 0;
+  }
+  __except (EXCEPTION_EXECUTE_HANDLER)
+  {
+    MessageBoxW(NULL, L"Testing SEH.", L"Hades-MMHelper", MB_OK);
+  }
+}
+#pragma warning(pop)
+
 extern "C" __declspec(dllexport) DWORD __stdcall Test(HMODULE /*Module*/)
 {
   // Break to debugger if present
@@ -36,18 +105,27 @@ extern "C" __declspec(dllexport) DWORD __stdcall Test(HMODULE /*Module*/)
     DebugBreak();
   }
 
+  // Add VEH
+  if (!AddVectoredExceptionHandler(1, &VectoredHandler))
+  {
+    MessageBoxW(NULL, L"Failed to add VEH.", L"Hades-MMHelper", MB_OK);
+  }
+
   // Test IAT
-  MessageBoxW(NULL, L"Testing IAT", L"Hades-MMHelper", MB_OK);
+  MessageBoxW(NULL, L"Testing IAT.", L"Hades-MMHelper", MB_OK);
 
   // Test TLS
   boost::thread_specific_ptr<std::wstring> TlsTest;
-  TlsTest.reset(new std::wstring(L"Testing TLS"));
+  TlsTest.reset(new std::wstring(L"Testing TLS."));
   MessageBoxW(NULL, TlsTest->c_str(), L"Hades-MMHelper", MB_OK);
 
-  // Test EH
+  // Test SEH
+  TestSEH();
+
+  // Test C++ EH
   try
   {
-    throw std::runtime_error("Testing EH");
+    throw std::runtime_error("Testing C++ EH.");
   }
   catch (std::exception const& e)
   {
