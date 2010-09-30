@@ -43,6 +43,8 @@ typedef struct _DISPATCHER_CONTEXT
   PEXCEPTION_REGISTRATION_RECORD RegistrationPointer;
 } DISPATCHER_CONTEXT, *PDISPATCHER_CONTEXT;
 
+#define EXCEPTION_CHAIN_END ((PEXCEPTION_REGISTRATION_RECORD)-1)
+
 LONG CALLBACK VectoredHandler(__in PEXCEPTION_POINTERS ExceptionInfo)
 {
   PVOID pTeb = NtCurrentTeb();
@@ -50,7 +52,7 @@ LONG CALLBACK VectoredHandler(__in PEXCEPTION_POINTERS ExceptionInfo)
   PEXCEPTION_REGISTRATION_RECORD pExceptionList = 
     *reinterpret_cast<PEXCEPTION_REGISTRATION_RECORD*>(pTeb);
 
-  while (pExceptionList && pExceptionList->Handler)
+  while (pExceptionList != EXCEPTION_CHAIN_END)
   {
     DISPATCHER_CONTEXT DispatcherContext = { 0 };
 
