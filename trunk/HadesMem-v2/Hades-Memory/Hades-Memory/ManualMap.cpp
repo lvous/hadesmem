@@ -375,7 +375,7 @@ namespace Hades
         {
           // Inject dependent DLL
           std::wcout << "Injecting dependent DLL." << std::endl;
-          Injector MyInjector(*m_pMemory);
+          Injector const MyInjector(*m_pMemory);
           CurModBase = MyInjector.InjectDll(ModuleNameW, false);
           CurModName = ModuleNameW;
         }
