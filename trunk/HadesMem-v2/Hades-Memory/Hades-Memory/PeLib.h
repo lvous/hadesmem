@@ -23,6 +23,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include "PeFile.h"
 #include "TlsDir.h"
 #include "Section.h"
+#include "ImportDir.h"
 #include "ExportDir.h"
 #include "DosHeader.h"
 #include "ExportDir.h"

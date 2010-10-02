@@ -44,6 +44,8 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include "Hades-Common/I18n.h"
 #include "Hades-Common/EnsureCleanup.h"
 
+#include "ImportDir.h"
+
 namespace 
 {
   std::array<ULONG, 16> const SectionCharacteristicsToProtect =
@@ -317,13 +319,9 @@ namespace Hades
       // Get NT headers
       NtHeaders const MyNtHeaders(MyPeFile);
 
-      // Get import data dir size and address
-      DWORD const ImpDirSize = MyNtHeaders.GetDataDirectorySize(NtHeaders::
-        DataDir_Import);
-      PIMAGE_IMPORT_DESCRIPTOR pImpDesc = 
-        static_cast<PIMAGE_IMPORT_DESCRIPTOR>(MyPeFile.RvaToVa(MyNtHeaders.
-        GetDataDirectoryVirtualAddress(NtHeaders::DataDir_Import)));
-      if (!ImpDirSize || !pImpDesc)
+      // Get import dir
+      ImportDir const MyImportDir(MyPeFile);
+      if (!MyImportDir.IsValid())
       {
         // Debug output
         std::wcout << "Image has no imports." << std::endl;
@@ -336,12 +334,12 @@ namespace Hades
       std::wcout << "Fixing imports." << std::endl;
 
       // Loop through all the required modules
-      for (; pImpDesc->Characteristics; ++pImpDesc) 
+      for (; MyImportDir.GetCharacteristics(); MyImportDir.Advance()) 
       {
         // Check for forwarded imports
         // Todo: Handle forwarded imports
-        if (pImpDesc->ForwarderChain != static_cast<DWORD>(-1) && 
-          pImpDesc->ForwarderChain != 0)
+        if (MyImportDir.GetForwarderChain() != static_cast<DWORD>(-1) && 
+          MyImportDir.GetForwarderChain() != 0)
         {
           BOOST_THROW_EXCEPTION(Error() << 
             ErrorFunction("ManualMap::FixImports") << 
@@ -349,10 +347,9 @@ namespace Hades
         }
 
         // Get module name
-        char const* pModuleName = static_cast<char const*>(MyPeFile.RvaToVa(
-          pImpDesc->Name));
+        std::string ModuleNameA(MyImportDir.GetName());
         std::wstring const ModuleNameW(boost::lexical_cast<std::wstring, 
-          std::string>(pModuleName));
+          std::string>(ModuleNameA));
         std::wstring const ModuleNameLowerW(boost::to_lower_copy(ModuleNameW));
         std::wcout << "Module Name: " << ModuleNameW << "." << std::endl;
 
@@ -389,34 +386,25 @@ namespace Hades
         }
 
         // Lookup the first import thunk for this module
-        PIMAGE_THUNK_DATA pThunkData = static_cast<PIMAGE_THUNK_DATA>(
-          MyPeFile.RvaToVa(pImpDesc->FirstThunk));
-        while (pThunkData->u1.AddressOfData != 0) 
+        PVOID pFirstThunk = MyPeFile.RvaToVa(MyImportDir.GetFirstThunk());
+        ImportThunk ImpThunk(MyPeFile, pFirstThunk);
+        while (ImpThunk.IsValid()) 
         {
-          // Get import data
-          PIMAGE_IMPORT_BY_NAME const pNameImport = 
-            static_cast<PIMAGE_IMPORT_BY_NAME>(MyPeFile.RvaToVa(
-            static_cast<DWORD>(pThunkData->u1.AddressOfData)));
-
           // Get name of function
-          std::string const ImpName(reinterpret_cast<char*>(pNameImport->
-            Name));
+          std::string const ImpName(ImpThunk.GetName());
           std::cout << "Function Name: " << ImpName << "." << std::endl;
 
           // Get function address in remote process
-          bool const ByOrdinal = IMAGE_SNAP_BY_ORDINAL(pThunkData->u1.Ordinal);
           FARPROC FuncAddr = 0;
-          if (ByOrdinal)
+          if (ImpThunk.ByOrdinal())
           {
-            WORD Ordinal = IMAGE_ORDINAL(pThunkData->u1.Ordinal);
             FuncAddr = m_pMemory->GetRemoteProcAddress(CurModBase, CurModName, 
-              Ordinal);
+              ImpThunk.GetOrdinal());
           }
           else
           {
-            LPCSTR Function = reinterpret_cast<LPCSTR>(pNameImport->Name);
             FuncAddr = m_pMemory->GetRemoteProcAddress(CurModBase, CurModName, 
-              Function);
+              ImpThunk.GetName());
           }
 
           // Ensure function was found
@@ -428,10 +416,10 @@ namespace Hades
           }
 
           // Set function address
-          pThunkData->u1.Function = reinterpret_cast<DWORD_PTR>(FuncAddr);
+          ImpThunk.SetFunction(reinterpret_cast<DWORD_PTR>(FuncAddr));
 
           // Advance to next function
-          ++pThunkData;
+          ImpThunk.Advance();
         }
       } 
     }

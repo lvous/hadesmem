@@ -22,6 +22,7 @@
     <ClCompile Include="Disassembler.cpp" />
     <ClCompile Include="DosHeader.cpp" />
     <ClCompile Include="ExportDir.cpp" />
+    <ClCompile Include="ImportDir.cpp" />
     <ClCompile Include="Injector.cpp" />
     <ClCompile Include="ManualMap.cpp" />
     <ClCompile Include="MemoryMgr.cpp" />
@@ -47,6 +48,7 @@
     <ClInclude Include="ExportEnum.h" />
     <ClInclude Include="ExportWrap.h" />
     <ClInclude Include="Fwd.h" />
+    <ClInclude Include="ImportDir.h" />
     <ClInclude Include="Injector.h" />
     <ClInclude Include="InjectorWrap.h" />
     <ClInclude Include="ManualMap.h" />

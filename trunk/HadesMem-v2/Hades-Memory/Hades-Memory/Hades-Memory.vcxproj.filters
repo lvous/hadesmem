@@ -99,6 +99,9 @@
     <ClCompile Include="Scripting.cpp">
       <Filter>Source Files\Scripting</Filter>
     </ClCompile>
+    <ClCompile Include="ImportDir.cpp">
+      <Filter>Source Files\External\PeLib</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Memory.h">
@@ -208,6 +211,9 @@
     </ClInclude>
     <ClInclude Include="Fwd.h">
       <Filter>Header Files\Aux</Filter>
+    </ClInclude>
+    <ClInclude Include="ImportDir.h">
+      <Filter>Header Files\External\PeLib</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
