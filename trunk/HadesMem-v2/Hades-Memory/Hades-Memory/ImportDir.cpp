@@ -105,28 +105,28 @@ namespace Hades
     // Get characteristics
     DWORD ImportDir::GetCharacteristics() const
     {
-      return m_pMemory->Read<DWORD_PTR>(GetBase() + FIELD_OFFSET(
+      return m_pMemory->Read<DWORD>(GetBase() + FIELD_OFFSET(
         IMAGE_IMPORT_DESCRIPTOR, Characteristics));
     }
 
     // Get time and date stamp
     DWORD ImportDir::GetTimeDateStamp() const
     {
-      return m_pMemory->Read<DWORD_PTR>(GetBase() + FIELD_OFFSET(
+      return m_pMemory->Read<DWORD>(GetBase() + FIELD_OFFSET(
         IMAGE_IMPORT_DESCRIPTOR, TimeDateStamp));
     }
 
     // Get forwarder chain
     DWORD ImportDir::GetForwarderChain() const
     {
-      return m_pMemory->Read<DWORD_PTR>(GetBase() + FIELD_OFFSET(
+      return m_pMemory->Read<DWORD>(GetBase() + FIELD_OFFSET(
         IMAGE_IMPORT_DESCRIPTOR, ForwarderChain));
     }
 
     // Get name (raw)
     DWORD ImportDir::GetNameRaw() const
     {
-      return m_pMemory->Read<DWORD_PTR>(GetBase() + FIELD_OFFSET(
+      return m_pMemory->Read<DWORD>(GetBase() + FIELD_OFFSET(
         IMAGE_IMPORT_DESCRIPTOR, Name));
     }
 
@@ -139,7 +139,7 @@ namespace Hades
     // Get first think
     DWORD ImportDir::GetFirstThunk() const
     {
-      return m_pMemory->Read<DWORD_PTR>(GetBase() + FIELD_OFFSET(
+      return m_pMemory->Read<DWORD>(GetBase() + FIELD_OFFSET(
         IMAGE_IMPORT_DESCRIPTOR, FirstThunk));
     }
 
