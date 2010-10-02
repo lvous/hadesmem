@@ -31,6 +31,11 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 // Hades
 #include "Hades-Common/Logger.h"
+#include "Hades-Memory/Memory.h"
+#include "Hades-Memory/AutoLink.h"
+
+// Image base linker 'trick'
+EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 
 typedef struct _EXCEPTION_REGISTRATION_RECORD
 {
@@ -47,10 +52,25 @@ typedef struct _DISPATCHER_CONTEXT
 
 LONG CALLBACK VectoredHandler(__in PEXCEPTION_POINTERS ExceptionInfo)
 {
+#if defined(_M_AMD64) 
+  ExceptionInfo;
+  return EXCEPTION_CONTINUE_SEARCH;
+#elif defined(_M_IX86) 
   PVOID pTeb = NtCurrentTeb();
+  if (!pTeb)
+  {
+    MessageBoxW(NULL, L"TEB pointer invalid.", L"Hades-MMHelper", MB_OK);
+    return EXCEPTION_CONTINUE_SEARCH;
+  }
 
   PEXCEPTION_REGISTRATION_RECORD pExceptionList = 
     *reinterpret_cast<PEXCEPTION_REGISTRATION_RECORD*>(pTeb);
+  if (!pExceptionList)
+  {
+    MessageBoxW(NULL, L"Exception list pointer invalid.", L"Hades-MMHelper", 
+      MB_OK);
+    return EXCEPTION_CONTINUE_SEARCH;
+  }
 
   while (pExceptionList != EXCEPTION_CHAIN_END)
   {
@@ -68,7 +88,6 @@ LONG CALLBACK VectoredHandler(__in PEXCEPTION_POINTERS ExceptionInfo)
       return EXCEPTION_CONTINUE_EXECUTION;
 
     case ExceptionContinueSearch:
-      pExceptionList = pExceptionList->Next;
       break;
 
     case ExceptionNestedException:
@@ -78,9 +97,14 @@ LONG CALLBACK VectoredHandler(__in PEXCEPTION_POINTERS ExceptionInfo)
     default:
       assert(!"Unknown exception disposition.");
     }
+
+    pExceptionList = pExceptionList->Next;
   }
 
   return EXCEPTION_CONTINUE_SEARCH;
+#else 
+#error "Unsupported architecture."
+#endif
 }
 
 #pragma warning(push, 1)
@@ -103,6 +127,62 @@ void TestSEH()
 void TestRelocs()
 {
   MessageBoxW(NULL, L"Testing relocations.", L"Hades-MMHelper", MB_OK);
+}
+
+void InitializeSEH()
+{
+#if defined(_M_AMD64) 
+  Hades::Memory::MemoryMgr MyMemory(GetCurrentProcessId());
+  Hades::Memory::PeFile MyPeFile(MyMemory, &__ImageBase);
+
+  Hades::Memory::DosHeader MyDosHeader(MyPeFile);
+  Hades::Memory::NtHeaders MyNtHeaders(MyPeFile);
+
+  DWORD ExceptDirSize = MyNtHeaders.GetDataDirectorySize(Hades::Memory::
+    NtHeaders::DataDir_Exception);
+  DWORD ExceptDirRva = MyNtHeaders.GetDataDirectoryVirtualAddress(Hades::
+    Memory::NtHeaders::DataDir_Exception);
+  if (!ExceptDirSize || !ExceptDirRva)
+  {
+    MessageBoxW(NULL, L"Image has no exception directory.", L"Hades-MMHelper", 
+      MB_OK);
+    return;
+  }
+
+  PRUNTIME_FUNCTION pExceptDir = static_cast<PRUNTIME_FUNCTION>(
+    MyPeFile.RvaToVa(ExceptDirRva));
+  DWORD NumEntries = 0;
+  for (PRUNTIME_FUNCTION pExceptDirTemp = pExceptDir; pExceptDirTemp->
+    BeginAddress; ++pExceptDirTemp)
+  {
+    ++NumEntries;
+  }
+
+  if (!RtlAddFunctionTable(pExceptDir, NumEntries, reinterpret_cast<DWORD_PTR>(
+    &__ImageBase)))
+  {
+    MessageBoxW(NULL, L"Could not add function table.", L"Hades-MMHelper", 
+      MB_OK);
+    return;
+  }
+#elif defined(_M_IX86) 
+  return;
+#else 
+#error "Unsupported architecture."
+#endif
+}
+
+void TestCPPEH()
+{
+  try
+  {
+    throw std::runtime_error("Testing C++ EH.");
+  }
+  catch (std::exception const& e)
+  {
+    MessageBoxA(NULL, boost::diagnostic_information(e).c_str(), 
+      "Hades-MMHelper", MB_OK);
+  }
 }
 
 extern "C" __declspec(dllexport) DWORD __stdcall Test(HMODULE /*Module*/)
@@ -132,19 +212,14 @@ extern "C" __declspec(dllexport) DWORD __stdcall Test(HMODULE /*Module*/)
   tTestRelocs pTestRelocs = reinterpret_cast<tTestRelocs>(&TestRelocs);
   pTestRelocs();
 
+  // Initialize exception handling support
+  InitializeSEH();
+
   // Test SEH
   TestSEH();
 
   // Test C++ EH
-  try
-  {
-    throw std::runtime_error("Testing C++ EH.");
-  }
-  catch (std::exception const& e)
-  {
-    MessageBoxA(NULL, boost::diagnostic_information(e).c_str(), 
-      "Hades-MMHelper", MB_OK);
-  }
+  TestCPPEH();
 
   // Test return values
   return 1337;

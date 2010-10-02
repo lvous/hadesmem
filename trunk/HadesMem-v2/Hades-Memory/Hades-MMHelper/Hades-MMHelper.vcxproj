@@ -136,12 +136,16 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(SolutionDir)Binaries\$(Configuration)-$(Platform)\;$(SolutionDir)..\Dependencies\AsmJit\Binaries\$(Configuration)-$(Platform)\;$(SolutionDir)..\Dependencies\BeaEngine\Binaries\$(Configuration)-$(Platform)\;$(SolutionDir)..\Dependencies\Lua\Binaries\$(Configuration)-$(Platform)\;$(SolutionDir)..\Dependencies\LuaBind\Binaries\$(Configuration)-$(Platform)\</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)Binaries\Full-$(Configuration)\" /y
 xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
 </Command>
     </PostBuildEvent>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -189,12 +193,16 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>$(SolutionDir)Binaries\$(Configuration)-$(Platform)\;$(SolutionDir)..\Dependencies\AsmJit\Binaries\$(Configuration)-$(Platform)\;$(SolutionDir)..\Dependencies\BeaEngine\Binaries\$(Configuration)-$(Platform)\;$(SolutionDir)..\Dependencies\Lua\Binaries\$(Configuration)-$(Platform)\;$(SolutionDir)..\Dependencies\LuaBind\Binaries\$(Configuration)-$(Platform)\</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)Binaries\Full-$(Configuration)\" /y
 xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
 </Command>
     </PostBuildEvent>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="DllMain.cpp" />
