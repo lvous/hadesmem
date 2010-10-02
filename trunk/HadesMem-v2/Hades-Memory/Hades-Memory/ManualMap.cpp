@@ -44,8 +44,6 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include "Hades-Common/I18n.h"
 #include "Hades-Common/EnsureCleanup.h"
 
-#include "ImportDir.h"
-
 namespace 
 {
   std::array<ULONG, 16> const SectionCharacteristicsToProtect =
