@@ -419,6 +419,14 @@ namespace Hades
               Function);
           }
 
+          // Ensure function was found
+          if (!FuncAddr)
+          {
+            BOOST_THROW_EXCEPTION(Error() << 
+              ErrorFunction("ManualMap::FixImports") << 
+              ErrorString("Could not find current import."));
+          }
+
           // Set function address
           pThunkData->u1.Function = reinterpret_cast<DWORD_PTR>(FuncAddr);
 
