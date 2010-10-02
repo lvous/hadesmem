@@ -404,11 +404,20 @@ namespace Hades
           std::cout << "Function Name: " << ImpName << "." << std::endl;
 
           // Get function address in remote process
-          bool const ByOrdinal = IMAGE_SNAP_BY_ORDINAL(pNameImport->Hint);
-          LPCSTR Function = ByOrdinal ? reinterpret_cast<LPCSTR>(IMAGE_ORDINAL(
-            pNameImport->Hint)) : reinterpret_cast<LPCSTR>(pNameImport->Name);
-          FARPROC FuncAddr = m_pMemory->GetRemoteProcAddress(CurModBase, 
-            CurModName, Function);
+          bool const ByOrdinal = IMAGE_SNAP_BY_ORDINAL(pThunkData->u1.Ordinal);
+          FARPROC FuncAddr = 0;
+          if (ByOrdinal)
+          {
+            WORD Ordinal = IMAGE_ORDINAL(pThunkData->u1.Ordinal);
+            FuncAddr = m_pMemory->GetRemoteProcAddress(CurModBase, CurModName, 
+              Ordinal);
+          }
+          else
+          {
+            LPCSTR Function = reinterpret_cast<LPCSTR>(pNameImport->Name);
+            FuncAddr = m_pMemory->GetRemoteProcAddress(CurModBase, CurModName, 
+              Function);
+          }
 
           // Set function address
           pThunkData->u1.Function = reinterpret_cast<DWORD_PTR>(FuncAddr);
