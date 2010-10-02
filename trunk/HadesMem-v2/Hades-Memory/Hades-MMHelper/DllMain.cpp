@@ -153,7 +153,7 @@ void InitializeSEH()
     MyPeFile.RvaToVa(ExceptDirRva));
   DWORD NumEntries = 0;
   for (PRUNTIME_FUNCTION pExceptDirTemp = pExceptDir; pExceptDirTemp->
-    BeginAddress; ++pExceptDirTemp)
+    UnwindData; ++pExceptDirTemp)
   {
     ++NumEntries;
   }
@@ -182,6 +182,10 @@ void TestCPPEH()
   {
     MessageBoxA(NULL, boost::diagnostic_information(e).c_str(), 
       "Hades-MMHelper", MB_OK);
+  }
+  catch (...)
+  {
+    MessageBoxA(NULL, "Caught unknown exception.", "Hades-MMHelper", MB_OK);
   }
 }
 
