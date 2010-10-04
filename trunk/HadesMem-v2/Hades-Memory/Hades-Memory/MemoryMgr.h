@@ -34,8 +34,6 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
 #include <boost/filesystem.hpp>
 #include <boost/noncopyable.hpp>
-#include <boost/type_traits.hpp>
-#include <boost/utility/enable_if.hpp>
 #pragma warning(pop)
 
 // AsmJit
@@ -92,35 +90,36 @@ namespace Hades
 
       // Read memory (POD types)
       template <typename T>
-      T Read(PVOID Address, typename boost::enable_if<std::is_pod<T>>::type* 
-        Dummy = 0) const;
+      T Read(PVOID Address, typename std::enable_if<std::is_pod<T>::value, T>::
+        type* Dummy = 0) const;
 
       // Read memory (string types)
       template <typename T>
-      T Read(PVOID Address, typename boost::enable_if<std::is_same<T, 
-        std::basic_string<typename T::value_type>>>::type* Dummy = 0) const;
+      T Read(PVOID Address, typename std::enable_if<std::is_same<T, std::
+        basic_string<typename T::value_type>>::value, T>::type* Dummy = 0) 
+        const;
 
       // Read memory (vector types)
       template <typename T>
-      T Read(PVOID Address, std::size_t Size, typename boost::enable_if<
-        std::is_same<T, std::vector<typename T::value_type>>>::type* 
+      T Read(PVOID Address, std::size_t Size, typename std::enable_if<std::
+        is_same<T, std::vector<typename T::value_type>>::value, T>::type* 
         Dummy = 0) const;
 
       // Write memory (POD types)
       template <typename T>
-      void Write(PVOID Address, T const& Data, typename boost::enable_if<
-        std::is_pod<T>>::type* Dummy = 0) const;
+      void Write(PVOID Address, T const& Data, typename std::enable_if<std::
+        is_pod<T>::value, T>::type* Dummy = 0) const;
 
       // Write memory (string types)
       template <typename T>
-      void Write(PVOID Address, T const& Data, typename boost::enable_if<
-        std::is_same<T, std::basic_string<typename T::value_type>>>::type* 
-        Dummy = 0) const;
+      void Write(PVOID Address, T const& Data, typename std::enable_if<std::
+        is_same<T, std::basic_string<typename T::value_type>>::value, T>::
+        type* Dummy = 0) const;
 
       // Write memory (vector types)
       template <typename T>
-      void Write(PVOID Address, T const& Data, typename boost::enable_if<
-        std::is_same<T, std::vector<typename T::value_type>>>::type* 
+      void Write(PVOID Address, T const& Data, typename std::enable_if<std::
+        is_same<T, std::vector<typename T::value_type>>::value, T>::type* 
         Dummy = 0) const;
 
       // Whether an address is currently readable
@@ -185,8 +184,8 @@ namespace Hades
 
     // Read memory (POD types)
     template <typename T>
-    T MemoryMgr::Read(PVOID Address, typename boost::enable_if<std::is_pod<T>>
-      ::type* /*Dummy*/) const 
+    T MemoryMgr::Read(PVOID Address, typename std::enable_if<std::is_pod<T>::
+      value, T>::type* /*Dummy*/) const 
     {
       // Whether we can read the given address
       bool const CanReadMem = CanRead(Address);
@@ -245,8 +244,9 @@ namespace Hades
 
     // Read memory (string types)
     template <typename T>
-    T MemoryMgr::Read(PVOID Address, typename boost::enable_if<std::is_same<T, 
-      std::basic_string<typename T::value_type>>>::type* /*Dummy*/) const
+    T MemoryMgr::Read(PVOID Address, typename std::enable_if<std::is_same<T, 
+      std::basic_string<typename T::value_type>>::value, T>::type* /*Dummy*/) 
+      const
     {
       // Character type
       typedef typename T::value_type CharT;
@@ -273,8 +273,8 @@ namespace Hades
 
     // Read memory (vector types)
     template <typename T>
-    T MemoryMgr::Read(PVOID Address, std::size_t Size, typename boost::
-      enable_if<std::is_same<T, std::vector<typename T::value_type>>>::type* 
+    T MemoryMgr::Read(PVOID Address, std::size_t Size, typename std::enable_if<
+      std::is_same<T, std::vector<typename T::value_type>>::value, T>::type* 
       /*Dummy*/) const
     {
       // Calculate 'raw' size of data
@@ -338,8 +338,8 @@ namespace Hades
 
     // Write memory (POD types)
     template <typename T>
-    void MemoryMgr::Write(PVOID Address, T const& Data, typename 
-      boost::enable_if<std::is_pod<T>>::type* /*Dummy*/) const 
+    void MemoryMgr::Write(PVOID Address, T const& Data, typename std::
+      enable_if<std::is_pod<T>::value, T>::type* /*Dummy*/) const 
     {
       // Set page protections for writing
       DWORD OldProtect = 0;
@@ -384,8 +384,8 @@ namespace Hades
     // Write memory (string types)
     template <typename T>
     void MemoryMgr::Write(PVOID Address, T const& Data, 
-      typename boost::enable_if<std::is_same<T, std::basic_string<
-      typename T::value_type>>>::type* /*Dummy*/) const
+      typename std::enable_if<std::is_same<T, std::basic_string<typename T::
+      value_type>>::value, T>::type* /*Dummy*/) const
     {
       // Character type
       typedef typename T::value_type CharT;
@@ -407,9 +407,9 @@ namespace Hades
 
     // Write memory (vector types)
     template <typename T>
-    void MemoryMgr::Write(PVOID Address, T const& Data, typename boost::
-      enable_if<std::is_same<T, std::vector<typename T::value_type>>>::type* 
-      /*Dummy*/) const
+    void MemoryMgr::Write(PVOID Address, T const& Data, typename std::
+      enable_if<std::is_same<T, std::vector<typename T::value_type>>::value, 
+      T>::type* /*Dummy*/) const
     {
       // Calculate 'raw' size of data
       std::size_t RawSize = Data.size() * sizeof(T::value_type);
