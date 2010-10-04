@@ -114,61 +114,61 @@ namespace Hades
       LONG GetNewHeaderOffset() const;
 
       // Set magic
-      void SetMagic(WORD Magic);
+      void SetMagic(WORD Magic) const;
 
       // Set bytes on last page
-      void SetBytesOnLastPage(WORD BytesOnLastPage);
+      void SetBytesOnLastPage(WORD BytesOnLastPage) const;
 
       // Set pages in file
-      void SetPagesInFile(WORD PagesInFile);
+      void SetPagesInFile(WORD PagesInFile) const;
 
       // Set relocations
-      void SetRelocations(WORD Relocations);
+      void SetRelocations(WORD Relocations) const;
 
       // Set size of header in paragraphs
-      void SetSizeOfHeaderInParagraphs(WORD SizeOfHeaderInParagraphs);
+      void SetSizeOfHeaderInParagraphs(WORD SizeOfHeaderInParagraphs) const;
 
       // Set minimum extra paragraphs needed
-      void SetMinExtraParagraphs(WORD MinExtraParagraphs);
+      void SetMinExtraParagraphs(WORD MinExtraParagraphs) const;
 
       // Set maximum extra paragraphs needed
-      void SetMaxExtraParagraphs(WORD MaxExtraParagraphs);
+      void SetMaxExtraParagraphs(WORD MaxExtraParagraphs) const;
 
       // Set initial SS value
-      void SetInitialSS(WORD InitialSS);
+      void SetInitialSS(WORD InitialSS) const;
 
       // Set initial SP value
-      void SetInitialSP(WORD InitialSP);
+      void SetInitialSP(WORD InitialSP) const;
 
       // Set checksum
-      void SetChecksum(WORD Checksum);
+      void SetChecksum(WORD Checksum) const;
 
       // Set initial IP value
-      void SetInitialIP(WORD InitialIP);
+      void SetInitialIP(WORD InitialIP) const;
 
       // Set initial CS value
-      void SetInitialCS(WORD InitialCS);
+      void SetInitialCS(WORD InitialCS) const;
 
       // Set file address of reloc table
-      void SetRelocTableFileAddr(WORD RelocTableFileAddr);
+      void SetRelocTableFileAddr(WORD RelocTableFileAddr) const;
 
       // Set overlay number
-      void SetOverlayNum(WORD OverlayNum);
+      void SetOverlayNum(WORD OverlayNum) const;
 
       // Set first set of reserved words
-      void SetReservedWords1(std::array<WORD, 4> const& ReservedWords1);
+      void SetReservedWords1(std::array<WORD, 4> const& ReservedWords1) const;
 
       // Set OEM ID
-      void SetOEMID(WORD OEMID);
+      void SetOEMID(WORD OEMID) const;
 
       // Set OEM info
-      void SetOEMInfo(WORD OEMInfo);
+      void SetOEMInfo(WORD OEMInfo) const;
 
       // Set second set of reserved words
-      void SetReservedWords2(std::array<WORD, 10> const& ReservedWords2);
+      void SetReservedWords2(std::array<WORD, 10> const& ReservedWords2) const;
 
       // Set new header offset
-      void SetNewHeaderOffset(LONG Offset);
+      void SetNewHeaderOffset(LONG Offset) const;
 
     private:
       // PE file

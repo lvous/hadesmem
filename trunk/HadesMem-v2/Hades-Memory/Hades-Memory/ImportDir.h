@@ -128,7 +128,7 @@ namespace Hades
       std::string GetName() const;
 
       // Set function
-      void SetFunction(DWORD_PTR Function);
+      void SetFunction(DWORD_PTR Function) const;
 
     private:
       PeFile* m_pPeFile;

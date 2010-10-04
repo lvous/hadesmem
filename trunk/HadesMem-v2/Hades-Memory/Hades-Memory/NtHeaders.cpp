@@ -76,7 +76,7 @@ namespace Hades
     }
 
     // Set signature
-    void NtHeaders::SetSignature(DWORD Signature)
+    void NtHeaders::SetSignature(DWORD Signature) const
     {
       m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, Signature), 
         Signature);
@@ -97,7 +97,7 @@ namespace Hades
     }
 
     // Set machine
-    void NtHeaders::SetMachine(WORD Machine)
+    void NtHeaders::SetMachine(WORD Machine) const
     {
       m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, FileHeader.
         Machine), Machine);
@@ -118,7 +118,7 @@ namespace Hades
     }
 
     // Set number of sections
-    void NtHeaders::SetNumberOfSections(WORD NumberOfSections)
+    void NtHeaders::SetNumberOfSections(WORD NumberOfSections) const
     {
       m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, FileHeader.
         NumberOfSections), NumberOfSections);
@@ -139,7 +139,7 @@ namespace Hades
     }
 
     // Set time date stamp
-    void NtHeaders::SetTimeDateStamp(DWORD TimeDateStamp)
+    void NtHeaders::SetTimeDateStamp(DWORD TimeDateStamp) const
     {
       m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, FileHeader.
         TimeDateStamp), TimeDateStamp);
@@ -160,7 +160,7 @@ namespace Hades
     }
 
     // Set pointer to symbol table
-    void NtHeaders::SetPointerToSymbolTable(DWORD PointerToSymbolTable)
+    void NtHeaders::SetPointerToSymbolTable(DWORD PointerToSymbolTable) const
     {
       m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, FileHeader.
         PointerToSymbolTable), PointerToSymbolTable);
@@ -181,7 +181,7 @@ namespace Hades
     }
 
     // Set number of symbols
-    void NtHeaders::SetNumberOfSymbols(DWORD NumberOfSymbols)
+    void NtHeaders::SetNumberOfSymbols(DWORD NumberOfSymbols) const
     {
       m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, FileHeader.
         NumberOfSymbols), NumberOfSymbols);
@@ -202,7 +202,7 @@ namespace Hades
     }
 
     // Set size of optional header
-    void NtHeaders::SetSizeOfOptionalHeader(WORD SizeOfOptionalHeader)
+    void NtHeaders::SetSizeOfOptionalHeader(WORD SizeOfOptionalHeader) const
     {
       m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, FileHeader.
         SizeOfOptionalHeader), SizeOfOptionalHeader);
@@ -223,7 +223,7 @@ namespace Hades
     }
 
     // Set characteristics
-    void NtHeaders::SetCharacteristics(WORD Characteristics)
+    void NtHeaders::SetCharacteristics(WORD Characteristics) const
     {
       m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, FileHeader.
         Characteristics), Characteristics);
@@ -244,7 +244,7 @@ namespace Hades
     }
 
     // Set magic
-    void NtHeaders::SetMagic(WORD Magic)
+    void NtHeaders::SetMagic(WORD Magic) const
     {
       m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.Magic), Magic);
@@ -265,7 +265,7 @@ namespace Hades
     }
 
     // Set major linker version
-    void NtHeaders::SetMajorLinkerVersion(BYTE MajorLinkerVersion)
+    void NtHeaders::SetMajorLinkerVersion(BYTE MajorLinkerVersion) const
     {
       m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.MajorLinkerVersion), MajorLinkerVersion);
@@ -286,7 +286,7 @@ namespace Hades
     }
 
     // Set minor linker version
-    void NtHeaders::SetMinorLinkerVersion(BYTE MinorLinkerVersion)
+    void NtHeaders::SetMinorLinkerVersion(BYTE MinorLinkerVersion) const
     {
       m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.MinorLinkerVersion), MinorLinkerVersion);
@@ -307,7 +307,7 @@ namespace Hades
     }
 
     // Set size of code
-    void NtHeaders::SetSizeOfCode(DWORD SizeOfCode)
+    void NtHeaders::SetSizeOfCode(DWORD SizeOfCode) const
     {
       m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.SizeOfCode), SizeOfCode);
@@ -328,7 +328,7 @@ namespace Hades
     }
 
     // Set size of initialized data
-    void NtHeaders::SetSizeOfInitializedData(DWORD SizeOfInitializedData)
+    void NtHeaders::SetSizeOfInitializedData(DWORD SizeOfInitializedData) const
     {
       m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.SizeOfInitializedData), SizeOfInitializedData);
@@ -349,7 +349,8 @@ namespace Hades
     }
 
     // Set size of uninitialized data
-    void NtHeaders::SetSizeOfUninitializedData(DWORD SizeOfUninitializedData)
+    void NtHeaders::SetSizeOfUninitializedData(DWORD SizeOfUninitializedData) 
+      const
     {
       m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.SizeOfUninitializedData), SizeOfUninitializedData);
@@ -370,7 +371,7 @@ namespace Hades
     }
 
     // Set address of entry point
-    void NtHeaders::SetAddressOfEntryPoint(DWORD AddressOfEntryPoint)
+    void NtHeaders::SetAddressOfEntryPoint(DWORD AddressOfEntryPoint) const
     {
       m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.AddressOfEntryPoint), AddressOfEntryPoint);
@@ -391,7 +392,7 @@ namespace Hades
     }
 
     // Set base of code
-    void NtHeaders::SetBaseOfCode(DWORD BaseOfCode)
+    void NtHeaders::SetBaseOfCode(DWORD BaseOfCode) const
     {
       m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.BaseOfCode), BaseOfCode);
@@ -413,7 +414,7 @@ namespace Hades
     }
 
     // Set base of data
-    void NtHeaders::SetBaseOfData(DWORD BaseOfData)
+    void NtHeaders::SetBaseOfData(DWORD BaseOfData) const
     {
       m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.BaseOfData), BaseOfData);
@@ -435,7 +436,7 @@ namespace Hades
     }
 
     // Set image base
-    void NtHeaders::SetImageBase(ULONG_PTR ImageBase)
+    void NtHeaders::SetImageBase(ULONG_PTR ImageBase) const
     {
       m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.ImageBase), ImageBase);
@@ -456,7 +457,7 @@ namespace Hades
     }
 
     // Set section alignment
-    void NtHeaders::SetSectionAlignment(DWORD SectionAlignment)
+    void NtHeaders::SetSectionAlignment(DWORD SectionAlignment) const
     {
       m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.SectionAlignment), SectionAlignment);
@@ -477,7 +478,7 @@ namespace Hades
     }
 
     // Set file alignment
-    void NtHeaders::SetFileAlignment(DWORD FileAlignment)
+    void NtHeaders::SetFileAlignment(DWORD FileAlignment) const
     {
       m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.FileAlignment), FileAlignment);
@@ -499,7 +500,7 @@ namespace Hades
 
     // Set major operating system version
     void NtHeaders::SetMajorOperatingSystemVersion(
-      WORD MajorOperatingSystemVersion)
+      WORD MajorOperatingSystemVersion) const
     {
       m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.MajorOperatingSystemVersion), 
@@ -522,7 +523,7 @@ namespace Hades
 
     // Set minor operating system version
     void NtHeaders::SetMinorOperatingSystemVersion(
-      WORD MinorOperatingSystemVersion)
+      WORD MinorOperatingSystemVersion) const
     {
       m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.MinorOperatingSystemVersion), 
@@ -544,7 +545,7 @@ namespace Hades
     }
 
     // Set major image version
-    void NtHeaders::SetMajorImageVersion(WORD MajorImageVersion)
+    void NtHeaders::SetMajorImageVersion(WORD MajorImageVersion) const
     {
       m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.MajorImageVersion), MajorImageVersion);
@@ -565,7 +566,7 @@ namespace Hades
     }
 
     // Set minor image version
-    void NtHeaders::SetMinorImageVersion(WORD MinorImageVersion)
+    void NtHeaders::SetMinorImageVersion(WORD MinorImageVersion) const
     {
       m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.MinorImageVersion), MinorImageVersion);
@@ -586,7 +587,7 @@ namespace Hades
     }
 
     // Set major subsystem version
-    void NtHeaders::SetMajorSubsystemVersion(WORD MajorSubsystemVersion)
+    void NtHeaders::SetMajorSubsystemVersion(WORD MajorSubsystemVersion) const
     {
       m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.MajorSubsystemVersion), MajorSubsystemVersion);
@@ -607,7 +608,7 @@ namespace Hades
     }
 
     // Set minor subsystem version
-    void NtHeaders::SetMinorSubsystemVersion(WORD MinorSubsystemVersion)
+    void NtHeaders::SetMinorSubsystemVersion(WORD MinorSubsystemVersion) const
     {
       m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.MinorSubsystemVersion), MinorSubsystemVersion);
@@ -628,7 +629,7 @@ namespace Hades
     }
 
     // Set Win32 version value
-    void NtHeaders::SetWin32VersionValue(DWORD Win32VersionValue)
+    void NtHeaders::SetWin32VersionValue(DWORD Win32VersionValue) const
     {
       m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.Win32VersionValue), Win32VersionValue);
@@ -649,7 +650,7 @@ namespace Hades
     }
 
     // Set size of image
-    void NtHeaders::SetSizeOfImage(DWORD SizeOfImage)
+    void NtHeaders::SetSizeOfImage(DWORD SizeOfImage) const
     {
       m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.SizeOfImage), SizeOfImage);
@@ -670,7 +671,7 @@ namespace Hades
     }
 
     // Set size of headers
-    void NtHeaders::SetSizeOfHeaders(DWORD SizeOfHeaders)
+    void NtHeaders::SetSizeOfHeaders(DWORD SizeOfHeaders) const
     {
       m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.SizeOfHeaders), SizeOfHeaders);
@@ -691,7 +692,7 @@ namespace Hades
     }
 
     // Set checksum
-    void NtHeaders::SetCheckSum(DWORD CheckSum)
+    void NtHeaders::SetCheckSum(DWORD CheckSum) const
     {
       m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.CheckSum), CheckSum);
@@ -712,7 +713,7 @@ namespace Hades
     }
 
     // Set subsystem
-    void NtHeaders::SetSubsystem(WORD Subsystem)
+    void NtHeaders::SetSubsystem(WORD Subsystem) const
     {
       m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.Subsystem), Subsystem);
@@ -733,7 +734,7 @@ namespace Hades
     }
 
     // Set DLL characteristics
-    void NtHeaders::SetDllCharacteristics(WORD DllCharacteristics)
+    void NtHeaders::SetDllCharacteristics(WORD DllCharacteristics) const
     {
       m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.DllCharacteristics), DllCharacteristics);
@@ -754,7 +755,7 @@ namespace Hades
     }
 
     // Set size of stack reserve
-    void NtHeaders::SetSizeOfStackReserve(ULONG_PTR SizeOfStackReserve)
+    void NtHeaders::SetSizeOfStackReserve(ULONG_PTR SizeOfStackReserve) const
     {
       m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.SizeOfStackReserve), SizeOfStackReserve);
@@ -775,7 +776,7 @@ namespace Hades
     }
 
     // Set size of stack commit
-    void NtHeaders::SetSizeOfStackCommit(ULONG_PTR SizeOfStackCommit)
+    void NtHeaders::SetSizeOfStackCommit(ULONG_PTR SizeOfStackCommit) const
     {
       m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.SizeOfStackCommit), SizeOfStackCommit);
@@ -796,7 +797,7 @@ namespace Hades
     }
 
     // Set size of heap reserve
-    void NtHeaders::SetSizeOfHeapReserve(ULONG_PTR SizeOfHeapReserve)
+    void NtHeaders::SetSizeOfHeapReserve(ULONG_PTR SizeOfHeapReserve) const
     {
       m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.SizeOfHeapReserve), SizeOfHeapReserve);
@@ -817,7 +818,7 @@ namespace Hades
     }
 
     // Set size of heap commit
-    void NtHeaders::SetSizeOfHeapCommit(ULONG_PTR SizeOfHeapCommit)
+    void NtHeaders::SetSizeOfHeapCommit(ULONG_PTR SizeOfHeapCommit) const
     {
       m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.SizeOfHeapCommit), SizeOfHeapCommit);
@@ -838,7 +839,7 @@ namespace Hades
     }
 
     // Set loader flags
-    void NtHeaders::SetLoaderFlags(DWORD LoaderFlags)
+    void NtHeaders::SetLoaderFlags(DWORD LoaderFlags) const
     {
       m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.LoaderFlags), LoaderFlags);
@@ -859,7 +860,7 @@ namespace Hades
     }
 
     // Set number of RVA and sizes
-    void NtHeaders::SetNumberOfRvaAndSizes(DWORD NumberOfRvaAndSizes)
+    void NtHeaders::SetNumberOfRvaAndSizes(DWORD NumberOfRvaAndSizes) const
     {
       m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.NumberOfRvaAndSizes), NumberOfRvaAndSizes);
@@ -883,7 +884,7 @@ namespace Hades
 
     // Set data directory virtual address
     void NtHeaders::SetDataDirectoryVirtualAddress(DataDir MyDataDir, 
-      DWORD DataDirectoryVirtualAddress)
+      DWORD DataDirectoryVirtualAddress) const
     {
       m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.DataDirectory[0]) + MyDataDir * sizeof(
@@ -910,7 +911,7 @@ namespace Hades
 
     // Set data directory size
     void NtHeaders::SetDataDirectorySize(DataDir MyDataDir, 
-      DWORD DataDirectorySize)
+      DWORD DataDirectorySize) const
     {
       m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.DataDirectory[0]) + MyDataDir * sizeof(

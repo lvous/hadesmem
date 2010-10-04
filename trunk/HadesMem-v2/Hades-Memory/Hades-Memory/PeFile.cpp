@@ -31,7 +31,7 @@ namespace Hades
     { }
 
     // Convert RVA to VA
-    PVOID PeFileAsData::RvaToVa(DWORD Rva)
+    PVOID PeFileAsData::RvaToVa(DWORD Rva) const
     {
       // Ensure RVA is valid
       if (!Rva)
@@ -118,7 +118,7 @@ namespace Hades
     }
 
     // Convert RVA to VA
-    PVOID PeFile::RvaToVa(DWORD Rva)
+    PVOID PeFile::RvaToVa(DWORD Rva) const
     {
       return Rva ? (m_pBase + Rva) : nullptr;
     }

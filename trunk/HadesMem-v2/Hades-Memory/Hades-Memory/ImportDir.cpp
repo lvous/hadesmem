@@ -216,7 +216,7 @@ namespace Hades
     }
 
     // Set function
-    void ImportThunk::SetFunction(DWORD_PTR Function) 
+    void ImportThunk::SetFunction(DWORD_PTR Function) const
     {
       return m_pMemory->Write(m_pBase + FIELD_OFFSET(IMAGE_THUNK_DATA, 
         u1.Function), Function);

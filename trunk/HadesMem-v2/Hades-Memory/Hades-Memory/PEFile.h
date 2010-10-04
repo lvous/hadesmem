@@ -54,7 +54,7 @@ namespace Hades
       PBYTE GetBase() const;
 
       // Convert RVA to VA
-      virtual PVOID RvaToVa(DWORD Rva);
+      virtual PVOID RvaToVa(DWORD Rva) const;
 
     private:
       // Memory instance
@@ -73,7 +73,7 @@ namespace Hades
       PeFileAsData(MemoryMgr& MyMemory, PVOID Address);
 
       // Convert RVA to VA
-      virtual PVOID RvaToVa(DWORD Rva);
+      virtual PVOID RvaToVa(DWORD Rva) const;
     };
   }
 }

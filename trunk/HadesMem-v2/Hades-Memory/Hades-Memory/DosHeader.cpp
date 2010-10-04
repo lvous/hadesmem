@@ -188,7 +188,7 @@ namespace Hades
     }
 
     // Set magic
-    void DosHeader::SetMagic(WORD Magic) 
+    void DosHeader::SetMagic(WORD Magic) const
     {
       m_pMemory->Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_magic), 
         Magic);
@@ -202,7 +202,7 @@ namespace Hades
     }
 
     // Set bytes on last page
-    void DosHeader::SetBytesOnLastPage(WORD BytesOnLastPage)
+    void DosHeader::SetBytesOnLastPage(WORD BytesOnLastPage) const
     {
       m_pMemory->Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_cblp), 
         BytesOnLastPage);
@@ -217,7 +217,7 @@ namespace Hades
     }
 
     // Set pages in file
-    void DosHeader::SetPagesInFile(WORD PagesInFile)
+    void DosHeader::SetPagesInFile(WORD PagesInFile) const
     {
       m_pMemory->Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_cp), 
         PagesInFile);
@@ -231,7 +231,7 @@ namespace Hades
     }
 
     // Set relocations
-    void DosHeader::SetRelocations(WORD Relocations)
+    void DosHeader::SetRelocations(WORD Relocations) const
     {
       m_pMemory->Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_crlc), 
         Relocations);
@@ -245,7 +245,8 @@ namespace Hades
     }
 
     // Set size of header in paragraphs
-    void DosHeader::SetSizeOfHeaderInParagraphs(WORD SizeOfHeaderInParagraphs)
+    void DosHeader::SetSizeOfHeaderInParagraphs(WORD SizeOfHeaderInParagraphs) 
+      const
     {
       m_pMemory->Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_cparhdr), 
         SizeOfHeaderInParagraphs);
@@ -260,7 +261,7 @@ namespace Hades
     }
 
     // Set min extra paragraphs
-    void DosHeader::SetMinExtraParagraphs(WORD MinExtraParagraphs)
+    void DosHeader::SetMinExtraParagraphs(WORD MinExtraParagraphs) const
     {
       m_pMemory->Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_minalloc), 
         MinExtraParagraphs);
@@ -275,7 +276,7 @@ namespace Hades
     }
 
     // Set max extra paragraphs
-    void DosHeader::SetMaxExtraParagraphs(WORD MaxExtraParagraphs)
+    void DosHeader::SetMaxExtraParagraphs(WORD MaxExtraParagraphs) const
     {
       m_pMemory->Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_maxalloc), 
         MaxExtraParagraphs);
@@ -290,7 +291,7 @@ namespace Hades
     }
 
     // Set initial SS
-    void DosHeader::SetInitialSS(WORD InitialSS)
+    void DosHeader::SetInitialSS(WORD InitialSS) const
     {
       m_pMemory->Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_ss), 
         InitialSS);
@@ -304,7 +305,7 @@ namespace Hades
     }
 
     // Set initial SP
-    void DosHeader::SetInitialSP(WORD InitialSP)
+    void DosHeader::SetInitialSP(WORD InitialSP) const
     {
       m_pMemory->Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_sp), 
         InitialSP);
@@ -318,7 +319,7 @@ namespace Hades
     }
 
     // Set checksum
-    void DosHeader::SetChecksum(WORD Checksum) 
+    void DosHeader::SetChecksum(WORD Checksum) const
     {
       m_pMemory->Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_csum), 
         Checksum);
@@ -332,7 +333,7 @@ namespace Hades
     }
 
     // Set initial IP
-    void DosHeader::SetInitialIP(WORD InitialIP)
+    void DosHeader::SetInitialIP(WORD InitialIP) const
     {
       m_pMemory->Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_ip), 
         InitialIP);
@@ -346,7 +347,7 @@ namespace Hades
     }
 
     // Set initial CS
-    void DosHeader::SetInitialCS(WORD InitialCS)
+    void DosHeader::SetInitialCS(WORD InitialCS) const
     {
       m_pMemory->Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_cs), 
         InitialCS);
@@ -360,7 +361,7 @@ namespace Hades
     }
 
     // Set reloc table file address
-    void DosHeader::SetRelocTableFileAddr(WORD RelocTableFileAddr)
+    void DosHeader::SetRelocTableFileAddr(WORD RelocTableFileAddr) const
     {
       m_pMemory->Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_lfarlc), 
         RelocTableFileAddr);
@@ -375,7 +376,7 @@ namespace Hades
     }
 
     // Set overlay number
-    void DosHeader::SetOverlayNum(WORD OverlayNum)
+    void DosHeader::SetOverlayNum(WORD OverlayNum) const
     {
       m_pMemory->Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_ovno), 
         OverlayNum);
@@ -390,7 +391,7 @@ namespace Hades
 
     // Set first set of reserved words
     void DosHeader::SetReservedWords1(std::array<WORD, 4> const& 
-      ReservedWords1)
+      ReservedWords1) const
     {
       m_pMemory->Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_res), 
         ReservedWords1);
@@ -405,7 +406,7 @@ namespace Hades
     }
 
     // Set OEM ID
-    void DosHeader::SetOEMID(WORD OEMID)
+    void DosHeader::SetOEMID(WORD OEMID) const
     {
       m_pMemory->Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_oemid), 
         OEMID);
@@ -419,7 +420,7 @@ namespace Hades
     }
 
     // Set OEM info
-    void DosHeader::SetOEMInfo(WORD OEMInfo)
+    void DosHeader::SetOEMInfo(WORD OEMInfo) const
     {
       m_pMemory->Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_oeminfo), 
         OEMInfo);
@@ -434,7 +435,7 @@ namespace Hades
 
     // Set second set of reserved words
     void DosHeader::SetReservedWords2(std::array<WORD, 10> const& 
-      ReservedWords2)
+      ReservedWords2) const
     {
       m_pMemory->Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_res2), 
         ReservedWords2);
@@ -449,7 +450,7 @@ namespace Hades
     }
 
     // Set new header offset
-    void DosHeader::SetNewHeaderOffset(LONG Offset) 
+    void DosHeader::SetNewHeaderOffset(LONG Offset) const
     {
       m_pMemory->Write(m_pBase + FIELD_OFFSET(IMAGE_DOS_HEADER, e_lfanew), 
         Offset);
