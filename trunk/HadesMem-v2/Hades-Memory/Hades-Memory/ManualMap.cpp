@@ -318,8 +318,8 @@ namespace Hades
       NtHeaders const MyNtHeaders(MyPeFile);
 
       // Get import dir
-      ImportDir const MyImportDir(MyPeFile);
-      if (!MyImportDir.IsValid())
+      ImportDir const CheckImpDir(MyPeFile);
+      if (!CheckImpDir.IsValid())
       {
         // Debug output
         std::wcout << "Image has no imports." << std::endl;
@@ -332,8 +332,12 @@ namespace Hades
       std::wcout << "Fixing imports." << std::endl;
 
       // Loop through all the required modules
-      for (; MyImportDir.GetCharacteristics(); MyImportDir.Advance()) 
+      ImportDirEnum MyImportDirEnum(MyPeFile);
+      for (ImportDirEnum::ImportDirIter i(MyImportDirEnum); *i; ++i)
       {
+        // Get import dir
+        ImportDir& MyImportDir = **i;
+
         // Check for forwarded imports
         // Todo: Handle forwarded imports
         if (MyImportDir.GetForwarderChain() != static_cast<DWORD>(-1) && 
@@ -383,11 +387,14 @@ namespace Hades
           CurModName = MyModule->GetName();
         }
 
-        // Lookup the first import thunk for this module
-        PVOID pFirstThunk = MyPeFile.RvaToVa(MyImportDir.GetFirstThunk());
-        ImportThunk ImpThunk(MyPeFile, pFirstThunk);
-        while (ImpThunk.IsValid()) 
+        // Loop over import thunks for current module
+        ImportThunkEnum MyImportThunkEnum(MyPeFile, MyImportDir.
+          GetFirstThunk());
+        for (ImportThunkEnum::ImportThunkIter i(MyImportThunkEnum); *i; ++i)
         {
+          // Get import thunk
+          ImportThunk& ImpThunk = **i;
+
           // Get name of function
           std::string const ImpName(ImpThunk.GetName());
           std::cout << "Function Name: " << ImpName << "." << std::endl;
@@ -415,9 +422,6 @@ namespace Hades
 
           // Set function address
           ImpThunk.SetFunction(reinterpret_cast<DWORD_PTR>(FuncAddr));
-
-          // Advance to next function
-          ImpThunk.Advance();
         }
       } 
     }

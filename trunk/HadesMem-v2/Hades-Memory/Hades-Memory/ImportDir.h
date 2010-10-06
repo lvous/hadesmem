@@ -29,12 +29,12 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #pragma warning(push, 1)
 #pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
 #include <boost/noncopyable.hpp>
+#include <boost/iterator/iterator_facade.hpp>
 #pragma warning(pop)
 
 // Hades
 #include "Fwd.h"
 #include "Error.h"
-#include "PeFile.h"
 
 namespace Hades
 {
@@ -49,7 +49,8 @@ namespace Hades
       { };
 
       // Constructor
-      ImportDir(PeFile& MyPeFile);
+      explicit ImportDir(PeFile& MyPeFile, PIMAGE_IMPORT_DESCRIPTOR pImpDesc = 
+        nullptr);
 
       // Whether import directory is valid
       bool IsValid() const;
@@ -87,6 +88,88 @@ namespace Hades
       MemoryMgr* m_pMemory;
 
       mutable PIMAGE_IMPORT_DESCRIPTOR m_pImpDesc;
+    };
+
+    // Section enumerator
+    class ImportDirEnum : private boost::noncopyable
+    {
+    public:
+      // Constructor
+      explicit ImportDirEnum(PeFile& MyPeFile) 
+        : m_pPeFile(&MyPeFile), 
+        m_pImpDesc(nullptr)
+      { }
+
+      // Get first import thunk
+      std::unique_ptr<ImportDir> First() 
+      {
+        ImportDir MyImportDir(*m_pPeFile);
+        m_pImpDesc = reinterpret_cast<PIMAGE_IMPORT_DESCRIPTOR>(MyImportDir.
+          GetBase());
+        return MyImportDir.GetCharacteristics() ? 
+          std::unique_ptr<ImportDir>(new ImportDir(*m_pPeFile)) 
+          : std::unique_ptr<ImportDir>(nullptr);
+      }
+
+      // Get next import thunk
+      std::unique_ptr<ImportDir> Next()
+      {
+        ++m_pImpDesc;
+        ImportDir MyImportDir(*m_pPeFile, m_pImpDesc);
+        return MyImportDir.GetCharacteristics() ? 
+          std::unique_ptr<ImportDir>(new ImportDir(*m_pPeFile, m_pImpDesc)) 
+          : std::unique_ptr<ImportDir>(nullptr);
+      }
+
+      // Section iterator
+      class ImportDirIter : public boost::iterator_facade<ImportDirIter, 
+        std::unique_ptr<ImportDir>, boost::incrementable_traversal_tag>,  
+        private boost::noncopyable
+      {
+      public:
+        // Constructor
+        explicit ImportDirIter(ImportDirEnum& MyImportDirEnum) 
+          : m_ImportDirEnum(MyImportDirEnum)
+        {
+          m_Current = m_ImportDirEnum.First();
+        }
+
+      private:
+        // Disable assignment
+        ImportDirIter& operator= (ImportDirIter const&);
+
+        // Allow Boost.Iterator access to internals
+        friend class boost::iterator_core_access;
+
+        // For Boost.Iterator
+        void increment() 
+        {
+          m_Current = m_ImportDirEnum.Next();
+        }
+
+        // For Boost.Iterator
+        std::unique_ptr<ImportDir>& dereference() const
+        {
+          return m_Current;
+        }
+
+        // Parent
+        ImportDirEnum& m_ImportDirEnum;
+
+        // Current import dir
+        // Mutable due to 'dereference' being marked as 'const'
+        mutable std::unique_ptr<ImportDir> m_Current;
+      };
+
+    private:
+      // Disable assignment
+      ImportDirEnum& operator= (ImportDirEnum const&);
+
+      // Memory instance
+      PeFile* m_pPeFile;
+
+      // Current thunk pointer
+      PIMAGE_IMPORT_DESCRIPTOR m_pImpDesc;
     };
 
     // Import thunk wrapper
@@ -138,6 +221,87 @@ namespace Hades
       mutable PIMAGE_THUNK_DATA m_pThunk;
 
       mutable PBYTE m_pBase;
+    };
+
+    // Section enumerator
+    class ImportThunkEnum : private boost::noncopyable
+    {
+    public:
+      // Constructor
+      ImportThunkEnum(PeFile& MyPeFile, DWORD FirstThunk) 
+        : m_pPeFile(&MyPeFile), 
+        m_pThunk(reinterpret_cast<PIMAGE_THUNK_DATA>(
+          m_pPeFile->RvaToVa(FirstThunk)))
+      { }
+
+      // Get first import thunk
+      std::unique_ptr<ImportThunk> First() 
+      {
+        ImportThunk MyImportThunk(*m_pPeFile, m_pThunk);
+        return MyImportThunk.IsValid() ? 
+          std::unique_ptr<ImportThunk>(new ImportThunk(*m_pPeFile, m_pThunk)) 
+          : std::unique_ptr<ImportThunk>(nullptr);
+      }
+
+      // Get next import thunk
+      std::unique_ptr<ImportThunk> Next()
+      {
+        ++m_pThunk;
+        ImportThunk MyImportThunk(*m_pPeFile, m_pThunk);
+        return MyImportThunk.IsValid() ? 
+          std::unique_ptr<ImportThunk>(new ImportThunk(*m_pPeFile, m_pThunk)) 
+          : std::unique_ptr<ImportThunk>(nullptr);
+      }
+
+      // Section iterator
+      class ImportThunkIter : public boost::iterator_facade<ImportThunkIter, 
+        std::unique_ptr<ImportThunk>, boost::incrementable_traversal_tag>,  
+        private boost::noncopyable
+      {
+      public:
+        // Constructor
+        explicit ImportThunkIter(ImportThunkEnum& MyImportThunkEnum) 
+          : m_ImportThunkEnum(MyImportThunkEnum)
+        {
+          m_Current = m_ImportThunkEnum.First();
+        }
+
+      private:
+        // Disable assignment
+        ImportThunkIter& operator= (ImportThunkIter const&);
+
+        // Allow Boost.Iterator access to internals
+        friend class boost::iterator_core_access;
+
+        // For Boost.Iterator
+        void increment() 
+        {
+          m_Current = m_ImportThunkEnum.Next();
+        }
+
+        // For Boost.Iterator
+        std::unique_ptr<ImportThunk>& dereference() const
+        {
+          return m_Current;
+        }
+
+        // Parent
+        ImportThunkEnum& m_ImportThunkEnum;
+
+        // Current import thunk
+        // Mutable due to 'dereference' being marked as 'const'
+        mutable std::unique_ptr<ImportThunk> m_Current;
+      };
+
+    private:
+      // Disable assignment
+      ImportThunkEnum& operator= (ImportThunkEnum const&);
+
+      // Memory instance
+      PeFile* m_pPeFile;
+
+      // Current thunk pointer
+      PIMAGE_THUNK_DATA m_pThunk;
     };
   }
 }

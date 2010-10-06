@@ -26,17 +26,16 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include "NtHeaders.h"
 #include "DosHeader.h"
 #include "MemoryMgr.h"
-#include "ExportDir.h"
 
 namespace Hades
 {
   namespace Memory
   {
     // Constructor
-    ImportDir::ImportDir(PeFile& MyPeFile) 
+    ImportDir::ImportDir(PeFile& MyPeFile, PIMAGE_IMPORT_DESCRIPTOR pImpDesc) 
       : m_pPeFile(&MyPeFile), 
       m_pMemory(&m_pPeFile->GetMemoryMgr()), 
-      m_pImpDesc(nullptr)
+      m_pImpDesc(pImpDesc)
     { }
 
     // Whether import directory is valid
