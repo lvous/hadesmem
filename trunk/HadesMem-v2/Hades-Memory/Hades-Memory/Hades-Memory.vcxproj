@@ -30,7 +30,6 @@
     <ClCompile Include="NtHeaders.cpp" />
     <ClCompile Include="Patcher.cpp" />
     <ClCompile Include="PeFile.cpp" />
-    <ClCompile Include="Placeholder.cpp" />
     <ClCompile Include="Process.cpp" />
     <ClCompile Include="Region.cpp" />
     <ClCompile Include="Scanner.cpp" />
