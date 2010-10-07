@@ -29,6 +29,7 @@
     <ClInclude Include="Logger.h" />
     <ClInclude Include="StringBuffer.h" />
     <ClInclude Include="VecN.h" />
+    <ClInclude Include="WinAux.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{02EE0F16-8897-4E45-917D-2A4354089091}</ProjectGuid>

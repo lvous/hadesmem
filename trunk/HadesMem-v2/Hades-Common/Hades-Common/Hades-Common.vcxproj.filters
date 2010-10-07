@@ -41,5 +41,8 @@
     <ClInclude Include="VecN.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="WinAux.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

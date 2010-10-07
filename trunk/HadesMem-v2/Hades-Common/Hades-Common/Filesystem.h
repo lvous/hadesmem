@@ -19,10 +19,6 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-// Hades
-#include "Error.h"
-#include "StringBuffer.h"
-
 // C++ Standard Library
 #include <string>
 #include <vector>
@@ -38,8 +34,10 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Windows API
 #include <Windows.h>
 
-// Image base linker 'trick'
-EXTERN_C IMAGE_DOS_HEADER __ImageBase;
+// Hades
+#include "Error.h"
+#include "WinAux.h"
+#include "StringBuffer.h"
 
 namespace Hades
 {
@@ -92,7 +90,7 @@ namespace Hades
     inline boost::filesystem::path GetSelfPath()
     {
       // Get self
-      HMODULE const ModMe(reinterpret_cast<HMODULE>(&__ImageBase));
+      HMODULE const ModMe(reinterpret_cast<HMODULE>(GetBaseOfSelf()));
 
       // Get path to self
       DWORD const SelfPathSize = MAX_PATH;
