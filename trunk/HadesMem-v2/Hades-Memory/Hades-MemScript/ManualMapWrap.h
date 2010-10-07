@@ -20,20 +20,21 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 // C++ Standard Library
-#include <vector>
+#include <string>
 
 // Boost
 #pragma warning(push, 1)
 #pragma warning(disable: ALL_CODE_ANALYSIS_WARNINGS)
-#include <boost/shared_ptr.hpp>
+#include <boost/lexical_cast.hpp>
 #pragma warning(pop)
 
 // Windows API
 #include <Windows.h>
 
 // Hades
-#include "PEFile.h"
-#include "SectionEnum.h"
+#include "Hades-Common/I18n.h"
+#include "Hades-Memory/ManualMap.h"
+#include "Hades-Memory/MemoryMgr.h"
 
 namespace Hades
 {
@@ -41,29 +42,19 @@ namespace Hades
   {
     namespace Wrappers
     {
-      class SectionEnumWrap : public SectionEnum
+      class ManualMapWrappers : public ManualMap
       {
       public:
-        SectionEnumWrap(PeFile& MyPeFile)
-          : SectionEnum(MyPeFile)
+        ManualMapWrappers(MemoryMgr& MyMemory) 
+          : ManualMap(MyMemory)
         { }
 
-        boost::shared_ptr<Section> First()
+        // Wrapper function for ManualMap::Map
+        DWORD_PTR Map(std::string const& Path, std::string const& Export, 
+          bool InjectHelper)
         {
-          // This is dangerous, but I haven't had time to think about the 
-          // 'proper' solution yet, so this should work for now, but needs 
-          // to be fixed in the future.
-          // Todo: Fix this monstrosity.
-          return boost::shared_ptr<Section>(SectionEnum::First().release());
-        }
-
-        boost::shared_ptr<Section> Next()
-        {
-          // This is dangerous, but I haven't had time to think about the 
-          // 'proper' solution yet, so this should work for now, but needs 
-          // to be fixed in the future.
-          // Todo: Fix this monstrosity.
-          return boost::shared_ptr<Section>(SectionEnum::Next().release());
+          return reinterpret_cast<DWORD_PTR>(ManualMap::Map(
+            boost::lexical_cast<std::wstring>(Path), Export, InjectHelper));
         }
       };
     }

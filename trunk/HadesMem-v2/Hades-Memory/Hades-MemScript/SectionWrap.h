@@ -28,9 +28,12 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include <boost/shared_ptr.hpp>
 #pragma warning(pop)
 
+// Windows API
+#include <Windows.h>
+
 // Hades
-#include "PEFile.h"
-#include "ExportEnum.h"
+#include "Hades-Memory/PEFile.h"
+#include "Hades-Memory/SectionEnum.h"
 
 namespace Hades
 {
@@ -38,29 +41,29 @@ namespace Hades
   {
     namespace Wrappers
     {
-      class ExportEnumWrap : public ExportEnum
+      class SectionEnumWrap : public SectionEnum
       {
       public:
-        ExportEnumWrap(PeFile& MyPeFile)
-          : ExportEnum(MyPeFile)
+        SectionEnumWrap(PeFile& MyPeFile)
+          : SectionEnum(MyPeFile)
         { }
 
-        boost::shared_ptr<Export> First()
+        boost::shared_ptr<Section> First()
         {
           // This is dangerous, but I haven't had time to think about the 
           // 'proper' solution yet, so this should work for now, but needs 
           // to be fixed in the future.
           // Todo: Fix this monstrosity.
-          return boost::shared_ptr<Export>(ExportEnum::First().release());
+          return boost::shared_ptr<Section>(SectionEnum::First().release());
         }
 
-        boost::shared_ptr<Export> Next()
+        boost::shared_ptr<Section> Next()
         {
           // This is dangerous, but I haven't had time to think about the 
           // 'proper' solution yet, so this should work for now, but needs 
           // to be fixed in the future.
           // Todo: Fix this monstrosity.
-          return boost::shared_ptr<Export>(ExportEnum::Next().release());
+          return boost::shared_ptr<Section>(SectionEnum::Next().release());
         }
       };
     }

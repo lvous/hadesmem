@@ -34,9 +34,9 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include <Windows.h>
 
 // Hades
-#include "Module.h"
-#include "MemoryMgr.h"
 #include "Hades-Common/I18n.h"
+#include "Hades-Memory/Module.h"
+#include "Hades-Memory/MemoryMgr.h"
 
 namespace Hades
 {

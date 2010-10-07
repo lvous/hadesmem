@@ -19,11 +19,12 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-// C++ Standard Library
-#include <vector>
+// Windows API
+#include <Windows.h>
 
 // Hades
-#include "TlsDir.h"
+#include "Hades-Memory/PeFile.h"
+#include "Hades-Memory/MemoryMgr.h"
 
 namespace Hades
 {
@@ -31,31 +32,20 @@ namespace Hades
   {
     namespace Wrappers
     {
-      class TlsDirWrappers : public TlsDir
+      class PeFileWrappers : public PeFile
       {
       public:
-        struct TlsCallbackList
-        {
-          std::vector<DWORD_PTR> List;
-        };
-
-        TlsDirWrappers(PeFile& MyPeFile) 
-          : TlsDir(MyPeFile)
+        PeFileWrappers(MemoryMgr& MyMemory, DWORD_PTR Address) 
+          : PeFile(MyMemory, reinterpret_cast<PVOID>(Address))
         { }
+      };
 
-        TlsCallbackList GetCallbacks() const
-        {
-          std::vector<PIMAGE_TLS_CALLBACK> const Callbacks(TlsDir::
-            GetCallbacks());
-          TlsCallbackList MyList;
-          std::transform(Callbacks.begin(), Callbacks.end(), 
-            std::back_inserter(MyList.List), 
-            [] (PIMAGE_TLS_CALLBACK Current)
-          {
-            return reinterpret_cast<DWORD_PTR>(Current);
-          });
-          return MyList;
-        }
+      class PeFileAsDataWrappers : public PeFileAsData
+      {
+      public:
+        PeFileAsDataWrappers(MemoryMgr& MyMemory, DWORD_PTR Address) 
+          : PeFileAsData(MyMemory, reinterpret_cast<PVOID>(Address))
+        { }
       };
     }
   }

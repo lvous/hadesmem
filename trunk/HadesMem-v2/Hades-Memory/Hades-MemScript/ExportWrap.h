@@ -20,21 +20,17 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 // C++ Standard Library
-#include <string>
+#include <vector>
 
 // Boost
 #pragma warning(push, 1)
 #pragma warning(disable: ALL_CODE_ANALYSIS_WARNINGS)
-#include <boost/lexical_cast.hpp>
+#include <boost/shared_ptr.hpp>
 #pragma warning(pop)
 
-// Windows API
-#include <Windows.h>
-
 // Hades
-#include "ManualMap.h"
-#include "MemoryMgr.h"
-#include "Hades-Common/I18n.h"
+#include "Hades-Memory/PEFile.h"
+#include "Hades-Memory/ExportEnum.h"
 
 namespace Hades
 {
@@ -42,19 +38,29 @@ namespace Hades
   {
     namespace Wrappers
     {
-      class ManualMapWrappers : public ManualMap
+      class ExportEnumWrap : public ExportEnum
       {
       public:
-        ManualMapWrappers(MemoryMgr& MyMemory) 
-          : ManualMap(MyMemory)
+        ExportEnumWrap(PeFile& MyPeFile)
+          : ExportEnum(MyPeFile)
         { }
 
-        // Wrapper function for ManualMap::Map
-        DWORD_PTR Map(std::string const& Path, std::string const& Export, 
-          bool InjectHelper)
+        boost::shared_ptr<Export> First()
         {
-          return reinterpret_cast<DWORD_PTR>(ManualMap::Map(
-            boost::lexical_cast<std::wstring>(Path), Export, InjectHelper));
+          // This is dangerous, but I haven't had time to think about the 
+          // 'proper' solution yet, so this should work for now, but needs 
+          // to be fixed in the future.
+          // Todo: Fix this monstrosity.
+          return boost::shared_ptr<Export>(ExportEnum::First().release());
+        }
+
+        boost::shared_ptr<Export> Next()
+        {
+          // This is dangerous, but I haven't had time to think about the 
+          // 'proper' solution yet, so this should work for now, but needs 
+          // to be fixed in the future.
+          // Todo: Fix this monstrosity.
+          return boost::shared_ptr<Export>(ExportEnum::Next().release());
         }
       };
     }

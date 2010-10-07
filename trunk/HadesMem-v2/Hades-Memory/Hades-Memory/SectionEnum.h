@@ -29,7 +29,9 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include <Windows.h>
 
 // Hades
+#include "PeFile.h"
 #include "Section.h"
+#include "NtHeaders.h"
 
 namespace Hades
 {

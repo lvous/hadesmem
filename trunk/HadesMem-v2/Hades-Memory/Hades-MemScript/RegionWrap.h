@@ -32,8 +32,8 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include <Windows.h>
 
 // Hades
-#include "Region.h"
-#include "MemoryMgr.h"
+#include "Hades-Memory/Region.h"
+#include "Hades-Memory/MemoryMgr.h"
 
 namespace Hades
 {

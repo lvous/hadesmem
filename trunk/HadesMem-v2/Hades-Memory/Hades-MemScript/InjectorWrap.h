@@ -34,10 +34,10 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include <Windows.h>
 
 // Hades
-#include "Injector.h"
-#include "MemoryMgr.h"
 #include "MemoryMgrWrap.h"
 #include "Hades-Common/I18n.h"
+#include "Hades-Memory/Injector.h"
+#include "Hades-Memory/MemoryMgr.h"
 
 namespace Hades
 {

@@ -40,7 +40,8 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include "Hades-Memory/Memory.h"
 #include "Hades-Common/Logger.h"
 #include "Hades-Memory/AutoLink.h"
-#include "Hades-Memory/Scripting.h"
+#include "Hades-MemScript/AutoLink.h"
+#include "Hades-MemScript/Scripting.h"
 
 bool GetInput(Hades::Memory::ScriptMgr& MyScriptMgr) 
 {

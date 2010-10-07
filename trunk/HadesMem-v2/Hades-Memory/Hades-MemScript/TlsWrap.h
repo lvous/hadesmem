@@ -20,15 +20,10 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 // C++ Standard Library
-#include <string>
 #include <vector>
 
-// Windows API
-#include <Windows.h>
-
 // Hades
-#include "MemoryMgr.h"
-#include "Disassembler.h"
+#include "Hades-Memory/TlsDir.h"
 
 namespace Hades
 {
@@ -36,27 +31,30 @@ namespace Hades
   {
     namespace Wrappers
     {
-      // String list wrapper
-      struct StringList
-      {
-        std::vector<std::string> List;
-      };
-
-      class DisassemblerWrappers : public Disassembler
+      class TlsDirWrappers : public TlsDir
       {
       public:
-        explicit DisassemblerWrappers(MemoryMgr& pMyMemory) 
-          : Disassembler(pMyMemory)
+        struct TlsCallbackList
+        {
+          std::vector<DWORD_PTR> List;
+        };
+
+        TlsDirWrappers(PeFile& MyPeFile) 
+          : TlsDir(MyPeFile)
         { }
 
-        // Disassembler::DisassembleToStr wrapper
-        StringList DisassembleToStr(DWORD_PTR Address, 
-          DWORD_PTR NumInstructions)
+        TlsCallbackList GetCallbacks() const
         {
-          StringList MyStringList;
-          MyStringList.List =  Disassembler::DisassembleToStr(
-            reinterpret_cast<PVOID>(Address), NumInstructions);
-          return MyStringList;
+          std::vector<PIMAGE_TLS_CALLBACK> const Callbacks(TlsDir::
+            GetCallbacks());
+          TlsCallbackList MyList;
+          std::transform(Callbacks.begin(), Callbacks.end(), 
+            std::back_inserter(MyList.List), 
+            [] (PIMAGE_TLS_CALLBACK Current)
+          {
+            return reinterpret_cast<DWORD_PTR>(Current);
+          });
+          return MyList;
         }
       };
     }

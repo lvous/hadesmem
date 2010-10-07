@@ -35,10 +35,10 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include <Windows.h>
 
 // Hades
-#include "Types.h"
-#include "Scanner.h"
-#include "MemoryMgr.h"
 #include "Hades-Common/I18n.h"
+#include "Hades-Memory/Types.h"
+#include "Hades-Memory/Scanner.h"
+#include "Hades-Memory/MemoryMgr.h"
 
 // Wrapper function generator for MyScanner::Find
 #define HADESMEM_SCRIPTING_GEN_FIND(x) \

@@ -25,5 +25,3 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Auto-link dependencies
 #pragma comment(lib, "AsmJit.lib")
 #pragma comment(lib, "BeaEngine.lib")
-#pragma comment(lib, "Lua.lib")
-#pragma comment(lib, "LuaBind.lib")

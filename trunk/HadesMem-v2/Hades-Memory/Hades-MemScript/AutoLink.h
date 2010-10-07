@@ -19,34 +19,9 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-// Windows API
-#include <Windows.h>
+// Auto-link Hades-Memory
+#pragma comment(lib, "Hades-MemScript.lib")
 
-// Hades
-#include "PeFile.h"
-#include "MemoryMgr.h"
-
-namespace Hades
-{
-  namespace Memory
-  {
-    namespace Wrappers
-    {
-      class PeFileWrappers : public PeFile
-      {
-      public:
-        PeFileWrappers(MemoryMgr& MyMemory, DWORD_PTR Address) 
-          : PeFile(MyMemory, reinterpret_cast<PVOID>(Address))
-        { }
-      };
-
-      class PeFileAsDataWrappers : public PeFileAsData
-      {
-      public:
-        PeFileAsDataWrappers(MemoryMgr& MyMemory, DWORD_PTR Address) 
-          : PeFileAsData(MyMemory, reinterpret_cast<PVOID>(Address))
-        { }
-      };
-    }
-  }
-}
+// Auto-link dependencies
+#pragma comment(lib, "Lua.lib")
+#pragma comment(lib, "LuaBind.lib")

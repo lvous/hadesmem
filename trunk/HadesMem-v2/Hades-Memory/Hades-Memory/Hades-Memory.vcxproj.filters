@@ -16,23 +16,14 @@
     <Filter Include="Header Files\Aux">
       <UniqueIdentifier>{06302c30-6025-470c-85a5-ba28715f8f44}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Scripting">
-      <UniqueIdentifier>{57de000b-ef6d-4d44-a174-7ce3b49f8a02}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\External">
       <UniqueIdentifier>{4c1fbea3-b11a-4ce3-9dd3-90204d38c9fd}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\Internal">
       <UniqueIdentifier>{f5354ef0-883f-4799-9047-3caef0312ea4}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Scripting\Wrappers">
-      <UniqueIdentifier>{5df4394a-3100-4d90-8f3d-2f0f47ccdef8}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\External\PeLib">
       <UniqueIdentifier>{ddcd7702-c910-4e83-9b85-d08684a05d87}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Scripting\Wrappers\PeLib">
-      <UniqueIdentifier>{22f7bc4d-3eb0-42c6-ad60-11a9eb080334}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\External">
       <UniqueIdentifier>{076a74c8-a005-4183-b1db-2c2988209150}</UniqueIdentifier>
@@ -42,9 +33,6 @@
     </Filter>
     <Filter Include="Source Files\Internal">
       <UniqueIdentifier>{c581c5ae-2da0-4123-8cc9-e118cac78158}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Scripting">
-      <UniqueIdentifier>{4cfe283c-51a3-4cb6-81c0-895245acbf32}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -96,9 +84,6 @@
     <ClCompile Include="Disassembler.cpp">
       <Filter>Source Files\External</Filter>
     </ClCompile>
-    <ClCompile Include="Scripting.cpp">
-      <Filter>Source Files\Scripting</Filter>
-    </ClCompile>
     <ClCompile Include="ImportDir.cpp">
       <Filter>Source Files\External\PeLib</Filter>
     </ClCompile>
@@ -112,9 +97,6 @@
     </ClInclude>
     <ClInclude Include="Types.h">
       <Filter>Header Files\Aux</Filter>
-    </ClInclude>
-    <ClInclude Include="Scripting.h">
-      <Filter>Header Files\Scripting</Filter>
     </ClInclude>
     <ClInclude Include="Disassembler.h">
       <Filter>Header Files\External</Filter>
@@ -143,30 +125,6 @@
     <ClInclude Include="Patcher.h">
       <Filter>Header Files\Internal</Filter>
     </ClInclude>
-    <ClInclude Include="DisassemblerWrap.h">
-      <Filter>Header Files\Scripting\Wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="InjectorWrap.h">
-      <Filter>Header Files\Scripting\Wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="ManualMapWrap.h">
-      <Filter>Header Files\Scripting\Wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="MemoryMgrWrap.h">
-      <Filter>Header Files\Scripting\Wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="ModuleWrap.h">
-      <Filter>Header Files\Scripting\Wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="RegionWrap.h">
-      <Filter>Header Files\Scripting\Wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="ScannerWrap.h">
-      <Filter>Header Files\Scripting\Wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="Wrappers.h">
-      <Filter>Header Files\Scripting\Wrappers</Filter>
-    </ClInclude>
     <ClInclude Include="TlsDir.h">
       <Filter>Header Files\External\PeLib</Filter>
     </ClInclude>
@@ -193,18 +151,6 @@
     </ClInclude>
     <ClInclude Include="DosHeader.h">
       <Filter>Header Files\External\PeLib</Filter>
-    </ClInclude>
-    <ClInclude Include="TlsWrap.h">
-      <Filter>Header Files\Scripting\Wrappers\PeLib</Filter>
-    </ClInclude>
-    <ClInclude Include="ExportWrap.h">
-      <Filter>Header Files\Scripting\Wrappers\PeLib</Filter>
-    </ClInclude>
-    <ClInclude Include="PeFileWrap.h">
-      <Filter>Header Files\Scripting\Wrappers\PeLib</Filter>
-    </ClInclude>
-    <ClInclude Include="SectionWrap.h">
-      <Filter>Header Files\Scripting\Wrappers\PeLib</Filter>
     </ClInclude>
     <ClInclude Include="AutoLink.h">
       <Filter>Header Files\Aux</Filter>

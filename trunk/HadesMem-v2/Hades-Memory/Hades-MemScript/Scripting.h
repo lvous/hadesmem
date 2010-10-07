@@ -55,10 +55,10 @@ extern "C"
 #pragma warning(pop)
 
 // Hades
-#include "PeLib.h"
-#include "Memory.h"
 #include "Wrappers.h"
 #include "Hades-Common/I18n.h"
+#include "Hades-Memory/PeLib.h"
+#include "Hades-Memory/Memory.h"
 
 // LuaBind extensions for 64-bit number support
 namespace luabind
