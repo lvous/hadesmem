@@ -358,13 +358,13 @@ namespace Hades
         // Check whether dependent module is already loaded
         ModuleEnum MyModuleList(*m_pMemory);
         std::unique_ptr<Module> MyModule;
-        for (ModuleEnum::ModuleListIter i(MyModuleList); *i; ++i)
+        for (ModuleEnum::ModuleListIter j(MyModuleList); *j; ++j)
         {
-          Module& Current = **i;
+          Module& Current = **j;
           if (boost::to_lower_copy(Current.GetName()) == ModuleNameLowerW || 
             boost::to_lower_copy(Current.GetPath()) == ModuleNameLowerW)
           {
-            MyModule = std::move(*i);
+            MyModule = std::move(*j);
           }
         }
 
@@ -390,10 +390,10 @@ namespace Hades
         // Loop over import thunks for current module
         ImportThunkEnum MyImportThunkEnum(MyPeFile, MyImportDir.
           GetFirstThunk());
-        for (ImportThunkEnum::ImportThunkIter i(MyImportThunkEnum); *i; ++i)
+        for (ImportThunkEnum::ImportThunkIter j(MyImportThunkEnum); *j; ++j)
         {
           // Get import thunk
-          ImportThunk& ImpThunk = **i;
+          ImportThunk& ImpThunk = **j;
 
           // Get name of function
           std::string const ImpName(ImpThunk.GetName());
