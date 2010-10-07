@@ -113,8 +113,6 @@
       <AdditionalDependencies>
       </AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)Binaries\$(Configuration)-$(Platform)\;$(SolutionDir)..\Dependencies\AsmJit\Binaries\$(Configuration)-$(Platform)\;$(SolutionDir)..\Dependencies\BeaEngine\Binaries\$(Configuration)-$(Platform)\;$(SolutionDir)..\Dependencies\Lua\Binaries\$(Configuration)-$(Platform)\;$(SolutionDir)..\Dependencies\LuaBind\Binaries\$(Configuration)-$(Platform)\</AdditionalLibraryDirectories>
-      <SubSystem>Windows</SubSystem>
-      <EntryPointSymbol>main</EntryPointSymbol>
     </Link>
     <ProjectReference>
       <LinkLibraryDependencies>false</LinkLibraryDependencies>
@@ -139,8 +137,6 @@
       <AdditionalDependencies>
       </AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)Binaries\$(Configuration)-$(Platform)\;$(SolutionDir)..\Dependencies\AsmJit\Binaries\$(Configuration)-$(Platform)\;$(SolutionDir)..\Dependencies\BeaEngine\Binaries\$(Configuration)-$(Platform)\;$(SolutionDir)..\Dependencies\Lua\Binaries\$(Configuration)-$(Platform)\;$(SolutionDir)..\Dependencies\LuaBind\Binaries\$(Configuration)-$(Platform)\</AdditionalLibraryDirectories>
-      <SubSystem>Windows</SubSystem>
-      <EntryPointSymbol>main</EntryPointSymbol>
     </Link>
     <ProjectReference>
       <LinkLibraryDependencies>false</LinkLibraryDependencies>
@@ -164,8 +160,6 @@
       <AdditionalDependencies>
       </AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)Binaries\$(Configuration)-$(Platform)\;$(SolutionDir)..\Dependencies\AsmJit\Binaries\$(Configuration)-$(Platform)\;$(SolutionDir)..\Dependencies\BeaEngine\Binaries\$(Configuration)-$(Platform)\;$(SolutionDir)..\Dependencies\Lua\Binaries\$(Configuration)-$(Platform)\;$(SolutionDir)..\Dependencies\LuaBind\Binaries\$(Configuration)-$(Platform)\</AdditionalLibraryDirectories>
-      <SubSystem>Windows</SubSystem>
-      <EntryPointSymbol>main</EntryPointSymbol>
     </Link>
     <ProjectReference>
       <LinkLibraryDependencies>false</LinkLibraryDependencies>
@@ -189,8 +183,6 @@
       <AdditionalDependencies>
       </AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)Binaries\$(Configuration)-$(Platform)\;$(SolutionDir)..\Dependencies\AsmJit\Binaries\$(Configuration)-$(Platform)\;$(SolutionDir)..\Dependencies\BeaEngine\Binaries\$(Configuration)-$(Platform)\;$(SolutionDir)..\Dependencies\Lua\Binaries\$(Configuration)-$(Platform)\;$(SolutionDir)..\Dependencies\LuaBind\Binaries\$(Configuration)-$(Platform)\</AdditionalLibraryDirectories>
-      <SubSystem>Windows</SubSystem>
-      <EntryPointSymbol>main</EntryPointSymbol>
     </Link>
     <ProjectReference>
       <LinkLibraryDependencies>false</LinkLibraryDependencies>
@@ -220,7 +212,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Form1.h">
+    <ClInclude Include="FrmMain.h">
       <FileType>CppForm</FileType>
     </ClInclude>
     <ClInclude Include="resource.h" />
@@ -230,8 +222,8 @@
     <ResourceCompile Include="app.rc" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Form1.resX">
-      <DependentUpon>Form1.h</DependentUpon>
+    <EmbeddedResource Include="FrmMain.resX">
+      <DependentUpon>FrmMain.h</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>

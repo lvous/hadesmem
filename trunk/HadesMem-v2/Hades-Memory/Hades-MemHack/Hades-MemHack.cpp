@@ -1,7 +1,7 @@
 // Hades-MemHack.cpp : main project file.
 
 #include "stdafx.h"
-#include "Form1.h"
+#include "FrmMain.h"
 
 using namespace HadesMemHack;
 
@@ -13,7 +13,7 @@ int main(array<System::String ^> ^/*args*/)
 	Application::SetCompatibleTextRenderingDefault(false);
 
 	// Create the main window and run it
-	Application::Run(gcnew Form1());
+	Application::Run(gcnew FrmMain());
 
 	return 0;
 }
