@@ -229,27 +229,21 @@ namespace Hades
 #error "Unsupported architecture."
 #endif
 
-      // Make JIT function.
-      EnsureAsmJitFree const LoaderStub(MyJitFunc.make());
-
-      // Ensure function creation succeeded
-      if (!LoaderStub.Get())
-      {
-        BOOST_THROW_EXCEPTION(Error() << 
-          ErrorFunction("MemoryMgr::Call") << 
-          ErrorString("Error JIT'ing loader stub."));
-      }
-
       // Get stub size
       DWORD_PTR const StubSize = MyJitFunc.getCodeSize();
 
       // Allocate memory for stub buffer
       AllocAndFree const StubMemRemote(*this, StubSize);
-      // Copy loader stub to stub buffer
-      std::vector<BYTE> const EpCallBuf(static_cast<PBYTE>(LoaderStub.Get()), 
-        static_cast<PBYTE>(LoaderStub.Get()) + StubSize);
+
+      // Create buffer to hold relocated code
+      std::vector<BYTE> CodeReal(StubSize);
+
+      // Generate code
+      MyJitFunc.relocCode(&CodeReal[0], reinterpret_cast<DWORD_PTR>(
+        StubMemRemote.GetAddress()));
+
       // Write stub buffer to process
-      Write(StubMemRemote.GetAddress(), EpCallBuf);
+      Write(StubMemRemote.GetAddress(), CodeReal);
 
       // Call stub via creating a remote thread in the target.
       Windows::EnsureCloseHandle const MyThread(CreateRemoteThread(m_Process.
