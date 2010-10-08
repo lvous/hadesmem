@@ -46,7 +46,7 @@ namespace Hades
           ErrorCodeWin(LastError));
       }
 
-      return MemInfo.BaseAddress;
+      return MemInfo.AllocationBase;
     }
   }
 }
