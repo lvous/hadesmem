@@ -18,8 +18,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Hades-MemScript", "Hades-MemScript\Hades-MemScript.vcxproj", "{0DB82E5F-ABE7-41DA-AF7A-8721CA98BA03}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Hades-MemHack", "Hades-MemHack\Hades-MemHack.vcxproj", "{7E3FB827-029D-44C8-B999-8BDAE0C487A7}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -60,14 +58,6 @@ Global
 		{0DB82E5F-ABE7-41DA-AF7A-8721CA98BA03}.Release|Win32.Build.0 = Release|Win32
 		{0DB82E5F-ABE7-41DA-AF7A-8721CA98BA03}.Release|x64.ActiveCfg = Release|x64
 		{0DB82E5F-ABE7-41DA-AF7A-8721CA98BA03}.Release|x64.Build.0 = Release|x64
-		{7E3FB827-029D-44C8-B999-8BDAE0C487A7}.Debug|Win32.ActiveCfg = Debug|Win32
-		{7E3FB827-029D-44C8-B999-8BDAE0C487A7}.Debug|Win32.Build.0 = Debug|Win32
-		{7E3FB827-029D-44C8-B999-8BDAE0C487A7}.Debug|x64.ActiveCfg = Debug|x64
-		{7E3FB827-029D-44C8-B999-8BDAE0C487A7}.Debug|x64.Build.0 = Debug|x64
-		{7E3FB827-029D-44C8-B999-8BDAE0C487A7}.Release|Win32.ActiveCfg = Release|Win32
-		{7E3FB827-029D-44C8-B999-8BDAE0C487A7}.Release|Win32.Build.0 = Release|Win32
-		{7E3FB827-029D-44C8-B999-8BDAE0C487A7}.Release|x64.ActiveCfg = Release|x64
-		{7E3FB827-029D-44C8-B999-8BDAE0C487A7}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
