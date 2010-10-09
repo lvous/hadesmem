@@ -95,8 +95,8 @@ namespace Hades
         // Scanner::operator[] wrapper
         DWORD_PTR GetAddress(std::string const& Name)
         {
-          return reinterpret_cast<DWORD_PTR>(Scanner::operator[](
-            boost::lexical_cast<std::wstring>(Name)));
+          return reinterpret_cast<DWORD_PTR>((*this)[boost::lexical_cast<
+            std::wstring>(Name)]);
         }
 
         // Scanner::Find<T> wrappers
@@ -110,10 +110,10 @@ namespace Hades
         HADESMEM_SCRIPTING_GEN_FIND(UInt64)
         HADESMEM_SCRIPTING_GEN_FIND(Float)
         HADESMEM_SCRIPTING_GEN_FIND(Double)
-        HADESMEM_SCRIPTING_GEN_FIND(StrNarrow)
+        HADESMEM_SCRIPTING_GEN_FIND(StringA)
 
         // Wrapper function for Scanner::FindCharNarrow
-        DWORD_PTR FindCharNarrow(std::string const& Data)
+        DWORD_PTR FindCharA(std::string const& Data)
         {
           if (Data.size() != 1)
           {
@@ -125,7 +125,7 @@ namespace Hades
         }
 
         // Wrapper function for Scanner::FindCharWide
-        DWORD_PTR FindCharWide(std::string const& Data)
+        DWORD_PTR FindCharW(std::string const& Data)
         {
           if (Data.size() != 1)
           {
@@ -134,14 +134,14 @@ namespace Hades
               ErrorString("Value invalid (must be a single character)."));
           }
           return reinterpret_cast<DWORD_PTR>(Scanner::Find(
-            boost::lexical_cast<Types::StrWide>(Data[0])));
+            boost::lexical_cast<Types::StringW>(Data[0])));
         }
 
         // Wrapper function for Scanner::FindStrWide
-        DWORD_PTR FindStrWide(std::string const& Data)
+        DWORD_PTR FindStringW(std::string const& Data)
         {
           return reinterpret_cast<DWORD_PTR>(Scanner::Find(
-            boost::lexical_cast<Types::StrWide>(Data)));
+            boost::lexical_cast<Types::StringW>(Data)));
         }
 
         // Wrapper function for Scanner::FindPointer
@@ -168,10 +168,10 @@ namespace Hades
         HADESMEM_SCRIPTING_GEN_FIND_ALL(UInt64)
         HADESMEM_SCRIPTING_GEN_FIND_ALL(Float)
         HADESMEM_SCRIPTING_GEN_FIND_ALL(Double)
-        HADESMEM_SCRIPTING_GEN_FIND_ALL(StrNarrow)
+        HADESMEM_SCRIPTING_GEN_FIND_ALL(StringA)
 
         // Wrapper function for Scanner::FindAllCharNarrow
-        DwordPtrList FindAllCharNarrow(std::string const& Data)
+        DwordPtrList FindAllCharA(std::string const& Data)
         {
           if (Data.size() != 1)
           {
@@ -192,7 +192,7 @@ namespace Hades
         }
 
         // Wrapper function for Scanner::FindAllCharWide
-        DwordPtrList FindAllCharWide(std::string const& Data)
+        DwordPtrList FindAllCharW(std::string const& Data)
         {
           if (Data.size() != 1)
           {
@@ -201,7 +201,7 @@ namespace Hades
               ErrorString("Value invalid (must be a single character)."));
           }
           std::vector<PVOID> AddrList(Scanner::FindAll(
-            boost::lexical_cast<Types::StrWide>(Data[0])));
+            boost::lexical_cast<Types::StringW>(Data[0])));
           DwordPtrList NewList;
           NewList.List.reserve(AddrList.size());
           std::transform(AddrList.cbegin(), AddrList.cend(), 
@@ -214,10 +214,10 @@ namespace Hades
         }
 
         // Wrapper function for Scanner::FindAllStrWide
-        DwordPtrList FindAllStrWide(std::string const& Data)
+        DwordPtrList FindAllStringW(std::string const& Data)
         {
           std::vector<PVOID> AddrList(Scanner::FindAll(
-            boost::lexical_cast<Types::StrWide>(Data[0])));
+            boost::lexical_cast<Types::StringW>(Data[0])));
           DwordPtrList NewList;
           NewList.List.reserve(AddrList.size());
           std::transform(AddrList.cbegin(), AddrList.cend(), 

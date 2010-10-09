@@ -161,31 +161,31 @@ namespace Hades
         HADESMEM_SCRIPTING_GEN_READ(UInt64)
         HADESMEM_SCRIPTING_GEN_READ(Float)
         HADESMEM_SCRIPTING_GEN_READ(Double)
-        HADESMEM_SCRIPTING_GEN_READ(StrNarrow)
+        HADESMEM_SCRIPTING_GEN_READ(StringA)
 
         // Wrapper function generator for MemoryMgr::ReadCharNarrow
-        std::string ReadCharNarrow(DWORD_PTR Address)
+        std::string ReadCharA(DWORD_PTR Address)
         {
           std::string MyStr;
-          MyStr += MemoryMgr::Read<Types::CharNarrow>(reinterpret_cast<PVOID>(
+          MyStr += MemoryMgr::Read<Types::CharA>(reinterpret_cast<PVOID>(
             Address));
           return MyStr;
         }
 
         // Wrapper function generator for MemoryMgr::ReadCharWide
-        std::string ReadCharWide(DWORD_PTR Address)
+        std::string ReadCharW(DWORD_PTR Address)
         {
           std::wstring MyStr;
-          MyStr += MemoryMgr::Read<Types::CharWide>(reinterpret_cast<PVOID>(
+          MyStr += MemoryMgr::Read<Types::CharW>(reinterpret_cast<PVOID>(
             Address));
           return boost::lexical_cast<std::string>(MyStr);
         }
 
         // Wrapper function generator for MemoryMgr::ReadStrWide
-        std::string ReadStrWide(DWORD_PTR Address)
+        std::string ReadStringW(DWORD_PTR Address)
         {
           return boost::lexical_cast<std::string>(MemoryMgr::Read<Types::
-            StrWide>(reinterpret_cast<PVOID>(Address)));
+            StringW>(reinterpret_cast<PVOID>(Address)));
         }
 
         // Wrapper function generator for MemoryMgr::ReadPointer
@@ -206,10 +206,10 @@ namespace Hades
         HADESMEM_SCRIPTING_GEN_WRITE(UInt64)
         HADESMEM_SCRIPTING_GEN_WRITE(Float)
         HADESMEM_SCRIPTING_GEN_WRITE(Double)
-        HADESMEM_SCRIPTING_GEN_WRITE(StrNarrow)
+        HADESMEM_SCRIPTING_GEN_WRITE(StringA)
 
         // Wrapper function generator for MemoryMgr::WriteCharNarrow
-        void WriteCharNarrow(DWORD_PTR Address, std::string const& Value)
+        void WriteCharA(DWORD_PTR Address, std::string const& Value)
         {
           if (Value.size() != 1)
           {
@@ -222,7 +222,7 @@ namespace Hades
         }
 
         // Wrapper function generator for MemoryMgr::WriteCharWide
-        void WriteCharWide(DWORD_PTR Address, std::string const& Value)
+        void WriteCharW(DWORD_PTR Address, std::string const& Value)
         {
           if (Value.size() != 1)
           {
@@ -236,7 +236,7 @@ namespace Hades
         }
 
         // Wrapper function generator for MemoryMgr::ReadStrWide
-        void WriteStrWide(DWORD_PTR Address, std::string const& Value)
+        void WriteStringW(DWORD_PTR Address, std::string const& Value)
         {
           MemoryMgr::Write(reinterpret_cast<PVOID>(Address), 
             boost::lexical_cast<std::wstring>(Value));

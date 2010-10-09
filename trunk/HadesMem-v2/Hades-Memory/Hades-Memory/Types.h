@@ -21,6 +21,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 // C++ Standard Library
 #include <string>
+#include <cstdint>
 
 namespace Hades
 {
@@ -29,21 +30,21 @@ namespace Hades
     namespace Types
     {
       // Declare fixed-size types
-      typedef signed char           Int8;
-      typedef unsigned char         UInt8;
-      typedef short                 Int16;
-      typedef unsigned short        UInt16;
-      typedef int                   Int32;
-      typedef unsigned int          UInt32;
-      typedef long long             Int64;
-      typedef unsigned long long    UInt64;
-      typedef float                 Float;
-      typedef double                Double;
-      typedef char                  CharNarrow;
-      typedef wchar_t               CharWide;
-      typedef std::string           StrNarrow;
-      typedef std::wstring          StrWide;
-      typedef void*                 Pointer;
+      typedef std::int8_t     Int8;
+      typedef std::uint8_t    UInt8;
+      typedef std::int16_t    Int16;
+      typedef std::uint16_t   UInt16;
+      typedef std::int32_t    Int32;
+      typedef std::uint32_t   UInt32;
+      typedef std::int64_t    Int64;
+      typedef std::uint64_t   UInt64;
+      typedef float           Float;
+      typedef double          Double;
+      typedef char            CharA;
+      typedef wchar_t         CharW;
+      typedef std::string     StringA;
+      typedef std::wstring    StringW;
+      typedef void*           Pointer;
 
       // Ensure data type are correct
       static_assert(sizeof(Int8) == 1, "Size of Int8 is wrong.");

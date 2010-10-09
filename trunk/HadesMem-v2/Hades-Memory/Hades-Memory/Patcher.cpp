@@ -17,12 +17,6 @@ You should have received a copy of the GNU General Public License
 along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-// Boost
-#pragma warning(push, 1)
-#pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
-#include <boost/format.hpp>
-#pragma warning(pop)
-
 // Hades
 #include "Patcher.h"
 #include "MemoryMgr.h"
