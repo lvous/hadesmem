@@ -204,7 +204,7 @@ namespace Hades
         TlsCallArgs.push_back(0);
         TlsCallArgs.push_back(reinterpret_cast<PVOID>(DLL_PROCESS_ATTACH));
         TlsCallArgs.push_back(RemoteBase);
-        DWORD const TlsRet = m_pMemory->Call(reinterpret_cast<PBYTE>(
+        DWORD_PTR const TlsRet = m_pMemory->Call(reinterpret_cast<PBYTE>(
           RemoteBase) + reinterpret_cast<DWORD_PTR>(pCallback), TlsCallArgs);
         std::wcout << "TLS Callback Returned: " << TlsRet << "." << std::endl;
       });
@@ -214,7 +214,7 @@ namespace Hades
       EpArgs.push_back(0);
       EpArgs.push_back(reinterpret_cast<PVOID>(DLL_PROCESS_ATTACH));
       EpArgs.push_back(RemoteBase);
-      DWORD const EpRet = m_pMemory->Call(EntryPoint, EpArgs);
+      DWORD_PTR const EpRet = m_pMemory->Call(EntryPoint, EpArgs);
       std::wcout << "Entry Point Returned: " << EpRet << "." << std::endl;
 
       // Call remote export (if specified)
@@ -222,7 +222,7 @@ namespace Hades
       {
         std::vector<PVOID> ExpArgs;
         ExpArgs.push_back(RemoteBase);
-        DWORD const ExpRet = m_pMemory->Call(ExportAddr, ExpArgs);
+        DWORD_PTR const ExpRet = m_pMemory->Call(ExportAddr, ExpArgs);
         std::wcout << "Export Returned: " << ExpRet << "." << std::endl;
       }
 

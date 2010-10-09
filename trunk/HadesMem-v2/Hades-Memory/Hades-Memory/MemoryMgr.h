@@ -85,7 +85,7 @@ namespace Hades
       };
 
       // Call remote function
-      DWORD Call(PVOID Address, std::vector<PVOID> const& Args, 
+      DWORD_PTR Call(PVOID Address, std::vector<PVOID> const& Args, 
         CallConv MyCallConv = CallConv_Default) const;
 
       // Read memory (POD types)

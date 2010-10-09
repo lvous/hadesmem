@@ -87,7 +87,7 @@ namespace Hades
     // Todo: Support hijacking existing thread (rather than creating new one).
     // Todo: Support 'breaking' the WoW64 barrier and creating threads in 
     // cross-architecture situations.
-    DWORD MemoryMgr::Call(PVOID Address, std::vector<PVOID> const& Args, 
+    DWORD_PTR MemoryMgr::Call(PVOID Address, std::vector<PVOID> const& Args, 
       CallConv MyCallConv) const 
     {
       // Get number of arguments
@@ -108,6 +108,9 @@ namespace Hades
       // Prologue
       MyJitFunc.push(AsmJit::rbp);
       MyJitFunc.mov(AsmJit::rbp, AsmJit::rsp);
+
+      // Get address to write return value to and store for later
+      MyJitFunc.push(AsmJit::rcx);
 
       // Allocate ghost space
       MyJitFunc.sub(AsmJit::rsp, AsmJit::Imm(0x20));
@@ -147,6 +150,10 @@ namespace Hades
         MyJitFunc.add(AsmJit::rsp, AsmJit::Imm(0x8));
       }
 
+      // Write return value to memory
+      MyJitFunc.pop(AsmJit::rcx);
+      MyJitFunc.mov(AsmJit::dword_ptr(AsmJit::rcx), AsmJit::rax);
+
       // Epilogue
       MyJitFunc.mov(AsmJit::rsp, AsmJit::rbp);
       MyJitFunc.pop(AsmJit::rbp);
@@ -157,6 +164,10 @@ namespace Hades
       // Prologue
       MyJitFunc.push(AsmJit::ebp);
       MyJitFunc.mov(AsmJit::ebp, AsmJit::esp);
+
+      // Get address to write return value to and store for later
+      MyJitFunc.mov(AsmJit::eax, AsmJit::dword_ptr(AsmJit::ebp, 8));
+      MyJitFunc.push(AsmJit::eax);
 
       // Get stack arguments offset
       std::size_t StackArgOffs = 0;
@@ -219,36 +230,45 @@ namespace Hades
         MyJitFunc.add(AsmJit::esp, AsmJit::Imm(NumArgs * sizeof(PVOID)));
       }
 
+      // Write return value to memory
+      MyJitFunc.pop(AsmJit::ecx);
+      MyJitFunc.mov(AsmJit::dword_ptr(AsmJit::ecx), AsmJit::eax);
+
       // Epilogue
       MyJitFunc.mov(AsmJit::esp, AsmJit::ebp);
       MyJitFunc.pop(AsmJit::ebp);
 
       // Return
-      MyJitFunc.ret();
+      MyJitFunc.ret(AsmJit::Imm(0x4));
 #else 
 #error "Unsupported architecture."
 #endif
 
       // Get stub size
       DWORD_PTR const StubSize = MyJitFunc.getCodeSize();
+      DWORD_PTR const StubSizeFull = MyJitFunc.getCodeSize() + 
+        sizeof(DWORD_PTR);
 
       // Allocate memory for stub buffer
-      AllocAndFree const StubMemRemote(*this, StubSize);
+      AllocAndFree const StubMemRemote(*this, StubSizeFull);
+      PBYTE pRemoteStub = static_cast<PBYTE>(StubMemRemote.GetAddress());
+      PBYTE pRemoteStubCode = static_cast<PBYTE>(StubMemRemote.GetAddress()) + 
+        sizeof(DWORD_PTR);
 
-      // Create buffer to hold relocated code
+      // Create buffer to hold relocated code plues the return value address
       std::vector<BYTE> CodeReal(StubSize);
 
       // Generate code
       MyJitFunc.relocCode(&CodeReal[0], reinterpret_cast<DWORD_PTR>(
-        StubMemRemote.GetAddress()));
+        pRemoteStubCode));
 
       // Write stub buffer to process
-      Write(StubMemRemote.GetAddress(), CodeReal);
+      Write(pRemoteStubCode, CodeReal);
 
       // Call stub via creating a remote thread in the target.
       Windows::EnsureCloseHandle const MyThread(CreateRemoteThread(m_Process.
         GetHandle(), nullptr, 0, reinterpret_cast<LPTHREAD_START_ROUTINE>(
-        StubMemRemote.GetAddress()), nullptr, 0, nullptr));
+        pRemoteStubCode), pRemoteStub, 0, nullptr));
       if (!MyThread)
       {
         DWORD const LastError = GetLastError();
@@ -268,19 +288,9 @@ namespace Hades
           ErrorCodeWin(LastError));
       }
 
-      // Get exit code of remote injection thread
-      DWORD ExitCode = 0;
-      if (!GetExitCodeThread(MyThread, &ExitCode))
-      {
-        DWORD const LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(Error() << 
-          ErrorFunction("MemoryMgr::Call") << 
-          ErrorString("Could not get remote thread exit code.") << 
-          ErrorCodeWin(LastError));
-      }
-
-      // Return exit code from thread
-      return ExitCode;
+      // Forward return value remote thread
+      DWORD_PTR RetVal = Read<DWORD_PTR>(pRemoteStub);
+      return RetVal;
     }
 
     // Whether an address is currently readable

@@ -80,7 +80,7 @@ namespace Hades
         HMODULE const ModBase = MyInjector.InjectDll(Module);
 
         // If export has been specified
-        DWORD const ExportRet = Export.empty() ? 0 : MyInjector.CallExport(
+        DWORD_PTR const ExportRet = Export.empty() ? 0 : MyInjector.CallExport(
           Module, ModBase, Export);
 
         // Success! Let the process continue execution.
@@ -245,7 +245,7 @@ namespace Hades
     }
 
     // Call export
-    DWORD Injector::CallExport(boost::filesystem::path const& ModulePath, 
+    DWORD_PTR Injector::CallExport(boost::filesystem::path const& ModulePath, 
       HMODULE ModuleRemote, std::string const& Export) const
     {
       // Get export address

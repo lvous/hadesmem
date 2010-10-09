@@ -90,7 +90,7 @@ namespace Hades
         }
 
         // MemoryMgr::Call wrapper
-        DWORD Call(DWORD_PTR Address, std::vector<DWORD_PTR> const& Args, 
+        DWORD_PTR Call(DWORD_PTR Address, std::vector<DWORD_PTR> const& Args, 
           CallConv MyCallConv)
         {
           std::vector<PVOID> ArgsNew;
