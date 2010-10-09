@@ -19,6 +19,9 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+// C++ Standard Library
+#include <memory>
+
 // Boost
 #pragma warning(push, 1)
 #pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
@@ -45,15 +48,15 @@ namespace Hades
       explicit SectionEnum(PeFile& MyPeFile) 
         : m_pPeFile(&MyPeFile), 
         m_Current(0)
-      {
-        ZeroMemory(&m_Current, sizeof(m_Current));
-      }
+      { }
 
       // Get first section
       std::unique_ptr<Section> First() 
       {
         NtHeaders const MyNtHeaders(*m_pPeFile);
         WORD NumberOfSections = MyNtHeaders.GetNumberOfSections();
+
+        m_Current = 0;
 
         return NumberOfSections ? std::unique_ptr<Section>(new Section(
           *m_pPeFile, m_Current)) : std::unique_ptr<Section>(nullptr);

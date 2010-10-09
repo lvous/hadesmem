@@ -45,6 +45,7 @@
     <ClInclude Include="ExportEnum.h" />
     <ClInclude Include="Fwd.h" />
     <ClInclude Include="ImportDir.h" />
+    <ClInclude Include="ImportEnum.h" />
     <ClInclude Include="Injector.h" />
     <ClInclude Include="ManualMap.h" />
     <ClInclude Include="Memory.h" />

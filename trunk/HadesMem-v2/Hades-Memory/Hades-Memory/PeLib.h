@@ -28,5 +28,6 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include "DosHeader.h"
 #include "ExportDir.h"
 #include "NtHeaders.h"
+#include "ImportEnum.h"
 #include "ExportEnum.h"
 #include "SectionEnum.h"

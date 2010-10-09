@@ -158,5 +158,8 @@
     <ClInclude Include="ImportDir.h">
       <Filter>Header Files\External\PeLib</Filter>
     </ClInclude>
+    <ClInclude Include="ImportEnum.h">
+      <Filter>Header Files\External\PeLib</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
