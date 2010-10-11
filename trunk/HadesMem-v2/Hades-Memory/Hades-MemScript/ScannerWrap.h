@@ -89,14 +89,15 @@ namespace Hades
         // Scanner::LoadFromXML wrapper
         void LoadFromXML(std::string const& Path)
         {
-          Scanner::LoadFromXML(boost::lexical_cast<std::wstring>(Path));
+          Scanner::LoadFromXML(boost::lexical_cast<std::basic_string<TCHAR>>(
+            Path));
         }
 
         // Scanner::operator[] wrapper
         DWORD_PTR GetAddress(std::string const& Name)
         {
           return reinterpret_cast<DWORD_PTR>((*this)[boost::lexical_cast<
-            std::wstring>(Name)]);
+            std::basic_string<TCHAR>>(Name)]);
         }
 
         // Scanner::Find<T> wrappers

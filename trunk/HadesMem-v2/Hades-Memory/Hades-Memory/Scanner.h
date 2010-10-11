@@ -20,6 +20,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 // Windows API
+#include <tchar.h>
 #include <Windows.h>
 
 // C++ Standard Library
@@ -66,10 +67,10 @@ namespace Hades
 
       // Search memory (vector types)
       template <typename T>
-      PVOID Find(T const& Data, std::wstring const& Mask = L"", typename boost::
-        enable_if<std::is_same<T, std::vector<typename T::value_type>>>::type* 
-        Dummy1 = 0, typename boost::enable_if<std::is_pod<typename T::
-        value_type>>::type* Dummy2 = 0) const;
+      PVOID Find(T const& Data, std::basic_string<TCHAR> const& Mask = _T(""), 
+        typename boost::enable_if<std::is_same<T, std::vector<typename T::
+        value_type>>>::type* Dummy1 = 0, typename boost::enable_if<std::
+        is_pod<typename T::value_type>>::type* Dummy2 = 0) const;
 
       // Search memory (POD types)
       template <typename T>
@@ -84,19 +85,20 @@ namespace Hades
 
       // Search memory (vector types)
       template <typename T>
-      std::vector<PVOID> FindAll(T const& Data, std::wstring const& Mask = L"", 
-        typename boost::enable_if<std::is_same<T, std::vector<typename T::
-        value_type>>>::type* Dummy1 = 0, typename boost::enable_if<std::is_pod<
-        typename T::value_type>>::type* Dummy2 = 0) const;
+      std::vector<PVOID> FindAll(T const& Data, 
+        std::basic_string<TCHAR> const& Mask = _T(""), 
+        typename boost::enable_if<std::is_same<T, std::vector<typename 
+        T::value_type>>>::type* Dummy1 = 0, typename boost::enable_if<std::
+        is_pod<typename T::value_type>>::type* Dummy2 = 0) const;
 
       // Load patterns from XML file
       void LoadFromXML(boost::filesystem::path const& Path);
 
       // Get address map
-      std::map<std::wstring, PVOID> GetAddresses() const;
+      std::map<std::basic_string<TCHAR>, PVOID> GetAddresses() const;
 
       // Operator[] overload to allow retrieving addresses by name
-      PVOID operator[](std::wstring const& Name) const;
+      PVOID operator[](std::basic_string<TCHAR> const& Name) const;
 
     private:
       // Memory manager instance
@@ -107,7 +109,7 @@ namespace Hades
       PBYTE m_End;
 
       // Map to hold addresses
-      std::map<std::wstring, PVOID> m_Addresses;
+      std::map<std::basic_string<TCHAR>, PVOID> m_Addresses;
     };
 
     // Search memory (POD types)
@@ -158,7 +160,7 @@ namespace Hades
 
     // Search memory (vector types)
     template <typename T>
-    PVOID Scanner::Find(T const& Data, std::wstring const& Mask, typename 
+    PVOID Scanner::Find(T const& Data, std::basic_string<TCHAR> const& Mask, typename 
       boost::enable_if<std::is_same<T, std::vector<typename T::value_type>>>::
       type* /*Dummy1*/, typename boost::enable_if<std::is_pod<typename T::
       value_type>>::type* /*Dummy2*/) const
@@ -276,7 +278,7 @@ namespace Hades
 
     template <typename T>
     std::vector<PVOID> Scanner::FindAll(T const& Data, 
-      std::wstring const& Mask, typename boost::enable_if<std::is_same<T, 
+      std::basic_string<TCHAR> const& Mask, typename boost::enable_if<std::is_same<T, 
       std::vector<typename T::value_type>>>::type* /*Dummy1*/, typename boost::
       enable_if<std::is_pod<typename T::value_type>>::type* /*Dummy2*/) const
     {

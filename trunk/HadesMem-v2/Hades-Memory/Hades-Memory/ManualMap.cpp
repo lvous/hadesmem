@@ -85,8 +85,8 @@ namespace Hades
       std::string const& Export, bool InjectHelper) const
     {
       // Open file for reading
-      std::basic_ifstream<BYTE> ModuleFile(Path.c_str(), std::ios::binary | 
-        std::ios::ate);
+      std::basic_ifstream<BYTE> ModuleFile(Path.string<std::
+        basic_string<TCHAR>>().c_str(), std::ios::binary | std::ios::ate);
       if (!ModuleFile)
       {
         BOOST_THROW_EXCEPTION(Error() << 
@@ -123,16 +123,16 @@ namespace Hades
       MemoryMgr MyMemoryLocal(GetCurrentProcessId());
 
       // Ensure file is a valid PE file
-      std::wcout << "Performing PE file format validation." << std::endl;
+      std::cout << "Performing PE file format validation." << std::endl;
       PeFileAsData MyPeFile(MyMemoryLocal, pBase);
       DosHeader const MyDosHeader(MyPeFile);
       NtHeaders const MyNtHeaders(MyPeFile);
 
       // Allocate memory for image
-      std::wcout << "Allocating remote memory for image." << std::endl;
+      std::cout << "Allocating remote memory for image." << std::endl;
       PVOID const RemoteBase = m_pMemory->Alloc(MyNtHeaders.GetSizeOfImage());
-      std::wcout << "Image base address: " << RemoteBase << "." << std::endl;
-      std::wcout << "Image size: " << std::hex << MyNtHeaders.GetSizeOfImage() 
+      std::cout << "Image base address: " << RemoteBase << "." << std::endl;
+      std::cout << "Image size: " << std::hex << MyNtHeaders.GetSizeOfImage() 
         << std::dec << "." << std::endl;
 
       // Get all TLS callbacks
@@ -144,7 +144,7 @@ namespace Hades
         std::for_each(TlsCallbacks.cbegin(), TlsCallbacks.cend(), 
           [&] (PIMAGE_TLS_CALLBACK pCurrent)
         {
-          std::wcout << "TLS Callback: " << pCurrent << std::endl;
+          std::cout << "TLS Callback: " << pCurrent << std::endl;
         });
       }
 
@@ -155,8 +155,8 @@ namespace Hades
       FixRelocations(MyPeFile, RemoteBase);
 
       // Write DOS header to process
-      std::wcout << "Writing DOS header." << std::endl;
-      std::wcout << "DOS Header: " << RemoteBase << std::endl;
+      std::cout << "Writing DOS header." << std::endl;
+      std::cout << "DOS Header: " << RemoteBase << std::endl;
       m_pMemory->Write(RemoteBase, *reinterpret_cast<PIMAGE_DOS_HEADER>(
         pBase));
 
@@ -167,8 +167,8 @@ namespace Hades
       std::vector<BYTE> const PeHeaderBuf(NtHeadersStart, NtHeadersEnd);
       PBYTE const TargetAddr = static_cast<PBYTE>(RemoteBase) + MyDosHeader.
         GetNewHeaderOffset();
-      std::wcout << "Writing NT header." << std::endl;
-      std::wcout << "NT Header: " << TargetAddr << std::endl;
+      std::cout << "Writing NT header." << std::endl;
+      std::cout << "NT Header: " << TargetAddr << std::endl;
       m_pMemory->Write(TargetAddr, PeHeaderBuf);
 
       // Write sections to process
@@ -177,20 +177,20 @@ namespace Hades
       // Calculate module entry point
       PVOID const EntryPoint = static_cast<PBYTE>(RemoteBase) + 
         MyNtHeaders.GetAddressOfEntryPoint();
-      std::wcout << "Entry Point: " << EntryPoint << "." << std::endl;
+      std::cout << "Entry Point: " << EntryPoint << "." << std::endl;
 
       // Get address of export in remote process
       PVOID const ExportAddr = m_pMemory->GetRemoteProcAddress(
         reinterpret_cast<HMODULE>(RemoteBase), Path, Export.c_str());
-      std::wcout << "Export Address: " << ExportAddr << "." << std::endl;
+      std::cout << "Export Address: " << ExportAddr << "." << std::endl;
 
       // Inject helper module
       if (InjectHelper)
       {
 #if defined(_M_AMD64) 
-        Map(L"Hades-MMHelper_AMD64.dll", "Initialize", false);
+        Map(_T("Hades-MMHelper_AMD64.dll"), "Initialize", false);
 #elif defined(_M_IX86) 
-        Map(L"Hades-MMHelper_IA32.dll", "_Initialize@4", false);
+        Map(_T("Hades-MMHelper_IA32.dll"), "_Initialize@4", false);
 #else 
 #error "Unsupported architecture."
 #endif
@@ -206,7 +206,7 @@ namespace Hades
         TlsCallArgs.push_back(RemoteBase);
         DWORD_PTR const TlsRet = m_pMemory->Call(reinterpret_cast<PBYTE>(
           RemoteBase) + reinterpret_cast<DWORD_PTR>(pCallback), TlsCallArgs);
-        std::wcout << "TLS Callback Returned: " << TlsRet << "." << std::endl;
+        std::cout << "TLS Callback Returned: " << TlsRet << "." << std::endl;
       });
 
       // Call entry point
@@ -215,7 +215,7 @@ namespace Hades
       EpArgs.push_back(reinterpret_cast<PVOID>(DLL_PROCESS_ATTACH));
       EpArgs.push_back(RemoteBase);
       DWORD_PTR const EpRet = m_pMemory->Call(EntryPoint, EpArgs);
-      std::wcout << "Entry Point Returned: " << EpRet << "." << std::endl;
+      std::cout << "Entry Point Returned: " << EpRet << "." << std::endl;
 
       // Call remote export (if specified)
       if (ExportAddr)
@@ -223,7 +223,7 @@ namespace Hades
         std::vector<PVOID> ExpArgs;
         ExpArgs.push_back(RemoteBase);
         DWORD_PTR const ExpRet = m_pMemory->Call(ExportAddr, ExpArgs);
-        std::wcout << "Export Returned: " << ExpRet << "." << std::endl;
+        std::cout << "Export Returned: " << ExpRet << "." << std::endl;
       }
 
       // Return pointer to module in remote process
@@ -234,7 +234,7 @@ namespace Hades
     void ManualMap::MapSections(PeFile& MyPeFile, PVOID RemoteAddr) const
     {
       // Debug output
-      std::wcout << "Mapping sections." << std::endl;
+      std::cout << "Mapping sections." << std::endl;
 
       // Enumerate all sections
       SectionEnum MySectionEnum(MyPeFile);
@@ -245,16 +245,16 @@ namespace Hades
 
         // Get section name
         std::string const Name(Current.GetName());
-        std::wcout << "Section Name: " << Name.c_str() << std::endl;
+        std::cout << "Section Name: " << Name.c_str() << std::endl;
 
         // Calculate target address for section in remote process
         PVOID const TargetAddr = reinterpret_cast<PBYTE>(RemoteAddr) + 
           Current.GetVirtualAddress();
-        std::wcout << "Target Address: " << TargetAddr << std::endl;
+        std::cout << "Target Address: " << TargetAddr << std::endl;
 
         // Calculate virtual size of section
         DWORD const VirtualSize = Current.GetVirtualSize(); 
-        std::wcout << "Virtual Size: " << std::hex << VirtualSize << std::dec 
+        std::cout << "Virtual Size: " << std::hex << VirtualSize << std::dec 
           << std::endl;
 
         // Calculate start and end of section data in buffer
@@ -322,14 +322,14 @@ namespace Hades
       if (!CheckImpDir.IsValid())
       {
         // Debug output
-        std::wcout << "Image has no imports." << std::endl;
+        std::cout << "Image has no imports." << std::endl;
 
         // Nothing more to do
         return;
       }
 
       // Debug output
-      std::wcout << "Fixing imports." << std::endl;
+      std::cout << "Fixing imports." << std::endl;
 
       // Loop through all the required modules
       ImportDirEnum MyImportDirEnum(MyPeFile);
@@ -349,11 +349,12 @@ namespace Hades
         }
 
         // Get module name
-        std::string ModuleNameA(MyImportDir.GetName());
-        std::wstring const ModuleNameW(boost::lexical_cast<std::wstring, 
-          std::string>(ModuleNameA));
-        std::wstring const ModuleNameLowerW(boost::to_lower_copy(ModuleNameW));
-        std::wcout << "Module Name: " << ModuleNameW << "." << std::endl;
+        std::string ModuleName(MyImportDir.GetName());
+        std::basic_string<TCHAR> ModuleNameT(boost::lexical_cast<std::
+          basic_string<TCHAR>>(ModuleName));
+        std::basic_string<TCHAR> const ModuleNameLowerT(boost::to_lower_copy(
+          ModuleNameT));
+        std::cout << "Module Name: " << ModuleName << "." << std::endl;
 
         // Check whether dependent module is already loaded
         ModuleEnum MyModuleList(*m_pMemory);
@@ -361,8 +362,8 @@ namespace Hades
         for (ModuleEnum::ModuleListIter j(MyModuleList); *j; ++j)
         {
           Module& Current = **j;
-          if (boost::to_lower_copy(Current.GetName()) == ModuleNameLowerW || 
-            boost::to_lower_copy(Current.GetPath()) == ModuleNameLowerW)
+          if (boost::to_lower_copy(Current.GetName()) == ModuleNameLowerT || 
+            boost::to_lower_copy(Current.GetPath()) == ModuleNameLowerT)
           {
             MyModule = std::move(*j);
           }
@@ -370,16 +371,16 @@ namespace Hades
 
         // Module base address and name
         HMODULE CurModBase = 0;
-        std::wstring CurModName;
+        std::basic_string<TCHAR> CurModName;
 
         // If dependent module is not yet loaded then inject it
         if (!MyModule)
         {
           // Inject dependent DLL
-          std::wcout << "Injecting dependent DLL." << std::endl;
+          std::cout << "Injecting dependent DLL." << std::endl;
           Injector const MyInjector(*m_pMemory);
-          CurModBase = MyInjector.InjectDll(ModuleNameW, false);
-          CurModName = ModuleNameW;
+          CurModBase = MyInjector.InjectDll(ModuleName, false);
+          CurModName = ModuleNameT;
         }
         else
         {
@@ -441,7 +442,7 @@ namespace Hades
       if (!RelocDirSize || !pRelocDir)
       {
         // Debug output
-        std::wcout << "Image has no relocations." << std::endl;
+        std::cout << "Image has no relocations." << std::endl;
 
         // Nothing more to do
         return;
@@ -451,7 +452,7 @@ namespace Hades
       PVOID pRelocDirEnd = reinterpret_cast<PBYTE>(pRelocDir) + RelocDirSize;
 
       // Debug output
-      std::wcout << "Fixing relocations." << std::endl;
+      std::cout << "Fixing relocations." << std::endl;
 
       // Get image base
       ULONG_PTR const ImageBase = MyNtHeaders.GetImageBase();
@@ -497,7 +498,7 @@ namespace Hades
             break;
 
           default:
-            std::wcout << "Unsupported relocation type: " << RelocType << 
+            std::cout << "Unsupported relocation type: " << RelocType << 
               std::endl;
 
             BOOST_THROW_EXCEPTION(Error() << 

@@ -17,6 +17,10 @@ You should have received a copy of the GNU General Public License
 along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+// Windows API
+#include <tchar.h>
+#include <Windows.h>
+
 // C++ Standard Library
 #include <vector>
 
@@ -38,8 +42,9 @@ namespace Hades
   namespace Memory
   {
     // Create process (as suspended) and inject DLL
-    CreateAndInjectData CreateAndInject(std::wstring const& Path, 
-      std::wstring const& Args, std::wstring const& Module, 
+    CreateAndInjectData CreateAndInject(boost::filesystem::path const& Path, 
+      std::basic_string<TCHAR> const& Args, 
+      std::basic_string<TCHAR> const& Module, 
       std::string const& Export)
     {
       // Set up args for CreateProcess
@@ -47,14 +52,16 @@ namespace Hades
       PROCESS_INFORMATION ProcInfo = { 0 };
 
       // Construct command line.
-      std::wstring const CommandLine(L"\"" + Path + L"\" " + Args);
+      std::basic_string<TCHAR> const CommandLine(_T("\"") + Path.
+        string<std::basic_string<TCHAR>>() + _T("\" ") + Args);
       // Copy command line to buffer
-      std::vector<wchar_t> ProcArgs(CommandLine.cbegin(), CommandLine.cend());
+      std::vector<TCHAR> ProcArgs(CommandLine.cbegin(), CommandLine.cend());
       ProcArgs.push_back(L'\0');
 
       // Attempt process creation
-      if (!CreateProcess(Path.c_str(), &ProcArgs[0], NULL, NULL, FALSE, 
-        CREATE_SUSPENDED, NULL, NULL, &StartInfo, &ProcInfo))
+      if (!CreateProcess(Path.string<std::basic_string<TCHAR>>().c_str(), 
+        &ProcArgs[0], NULL, NULL, FALSE, CREATE_SUSPENDED, NULL, NULL, 
+        &StartInfo, &ProcInfo))
       {
         DWORD const LastError = GetLastError();
         BOOST_THROW_EXCEPTION(Injector::Error() << 
@@ -151,9 +158,12 @@ namespace Hades
           ErrorString("Could not find module file."));
       }
 
+      // Get path as string
+      std::basic_string<TCHAR> PathString(PathReal.
+        string<std::basic_string<TCHAR>>());
+
       // Calculate the number of bytes needed for the DLL's pathname
-      std::size_t const PathBufSize = (PathReal.wstring().length() + 1) * 
-        sizeof(wchar_t);
+      std::size_t const PathBufSize = (PathString.size() + 1) * sizeof(TCHAR);
 
       // Allocate space in the remote process for the pathname
       AllocAndFree const LibFileRemote(*m_pMemory, PathBufSize);
@@ -167,10 +177,10 @@ namespace Hades
       }
 
       // Copy the DLL's pathname to the remote process' address space
-      m_pMemory->Write(LibFileRemote.GetAddress(), PathReal.wstring());
+      m_pMemory->Write(LibFileRemote.GetAddress(), PathString);
 
       // Get address of LoadLibraryW in Kernel32.dll
-      HMODULE const hKernel32 = GetModuleHandleW(L"Kernel32.dll");
+      HMODULE const hKernel32 = GetModuleHandle(_T("Kernel32.dll"));
       if (!hKernel32)
       {
         DWORD const LastError = GetLastError();
@@ -200,8 +210,8 @@ namespace Hades
       }
 
       // Get path as lowercase string
-      std::wstring const PathRealLower(boost::to_lower_copy(PathReal.
-        wstring()));
+      std::basic_string<TCHAR> const PathRealLower(boost::to_lower_copy(
+        PathString));
 
       // Look for target module
       ModuleEnum MyModuleList(*m_pMemory);

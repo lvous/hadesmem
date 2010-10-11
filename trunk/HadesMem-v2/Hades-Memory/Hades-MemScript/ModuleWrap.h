@@ -51,9 +51,8 @@ namespace Hades
           : Module(MyMemory, reinterpret_cast<HMODULE>(Handle))
         { }
 
-        ModuleWrappers(MemoryMgr& MyMemory, 
-          std::string const& ModuleName) 
-          : Module(MyMemory, boost::lexical_cast<std::wstring>(ModuleName))
+        ModuleWrappers(MemoryMgr& MyMemory, std::string const& ModuleName) 
+          : Module(MyMemory, boost::lexical_cast<std::basic_string<TCHAR>>(ModuleName))
         { }
 
         // Module::GetBase wrapper

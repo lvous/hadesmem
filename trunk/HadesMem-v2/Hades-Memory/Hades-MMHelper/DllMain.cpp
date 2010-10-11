@@ -58,7 +58,7 @@ LONG CALLBACK VectoredHandler(__in PEXCEPTION_POINTERS ExceptionInfo)
   PVOID pTeb = NtCurrentTeb();
   if (!pTeb)
   {
-    MessageBoxW(NULL, L"TEB pointer invalid.", L"Hades-MMHelper", MB_OK);
+    MessageBox(NULL, _T("TEB pointer invalid."), _T("Hades-MMHelper"), MB_OK);
     return EXCEPTION_CONTINUE_SEARCH;
   }
 
@@ -66,8 +66,8 @@ LONG CALLBACK VectoredHandler(__in PEXCEPTION_POINTERS ExceptionInfo)
     *reinterpret_cast<PEXCEPTION_REGISTRATION_RECORD*>(pTeb);
   if (!pExceptionList)
   {
-    MessageBoxW(NULL, L"Exception list pointer invalid.", L"Hades-MMHelper", 
-      MB_OK);
+    MessageBox(NULL, _T("Exception list pointer invalid."), 
+      _T("Hades-MMHelper"), MB_OK);
     return EXCEPTION_CONTINUE_SEARCH;
   }
 
@@ -118,14 +118,14 @@ void TestSEH()
   }
   __except (EXCEPTION_EXECUTE_HANDLER)
   {
-    MessageBoxW(NULL, L"Testing SEH.", L"Hades-MMHelper", MB_OK);
+    MessageBox(NULL, _T("Testing SEH."), _T("Hades-MMHelper"), MB_OK);
   }
 }
 #pragma warning(pop)
 
 void TestRelocs()
 {
-  MessageBoxW(NULL, L"Testing relocations.", L"Hades-MMHelper", MB_OK);
+  MessageBox(NULL, _T("Testing relocations."), _T("Hades-MMHelper"), MB_OK);
 }
 
 void InitializeSEH()
@@ -143,8 +143,8 @@ void InitializeSEH()
     Memory::NtHeaders::DataDir_Exception);
   if (!ExceptDirSize || !ExceptDirRva)
   {
-    MessageBoxW(NULL, L"Image has no exception directory.", L"Hades-MMHelper", 
-      MB_OK);
+    MessageBox(NULL, _T("Image has no exception directory."), 
+      _T("Hades-MMHelper"), MB_OK);
     return;
   }
 
@@ -160,8 +160,8 @@ void InitializeSEH()
   if (!RtlAddFunctionTable(pExceptDir, NumEntries, reinterpret_cast<DWORD_PTR>(
     &__ImageBase)))
   {
-    MessageBoxW(NULL, L"Could not add function table.", L"Hades-MMHelper", 
-      MB_OK);
+    MessageBox(NULL, _T("Could not add function table."), 
+      _T("Hades-MMHelper"), MB_OK);
     return;
   }
 #elif defined(_M_IX86) 
@@ -199,16 +199,16 @@ extern "C" __declspec(dllexport) DWORD __stdcall Test(HMODULE /*Module*/)
   // Add VEH
   if (!AddVectoredExceptionHandler(1, &VectoredHandler))
   {
-    MessageBoxW(NULL, L"Failed to add VEH.", L"Hades-MMHelper", MB_OK);
+    MessageBox(NULL, _T("Failed to add VEH."), _T("Hades-MMHelper"), MB_OK);
   }
 
   // Test IAT
-  MessageBoxW(NULL, L"Testing IAT.", L"Hades-MMHelper", MB_OK);
+  MessageBox(NULL, _T("Testing IAT."), _T("Hades-MMHelper"), MB_OK);
 
   // Test TLS
-  boost::thread_specific_ptr<std::wstring> TlsTest;
-  TlsTest.reset(new std::wstring(L"Testing TLS."));
-  MessageBoxW(NULL, TlsTest->c_str(), L"Hades-MMHelper", MB_OK);
+  boost::thread_specific_ptr<std::basic_string<TCHAR>> TlsTest;
+  TlsTest.reset(new std::basic_string<TCHAR>(_T("Testing TLS.")));
+  MessageBox(NULL, TlsTest->c_str(), _T("Hades-MMHelper"), MB_OK);
 
   // Test relocs
   typedef void (* tTestRelocs)();

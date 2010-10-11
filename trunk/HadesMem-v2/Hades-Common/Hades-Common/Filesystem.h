@@ -52,7 +52,8 @@ namespace Hades
       boost::filesystem::path const& Path)
     {
       // Open file
-      std::basic_ofstream<BYTE> File(Path.c_str(), std::ios::binary);
+      std::basic_ofstream<BYTE> File(Path.string<std::basic_string<TCHAR>>().
+        c_str(), std::ios::binary);
       if (!File)
       {
         BOOST_THROW_EXCEPTION(FilesystemError() << 
@@ -68,8 +69,8 @@ namespace Hades
     inline std::vector<BYTE> FileToBuffer(boost::filesystem::path const& Path)
     {
       // Open file
-      std::basic_ifstream<BYTE> File(Path.c_str(), std::ios::binary | 
-        std::ios::ate);
+      std::basic_ifstream<BYTE> File(Path.string<std::basic_string<TCHAR>>().
+        c_str(), std::ios::binary | std::ios::ate);
       if (!File)
       {
         BOOST_THROW_EXCEPTION(FilesystemError() << 
@@ -94,7 +95,7 @@ namespace Hades
 
       // Get path to self
       DWORD const SelfPathSize = MAX_PATH;
-      std::wstring SelfFullPath;
+      std::basic_string<TCHAR> SelfFullPath;
       if (!GetModuleFileName(ModMe, Util::MakeStringBuffer(SelfFullPath, 
         SelfPathSize), SelfPathSize) || GetLastError() == 
         ERROR_INSUFFICIENT_BUFFER)

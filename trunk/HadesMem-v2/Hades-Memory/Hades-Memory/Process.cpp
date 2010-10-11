@@ -56,7 +56,7 @@ namespace Hades
     }
 
     // Open process from process name
-    Process::Process(std::wstring const& ProcName) 
+    Process::Process(std::basic_string<TCHAR> const& ProcName) 
       : m_Handle(nullptr), 
       m_ID(0) 
     {
@@ -76,7 +76,8 @@ namespace Hades
       }
 
       // Convert process name to lowercase
-      std::wstring const ProcNameLower(boost::to_lower_copy(ProcName));
+      std::basic_string<TCHAR> const ProcNameLower(boost::to_lower_copy(
+        ProcName));
 
       // Search for process
       PROCESSENTRY32 ProcEntry = { sizeof(ProcEntry) };
@@ -84,8 +85,8 @@ namespace Hades
       for (BOOL MoreMods = Process32First(Snap, &ProcEntry); MoreMods; 
         MoreMods = Process32Next(Snap, &ProcEntry)) 
       {
-        Found = (boost::to_lower_copy(static_cast<std::wstring>(ProcEntry.
-          szExeFile)) == ProcNameLower);
+        Found = (boost::to_lower_copy(static_cast<std::basic_string<TCHAR>>(
+          ProcEntry.szExeFile)) == ProcNameLower);
         if (Found)
         {
           break;
@@ -106,8 +107,8 @@ namespace Hades
     }
 
     // Open process from window name and class
-    Process::Process(std::wstring const& WindowName, 
-      std::wstring const& ClassName) 
+    Process::Process(std::basic_string<TCHAR> const& WindowName, 
+      std::basic_string<TCHAR> const& ClassName) 
       : m_Handle(nullptr), 
       m_ID(0) 
     {

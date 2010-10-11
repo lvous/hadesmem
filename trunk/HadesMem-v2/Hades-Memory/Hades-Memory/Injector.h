@@ -37,6 +37,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Hades
 #include "Fwd.h"
 #include "Error.h"
+#include "Hades-Common/I18n.h"
 
 // Image base linker 'trick'
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
@@ -105,8 +106,9 @@ namespace Hades
     };
 
     // Create process (as suspended) and inject DLL
-    CreateAndInjectData CreateAndInject(std::wstring const& Path, 
-      std::wstring const& Args, std::wstring const& Module, 
+    CreateAndInjectData CreateAndInject(boost::filesystem::path const& Path, 
+      std::basic_string<TCHAR> const& Args, 
+      std::basic_string<TCHAR> const& Module, 
       std::string const& Export);
   }
 }

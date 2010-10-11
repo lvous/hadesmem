@@ -68,13 +68,13 @@ namespace Hades
         { }
 
         explicit MemoryMgrWrappers(std::string const& ProcName) 
-          : MemoryMgr(boost::lexical_cast<std::wstring>(ProcName))
+          : MemoryMgr(boost::lexical_cast<std::basic_string<TCHAR>>(ProcName))
         { }
 
         explicit MemoryMgrWrappers(std::string const& WindowName, 
           std::string const& ClassName)
-          : MemoryMgr(boost::lexical_cast<std::wstring>(WindowName), 
-          boost::lexical_cast<std::wstring>(ClassName))
+          : MemoryMgr(boost::lexical_cast<std::basic_string<TCHAR>>(WindowName), 
+          boost::lexical_cast<std::basic_string<TCHAR>>(ClassName))
         { }
 
         // MemoryMgr::CanRead wrapper
@@ -129,7 +129,7 @@ namespace Hades
         {
           return reinterpret_cast<DWORD_PTR>(MemoryMgr::GetRemoteProcAddress(
             reinterpret_cast<HMODULE>(RemoteMod), 
-            boost::lexical_cast<std::wstring>(Module), 
+            boost::lexical_cast<std::basic_string<TCHAR>>(Module), 
             reinterpret_cast<LPCSTR>(MAKELONG(Ordinal, 0))));
         }
 
@@ -139,7 +139,7 @@ namespace Hades
         {
           return reinterpret_cast<DWORD_PTR>(MemoryMgr::GetRemoteProcAddress(
             reinterpret_cast<HMODULE>(RemoteMod), 
-            boost::lexical_cast<std::wstring>(Module), 
+            boost::lexical_cast<std::basic_string<TCHAR>>(Module), 
             Function.c_str()));
         }
 

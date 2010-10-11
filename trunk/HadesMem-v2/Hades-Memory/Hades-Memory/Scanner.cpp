@@ -107,7 +107,8 @@ namespace Hades
     void Scanner::LoadFromXML(boost::filesystem::path const& Path)
     {
       // Open current file
-      std::wifstream PatternFile(Path.c_str());
+      std::basic_ifstream<TCHAR> PatternFile(Path.string<std::
+        basic_string<TCHAR>>().c_str());
       if (!PatternFile)
       {
         BOOST_THROW_EXCEPTION(Error() << 
@@ -116,18 +117,19 @@ namespace Hades
       }
 
       // Copy file to buffer
-      std::istreambuf_iterator<wchar_t> const PatFileBeg(PatternFile);
-      std::istreambuf_iterator<wchar_t> const PatFileEnd;
-      std::vector<wchar_t> PatFileBuf(PatFileBeg, PatFileEnd);
+      std::istreambuf_iterator<TCHAR> const PatFileBeg(PatternFile);
+      std::istreambuf_iterator<TCHAR> const PatFileEnd;
+      std::vector<TCHAR> PatFileBuf(PatFileBeg, PatFileEnd);
       PatFileBuf.push_back(L'\0');
 
       // Open XML document
-      std::shared_ptr<rapidxml::xml_document<wchar_t>> const AccountsDoc(
-        std::make_shared<rapidxml::xml_document<wchar_t>>());
+      std::shared_ptr<rapidxml::xml_document<TCHAR>> const AccountsDoc(
+        std::make_shared<rapidxml::xml_document<TCHAR>>());
       AccountsDoc->parse<0>(&PatFileBuf[0]);
 
       // Ensure pattern tag is found
-      rapidxml::xml_node<wchar_t>* PatternsTag = AccountsDoc->first_node(L"Patterns");
+      rapidxml::xml_node<TCHAR>* PatternsTag = AccountsDoc->first_node(_T(
+        "Patterns"));
       if (!PatternsTag)
       {
         BOOST_THROW_EXCEPTION(Error() << 
@@ -136,19 +138,23 @@ namespace Hades
       }
 
       // Loop over all patterns
-      for (rapidxml::xml_node<wchar_t>* Pattern(PatternsTag->first_node(
-        L"Pattern")); Pattern; Pattern = Pattern->next_sibling(L"Pattern"))
+      for (rapidxml::xml_node<TCHAR>* Pattern(PatternsTag->first_node(
+        _T("Pattern"))); Pattern; Pattern = Pattern->next_sibling(_T(
+        "Pattern")))
       {
         // Get pattern attributes
-        rapidxml::xml_attribute<wchar_t> const* NameNode = Pattern->
-          first_attribute(L"Name");
-        rapidxml::xml_attribute<wchar_t> const* MaskNode = Pattern->
-          first_attribute(L"Mask");
-        rapidxml::xml_attribute<wchar_t> const* DataNode = Pattern->
-          first_attribute(L"Data");
-        std::wstring const Name(NameNode ? NameNode->value() : L"");
-        std::wstring const Mask(MaskNode ? MaskNode->value() : L"");
-        std::wstring const Data(DataNode ? DataNode->value() : L"");
+        rapidxml::xml_attribute<TCHAR> const* NameNode = Pattern->
+          first_attribute(_T("Name"));
+        rapidxml::xml_attribute<TCHAR> const* MaskNode = Pattern->
+          first_attribute(_T("Mask"));
+        rapidxml::xml_attribute<TCHAR> const* DataNode = Pattern->
+          first_attribute(_T("Data"));
+        std::basic_string<TCHAR> const Name(NameNode ? NameNode->value() : 
+          _T(""));
+        std::basic_string<TCHAR> const Mask(MaskNode ? MaskNode->value() : 
+          _T(""));
+        std::basic_string<TCHAR> const Data(DataNode ? DataNode->value() : 
+          _T(""));
         std::string const DataReal(boost::lexical_cast<std::string>(Data));
 
         // Ensure pattern attributes are valid
@@ -198,20 +204,20 @@ namespace Hades
         if (Address != 0)
         {
           // Loop over all pattern options
-          for (rapidxml::xml_node<wchar_t> const* PatOpts = Pattern->
+          for (rapidxml::xml_node<TCHAR> const* PatOpts = Pattern->
             first_node(); PatOpts; PatOpts = PatOpts->next_sibling())
           {
             // Get option name
-            std::wstring const OptionName(PatOpts->name());
+            std::basic_string<TCHAR> const OptionName(PatOpts->name());
 
             // Handle 'Add' and 'Sub' options
-            bool const IsAdd = (OptionName == L"Add");
-            bool const IsSub = (OptionName == L"Sub");
+            bool const IsAdd = (OptionName == _T("Add"));
+            bool const IsSub = (OptionName == _T("Sub"));
             if (IsAdd || IsSub)
             {
               // Get the modification value
-              rapidxml::xml_attribute<wchar_t> const* ModVal = PatOpts->
-                first_attribute(L"Value");
+              rapidxml::xml_attribute<TCHAR> const* ModVal = PatOpts->
+                first_attribute(_T("Value"));
               if (!ModVal)
               {
                 BOOST_THROW_EXCEPTION(Error() << 
@@ -220,7 +226,7 @@ namespace Hades
               }
 
               // Convert value to usable form
-              std::wstringstream Converter(ModVal->value());
+              std::basic_stringstream<TCHAR> Converter(ModVal->value());
               DWORD_PTR AddValReal = 0;
               if (!(Converter >> std::hex >> AddValReal >> std::dec))
               {
@@ -246,17 +252,17 @@ namespace Hades
               }
             }
             // Handle 'Lea' option (abs deref)
-            else if (OptionName == L"Lea")
+            else if (OptionName == _T("Lea"))
             {
               // Perform absolute 'dereference'
               Address = m_pMemory->Read<PBYTE>(Address);
             }
             // Handle 'Rel' option (rel deref)
-            else if (OptionName == L"Rel")
+            else if (OptionName == _T("Rel"))
             {
               // Get instruction size
-              rapidxml::xml_attribute<wchar_t> const* SizeAttr = PatOpts->
-                first_attribute(L"Size");
+              rapidxml::xml_attribute<TCHAR> const* SizeAttr = PatOpts->
+                first_attribute(_T("Size"));
               if (!SizeAttr)
               {
                 BOOST_THROW_EXCEPTION(Error() << 
@@ -266,7 +272,7 @@ namespace Hades
               }
 
               // Convert instruction size to usable format
-              std::wstringstream SizeConverter(SizeAttr->value());
+              std::basic_stringstream<TCHAR> SizeConverter(SizeAttr->value());
               DWORD_PTR Size(0);
               if (!(SizeConverter >> std::hex >> Size >> std::dec))
               {
@@ -277,8 +283,8 @@ namespace Hades
               }
 
               // Get instruction offset
-              rapidxml::xml_attribute<wchar_t> const* OffsetAttr = PatOpts->
-                first_attribute(L"Offset");
+              rapidxml::xml_attribute<TCHAR> const* OffsetAttr = PatOpts->
+                first_attribute(_T("Offset"));
               if (!OffsetAttr)
               {
                 BOOST_THROW_EXCEPTION(Error() << 
@@ -288,7 +294,8 @@ namespace Hades
               }
 
               // Convert instruction offset to usable format
-              std::wstringstream OffsetConverter(OffsetAttr->value());
+              std::basic_stringstream<TCHAR> OffsetConverter(OffsetAttr->
+                value());
               DWORD_PTR Offset(0);
               if (!(OffsetConverter >> std::hex >> Offset >> std::dec))
               {
@@ -318,13 +325,13 @@ namespace Hades
     }
 
     // Get address map
-    std::map<std::wstring, PVOID> Scanner::GetAddresses() const
+    std::map<std::basic_string<TCHAR>, PVOID> Scanner::GetAddresses() const
     {
       return m_Addresses;
     }
 
     // Operator[] overload to allow retrieving addresses by name
-    PVOID Scanner::operator[](std::wstring const& Name) const
+    PVOID Scanner::operator[](std::basic_string<TCHAR> const& Name) const
     {
       auto const Iter = m_Addresses.find(Name);
       return Iter != m_Addresses.end() ? Iter->second : nullptr;

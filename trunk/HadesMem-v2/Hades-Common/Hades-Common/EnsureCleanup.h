@@ -530,17 +530,18 @@ namespace Hades
     };
 
     // Special class for releasing a window class
-    class EnsureUnregisterClassW : private boost::noncopyable
+    class EnsureUnregisterClass : private boost::noncopyable
     {
     public:
       // Constructor
-      EnsureUnregisterClassW(const std::wstring& ClassName, HINSTANCE Instance)
+      EnsureUnregisterClass(std::basic_string<TCHAR> const& ClassName, 
+        HINSTANCE Instance)
         : m_ClassName(ClassName),
         m_Instance(Instance)
       { }
 
       // Move constructor
-      EnsureUnregisterClassW(EnsureUnregisterClassW&& MyEnsureCleanup)
+      EnsureUnregisterClass(EnsureUnregisterClass&& MyEnsureCleanup)
         : m_ClassName(),
         m_Instance()
       {
@@ -548,7 +549,7 @@ namespace Hades
       }
 
       // Move assignment operator
-      EnsureUnregisterClassW& operator= (EnsureUnregisterClassW&&
+      EnsureUnregisterClass& operator= (EnsureUnregisterClass&&
         MyEnsureCleanup)
       {
         Cleanup();
@@ -556,14 +557,14 @@ namespace Hades
         m_ClassName = std::move(MyEnsureCleanup.m_ClassName);
         m_Instance = MyEnsureCleanup.m_Instance;
 
-        MyEnsureCleanup.m_ClassName = std::wstring();
+        MyEnsureCleanup.m_ClassName = std::basic_string<TCHAR>();
         MyEnsureCleanup.m_Instance = NULL;
 
         return *this;
       }
 
       // Destructor
-      ~EnsureUnregisterClassW()
+      ~EnsureUnregisterClass()
       {
         Cleanup();
       }
@@ -573,7 +574,7 @@ namespace Hades
       {
         if (!m_ClassName.empty() && m_Instance)
         {
-          UnregisterClassW(m_ClassName.c_str(), m_Instance);
+          UnregisterClass(m_ClassName.c_str(), m_Instance);
 
           m_ClassName.clear();
           m_Instance = 0;
@@ -582,7 +583,7 @@ namespace Hades
 
     private:
       // 'Handles' being managed
-      std::wstring m_ClassName;
+      std::basic_string<TCHAR> m_ClassName;
       HINSTANCE m_Instance;
     };
 

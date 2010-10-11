@@ -57,10 +57,9 @@ namespace Hades
         std::string const& Path, std::string const& Args, 
         std::string const& Module, std::string const& Export)
       {
-        CreateAndInjectData MyData(CreateAndInject(
-          boost::lexical_cast<std::wstring>(Path), 
-          boost::lexical_cast<std::wstring>(Args), 
-          boost::lexical_cast<std::wstring>(Module), 
+        CreateAndInjectData MyData(CreateAndInject(Path, 
+          boost::lexical_cast<std::basic_string<TCHAR>>(Args), 
+          boost::lexical_cast<std::basic_string<TCHAR>>(Module), 
           Export));
 
         CreateAndInjectInfo MyInfo;
@@ -89,16 +88,17 @@ namespace Hades
         DWORD_PTR InjectDll(std::string const& Path, bool PathResolution)
         {
           return reinterpret_cast<DWORD_PTR>(Injector::InjectDll(
-            boost::lexical_cast<std::wstring>(Path), PathResolution));
+            boost::lexical_cast<std::basic_string<TCHAR>>(Path), 
+            PathResolution));
         }
 
         // Injector::CallExport wrapper
         DWORD_PTR CallExport(std::string const& ModulePath, 
           DWORD_PTR ModuleRemote, std::string const& Export)
         {
-          return Injector::CallExport(boost::lexical_cast<std::wstring>(
-            ModulePath), reinterpret_cast<HMODULE>(ModuleRemote), 
-            Export);
+          return Injector::CallExport(boost::lexical_cast<std::
+            basic_string<TCHAR>>(ModulePath), reinterpret_cast<HMODULE>(
+            ModuleRemote), Export);
         }
       };
     }

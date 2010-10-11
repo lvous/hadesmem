@@ -54,7 +54,8 @@ namespace Hades
           bool InjectHelper)
         {
           return reinterpret_cast<DWORD_PTR>(ManualMap::Map(
-            boost::lexical_cast<std::wstring>(Path), Export, InjectHelper));
+            boost::lexical_cast<std::basic_string<TCHAR>>(Path), Export, 
+            InjectHelper));
         }
       };
     }

@@ -20,6 +20,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 // Windows API
+#include <tchar.h>
 #include <Windows.h>
 #include <TlHelp32.h>
 
@@ -30,8 +31,8 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Boost
 #pragma warning(push, 1)
 #pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
-#include <boost/iterator/iterator_facade.hpp>
 #include <boost/noncopyable.hpp>
+#include <boost/iterator/iterator_facade.hpp>
 #pragma warning(pop)
 
 // Hades
@@ -59,7 +60,7 @@ namespace Hades
       Module(MemoryMgr& MyMemory, HMODULE Handle);
 
       // Find module by name
-      Module(MemoryMgr& MyMemory, std::wstring const& ModuleName);
+      Module(MemoryMgr& MyMemory, std::basic_string<TCHAR> const& ModuleName);
 
       // Get module base
       HMODULE GetBase() const;
@@ -67,9 +68,9 @@ namespace Hades
       DWORD GetSize() const;
 
       // Get module name
-      std::wstring GetName() const;
+      std::basic_string<TCHAR> GetName() const;
       // Get module path
-      std::wstring GetPath() const;
+      std::basic_string<TCHAR> GetPath() const;
 
     private:
       // Memory instance
@@ -80,9 +81,9 @@ namespace Hades
       // Module size
       DWORD m_Size;
       // Module name
-      std::wstring m_Name;
+      std::basic_string<TCHAR> m_Name;
       // Module path
-      std::wstring m_Path;
+      std::basic_string<TCHAR> m_Path;
     };
 
     // Module enumerator
