@@ -87,7 +87,7 @@ namespace Hades
           // This is dangerous, but I haven't had time to think about the 
           // 'proper' solution yet, so this should work for now, but needs 
           // to be fixed in the future.
-          // Todo: Fix this monstrosity.
+          // Fixme: Fix this monstrosity.
           return boost::shared_ptr<ModuleWrappers>(static_cast<ModuleWrappers*>(
             ModuleEnum::First().release()));
         }
@@ -97,7 +97,7 @@ namespace Hades
           // This is dangerous, but I haven't had time to think about the 
           // 'proper' solution yet, so this should work for now, but needs 
           // to be fixed in the future.
-          // Todo: Fix this monstrosity.
+          // Fixme: Fix this monstrosity.
           return boost::shared_ptr<ModuleWrappers>(static_cast<ModuleWrappers*>(
             ModuleEnum::Next().release()));
         }

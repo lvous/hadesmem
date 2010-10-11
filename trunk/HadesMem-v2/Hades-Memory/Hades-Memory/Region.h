@@ -121,7 +121,7 @@ namespace Hades
           m_Current.RegionSize;
 
         // Get region info
-        // Todo: Check GetLastError to ensure EOL and throw an exception 
+        // Fixme: Check GetLastError to ensure EOL and throw an exception 
         // on an actual error.
         return VirtualQueryEx(m_pMemory->GetProcessHandle(), m_Address, 
           &m_Current, sizeof(m_Current)) ? std::unique_ptr<Region>(new Region(

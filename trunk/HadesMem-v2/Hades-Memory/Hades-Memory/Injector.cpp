@@ -117,16 +117,9 @@ namespace Hades
     { }
 
     // Inject DLL
-    // Todo: Support IAT-based injection.
-    // Todo: Handle case where target is running under compatibility 
+    // Fixme: Handle case where target is running under compatibility 
     // mode and shims are enabled.
-    // Todo: Support 'native' processes by using Ntdll.dll!LdrLoadDll 
-    // to perform the injection instead.
-    // Todo: Support 'breaking' the WoW64 barrier and injecting 
-    // cross-architecture modules. (See "Heaven's Gate: 64-bit code in 
-    // 32-bit file")
-    // Todo: Perform necessary adjustments to module base if necessary.
-    // Todo: Support 'breaking' the session barrier.
+    // Fixme: Perform necessary adjustments to module base if necessary.
     HMODULE Injector::InjectDll(boost::filesystem::path const& Path, 
       bool PathResolution) const
     {

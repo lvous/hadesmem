@@ -18,7 +18,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 // Note: This file contains some code from the ReactOS project.
-// Todo: Find and tag all such code.
+// Fixme: Find and tag all such code.
 
 // C++ Standard Library
 #include <memory>
@@ -339,7 +339,7 @@ namespace Hades
         ImportDir& MyImportDir = **i;
 
         // Check for forwarded imports
-        // Todo: Handle forwarded imports
+        // Fixme: Handle forwarded imports
         if (MyImportDir.GetForwarderChain() != static_cast<DWORD>(-1) && 
           MyImportDir.GetForwarderChain() != 0)
         {

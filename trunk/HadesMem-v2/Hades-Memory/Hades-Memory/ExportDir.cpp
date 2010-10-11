@@ -274,7 +274,7 @@ namespace Hades
       if (FuncRva >= ExportDirStart && FuncRva <= ExportDirEnd)
       {
         // Set export forwarder
-        // Todo: Provide member which returns the 'split' version of the 
+        // Fixme: Provide member which returns the 'split' version of the 
         // forwarder. (i.e. module and name)
         m_Forwarded = true;
         m_Forwarder = m_pMemory->Read<std::string>(m_pPeFile->RvaToVa(

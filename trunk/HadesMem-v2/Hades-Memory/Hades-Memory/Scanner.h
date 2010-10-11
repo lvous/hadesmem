@@ -222,7 +222,7 @@ namespace Hades
           }
 
           // Read vector of Ts into cache
-          // Todo: If we're reading across a region boundary and we hit 
+          // Fixme: If we're reading across a region boundary and we hit 
           // inaccessible memory we should simply read all we can, rather 
           // than skipping the block entirely.
           std::vector<BYTE> Buffer(m_pMemory->Read<std::vector<BYTE>>(
@@ -251,7 +251,7 @@ namespace Hades
             {
               // If the buffer matched and the address is valid, return the 
               // current address.
-              // Todo: Do this check in the outer loop, and break if possible 
+              // Fixme: Do this check in the outer loop, and break if possible 
               // rather than continuing.
               PVOID const AddressReal = Address + (Current - &Buffer[0]);
               if (AddressReal >= m_Start && AddressReal <= m_End)
@@ -262,7 +262,7 @@ namespace Hades
           }
         }
         // Ignore any memory errors, as there's nothing we can do about them
-        // Todo: Detect memory read errors and drop back to a slower but 
+        // Fixme: Detect memory read errors and drop back to a slower but 
         // more reliable implementation.
         catch (MemoryMgr::Error const& /*e*/)
         {
@@ -342,7 +342,7 @@ namespace Hades
           }
 
           // Read vector of Ts into cache
-          // Todo: If we're reading across a region boundary and we hit 
+          // Fixme: If we're reading across a region boundary and we hit 
           // inaccessible memory we should simply read all we can, rather 
           // than skipping the block entirely.
           std::vector<BYTE> Buffer(m_pMemory->Read<std::vector<BYTE>>(
@@ -371,7 +371,7 @@ namespace Hades
             {
               // If the buffer matched and the address is valid, return the 
               // current address.
-              // Todo: Do this check in the outer loop, and break if possible 
+              // Fixme: Do this check in the outer loop, and break if possible 
               // rather than continuing.
               PVOID const AddressReal = Address + (Current - &Buffer[0]);
               if (AddressReal >= m_Start && AddressReal <= m_End)
@@ -382,7 +382,7 @@ namespace Hades
           }
         }
         // Ignore any memory errors, as there's nothing we can do about them
-        // Todo: Detect memory read errors and drop back to a slower but 
+        // Fixme: Detect memory read errors and drop back to a slower but 
         // more reliable implementation.
         catch (Error const& /*e*/)
         {

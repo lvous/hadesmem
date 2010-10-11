@@ -130,7 +130,7 @@ namespace Hades
       // Get next module
       std::unique_ptr<Module> Next()
       {
-        // Todo: Check GetLastError to ensure EOL and throw an exception 
+        // Fixme: Check GetLastError to ensure EOL and throw an exception 
         // on an actual error.
         return Module32Next(m_Snap, &m_ModuleEntry) ? std::unique_ptr<Module>(
           new Module(*m_pMemory, m_ModuleEntry)) : std::unique_ptr<Module>(
