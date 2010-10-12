@@ -44,39 +44,27 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include "Hades-MemScript/AutoLink.h"
 #include "Hades-MemScript/Scripting.h"
 
-// Ensure correct stream type is used.
-// Fixme: Implement this in a less disgusting way.
-#ifdef _UNICODE
-#define tcin wcin
-#define tcout wcout
-#define tvalue wvalue
-#else
-#define tcin cin
-#define tcout cout
-#define tvalue value
-#endif
-
 bool GetInput(Hades::Memory::ScriptMgr& MyScriptMgr) 
 {
   // Prompt for input
-  std::tcout << ">";
+  std::cout << ">";
 
   // Get command from user
-  std::basic_string<TCHAR> Input;
-  while (!std::getline(std::tcin, Input) || Input.empty())
+  std::string Input;
+  while (!std::getline(std::cin, Input) || Input.empty())
   {
-    std::tcout << "Invalid command." << std::endl;
-    std::tcout << ">";
+    std::cout << "Invalid command." << std::endl;
+    std::cout << ">";
   }
 
   // Check for quit request
-  if (Input == _T("quit") || Input == _T("exit"))
+  if (Input == "quit" || Input == "exit")
   {
     return false;
   }
 
   // Run script
-  MyScriptMgr.RunString(boost::lexical_cast<std::string>(Input));
+  MyScriptMgr.RunString(Input);
 
   return true;
 }
@@ -98,40 +86,40 @@ int _tmain(int argc, TCHAR* argv[])
 #endif
 
     // Hades version number
-    std::basic_string<TCHAR> const VerNum(_T("TRUNK"));
+    std::wstring const VerNum(L"TRUNK");
 
     // Version and copyright output
 #if defined(_M_X64)
-    std::tcout << "Hades-MemHack AMD64 [Version " << VerNum << "]\n";
+    std::wcout << "Hades-MemHack AMD64 [Version " << VerNum << "]\n";
 #elif defined(_M_IX86)
-    std::tcout << "Hades-MemHack IA32 [Version " << VerNum << "]\n";
+    std::wcout << "Hades-MemHack IA32 [Version " << VerNum << "]\n";
 #else
 #error Unsupported platform!
 #endif
-    std::tcout << "Copyright (C) 2010 RaptorFactor. All rights reserved." << 
+    std::wcout << "Copyright (C) 2010 RaptorFactor. All rights reserved." << 
       std::endl;
-    std::tcout << "Website: http://www.raptorfactor.com/, "
+    std::wcout << "Website: http://www.raptorfactor.com/, "
       "Email: raptorfactor@raptorfactor.com." << std::endl;
-    std::tcout << "Built on " << __DATE__ << " at " << __TIME__ << "." << 
+    std::wcout << "Built on " << __DATE__ << " at " << __TIME__ << "." << 
       std::endl << std::endl;
 
     // Auto-close flag (Set by Boost.ProgramOptions)
     bool KeepOpen = false;
     // Path to script file (Set by Boost.ProgramOptions)
-    std::basic_string<TCHAR> FilePath;
+    std::wstring FilePath;
     // Script string (Set by Boost.ProgramOptions)
-    std::basic_string<TCHAR> ScriptStr;
+    std::wstring ScriptStr;
 
     // Set program option descriptions
     boost::program_options::options_description OptsDesc("Allowed options");
     OptsDesc.add_options()
       ("help", "display help")
-      ("keep-open", boost::program_options::tvalue<bool>(&KeepOpen)->
+      ("keep-open", boost::program_options::wvalue<bool>(&KeepOpen)->
         zero_tokens(), "keep console window open")
-      ("file", boost::program_options::tvalue<std::basic_string<TCHAR>>(
-        &FilePath), "file to execute")
-      ("string", boost::program_options::tvalue<std::basic_string<TCHAR>>(
-        &ScriptStr), "string to execute")
+      ("file", boost::program_options::wvalue<std::wstring>(&FilePath), 
+        "file to execute")
+      ("string", boost::program_options::wvalue<std::wstring>(&ScriptStr), 
+        "string to execute")
       ;
 
     // Parse program options
@@ -149,9 +137,9 @@ int _tmain(int argc, TCHAR* argv[])
       // Stop window from automatically closing if required
       if (KeepOpen)
       {
-        std::tcin.clear();
-        std::tcin.sync();
-        std::tcin.get();
+        std::wcin.clear();
+        std::wcin.sync();
+        std::wcin.get();
       }
 
       // Quit
@@ -202,15 +190,15 @@ int _tmain(int argc, TCHAR* argv[])
     }
 
     // Print elapsed time
-    std::tcout << "\nElapsed Time: " << ProgTimer.elapsed() << "." << 
+    std::wcout << "\nElapsed Time: " << ProgTimer.elapsed() << "." << 
       std::endl;
 
     // Stop window from automatically closing if required
     if (KeepOpen)
     {
-      std::tcin.clear();
-      std::tcin.sync();
-      std::tcin.get();
+      std::wcin.clear();
+      std::wcin.sync();
+      std::wcin.get();
     }
   }
   catch (std::exception const& e)
@@ -219,12 +207,12 @@ int _tmain(int argc, TCHAR* argv[])
     std::cout << boost::diagnostic_information(e);
 
     // Print elapsed time
-    std::tcout << "\nElapsed Time: " << ProgTimer.elapsed() << "." << 
+    std::wcout << "\nElapsed Time: " << ProgTimer.elapsed() << "." << 
       std::endl;
 
     // Always keep window open in case of an error
-    std::tcin.clear();
-    std::tcin.sync();
-    std::tcin.get();
+    std::wcin.clear();
+    std::wcin.sync();
+    std::wcin.get();
   }
 }
