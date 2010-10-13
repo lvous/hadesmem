@@ -160,11 +160,11 @@ namespace Hades
       }
 
       // Get path as string
-      std::basic_string<TCHAR> PathString(PathReal.
-        string<std::basic_string<TCHAR>>());
+      std::wstring PathString(PathReal.wstring());
 
       // Calculate the number of bytes needed for the DLL's pathname
-      std::size_t const PathBufSize = (PathString.size() + 1) * sizeof(TCHAR);
+      std::size_t const PathBufSize = (PathString.size() + 1) * 
+        sizeof(wchar_t);
 
       // Allocate space in the remote process for the pathname
       AllocAndFree const LibFileRemote(*m_pMemory, PathBufSize);
@@ -212,7 +212,7 @@ namespace Hades
 
       // Get path as lowercase string
       std::basic_string<TCHAR> const PathRealLower(boost::to_lower_copy(
-        PathString));
+        boost::lexical_cast<std::basic_string<TCHAR>>(PathString)));
 
       // Look for target module
       ModuleEnum MyModuleList(*m_pMemory);
