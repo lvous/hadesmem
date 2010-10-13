@@ -124,8 +124,9 @@ namespace Hades
     { }
 
     // Inject DLL
-    // Fixme: Handle case where target is running under compatibility 
-    // mode and shims are enabled.
+    // Fixme: Handle case where we are running with shims enabled, and 
+    // GetProcAddress will return a pointer which is invalid for the 
+    // target.
     // Fixme: Perform necessary adjustments to module base if necessary.
     HMODULE Injector::InjectDll(boost::filesystem::path const& Path, 
       bool PathResolution) const
