@@ -45,3 +45,19 @@ inline std::wstring boost::lexical_cast<std::wstring, std::string>(
   return stdext::cvt::wstring_convert<std::codecvt<wchar_t, char, 
     mbstate_t>>().from_bytes(Source);
 }
+
+// Turn attempts to convert between the same string types into a nullsub.
+template<> 
+inline std::wstring boost::lexical_cast<std::wstring, std::wstring>(
+  std::wstring const& Source)
+{
+  return Source;
+}
+
+// Turn attempts to convert between the same string types into a nullsub.
+template<> 
+inline std::string boost::lexical_cast<std::string, std::string>(
+  std::string const& Source)
+{
+  return Source;
+}
