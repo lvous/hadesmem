@@ -127,7 +127,7 @@ namespace Hades
       for (auto i = MyDisasmData.cbegin(); i != MyDisasmData.cend(); ++i)
       {
         // Break once we've disassembled enough data
-        if (InstrSize > GetJumpSize())
+        if (InstrSize >= GetJumpSize())
         {
           break;
         }
