@@ -168,7 +168,8 @@ namespace Hades
       PBYTE const TargetAddr = static_cast<PBYTE>(RemoteBase) + MyDosHeader.
         GetNewHeaderOffset();
       std::cout << "Writing NT header." << std::endl;
-      std::cout << "NT Header: " << TargetAddr << std::endl;
+      std::cout << "NT Header: " << static_cast<PVOID>(TargetAddr) << 
+        std::endl;
       m_pMemory->Write(TargetAddr, PeHeaderBuf);
 
       // Write sections to process
