@@ -93,6 +93,9 @@ namespace Hades
       // Create Assembler.
       AsmJit::Assembler MyJitFunc;
 
+      // Allocate memory for return address
+      AllocAndFree const ReturnAddressRemote(*this, sizeof(DWORD_PTR));
+
 #if defined(_M_AMD64) 
       // Check calling convention
       if (MyCallConv != CallConv_X64 && MyCallConv != CallConv_Default)
@@ -105,9 +108,6 @@ namespace Hades
       // Prologue
       MyJitFunc.push(AsmJit::rbp);
       MyJitFunc.mov(AsmJit::rbp, AsmJit::rsp);
-
-      // Get address to write return value to and store for later
-      MyJitFunc.push(AsmJit::rcx);
 
       // Allocate ghost space
       MyJitFunc.sub(AsmJit::rsp, AsmJit::Imm(0x20));
@@ -141,14 +141,11 @@ namespace Hades
       MyJitFunc.add(AsmJit::rsp, AsmJit::Imm(0x20));
 
       // Clean up remaining stack space
-      std::size_t StackArgs = NumArgs > 4 ? NumArgs - 4 : 0;
-      while (StackArgs--)
-      {
-        MyJitFunc.add(AsmJit::rsp, AsmJit::Imm(0x8));
-      }
+      MyJitFunc.add(AsmJit::rsp, 0x8 * (NumArgs - 4));
 
       // Write return value to memory
-      MyJitFunc.pop(AsmJit::rcx);
+      MyJitFunc.mov(AsmJit::rcx, reinterpret_cast<DWORD_PTR>(
+        ReturnAddressRemote.GetAddress()));
       MyJitFunc.mov(AsmJit::dword_ptr(AsmJit::rcx), AsmJit::rax);
 
       // Epilogue
@@ -243,29 +240,27 @@ namespace Hades
 
       // Get stub size
       DWORD_PTR const StubSize = MyJitFunc.getCodeSize();
-      DWORD_PTR const StubSizeFull = MyJitFunc.getCodeSize() + 
-        sizeof(DWORD_PTR);
 
       // Allocate memory for stub buffer
-      AllocAndFree const StubMemRemote(*this, StubSizeFull);
+      AllocAndFree const StubMemRemote(*this, StubSize);
       PBYTE pRemoteStub = static_cast<PBYTE>(StubMemRemote.GetAddress());
-      PBYTE pRemoteStubCode = static_cast<PBYTE>(StubMemRemote.GetAddress()) + 
-        sizeof(DWORD_PTR);
+      PBYTE pReturnAddress = static_cast<PBYTE>(ReturnAddressRemote.
+        GetAddress());
 
-      // Create buffer to hold relocated code plues the return value address
+      // Create buffer to hold relocated code plus the return value address
       std::vector<BYTE> CodeReal(StubSize);
 
       // Generate code
       MyJitFunc.relocCode(&CodeReal[0], reinterpret_cast<DWORD_PTR>(
-        pRemoteStubCode));
+        pRemoteStub));
 
       // Write stub buffer to process
-      Write(pRemoteStubCode, CodeReal);
+      Write(pRemoteStub, CodeReal);
 
       // Call stub via creating a remote thread in the target.
       Windows::EnsureCloseHandle const MyThread(CreateRemoteThread(m_Process.
         GetHandle(), nullptr, 0, reinterpret_cast<LPTHREAD_START_ROUTINE>(
-        pRemoteStubCode), pRemoteStub, 0, nullptr));
+        pRemoteStub), pReturnAddress, 0, nullptr));
       if (!MyThread)
       {
         DWORD const LastError = GetLastError();
@@ -285,8 +280,8 @@ namespace Hades
           ErrorCodeWin(LastError));
       }
 
-      // Forward return value remote thread
-      DWORD_PTR RetVal = Read<DWORD_PTR>(pRemoteStub);
+      // Forward return value from remote thread
+      DWORD_PTR RetVal = Read<DWORD_PTR>(pReturnAddress);
       return RetVal;
     }
 
