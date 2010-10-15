@@ -240,6 +240,74 @@ extern "C" __declspec(dllexport) DWORD __stdcall Initialize(HMODULE /*Module*/)
   return 1234;
 }
 
+std::shared_ptr<Hades::Memory::MemoryMgr> g_pMyMemory;
+std::shared_ptr<Hades::Memory::PatchDetour> g_pNtGetTickCount;
+
+ULONG NTAPI NtGetTickCount_Hook()
+{
+  MessageBoxA(NULL, "Hook called!", "NtGetTickCount", MB_OK);
+
+  PVOID const pTrampoline = g_pNtGetTickCount->GetTrampoline();
+  typedef ULONG (NTAPI* tNtGetTickCount)();
+  tNtGetTickCount pNtGetTickCount = reinterpret_cast<tNtGetTickCount>(
+    pTrampoline);
+
+  return pNtGetTickCount();
+}
+
+extern "C" __declspec(dllexport) DWORD __stdcall TestPatcher(
+  HMODULE /*Module*/)
+{
+  try
+  {
+    if (!g_pMyMemory)
+    {
+      g_pMyMemory.reset(new Hades::Memory::MemoryMgr(GetCurrentProcessId()));
+    }
+
+    if (!g_pNtGetTickCount)
+    {
+      HMODULE NtdllMod = GetModuleHandle(L"Ntdll.dll");
+      if (!NtdllMod)
+      {
+        DWORD LastError = GetLastError();
+        BOOST_THROW_EXCEPTION(Hades::HadesError() << 
+          Hades::ErrorFunction("TestPatcher") << 
+          Hades::ErrorString("Could not get handle to Ntdll.") << 
+          Hades::ErrorCodeWin(LastError));
+      }
+
+      FARPROC pNtGetTickCount = GetProcAddress(NtdllMod, "NtGetTickCount");
+      if (!pNtGetTickCount)
+      {
+        DWORD LastError = GetLastError();
+        BOOST_THROW_EXCEPTION(Hades::HadesError() << 
+          Hades::ErrorFunction("TestPatcher") << 
+          Hades::ErrorString("Could not get pointer to NtGetTickCount.") << 
+          Hades::ErrorCodeWin(LastError));
+      }
+
+      g_pNtGetTickCount.reset(new Hades::Memory::PatchDetour(
+        *g_pMyMemory, pNtGetTickCount, &NtGetTickCount_Hook));
+
+      g_pNtGetTickCount->Apply();
+
+      pNtGetTickCount();
+
+      pNtGetTickCount();
+
+      g_pNtGetTickCount->Remove();
+    }
+  }
+  catch (std::exception const& e)
+  {
+    MessageBoxA(NULL, boost::diagnostic_information(e).c_str(), "TestPatcher", 
+      MB_OK);
+  }
+
+  return 1234;
+}
+
 BOOL WINAPI DllMain(HINSTANCE /*hinstDLL*/, DWORD /*fdwReason*/, 
   LPVOID /*lpvReserved*/)
 {
