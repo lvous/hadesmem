@@ -114,6 +114,8 @@ namespace Hades
       ULONG const TrampSize = GetJumpSize() * 3;
 
       // Allocate trampoline buffer
+      // Fixme: Ensure trampoline is within range for a RIP-relative 
+      // JMP under x64.
       m_Trampoline = m_pMemory->Alloc(TrampSize);
       PBYTE TrampCur = static_cast<PBYTE>(m_Trampoline);
 
@@ -139,6 +141,7 @@ namespace Hades
         std::vector<BYTE> const& CurRaw = CurDisasmData.Raw;
 
         // Detect and resolve jumps
+        // Fixme: Resolve other relative instructions.
         if ((CurDisasm.Instruction.BranchType == JmpType) && 
           (CurDisasm.Instruction.AddrValue != 0)) 
         {
@@ -190,6 +193,9 @@ namespace Hades
       m_pMemory->Write(m_Target, m_Orig);
 
       // Free trampoline
+      // Fixme: Use RAII for the remote memory buffer used to store the 
+      // trampoline. Currently, if detour removal (above) fails and an 
+      // exception is thrown, the memory will potentially be 'leaked'.
       m_pMemory->Free(m_Trampoline);
 
       // Patch has been removed
