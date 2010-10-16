@@ -215,7 +215,10 @@ namespace Hades
       std::vector<BYTE> JumpBuf(GetJumpSize());
       // Get pointer to buffer
       PBYTE pJumpBuf = &JumpBuf[0];
-      // Write code to buffer ('JMP DWORD PTR [PTR]')
+      // Write code to buffer ('JMP QWORD PTR [RIP+0]')
+      // Fixme: If an attempt to hook an already hooked function is made 
+      // the disassembled code will be 'garbage' due to code and data being 
+      // mixed. Rewrite this using a safer redirection method.
 #if defined(_M_AMD64) 
       *pJumpBuf++ = 0xFF;
       *pJumpBuf++ = 0x25;
