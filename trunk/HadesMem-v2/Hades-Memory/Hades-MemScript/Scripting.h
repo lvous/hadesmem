@@ -60,6 +60,7 @@ extern "C"
 #include "Hades-Memory/Memory.h"
 
 // LuaBind extensions for 64-bit number support
+// Fixme: Causes truncation to a 32-bit type.
 namespace luabind
 {
   template <>
