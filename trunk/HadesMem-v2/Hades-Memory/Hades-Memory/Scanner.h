@@ -160,10 +160,10 @@ namespace Hades
 
     // Search memory (vector types)
     template <typename T>
-    PVOID Scanner::Find(T const& Data, std::basic_string<TCHAR> const& Mask, typename 
-      boost::enable_if<std::is_same<T, std::vector<typename T::value_type>>>::
-      type* /*Dummy1*/, typename boost::enable_if<std::is_pod<typename T::
-      value_type>>::type* /*Dummy2*/) const
+    PVOID Scanner::Find(T const& Data, std::basic_string<TCHAR> const& Mask, 
+      typename boost::enable_if<std::is_same<T, std::vector<typename T::
+      value_type>>>::type* /*Dummy1*/, typename boost::enable_if<std::is_pod<
+      typename T::value_type>>::type* /*Dummy2*/) const
     {
       // Ensure there is data to process
       if (Data.empty())
