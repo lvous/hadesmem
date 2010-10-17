@@ -159,6 +159,9 @@ namespace Hades
     }
 
     // Search memory (vector types)
+    // Fixme: This function is extremely inefficient and full of potential 
+    // bugs. Perform a thorough review and rewrite.
+    // Fixme: Refactor Find and FindAll to factor out duplicated code.
     template <typename T>
     PVOID Scanner::Find(T const& Data, std::basic_string<TCHAR> const& Mask, 
       typename boost::enable_if<std::is_same<T, std::vector<typename T::
@@ -192,76 +195,54 @@ namespace Hades
       for (PBYTE Address = static_cast<PBYTE>(MinAddr); Address < MaxAddr; 
         Address += PageSize)
       {
+        // Skip region if out of bounds
+        if (Address + PageSize - 1 < m_Start)
+        {
+          continue;
+        }
+
+        // Quit if out of bounds
+        if (Address > m_End)
+        {
+          break;
+        }
+
+        // Check for invalid memory
+        MEMORY_BASIC_INFORMATION MyMbi1 = { 0 };
+        if (!VirtualQueryEx(m_pMemory->GetProcessHandle(), Address, &MyMbi1, 
+          sizeof(MyMbi1)) || (MyMbi1.Protect & PAGE_GUARD) == PAGE_GUARD)
+        {
+          continue;
+        }
+
+        // Check for invalid memory
+        MEMORY_BASIC_INFORMATION MyMbi2 = { 0 };
+        if (!VirtualQueryEx(m_pMemory->GetProcessHandle(), Address + 
+          PageSize, &MyMbi2, sizeof(MyMbi2)) || (MyMbi2.Protect & 
+          PAGE_GUARD) == PAGE_GUARD)
+        {
+          continue;
+        }
+
+        // Read vector of Ts into cache
+        std::vector<BYTE> Buffer;
+          
         try
         {
-          // Skip region if out of bounds
-          if (Address + PageSize < m_Start)
-          {
-            continue;
-          }
-
-          // Quit if out of bounds
-          if (Address > m_End)
-          {
-            break;
-          }
-
-          // Check for invalid memory
-          MEMORY_BASIC_INFORMATION MyMbi1 = { 0 };
-          if (!VirtualQueryEx(m_pMemory->GetProcessHandle(), Address, &MyMbi1, 
-            sizeof(MyMbi1)) || (MyMbi1.Protect & PAGE_GUARD) == PAGE_GUARD)
-          {
-            continue;
-          }
-
-          // Check for invalid memory
-          MEMORY_BASIC_INFORMATION MyMbi2 = { 0 };
-          if (!VirtualQueryEx(m_pMemory->GetProcessHandle(), Address + 
-            PageSize, &MyMbi2, sizeof(MyMbi2)) || (MyMbi2.Protect & 
-            PAGE_GUARD) == PAGE_GUARD)
-          {
-            continue;
-          }
-
-          // Read vector of Ts into cache
+          // Efficiency of assignment should not be an issue here (for 
+          // C++0x).
+          // 12.8/15 states that compilers can perform RVO if possible.
+          // In the case that this is not possible (or the compiler chooses 
+          // not to do it), 13.3.3.2/3 states that an rvalue ref binds to an 
+          // rvalue better than an lvalue ref so the move constructor will 
+          // be chosen.
+          // Fixme: Confirm that under the primary implementation being 
+          // used currently (MSVC10) that a copy never occurs here.
           // Fixme: If we're reading across a region boundary and we hit 
           // inaccessible memory we should simply read all we can, rather 
           // than skipping the block entirely.
-          std::vector<BYTE> Buffer(m_pMemory->Read<std::vector<BYTE>>(
-            Address, PageSize + Data.size() * sizeof(T::value_type)));
-
-          // Loop over entire memory region
-          for (PBYTE Current = &Buffer[0]; Current != &Buffer[0] + 
-            Buffer.size(); ++Current) 
-          {
-            // Check if current address matches buffer
-            bool Found = true;
-            for (std::size_t i = 0; i != Data.size(); ++i)
-            {
-              T::value_type const* CurrentTemp = 
-                reinterpret_cast<T::value_type const*>(Current);
-              if ((Mask.empty() || Mask[i] == L'x') && (CurrentTemp[i] != 
-                Data[i]))
-              {
-                Found = false;
-                break;
-              }
-            }
-
-            // If the buffer matched return the current address
-            if (Found)
-            {
-              // If the buffer matched and the address is valid, return the 
-              // current address.
-              // Fixme: Do this check in the outer loop, and break if possible 
-              // rather than continuing.
-              PVOID const AddressReal = Address + (Current - &Buffer[0]);
-              if (AddressReal >= m_Start && AddressReal <= m_End)
-              {
-                return AddressReal;
-              }
-            }
-          }
+          Buffer = m_pMemory->Read<std::vector<BYTE>>(Address, PageSize + 
+            Data.size() * sizeof(T::value_type));
         }
         // Ignore any memory errors, as there's nothing we can do about them
         // Fixme: Detect memory read errors and drop back to a slower but 
@@ -270,17 +251,55 @@ namespace Hades
         {
           continue;
         }
+
+        // Loop over entire memory region
+        for (PBYTE Current = &Buffer[0]; Current != &Buffer[0] + 
+          Buffer.size(); ++Current) 
+        {
+          // Check if current address matches buffer
+          bool Found = true;
+          for (std::size_t i = 0; i != Data.size(); ++i)
+          {
+            T::value_type const* CurrentTemp = 
+              reinterpret_cast<T::value_type const*>(Current);
+            if ((Mask.empty() || Mask[i] == L'x') && (CurrentTemp[i] != 
+              Data[i]))
+            {
+              Found = false;
+              break;
+            }
+          }
+
+          // If the buffer matched return the current address
+          if (Found)
+          {
+            // If the buffer matched and the address is valid, return the 
+            // current address.
+            // Fixme: Do this check in the outer loop, and break if possible 
+            // rather than continuing.
+            PVOID const AddressReal = Address + (Current - &Buffer[0]);
+            if (AddressReal >= m_Start && AddressReal <= m_End)
+            {
+              return AddressReal;
+            }
+          }
+        }
       }
 
       // Nothing found, return null
       return nullptr;
     }
 
+    // Search memory (vector types)
+    // Fixme: This function is extremely inefficient and full of potential 
+    // bugs. Perform a thorough review and rewrite.
+    // Fixme: Refactor Find and FindAll to factor out duplicated code.
     template <typename T>
     std::vector<PVOID> Scanner::FindAll(T const& Data, 
-      std::basic_string<TCHAR> const& Mask, typename boost::enable_if<std::is_same<T, 
-      std::vector<typename T::value_type>>>::type* /*Dummy1*/, typename boost::
-      enable_if<std::is_pod<typename T::value_type>>::type* /*Dummy2*/) const
+      std::basic_string<TCHAR> const& Mask, typename boost::enable_if<std::
+      is_same<T, std::vector<typename T::value_type>>>::type* /*Dummy1*/, 
+      typename boost::enable_if<std::is_pod<typename T::value_type>>::type* 
+      /*Dummy2*/) const
     {
       // Ensure there is data to process
       if (Data.empty())
@@ -305,90 +324,101 @@ namespace Hades
       SYSTEM_INFO MySystemInfo = { 0 };
       GetSystemInfo(&MySystemInfo);
       DWORD const PageSize = MySystemInfo.dwPageSize;
-      PVOID const MinAddr = MySystemInfo.lpMinimumApplicationAddress;
-      PVOID const MaxAddr = MySystemInfo.lpMaximumApplicationAddress;
+      PVOID const MinAddr = 0;
+      PVOID const MaxAddr = reinterpret_cast<PVOID>(-1);
 
       // Loop over all memory pages
       for (PBYTE Address = static_cast<PBYTE>(MinAddr); Address < MaxAddr; 
         Address += PageSize)
       {
+        // Skip region if out of bounds
+        if (Address + PageSize - 1 < m_Start)
+        {
+          continue;
+        }
+
+        // Quit if out of bounds
+        if (Address > m_End)
+        {
+          break;
+        }
+
+        // Check for invalid memory
+        MEMORY_BASIC_INFORMATION MyMbi1 = { 0 };
+        if (!VirtualQueryEx(m_pMemory->GetProcessHandle(), Address, &MyMbi1, 
+          sizeof(MyMbi1)) || (MyMbi1.Protect & PAGE_GUARD) == PAGE_GUARD)
+        {
+          continue;
+        }
+
+        // Check for invalid memory
+        MEMORY_BASIC_INFORMATION MyMbi2 = { 0 };
+        if (!VirtualQueryEx(m_pMemory->GetProcessHandle(), Address + PageSize, 
+          &MyMbi2, sizeof(MyMbi2)) || (MyMbi2.Protect & PAGE_GUARD) == 
+          PAGE_GUARD)
+        {
+          continue;
+        }
+
+        // Read vector of Ts into cache
+        std::vector<BYTE> Buffer;
+
         try
         {
-          // Skip region if out of bounds
-          if (Address + PageSize < m_Start)
-          {
-            continue;
-          }
-
-          // Quit if out of bounds
-          if (Address > m_End)
-          {
-            break;
-          }
-
-          // Check for invalid memory
-          MEMORY_BASIC_INFORMATION MyMbi1 = { 0 };
-          if (!VirtualQueryEx(m_pMemory->GetProcessHandle(), Address, &MyMbi1, 
-            sizeof(MyMbi1)) || (MyMbi1.Protect & PAGE_GUARD) == PAGE_GUARD)
-          {
-            continue;
-          }
-
-          // Check for invalid memory
-          MEMORY_BASIC_INFORMATION MyMbi2 = { 0 };
-          if (!VirtualQueryEx(m_pMemory->GetProcessHandle(), Address + PageSize, 
-            &MyMbi2, sizeof(MyMbi2)) || (MyMbi2.Protect & PAGE_GUARD) == 
-            PAGE_GUARD)
-          {
-            continue;
-          }
-
-          // Read vector of Ts into cache
+          // Efficiency of assignment should not be an issue here (for 
+          // C++0x).
+          // 12.8/15 states that compilers can perform RVO if possible.
+          // In the case that this is not possible (or the compiler chooses 
+          // not to do it), 13.3.3.2/3 states that an rvalue ref binds to an 
+          // rvalue better than an lvalue ref so the move constructor will 
+          // be chosen.
+          // Fixme: Confirm that under the primary implementation being 
+          // used currently (MSVC10) that a copy never occurs here.
           // Fixme: If we're reading across a region boundary and we hit 
           // inaccessible memory we should simply read all we can, rather 
           // than skipping the block entirely.
-          std::vector<BYTE> Buffer(m_pMemory->Read<std::vector<BYTE>>(
-            Address, PageSize + Data.size() * sizeof(T::value_type)));
-
-          // Loop over entire memory region
-          for (PBYTE Current = &Buffer[0]; Current != &Buffer[0] + 
-            Buffer.size(); ++Current) 
-          {
-            // Check if current address matches buffer
-            bool Found = true;
-            for (std::size_t i = 0; i != Data.size(); ++i)
-            {
-              T::value_type const* CurrentTemp = 
-                reinterpret_cast<T::value_type const*>(Current);
-              if ((Mask.empty() || Mask[i] == L'x') && (CurrentTemp[i] != 
-                Data[i]))
-              {
-                Found = false;
-                break;
-              }
-            }
-
-            // If the buffer matched return the current address
-            if (Found)
-            {
-              // If the buffer matched and the address is valid, return the 
-              // current address.
-              // Fixme: Do this check in the outer loop, and break if possible 
-              // rather than continuing.
-              PVOID const AddressReal = Address + (Current - &Buffer[0]);
-              if (AddressReal >= m_Start && AddressReal <= m_End)
-              {
-                Matches.push_back(AddressReal);
-              }
-            }
-          }
+          Buffer = m_pMemory->Read<std::vector<BYTE>>(Address, PageSize + 
+            Data.size() * sizeof(T::value_type));
         }
         // Ignore any memory errors, as there's nothing we can do about them
         // Fixme: Detect memory read errors and drop back to a slower but 
         // more reliable implementation.
-        catch (Error const& /*e*/)
+        catch (MemoryMgr::Error const& /*e*/)
         {
           continue;
+        }
+
+        // Loop over entire memory region
+        for (PBYTE Current = &Buffer[0]; Current != &Buffer[0] + 
+          Buffer.size(); ++Current) 
+        {
+          // Check if current address matches buffer
+          bool Found = true;
+          for (std::size_t i = 0; i != Data.size(); ++i)
+          {
+            T::value_type const* CurrentTemp = 
+              reinterpret_cast<T::value_type const*>(Current);
+            if ((Mask.empty() || Mask[i] == L'x') && (CurrentTemp[i] != 
+              Data[i]))
+            {
+              Found = false;
+              break;
+            }
+          }
+
+          // If the buffer matched return the current address
+          if (Found)
+          {
+            // If the buffer matched and the address is valid, return the 
+            // current address.
+            // Fixme: Do this check in the outer loop, and break if possible 
+            // rather than continuing.
+            PVOID const AddressReal = Address + (Current - &Buffer[0]);
+            if (AddressReal >= m_Start && AddressReal <= m_End)
+            {
+              Matches.push_back(AddressReal);
+            }
+          }
         }
       }
 
