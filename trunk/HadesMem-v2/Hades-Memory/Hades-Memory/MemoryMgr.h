@@ -171,7 +171,16 @@ namespace Hades
 
       ~AllocAndFree()
       {
-        m_pMemory->Free(m_Address);
+        // Swallow any exceptions that occur when attempting to free the 
+        // memory as destructors are not allowed to throw.
+        // Fixme: Provide some sort of debug output when freeing memory 
+        // fails.
+        try
+        {
+          m_pMemory->Free(m_Address);
+        }
+        catch (MemoryMgr::Error const& /*e*/)
+        { }
       }
 
       PVOID GetAddress() const 
