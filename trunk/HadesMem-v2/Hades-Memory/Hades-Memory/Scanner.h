@@ -324,8 +324,8 @@ namespace Hades
       SYSTEM_INFO MySystemInfo = { 0 };
       GetSystemInfo(&MySystemInfo);
       DWORD const PageSize = MySystemInfo.dwPageSize;
-      PVOID const MinAddr = 0;
-      PVOID const MaxAddr = reinterpret_cast<PVOID>(-1);
+      PVOID const MinAddr = MySystemInfo.lpMinimumApplicationAddress;
+      PVOID const MaxAddr = MySystemInfo.lpMaximumApplicationAddress;
 
       // Loop over all memory pages
       for (PBYTE Address = static_cast<PBYTE>(MinAddr); Address < MaxAddr; 
