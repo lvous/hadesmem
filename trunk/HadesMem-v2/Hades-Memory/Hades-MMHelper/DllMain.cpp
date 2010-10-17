@@ -267,7 +267,7 @@ extern "C" __declspec(dllexport) DWORD __stdcall TestPatcher(
 
     if (!g_pNtGetTickCount)
     {
-      HMODULE NtdllMod = GetModuleHandle(L"Ntdll.dll");
+      HMODULE NtdllMod = GetModuleHandleW(L"Ntdll.dll");
       if (!NtdllMod)
       {
         DWORD LastError = GetLastError();
