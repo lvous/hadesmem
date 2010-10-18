@@ -74,13 +74,14 @@ namespace luabind
 
     unsigned long long from(lua_State* L, int index)
     {
-      return static_cast<unsigned long long>(BOOST_PP_CAT(lua_to, number)
+      return static_cast<unsigned long long>(BOOST_PP_CAT(lua_to, integer)
         (L, index));
     }
 
     void to(lua_State* L, unsigned long long const& value)
     {
-      BOOST_PP_CAT(lua_push, number)(L, BOOST_PP_CAT(as_lua_, number)(value));
+      BOOST_PP_CAT(lua_push, integer)(L, BOOST_PP_CAT(as_lua_, integer)(
+        value));
     }
   };
 
@@ -105,13 +106,14 @@ namespace luabind
 
     signed long long from(lua_State* L, int index)
     {
-      return static_cast<signed long long>(BOOST_PP_CAT(lua_to, number)
+      return static_cast<signed long long>(BOOST_PP_CAT(lua_to, integer)
         (L, index));
     }
 
     void to(lua_State* L, signed long long const& value)
     {
-      BOOST_PP_CAT(lua_push, number)(L, BOOST_PP_CAT(as_lua_, number)(value));
+      BOOST_PP_CAT(lua_push, integer)(L, BOOST_PP_CAT(as_lua_, integer)(
+        value));
     }
   };
 
