@@ -118,6 +118,7 @@ int _tmain(int argc, TCHAR* argv[])
       return 1;
     }
 
+    // Sanity check
     if (!ProcID)
     {
       BOOST_THROW_EXCEPTION(Hades::HadesError() << 
@@ -125,9 +126,14 @@ int _tmain(int argc, TCHAR* argv[])
         Hades::ErrorString("No process ID specified."));
     }
 
+    // Create memory manager
     Hades::Memory::MemoryMgr MyMemory(ProcID);
+    
+    // Create pattern scanner and load pattern file
     Hades::Memory::FindPattern MyFindPattern(MyMemory);
     MyFindPattern.LoadFromXML(PatternFile);
+
+    // Dump pattern list
     auto AddressMap(MyFindPattern.GetAddresses());
     std::for_each(AddressMap.cbegin(), AddressMap.cend(), 
       [] (std::pair<std::basic_string<TCHAR>, PVOID> const& Current)
