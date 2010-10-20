@@ -299,6 +299,10 @@ namespace Hades
       std::is_same<T, std::vector<typename T::value_type>>::value, T>::type* 
       /*Dummy*/) const
     {
+      // Ensure type to be read is POD
+      static_assert(std::is_pod<T::value_type>::value, "MemoryMgr::Read: "
+        "Value type of vector must be POD.");
+
       // Treat attempt to read from a guard page as an error
       if (IsGuard(Address))
       {
@@ -442,6 +446,10 @@ namespace Hades
       enable_if<std::is_same<T, std::vector<typename T::value_type>>::value, 
       T>::type* /*Dummy*/) const
     {
+      // Ensure type to be written is POD
+      static_assert(std::is_pod<T::value_type>::value, "MemoryMgr::Write: "
+        "Value type of vector must be POD.");
+
       // Treat attempt to write to a guard page as an error
       if (IsGuard(Address))
       {
