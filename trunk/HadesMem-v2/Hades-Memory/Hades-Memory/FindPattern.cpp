@@ -373,6 +373,16 @@ namespace Hades
           }
         }
 
+        // Check for duplicate entry
+        auto const Iter = m_Addresses.find(boost::lexical_cast<std::
+          basic_string<TCHAR>>(Name));
+        if (Iter != m_Addresses.end())
+        {
+          BOOST_THROW_EXCEPTION(Error() << 
+            ErrorFunction("FindPattern::LoadFromXML") << 
+            ErrorString("Duplicate pattern name."));
+        }
+
         // Add address to map
         m_Addresses[boost::lexical_cast<std::basic_string<TCHAR>>(Name)] = 
           Address;
