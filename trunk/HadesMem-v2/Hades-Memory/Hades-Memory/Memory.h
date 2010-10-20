@@ -27,6 +27,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include "Injector.h"
 #include "ManualMap.h"
 #include "MemoryMgr.h"
+#include "FindPattern.h"
 #include "Disassembler.h"
 
 // Hades (Internal)

@@ -24,14 +24,15 @@ namespace Hades
   namespace Memory
   {
     // Hades (External)
-    class Disassembler;
-    class Injector;
-    class ManualMap;
-    class MemoryMgr;
     class Module;
-    class Process;
     class Region;
     class Scanner;
+    class Process;
+    class Injector;
+    class MemoryMgr;
+    class ManualMap;
+    class FindPattern;
+    class Disassembler;
     
     // Hades (Internal)
     class Patch;
@@ -39,11 +40,11 @@ namespace Hades
     class PatchDetour;
     
     // Hades (PeLib)
+    class PeFile;
+    class TlsDir;
+    class Section;
     class DosHeader;
     class ExportDir;
     class NtHeaders;
-    class PeFile;
-    class Section;
-    class TlsDir;
   }
 }

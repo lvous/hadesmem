@@ -84,6 +84,9 @@
     <ClCompile Include="ImportDir.cpp">
       <Filter>Source Files\External\PeLib</Filter>
     </ClCompile>
+    <ClCompile Include="FindPattern.cpp">
+      <Filter>Source Files\External</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Memory.h">
@@ -160,6 +163,9 @@
     </ClInclude>
     <ClInclude Include="ImportEnum.h">
       <Filter>Header Files\External\PeLib</Filter>
+    </ClInclude>
+    <ClInclude Include="FindPattern.h">
+      <Filter>Header Files\External</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
