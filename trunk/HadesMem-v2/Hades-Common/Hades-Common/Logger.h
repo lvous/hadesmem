@@ -103,9 +103,9 @@ namespace Hades
           local_time());
         // Convert time to string YYYY-MM-DDTHH:MM:SS
         std::basic_string<TCHAR> TimeStr(boost::posix_time::
-          to_iso_string_type<TCHAR>(Time));
+          to_iso_extended_string_type<TCHAR>(Time));
         // Reformat time YYYY-MM-DD_HH-MM-SS
-        TimeStr[10] = L'_'; TimeStr[13] = L'-'; TimeStr[16] = L'-';
+        TimeStr[10] = _T('_'); TimeStr[13] = _T('-'); TimeStr[16] = _T('-');
 
         // Generate file path relative to initial directory
         std::basic_string<TCHAR> const LogFile(Filename + _T("-") + TimeStr + 
