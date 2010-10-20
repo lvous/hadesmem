@@ -153,6 +153,8 @@ namespace Hades
         MemSize));
 
       // Use Boyer–Moore–Horspool to search for pattern
+      // Note: Based off the implementation provided on Wikipedia's entry 
+      // on the algorithm
 
       std::size_t Scan = 0;
       std::size_t const NeedleLen = Data.size();
