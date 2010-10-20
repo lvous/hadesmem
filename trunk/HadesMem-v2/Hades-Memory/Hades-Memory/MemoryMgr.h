@@ -130,6 +130,9 @@ namespace Hades
       // Whether an address is currently writable
       bool CanWrite(PVOID Address) const;
 
+      // Whether an address is contained within a guard page
+      bool  IsGuard(PVOID Address) const;
+
       // Allocate memory
       PVOID Alloc(SIZE_T Size) const;
 
@@ -198,6 +201,14 @@ namespace Hades
     T MemoryMgr::Read(PVOID Address, typename std::enable_if<std::is_pod<T>::
       value, T>::type* /*Dummy*/) const 
     {
+      // Treat attempting to read from a guard page as an error
+      if (IsGuard(Address))
+      {
+        BOOST_THROW_EXCEPTION(Error() << 
+          ErrorFunction("MemoryMgr::Read") << 
+          ErrorString("Attempt to read from guard page."));
+      }
+      
       // Whether we can read the given address
       bool const CanReadMem = CanRead(Address);
 
@@ -288,6 +299,14 @@ namespace Hades
       std::is_same<T, std::vector<typename T::value_type>>::value, T>::type* 
       /*Dummy*/) const
     {
+      // Treat attempting to read from a guard page as an error
+      if (IsGuard(Address))
+      {
+        BOOST_THROW_EXCEPTION(Error() << 
+          ErrorFunction("MemoryMgr::Read") << 
+          ErrorString("Attempt to read from guard page."));
+      }
+
       // Calculate 'raw' size of data
       std::size_t RawSize = Size * sizeof(T::value_type);
 
@@ -352,6 +371,14 @@ namespace Hades
     void MemoryMgr::Write(PVOID Address, T const& Data, typename std::
       enable_if<std::is_pod<T>::value, T>::type* /*Dummy*/) const 
     {
+      // Treat attempting to write to a guard page as an error
+      if (IsGuard(Address))
+      {
+        BOOST_THROW_EXCEPTION(Error() << 
+          ErrorFunction("MemoryMgr::Write") << 
+          ErrorString("Attempt to write to guard page."));
+      }
+
       // Set page protections for writing
       DWORD OldProtect = 0;
       if (!VirtualProtectEx(m_Process.GetHandle(), Address, sizeof(T), 
@@ -401,19 +428,12 @@ namespace Hades
       // Character type
       typedef typename T::value_type CharT;
 
-      // Create character pointer
-      CharT* AddressReal = reinterpret_cast<CharT*>(Address);
+      // Convert string to vector
+      std::vector<CharT> DataReal(Data.cbegin(), Data.cend());
+      DataReal.push_back(0);
 
-      // Write all characters in string to memory
-      std::for_each(Data.cbegin(), Data.cend(), 
-        [&] (CharT Current) 
-      {
-        // Write current character to memory
-        this->Write(AddressReal++, Current);
-      });
-
-      // Null terminate string
-      Write<CharT>(AddressReal, 0);
+      // Write string to memory
+      this->Write(Address, DataReal);
     }
 
     // Write memory (vector types)
@@ -422,6 +442,14 @@ namespace Hades
       enable_if<std::is_same<T, std::vector<typename T::value_type>>::value, 
       T>::type* /*Dummy*/) const
     {
+      // Treat attempting to write to a guard page as an error
+      if (IsGuard(Address))
+      {
+        BOOST_THROW_EXCEPTION(Error() << 
+          ErrorFunction("MemoryMgr::Write") << 
+          ErrorString("Attempt to write to guard page."));
+      }
+
       // Calculate 'raw' size of data
       std::size_t RawSize = Data.size() * sizeof(T::value_type);
 

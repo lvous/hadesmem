@@ -331,6 +331,25 @@ namespace Hades
         MyMemInfo.Protect == PAGE_WRITECOPY;
     }
 
+    // Whether an address is contained within a guard page
+    bool MemoryMgr::IsGuard(PVOID Address) const
+    {
+      // Query page protections
+      MEMORY_BASIC_INFORMATION MyMemInfo = { 0 };
+      if (!VirtualQueryEx(m_Process.GetHandle(), Address, &MyMemInfo, 
+        sizeof(MyMemInfo)))
+      {
+        DWORD const LastError = GetLastError();
+        BOOST_THROW_EXCEPTION(Error() << 
+          ErrorFunction("MemoryMgr::IsGuard") << 
+          ErrorString("Could not read process memory protection.") << 
+          ErrorCodeWin(LastError));
+      }
+
+      // Whether address is in a guard page
+      return MyMemInfo.Protect == PAGE_GUARD;
+    }
+
     // Allocate memory
     PVOID MemoryMgr::Alloc(SIZE_T Size) const
     {
