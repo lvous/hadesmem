@@ -201,7 +201,7 @@ namespace Hades
     T MemoryMgr::Read(PVOID Address, typename std::enable_if<std::is_pod<T>::
       value, T>::type* /*Dummy*/) const 
     {
-      // Treat attempting to read from a guard page as an error
+      // Treat attempt to read from a guard page as an error
       if (IsGuard(Address))
       {
         BOOST_THROW_EXCEPTION(Error() << 
@@ -299,7 +299,7 @@ namespace Hades
       std::is_same<T, std::vector<typename T::value_type>>::value, T>::type* 
       /*Dummy*/) const
     {
-      // Treat attempting to read from a guard page as an error
+      // Treat attempt to read from a guard page as an error
       if (IsGuard(Address))
       {
         BOOST_THROW_EXCEPTION(Error() << 
@@ -371,7 +371,7 @@ namespace Hades
     void MemoryMgr::Write(PVOID Address, T const& Data, typename std::
       enable_if<std::is_pod<T>::value, T>::type* /*Dummy*/) const 
     {
-      // Treat attempting to write to a guard page as an error
+      // Treat attempt to write to a guard page as an error
       if (IsGuard(Address))
       {
         BOOST_THROW_EXCEPTION(Error() << 
@@ -442,7 +442,7 @@ namespace Hades
       enable_if<std::is_same<T, std::vector<typename T::value_type>>::value, 
       T>::type* /*Dummy*/) const
     {
-      // Treat attempting to write to a guard page as an error
+      // Treat attempt to write to a guard page as an error
       if (IsGuard(Address))
       {
         BOOST_THROW_EXCEPTION(Error() << 
