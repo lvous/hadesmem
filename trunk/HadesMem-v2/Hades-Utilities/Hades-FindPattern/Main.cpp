@@ -138,7 +138,8 @@ int _tmain(int argc, TCHAR* argv[])
     std::for_each(AddressMap.cbegin(), AddressMap.cend(), 
       [] (std::pair<std::basic_string<TCHAR>, PVOID> const& Current)
     {
-      std::wcout << Current.first << " -> " << Current.second << std::endl;
+      std::wcout << boost::lexical_cast<std::wstring>(Current.first) << 
+        " -> " << Current.second << std::endl;
     });
 
     // Print elapsed time
