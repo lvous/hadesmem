@@ -89,7 +89,7 @@ int _tmain(int argc, TCHAR* argv[])
       ("keep-open", boost::program_options::wvalue<bool>(&KeepOpen)->
         zero_tokens(), "keep console window open")
       ("pattern-file", boost::program_options::wvalue<std::wstring>(
-        &PatternFile), "string to execute")
+        &PatternFile), "path to pattern file")
       ("process-id", boost::program_options::wvalue<DWORD>(&ProcID), 
         "target process id")
       ;
