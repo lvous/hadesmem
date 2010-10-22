@@ -157,7 +157,7 @@ int _tmain(int argc, TCHAR* argv[])
       if (!boost::filesystem::exists(FilePathReal))
       {
         BOOST_THROW_EXCEPTION(Hades::HadesError() << 
-          Hades::ErrorFunction("wmain") << 
+          Hades::ErrorFunction("_tmain") << 
           Hades::ErrorString("Requested file could not be found."));
       }
 
