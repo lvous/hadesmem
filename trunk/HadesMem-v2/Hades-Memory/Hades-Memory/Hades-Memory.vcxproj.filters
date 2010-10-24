@@ -34,6 +34,9 @@
     <Filter Include="Source Files\Internal">
       <UniqueIdentifier>{c581c5ae-2da0-4123-8cc9-e118cac78158}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Anti-Anti">
+      <UniqueIdentifier>{d9935020-19ea-4dfe-b485-f751313f0a99}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MemoryMgr.cpp">
@@ -166,6 +169,9 @@
     </ClInclude>
     <ClInclude Include="FindPattern.h">
       <Filter>Header Files\External</Filter>
+    </ClInclude>
+    <ClInclude Include="HashString.h">
+      <Filter>Header Files\Anti-Anti</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

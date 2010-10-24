@@ -94,6 +94,7 @@
     <ClInclude Include="ExportEnum.h" />
     <ClInclude Include="FindPattern.h" />
     <ClInclude Include="Fwd.h" />
+    <ClInclude Include="HashString.h" />
     <ClInclude Include="ImportDir.h" />
     <ClInclude Include="ImportEnum.h" />
     <ClInclude Include="Injector.h" />
