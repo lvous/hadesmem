@@ -21,15 +21,39 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include <crtdbg.h>
 #include <Windows.h>
 
+// C++ Standard Library
+#include <string>
+#include <iostream>
+
 // Boost
 #pragma warning(push, 1)
 #pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
 #include <boost/python.hpp>
+#include <boost/exception/all.hpp>
 #pragma warning(pop)
 
-char const* greet()
+// Hades
+#include "Hades-Common/Error.h"
+#include "Hades-Memory/AutoLink.h"
+#include "Hades-Memory/MemoryMgr.h"
+
+// Custom error translator
+void HadesErrorTranslator(std::exception const& e)
 {
-  return "hello, world";
+  PyErr_SetString(PyExc_RuntimeError, boost::diagnostic_information(e).
+    c_str());
+}
+
+// Export MemoryMgr API
+void ExportMemoryMgr()
+{
+  using namespace boost::python;
+  class_<Hades::Memory::MemoryMgr, boost::noncopyable>("MemoryMgr", 
+    init<DWORD>())
+    .def(init<std::basic_string<TCHAR> const&>())
+    .def(init<std::basic_string<TCHAR> const&, 
+    std::basic_string<TCHAR> const&>())
+    ;
 }
 
 #if defined(_M_AMD64) 
@@ -41,7 +65,8 @@ BOOST_PYTHON_MODULE(PyHadesMem_IA32)
 #endif
 {
   using namespace boost::python;
-  def("greet", greet);
+  register_exception_translator<std::exception>(&HadesErrorTranslator);
+  ExportMemoryMgr();
 }
 
 BOOL WINAPI DllMain(HINSTANCE /*hinstDLL*/, DWORD /*fdwReason*/, 
