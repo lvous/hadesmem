@@ -366,7 +366,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
       <AdditionalIncludeDirectories>"../";"../../Dependencies/AsmJit/";"../../Dependencies/BeaEngine/BeaEngine/include/";"../../Dependencies/Lua/Lua/";"../../Dependencies/LuaBind/LuaBind/";"../../Dependencies/RapidXML/";"../../Dependencies/WTL/";"../../Hades-Common/";</AdditionalIncludeDirectories>
-      <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED /D BOOST_PYTHON_STATIC_LIB %(AdditionalOptions)</AdditionalOptions>
       <DisableSpecificWarnings>4505</DisableSpecificWarnings>
       <EnablePREfast>true</EnablePREfast>
       <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
@@ -396,7 +396,7 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
       <AdditionalIncludeDirectories>"../";"../../Dependencies/AsmJit/";"../../Dependencies/BeaEngine/BeaEngine/include/";"../../Dependencies/Lua/Lua/";"../../Dependencies/LuaBind/LuaBind/";"../../Dependencies/RapidXML/";"../../Dependencies/WTL/";"../../Hades-Common/";</AdditionalIncludeDirectories>
-      <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED /D BOOST_PYTHON_STATIC_LIB %(AdditionalOptions)</AdditionalOptions>
       <DisableSpecificWarnings>4505</DisableSpecificWarnings>
       <EnablePREfast>true</EnablePREfast>
       <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
@@ -427,7 +427,7 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
       <AdditionalIncludeDirectories>"../";"../../Dependencies/AsmJit/";"../../Dependencies/BeaEngine/BeaEngine/include/";"../../Dependencies/Lua/Lua/";"../../Dependencies/LuaBind/LuaBind/";"../../Dependencies/RapidXML/";"../../Dependencies/WTL/";"../../Hades-Common/";</AdditionalIncludeDirectories>
-      <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED /D BOOST_PYTHON_STATIC_LIB %(AdditionalOptions)</AdditionalOptions>
       <DisableSpecificWarnings>4505</DisableSpecificWarnings>
       <EnablePREfast>true</EnablePREfast>
       <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
@@ -458,7 +458,7 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
       <AdditionalIncludeDirectories>"../";"../../Dependencies/AsmJit/";"../../Dependencies/BeaEngine/BeaEngine/include/";"../../Dependencies/Lua/Lua/";"../../Dependencies/LuaBind/LuaBind/";"../../Dependencies/RapidXML/";"../../Dependencies/WTL/";"../../Hades-Common/";</AdditionalIncludeDirectories>
-      <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED /D BOOST_PYTHON_STATIC_LIB %(AdditionalOptions)</AdditionalOptions>
       <DisableSpecificWarnings>4505</DisableSpecificWarnings>
       <EnablePREfast>true</EnablePREfast>
       <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
@@ -487,7 +487,7 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <TreatWarningAsError>true</TreatWarningAsError>
       <AdditionalIncludeDirectories>"../";"../../Dependencies/AsmJit/";"../../Dependencies/BeaEngine/BeaEngine/include/";"../../Dependencies/Lua/Lua/";"../../Dependencies/LuaBind/LuaBind/";"../../Dependencies/RapidXML/";"../../Dependencies/WTL/";"../../Hades-Common/";</AdditionalIncludeDirectories>
-      <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED /D BOOST_PYTHON_STATIC_LIB %(AdditionalOptions)</AdditionalOptions>
       <DisableSpecificWarnings>4505</DisableSpecificWarnings>
       <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
     </ClCompile>
@@ -515,7 +515,7 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <TreatWarningAsError>true</TreatWarningAsError>
       <AdditionalIncludeDirectories>"../";"../../Dependencies/AsmJit/";"../../Dependencies/BeaEngine/BeaEngine/include/";"../../Dependencies/Lua/Lua/";"../../Dependencies/LuaBind/LuaBind/";"../../Dependencies/RapidXML/";"../../Dependencies/WTL/";"../../Hades-Common/";</AdditionalIncludeDirectories>
-      <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED /D BOOST_PYTHON_STATIC_LIB %(AdditionalOptions)</AdditionalOptions>
       <DisableSpecificWarnings>4505</DisableSpecificWarnings>
       <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -544,7 +544,7 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <TreatWarningAsError>true</TreatWarningAsError>
       <AdditionalIncludeDirectories>"../";"../../Dependencies/AsmJit/";"../../Dependencies/BeaEngine/BeaEngine/include/";"../../Dependencies/Lua/Lua/";"../../Dependencies/LuaBind/LuaBind/";"../../Dependencies/RapidXML/";"../../Dependencies/WTL/";"../../Hades-Common/";</AdditionalIncludeDirectories>
-      <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED /D BOOST_PYTHON_STATIC_LIB %(AdditionalOptions)</AdditionalOptions>
       <DisableSpecificWarnings>4505</DisableSpecificWarnings>
       <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -573,7 +573,7 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <TreatWarningAsError>true</TreatWarningAsError>
       <AdditionalIncludeDirectories>"../";"../../Dependencies/AsmJit/";"../../Dependencies/BeaEngine/BeaEngine/include/";"../../Dependencies/Lua/Lua/";"../../Dependencies/LuaBind/LuaBind/";"../../Dependencies/RapidXML/";"../../Dependencies/WTL/";"../../Hades-Common/";</AdditionalIncludeDirectories>
-      <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED /D BOOST_PYTHON_STATIC_LIB %(AdditionalOptions)</AdditionalOptions>
       <DisableSpecificWarnings>4505</DisableSpecificWarnings>
       <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
     </ClCompile>
@@ -604,7 +604,7 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
       <AdditionalIncludeDirectories>"../";"../../Dependencies/AsmJit/";"../../Dependencies/BeaEngine/BeaEngine/include/";"../../Dependencies/Lua/Lua/";"../../Dependencies/LuaBind/LuaBind/";"../../Dependencies/RapidXML/";"../../Dependencies/WTL/";"../../Hades-Common/";</AdditionalIncludeDirectories>
-      <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED /D BOOST_PYTHON_STATIC_LIB %(AdditionalOptions)</AdditionalOptions>
       <DisableSpecificWarnings>4505</DisableSpecificWarnings>
       <EnablePREfast>true</EnablePREfast>
       <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
@@ -638,7 +638,7 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
       <AdditionalIncludeDirectories>"../";"../../Dependencies/AsmJit/";"../../Dependencies/BeaEngine/BeaEngine/include/";"../../Dependencies/Lua/Lua/";"../../Dependencies/LuaBind/LuaBind/";"../../Dependencies/RapidXML/";"../../Dependencies/WTL/";"../../Hades-Common/";</AdditionalIncludeDirectories>
-      <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED /D BOOST_PYTHON_STATIC_LIB %(AdditionalOptions)</AdditionalOptions>
       <DisableSpecificWarnings>4505</DisableSpecificWarnings>
       <EnablePREfast>true</EnablePREfast>
       <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
@@ -673,7 +673,7 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
       <AdditionalIncludeDirectories>"../";"../../Dependencies/AsmJit/";"../../Dependencies/BeaEngine/BeaEngine/include/";"../../Dependencies/Lua/Lua/";"../../Dependencies/LuaBind/LuaBind/";"../../Dependencies/RapidXML/";"../../Dependencies/WTL/";"../../Hades-Common/";</AdditionalIncludeDirectories>
-      <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED /D BOOST_PYTHON_STATIC_LIB %(AdditionalOptions)</AdditionalOptions>
       <DisableSpecificWarnings>4505</DisableSpecificWarnings>
       <EnablePREfast>true</EnablePREfast>
       <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
@@ -708,7 +708,7 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
       <AdditionalIncludeDirectories>"../";"../../Dependencies/AsmJit/";"../../Dependencies/BeaEngine/BeaEngine/include/";"../../Dependencies/Lua/Lua/";"../../Dependencies/LuaBind/LuaBind/";"../../Dependencies/RapidXML/";"../../Dependencies/WTL/";"../../Hades-Common/";</AdditionalIncludeDirectories>
-      <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED /D BOOST_PYTHON_STATIC_LIB %(AdditionalOptions)</AdditionalOptions>
       <DisableSpecificWarnings>4505</DisableSpecificWarnings>
       <EnablePREfast>true</EnablePREfast>
       <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
@@ -741,7 +741,7 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <TreatWarningAsError>true</TreatWarningAsError>
       <AdditionalIncludeDirectories>"../";"../../Dependencies/AsmJit/";"../../Dependencies/BeaEngine/BeaEngine/include/";"../../Dependencies/Lua/Lua/";"../../Dependencies/LuaBind/LuaBind/";"../../Dependencies/RapidXML/";"../../Dependencies/WTL/";"../../Hades-Common/";</AdditionalIncludeDirectories>
-      <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED /D BOOST_PYTHON_STATIC_LIB %(AdditionalOptions)</AdditionalOptions>
       <DisableSpecificWarnings>4505</DisableSpecificWarnings>
       <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
     </ClCompile>
@@ -773,7 +773,7 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <TreatWarningAsError>true</TreatWarningAsError>
       <AdditionalIncludeDirectories>"../";"../../Dependencies/AsmJit/";"../../Dependencies/BeaEngine/BeaEngine/include/";"../../Dependencies/Lua/Lua/";"../../Dependencies/LuaBind/LuaBind/";"../../Dependencies/RapidXML/";"../../Dependencies/WTL/";"../../Hades-Common/";</AdditionalIncludeDirectories>
-      <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED /D BOOST_PYTHON_STATIC_LIB %(AdditionalOptions)</AdditionalOptions>
       <DisableSpecificWarnings>4505</DisableSpecificWarnings>
       <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -806,7 +806,7 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <TreatWarningAsError>true</TreatWarningAsError>
       <AdditionalIncludeDirectories>"../";"../../Dependencies/AsmJit/";"../../Dependencies/BeaEngine/BeaEngine/include/";"../../Dependencies/Lua/Lua/";"../../Dependencies/LuaBind/LuaBind/";"../../Dependencies/RapidXML/";"../../Dependencies/WTL/";"../../Hades-Common/";</AdditionalIncludeDirectories>
-      <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED /D BOOST_PYTHON_STATIC_LIB %(AdditionalOptions)</AdditionalOptions>
       <DisableSpecificWarnings>4505</DisableSpecificWarnings>
       <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -839,7 +839,7 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <TreatWarningAsError>true</TreatWarningAsError>
       <AdditionalIncludeDirectories>"../";"../../Dependencies/AsmJit/";"../../Dependencies/BeaEngine/BeaEngine/include/";"../../Dependencies/Lua/Lua/";"../../Dependencies/LuaBind/LuaBind/";"../../Dependencies/RapidXML/";"../../Dependencies/WTL/";"../../Hades-Common/";</AdditionalIncludeDirectories>
-      <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED /D BOOST_PYTHON_STATIC_LIB %(AdditionalOptions)</AdditionalOptions>
       <DisableSpecificWarnings>4505</DisableSpecificWarnings>
       <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
     </ClCompile>

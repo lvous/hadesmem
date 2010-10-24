@@ -23,6 +23,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include <Windows.h>
 
 // C++ Standard Library
+#include <limits>
 #include <vector>
 #include <string>
 #include <iterator>
@@ -33,18 +34,16 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #pragma warning(push, 1)
 #pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
 #include <boost/timer.hpp>
+#include <boost/python.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 #pragma warning(pop)
 
 // Hades
 #include "Hades-Memory/Memory.h"
-#include "Hades-Common/Logger.h"
 #include "Hades-Memory/AutoLink.h"
-#include "Hades-MemScript/AutoLink.h"
-#include "Hades-MemScript/Scripting.h"
 
-bool GetInput(Hades::Memory::ScriptMgr& MyScriptMgr) 
+bool GetInput(boost::python::object PythonNamespace) 
 {
   // Prompt for input
   std::cout << ">";
@@ -55,6 +54,13 @@ bool GetInput(Hades::Memory::ScriptMgr& MyScriptMgr)
   {
     std::cout << "Invalid command." << std::endl;
     std::cout << ">";
+
+    // Reset input stream if necessary
+    if (!std::cin)
+    {
+      std::cin.clear();
+      std::cin.ignore((std::numeric_limits<std::streamsize>::max)(), '\n');
+    }
   }
 
   // Check for quit request
@@ -63,8 +69,19 @@ bool GetInput(Hades::Memory::ScriptMgr& MyScriptMgr)
     return false;
   }
 
-  // Run script
-  MyScriptMgr.RunString(Input);
+  try
+  {
+    // Run script
+    boost::python::exec(Input.c_str(), PythonNamespace, PythonNamespace);
+  }
+  catch (...)
+  {
+    // Handle exceptions
+    boost::python::handle_exception();
+
+    // Print error string
+    PyErr_Print();
+  }
 
   return true;
 }
@@ -108,7 +125,7 @@ int _tmain(int argc, TCHAR* argv[])
     // Path to script file (Set by Boost.ProgramOptions)
     std::wstring FilePath;
     // Script string (Set by Boost.ProgramOptions)
-    std::wstring ScriptStr;
+    std::string ScriptStr;
 
     // Set program option descriptions
     boost::program_options::options_description OptsDesc("Allowed options");
@@ -118,7 +135,7 @@ int _tmain(int argc, TCHAR* argv[])
         zero_tokens(), "keep console window open")
       ("file", boost::program_options::wvalue<std::wstring>(&FilePath), 
         "file to execute")
-      ("string", boost::program_options::wvalue<std::wstring>(&ScriptStr), 
+      ("string", boost::program_options::value<std::string>(&ScriptStr), 
         "string to execute")
       ;
 
@@ -146,8 +163,16 @@ int _tmain(int argc, TCHAR* argv[])
       return 1;
     }
 
-    // Create script manager
-    Hades::Memory::ScriptMgr MyScriptMgr;
+    // Initialize Python
+    Py_Initialize();
+
+    std::wcout << "Python " << Py_GetVersion() << std::endl;
+
+    // Retrieve the main module.
+    boost::python::object PythonMain(boost::python::import("__main__"));
+
+    // Retrieve the main module's namespace
+    boost::python::object PythonGlobal(PythonMain.attr("__dict__"));
 
     // If user has passed in a file-name then run it
     if (!FilePath.empty())
@@ -161,13 +186,38 @@ int _tmain(int argc, TCHAR* argv[])
           Hades::ErrorString("Requested file could not be found."));
       }
 
-      // Run script
-      MyScriptMgr.RunFile(FilePathReal.string());
+      try
+      {
+        // Run file
+        boost::python::exec_file(FilePathReal.string().c_str(), PythonGlobal, 
+          PythonGlobal);
+      }
+      catch (...)
+      {
+        // Handle exceptions
+        boost::python::handle_exception();
+
+        // Print error string
+        PyErr_Print();
+      }
+
     }
     // If user has passed in a string then run it
     else if (!ScriptStr.empty())
     {
-      MyScriptMgr.RunString(boost::lexical_cast<std::string>(ScriptStr));
+      try
+      {
+        // Run script
+        boost::python::exec(ScriptStr.c_str(), PythonGlobal, PythonGlobal);
+      }
+      catch (...)
+      {
+        // Handle exceptions
+        boost::python::handle_exception();
+
+        // Print error string
+        PyErr_Print();
+      }
     }
     // Otherwise process commands from user
     else
@@ -176,7 +226,7 @@ int _tmain(int argc, TCHAR* argv[])
       {
         try
         {
-          if (!GetInput(MyScriptMgr))
+          if (!GetInput(PythonGlobal))
           {
             break;
           }
