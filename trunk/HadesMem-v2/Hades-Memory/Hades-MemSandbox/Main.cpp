@@ -177,9 +177,9 @@ int _tmain(int argc, TCHAR* argv[])
 
     // PyHadesMem import statment
 #if defined(_M_X64)
-    std::string const PyHadesMemImp("import PyHadesMem_AMD64");
+    std::string const PyHadesMemImp("import PyHadesMem_AMD64 as PyHadesMem");
 #elif defined(_M_IX86)
-    std::string const PyHadesMemImp("import PyHadesMem_IA32");
+    std::string const PyHadesMemImp("import PyHadesMem_IA32 as PyHadesMem");
 #else
 #error Unsupported platform!
 #endif
