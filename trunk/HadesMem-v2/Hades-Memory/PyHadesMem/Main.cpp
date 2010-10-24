@@ -47,11 +47,10 @@ void HadesErrorTranslator(std::exception const& e)
 // Export MemoryMgr API
 void ExportMemoryMgr()
 {
-  using namespace boost::python;
-  class_<Hades::Memory::MemoryMgr, boost::noncopyable>("MemoryMgr", 
-    init<DWORD>())
-    .def(init<std::basic_string<TCHAR> const&>())
-    .def(init<std::basic_string<TCHAR> const&, 
+  boost::python::class_<Hades::Memory::MemoryMgr, boost::noncopyable>(
+    "MemoryMgr", boost::python::init<DWORD>())
+    .def(boost::python::init<std::basic_string<TCHAR> const&>())
+    .def(boost::python::init<std::basic_string<TCHAR> const&, 
     std::basic_string<TCHAR> const&>())
     ;
 }
@@ -64,8 +63,8 @@ BOOST_PYTHON_MODULE(PyHadesMem_IA32)
 #error "Unsupported architecture."
 #endif
 {
-  using namespace boost::python;
-  register_exception_translator<std::exception>(&HadesErrorTranslator);
+  boost::python::register_exception_translator<std::exception>(
+    &HadesErrorTranslator);
   ExportMemoryMgr();
 }
 
