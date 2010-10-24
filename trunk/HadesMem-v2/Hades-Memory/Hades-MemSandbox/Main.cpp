@@ -166,6 +166,7 @@ int _tmain(int argc, TCHAR* argv[])
     // Initialize Python
     Py_Initialize();
 
+    // Debug output
     std::wcout << "Python " << Py_GetVersion() << std::endl;
 
     // Retrieve the main module.
@@ -173,6 +174,31 @@ int _tmain(int argc, TCHAR* argv[])
 
     // Retrieve the main module's namespace
     boost::python::object PythonGlobal(PythonMain.attr("__dict__"));
+
+    // PyHadesMem import statment
+#if defined(_M_X64)
+    std::string const PyHadesMemImp("import PyHadesMem_AMD64");
+#elif defined(_M_IX86)
+    std::string const PyHadesMemImp("import PyHadesMem_IA32");
+#else
+#error Unsupported platform!
+#endif
+
+    try
+    {
+      // Import PyHadesMem
+      boost::python::exec(PyHadesMemImp.c_str(), PythonGlobal, PythonGlobal);
+    }
+    catch (...)
+    {
+      // Print error string
+      PyErr_Print();
+
+      // Throw exception
+      BOOST_THROW_EXCEPTION(Hades::HadesError() << 
+        Hades::ErrorFunction("_tmain") << 
+        Hades::ErrorString("Failed to load PyHadesMem."));
+    }
 
     // If user has passed in a file-name then run it
     if (!FilePath.empty())
