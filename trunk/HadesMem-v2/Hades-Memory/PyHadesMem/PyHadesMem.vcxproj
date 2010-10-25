@@ -379,7 +379,7 @@
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;PYHADESMEM_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>"../";"../../Dependencies/AsmJit/";"../../Dependencies/BeaEngine/BeaEngine/include/";"../../Dependencies/Lua/Lua/";"../../Dependencies/LuaBind/LuaBind/";"../../Dependencies/RapidXML/";"../../Dependencies/WTL/";"../../Hades-Common/";</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../;../../Dependencies/AsmJit/;../../Dependencies/BeaEngine/BeaEngine/include/;../../Dependencies/RapidXML/;../../Dependencies/WTL/;../../Hades-Common/</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
       <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
@@ -407,7 +407,7 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;PYHADESMEM_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>"../";"../../Dependencies/AsmJit/";"../../Dependencies/BeaEngine/BeaEngine/include/";"../../Dependencies/Lua/Lua/";"../../Dependencies/LuaBind/LuaBind/";"../../Dependencies/RapidXML/";"../../Dependencies/WTL/";"../../Hades-Common/";</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../;../../Dependencies/AsmJit/;../../Dependencies/BeaEngine/BeaEngine/include/;../../Dependencies/RapidXML/;../../Dependencies/WTL/;../../Hades-Common/</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
       <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
@@ -436,7 +436,7 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;PYHADESMEM_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>"../";"../../Dependencies/AsmJit/";"../../Dependencies/BeaEngine/BeaEngine/include/";"../../Dependencies/Lua/Lua/";"../../Dependencies/LuaBind/LuaBind/";"../../Dependencies/RapidXML/";"../../Dependencies/WTL/";"../../Hades-Common/";</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../;../../Dependencies/AsmJit/;../../Dependencies/BeaEngine/BeaEngine/include/;../../Dependencies/RapidXML/;../../Dependencies/WTL/;../../Hades-Common/</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
       <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
@@ -465,7 +465,7 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;PYHADESMEM_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>"../";"../../Dependencies/AsmJit/";"../../Dependencies/BeaEngine/BeaEngine/include/";"../../Dependencies/Lua/Lua/";"../../Dependencies/LuaBind/LuaBind/";"../../Dependencies/RapidXML/";"../../Dependencies/WTL/";"../../Hades-Common/";</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../;../../Dependencies/AsmJit/;../../Dependencies/BeaEngine/BeaEngine/include/;../../Dependencies/RapidXML/;../../Dependencies/WTL/;../../Hades-Common/</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
       <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
@@ -493,7 +493,7 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;PYHADESMEM_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>"../";"../../Dependencies/AsmJit/";"../../Dependencies/BeaEngine/BeaEngine/include/";"../../Dependencies/Lua/Lua/";"../../Dependencies/LuaBind/LuaBind/";"../../Dependencies/RapidXML/";"../../Dependencies/WTL/";"../../Hades-Common/";</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../;../../Dependencies/AsmJit/;../../Dependencies/BeaEngine/BeaEngine/include/;../../Dependencies/RapidXML/;../../Dependencies/WTL/;../../Hades-Common/</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
       <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
@@ -520,7 +520,7 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;PYHADESMEM_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>"../";"../../Dependencies/AsmJit/";"../../Dependencies/BeaEngine/BeaEngine/include/";"../../Dependencies/Lua/Lua/";"../../Dependencies/LuaBind/LuaBind/";"../../Dependencies/RapidXML/";"../../Dependencies/WTL/";"../../Hades-Common/";</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../;../../Dependencies/AsmJit/;../../Dependencies/BeaEngine/BeaEngine/include/;../../Dependencies/RapidXML/;../../Dependencies/WTL/;../../Hades-Common/</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
       <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
@@ -548,7 +548,7 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;PYHADESMEM_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>"../";"../../Dependencies/AsmJit/";"../../Dependencies/BeaEngine/BeaEngine/include/";"../../Dependencies/Lua/Lua/";"../../Dependencies/LuaBind/LuaBind/";"../../Dependencies/RapidXML/";"../../Dependencies/WTL/";"../../Hades-Common/";</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../;../../Dependencies/AsmJit/;../../Dependencies/BeaEngine/BeaEngine/include/;../../Dependencies/RapidXML/;../../Dependencies/WTL/;../../Hades-Common/</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
       <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
@@ -576,7 +576,7 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;PYHADESMEM_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>"../";"../../Dependencies/AsmJit/";"../../Dependencies/BeaEngine/BeaEngine/include/";"../../Dependencies/Lua/Lua/";"../../Dependencies/LuaBind/LuaBind/";"../../Dependencies/RapidXML/";"../../Dependencies/WTL/";"../../Hades-Common/";</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../;../../Dependencies/AsmJit/;../../Dependencies/BeaEngine/BeaEngine/include/;../../Dependencies/RapidXML/;../../Dependencies/WTL/;../../Hades-Common/</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
       <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
@@ -605,7 +605,7 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;PYHADESMEM_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>"../";"../../Dependencies/AsmJit/";"../../Dependencies/BeaEngine/BeaEngine/include/";"../../Dependencies/Lua/Lua/";"../../Dependencies/LuaBind/LuaBind/";"../../Dependencies/RapidXML/";"../../Dependencies/WTL/";"../../Hades-Common/";</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../;../../Dependencies/AsmJit/;../../Dependencies/BeaEngine/BeaEngine/include/;../../Dependencies/RapidXML/;../../Dependencies/WTL/;../../Hades-Common/</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
       <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
@@ -637,7 +637,7 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;PYHADESMEM_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>"../";"../../Dependencies/AsmJit/";"../../Dependencies/BeaEngine/BeaEngine/include/";"../../Dependencies/Lua/Lua/";"../../Dependencies/LuaBind/LuaBind/";"../../Dependencies/RapidXML/";"../../Dependencies/WTL/";"../../Hades-Common/";</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../;../../Dependencies/AsmJit/;../../Dependencies/BeaEngine/BeaEngine/include/;../../Dependencies/RapidXML/;../../Dependencies/WTL/;../../Hades-Common/</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
       <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
@@ -670,7 +670,7 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;PYHADESMEM_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>"../";"../../Dependencies/AsmJit/";"../../Dependencies/BeaEngine/BeaEngine/include/";"../../Dependencies/Lua/Lua/";"../../Dependencies/LuaBind/LuaBind/";"../../Dependencies/RapidXML/";"../../Dependencies/WTL/";"../../Hades-Common/";</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../;../../Dependencies/AsmJit/;../../Dependencies/BeaEngine/BeaEngine/include/;../../Dependencies/RapidXML/;../../Dependencies/WTL/;../../Hades-Common/</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
       <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
@@ -703,7 +703,7 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;PYHADESMEM_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>"../";"../../Dependencies/AsmJit/";"../../Dependencies/BeaEngine/BeaEngine/include/";"../../Dependencies/Lua/Lua/";"../../Dependencies/LuaBind/LuaBind/";"../../Dependencies/RapidXML/";"../../Dependencies/WTL/";"../../Hades-Common/";</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../;../../Dependencies/AsmJit/;../../Dependencies/BeaEngine/BeaEngine/include/;../../Dependencies/RapidXML/;../../Dependencies/WTL/;../../Hades-Common/</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
       <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
@@ -735,7 +735,7 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;PYHADESMEM_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>"../";"../../Dependencies/AsmJit/";"../../Dependencies/BeaEngine/BeaEngine/include/";"../../Dependencies/Lua/Lua/";"../../Dependencies/LuaBind/LuaBind/";"../../Dependencies/RapidXML/";"../../Dependencies/WTL/";"../../Hades-Common/";</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../;../../Dependencies/AsmJit/;../../Dependencies/BeaEngine/BeaEngine/include/;../../Dependencies/RapidXML/;../../Dependencies/WTL/;../../Hades-Common/</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
       <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
@@ -766,7 +766,7 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;PYHADESMEM_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>"../";"../../Dependencies/AsmJit/";"../../Dependencies/BeaEngine/BeaEngine/include/";"../../Dependencies/Lua/Lua/";"../../Dependencies/LuaBind/LuaBind/";"../../Dependencies/RapidXML/";"../../Dependencies/WTL/";"../../Hades-Common/";</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../;../../Dependencies/AsmJit/;../../Dependencies/BeaEngine/BeaEngine/include/;../../Dependencies/RapidXML/;../../Dependencies/WTL/;../../Hades-Common/</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
       <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
@@ -798,7 +798,7 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;PYHADESMEM_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>"../";"../../Dependencies/AsmJit/";"../../Dependencies/BeaEngine/BeaEngine/include/";"../../Dependencies/Lua/Lua/";"../../Dependencies/LuaBind/LuaBind/";"../../Dependencies/RapidXML/";"../../Dependencies/WTL/";"../../Hades-Common/";</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../;../../Dependencies/AsmJit/;../../Dependencies/BeaEngine/BeaEngine/include/;../../Dependencies/RapidXML/;../../Dependencies/WTL/;../../Hades-Common/</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
       <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
@@ -830,7 +830,7 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;PYHADESMEM_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>"../";"../../Dependencies/AsmJit/";"../../Dependencies/BeaEngine/BeaEngine/include/";"../../Dependencies/Lua/Lua/";"../../Dependencies/LuaBind/LuaBind/";"../../Dependencies/RapidXML/";"../../Dependencies/WTL/";"../../Hades-Common/";</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../;../../Dependencies/AsmJit/;../../Dependencies/BeaEngine/BeaEngine/include/;../../Dependencies/RapidXML/;../../Dependencies/WTL/;../../Hades-Common/</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
       <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
