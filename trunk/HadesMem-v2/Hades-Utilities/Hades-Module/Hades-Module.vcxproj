@@ -67,9 +67,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{81CED3BF-CE82-433D-9937-76504BDCA0A5}</ProjectGuid>
+    <ProjectGuid>{614435B3-BC1A-4C47-AA58-E0BAA8E1BF52}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>HadesFindPattern</RootNamespace>
+    <RootNamespace>HadesModule</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -136,19 +136,19 @@
     <PlatformToolset>Windows7.1SDK</PlatformToolset>
     <UseOfAtl>Dynamic</UseOfAtl>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_Static|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <UseDebugLibraries>false</UseDebugLibraries>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>Windows7.1SDK</PlatformToolset>
-    <UseOfAtl>Dynamic</UseOfAtl>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_MBCS_Static|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>Windows7.1SDK</PlatformToolset>
+    <UseOfAtl>Dynamic</UseOfAtl>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_Static|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>Windows7.1SDK</PlatformToolset>
     <UseOfAtl>Dynamic</UseOfAtl>
   </PropertyGroup>
@@ -168,19 +168,19 @@
     <PlatformToolset>Windows7.1SDK</PlatformToolset>
     <UseOfAtl>Dynamic</UseOfAtl>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_Static|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <UseDebugLibraries>false</UseDebugLibraries>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>Windows7.1SDK</PlatformToolset>
-    <UseOfAtl>Dynamic</UseOfAtl>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_MBCS_Static|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>Windows7.1SDK</PlatformToolset>
+    <UseOfAtl>Dynamic</UseOfAtl>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_Static|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>Windows7.1SDK</PlatformToolset>
     <UseOfAtl>Dynamic</UseOfAtl>
   </PropertyGroup>
@@ -222,10 +222,10 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_Static|Win32'" Label="PropertySheets">
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_MBCS_Static|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_MBCS_Static|Win32'" Label="PropertySheets">
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_Static|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_MBCS|Win32'" Label="PropertySheets">
@@ -234,10 +234,10 @@
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_Static|x64'" Label="PropertySheets">
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_MBCS_Static|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_MBCS_Static|x64'" Label="PropertySheets">
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_Static|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_MBCS|x64'" Label="PropertySheets">
@@ -246,35 +246,35 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
     <OutDir>$(SolutionDir)Binaries\$(Configuration)-$(Platform)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
     <TargetName>$(ProjectName)_IA32</TargetName>
-    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
-    <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_Static|Win32'">
     <LinkIncremental>true</LinkIncremental>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
     <OutDir>$(SolutionDir)Binaries\$(Configuration)-$(Platform)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
     <TargetName>$(ProjectName)_IA32</TargetName>
-    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
-    <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_MBCS_Static|Win32'">
     <LinkIncremental>true</LinkIncremental>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
     <OutDir>$(SolutionDir)Binaries\$(Configuration)-$(Platform)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
     <TargetName>$(ProjectName)_IA32</TargetName>
-    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
-    <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_MBCS|Win32'">
     <LinkIncremental>true</LinkIncremental>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
     <OutDir>$(SolutionDir)Binaries\$(Configuration)-$(Platform)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
     <TargetName>$(ProjectName)_IA32</TargetName>
-    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
-    <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
@@ -302,35 +302,35 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
     <OutDir>$(SolutionDir)Binaries\$(Configuration)-$(Platform)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
     <TargetName>$(ProjectName)_IA32</TargetName>
-    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
-    <RunCodeAnalysis>true</RunCodeAnalysis>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_Static|Win32'">
-    <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(SolutionDir)Binaries\$(Configuration)-$(Platform)\</OutDir>
-    <IntDir>$(Platform)\$(Configuration)\</IntDir>
-    <TargetName>$(ProjectName)_IA32</TargetName>
-    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
-    <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_MBCS_Static|Win32'">
     <LinkIncremental>false</LinkIncremental>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
     <OutDir>$(SolutionDir)Binaries\$(Configuration)-$(Platform)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
     <TargetName>$(ProjectName)_IA32</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_Static|Win32'">
+    <LinkIncremental>false</LinkIncremental>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <RunCodeAnalysis>true</RunCodeAnalysis>
+    <OutDir>$(SolutionDir)Binaries\$(Configuration)-$(Platform)\</OutDir>
+    <IntDir>$(Platform)\$(Configuration)\</IntDir>
+    <TargetName>$(ProjectName)_IA32</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_MBCS|Win32'">
     <LinkIncremental>false</LinkIncremental>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
     <OutDir>$(SolutionDir)Binaries\$(Configuration)-$(Platform)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
     <TargetName>$(ProjectName)_IA32</TargetName>
-    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
-    <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -338,13 +338,13 @@
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
     <TargetName>$(ProjectName)_AMD64</TargetName>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_Static|x64'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_MBCS_Static|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)Binaries\$(Configuration)-$(Platform)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
     <TargetName>$(ProjectName)_AMD64</TargetName>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_MBCS_Static|x64'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_Static|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)Binaries\$(Configuration)-$(Platform)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
@@ -362,13 +362,13 @@
       </PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>../;../../Dependencies/AsmJit/;../../Dependencies/BeaEngine/BeaEngine/include/;../../Dependencies/RapidXML/;../../Dependencies/WTL/;../../Hades-Common/;../../Hades-Memory/</AdditionalIncludeDirectories>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <TreatWarningAsError>true</TreatWarningAsError>
-      <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
-      <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <EnablePREfast>true</EnablePREfast>
+      <AdditionalIncludeDirectories>../;../../Dependencies/AsmJit/;../../Dependencies/BeaEngine/BeaEngine/include/;../../Dependencies/RapidXML/;../../Dependencies/WTL/;../../Hades-Common/;../../Hades-Memory/</AdditionalIncludeDirectories>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
+      <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -390,13 +390,13 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
       </PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>../;../../Dependencies/AsmJit/;../../Dependencies/BeaEngine/BeaEngine/include/;../../Dependencies/RapidXML/;../../Dependencies/WTL/;../../Hades-Common/;../../Hades-Memory/</AdditionalIncludeDirectories>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <TreatWarningAsError>true</TreatWarningAsError>
-      <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
-      <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <EnablePREfast>true</EnablePREfast>
+      <AdditionalIncludeDirectories>../;../../Dependencies/AsmJit/;../../Dependencies/BeaEngine/BeaEngine/include/;../../Dependencies/RapidXML/;../../Dependencies/WTL/;../../Hades-Common/;../../Hades-Memory/</AdditionalIncludeDirectories>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
+      <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -419,13 +419,13 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
       </PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>../;../../Dependencies/AsmJit/;../../Dependencies/BeaEngine/BeaEngine/include/;../../Dependencies/RapidXML/;../../Dependencies/WTL/;../../Hades-Common/;../../Hades-Memory/</AdditionalIncludeDirectories>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <TreatWarningAsError>true</TreatWarningAsError>
-      <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
-      <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <EnablePREfast>true</EnablePREfast>
+      <AdditionalIncludeDirectories>../;../../Dependencies/AsmJit/;../../Dependencies/BeaEngine/BeaEngine/include/;../../Dependencies/RapidXML/;../../Dependencies/WTL/;../../Hades-Common/;../../Hades-Memory/</AdditionalIncludeDirectories>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
+      <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -448,13 +448,13 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
       </PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>../;../../Dependencies/AsmJit/;../../Dependencies/BeaEngine/BeaEngine/include/;../../Dependencies/RapidXML/;../../Dependencies/WTL/;../../Hades-Common/;../../Hades-Memory/</AdditionalIncludeDirectories>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <TreatWarningAsError>true</TreatWarningAsError>
-      <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
-      <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <EnablePREfast>true</EnablePREfast>
+      <AdditionalIncludeDirectories>../;../../Dependencies/AsmJit/;../../Dependencies/BeaEngine/BeaEngine/include/;../../Dependencies/RapidXML/;../../Dependencies/WTL/;../../Hades-Common/;../../Hades-Memory/</AdditionalIncludeDirectories>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
+      <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -476,12 +476,12 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
       </PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>../;../../Dependencies/AsmJit/;../../Dependencies/BeaEngine/BeaEngine/include/;../../Dependencies/RapidXML/;../../Dependencies/WTL/;../../Hades-Common/;../../Hades-Memory/</AdditionalIncludeDirectories>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
+      <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -503,12 +503,12 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
       </PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>../;../../Dependencies/AsmJit/;../../Dependencies/BeaEngine/BeaEngine/include/;../../Dependencies/RapidXML/;../../Dependencies/WTL/;../../Hades-Common/;../../Hades-Memory/</AdditionalIncludeDirectories>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
+      <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -531,12 +531,12 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
       </PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>../;../../Dependencies/AsmJit/;../../Dependencies/BeaEngine/BeaEngine/include/;../../Dependencies/RapidXML/;../../Dependencies/WTL/;../../Hades-Common/;../../Hades-Memory/</AdditionalIncludeDirectories>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
+      <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -559,12 +559,12 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
       </PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>../;../../Dependencies/AsmJit/;../../Dependencies/BeaEngine/BeaEngine/include/;../../Dependencies/RapidXML/;../../Dependencies/WTL/;../../Hades-Common/;../../Hades-Memory/</AdditionalIncludeDirectories>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
+      <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -588,46 +588,13 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>../;../../Dependencies/AsmJit/;../../Dependencies/BeaEngine/BeaEngine/include/;../../Dependencies/RapidXML/;../../Dependencies/WTL/;../../Hades-Common/;../../Hades-Memory/</AdditionalIncludeDirectories>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <TreatWarningAsError>true</TreatWarningAsError>
-      <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
-      <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <EnablePREfast>true</EnablePREfast>
-    </ClCompile>
-    <Link>
-      <SubSystem>Console</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(SolutionDir)Binaries\$(Configuration)-$(Platform)\;$(SolutionDir)..\Dependencies\AsmJit\Binaries\$(Configuration)-$(Platform)\;$(SolutionDir)..\Dependencies\BeaEngine\Binaries\$(Configuration)-$(Platform)\;$(SolutionDir)..\Dependencies\Lua\Binaries\$(Configuration)-$(Platform)\;$(SolutionDir)..\Dependencies\LuaBind\Binaries\$(Configuration)-$(Platform)\;$(SolutionDir)..\Hades-Memory\Binaries\$(Configuration)-$(Platform)\</AdditionalLibraryDirectories>
-    </Link>
-    <ProjectReference>
-      <LinkLibraryDependencies>false</LinkLibraryDependencies>
-    </ProjectReference>
-    <PostBuildEvent>
-      <Command>xcopy "$(TargetPath)" "$(SolutionDir)Binaries\Full-$(Configuration)\" /y
-xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
-</Command>
-    </PostBuildEvent>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_Static|Win32'">
-    <ClCompile>
-      <WarningLevel>Level4</WarningLevel>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
-      <Optimization>MaxSpeed</Optimization>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>../;../../Dependencies/AsmJit/;../../Dependencies/BeaEngine/BeaEngine/include/;../../Dependencies/RapidXML/;../../Dependencies/WTL/;../../Hades-Common/;../../Hades-Memory/</AdditionalIncludeDirectories>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
-      <EnablePREfast>true</EnablePREfast>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -653,13 +620,46 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>../;../../Dependencies/AsmJit/;../../Dependencies/BeaEngine/BeaEngine/include/;../../Dependencies/RapidXML/;../../Dependencies/WTL/;../../Hades-Common/;../../Hades-Memory/</AdditionalIncludeDirectories>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <TreatWarningAsError>true</TreatWarningAsError>
-      <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
-      <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <EnablePREfast>true</EnablePREfast>
+      <AdditionalIncludeDirectories>../;../../Dependencies/AsmJit/;../../Dependencies/BeaEngine/BeaEngine/include/;../../Dependencies/RapidXML/;../../Dependencies/WTL/;../../Hades-Common/;../../Hades-Memory/</AdditionalIncludeDirectories>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
+      <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>$(SolutionDir)Binaries\$(Configuration)-$(Platform)\;$(SolutionDir)..\Dependencies\AsmJit\Binaries\$(Configuration)-$(Platform)\;$(SolutionDir)..\Dependencies\BeaEngine\Binaries\$(Configuration)-$(Platform)\;$(SolutionDir)..\Dependencies\Lua\Binaries\$(Configuration)-$(Platform)\;$(SolutionDir)..\Dependencies\LuaBind\Binaries\$(Configuration)-$(Platform)\;$(SolutionDir)..\Hades-Memory\Binaries\$(Configuration)-$(Platform)\</AdditionalLibraryDirectories>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+    <PostBuildEvent>
+      <Command>xcopy "$(TargetPath)" "$(SolutionDir)Binaries\Full-$(Configuration)\" /y
+xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
+</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_Static|Win32'">
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <EnablePREfast>true</EnablePREfast>
+      <AdditionalIncludeDirectories>../;../../Dependencies/AsmJit/;../../Dependencies/BeaEngine/BeaEngine/include/;../../Dependencies/RapidXML/;../../Dependencies/WTL/;../../Hades-Common/;../../Hades-Memory/</AdditionalIncludeDirectories>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
+      <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -686,13 +686,13 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>../;../../Dependencies/AsmJit/;../../Dependencies/BeaEngine/BeaEngine/include/;../../Dependencies/RapidXML/;../../Dependencies/WTL/;../../Hades-Common/;../../Hades-Memory/</AdditionalIncludeDirectories>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <TreatWarningAsError>true</TreatWarningAsError>
-      <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
-      <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <EnablePREfast>true</EnablePREfast>
+      <AdditionalIncludeDirectories>../;../../Dependencies/AsmJit/;../../Dependencies/BeaEngine/BeaEngine/include/;../../Dependencies/RapidXML/;../../Dependencies/WTL/;../../Hades-Common/;../../Hades-Memory/</AdditionalIncludeDirectories>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
+      <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -718,44 +718,12 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>../;../../Dependencies/AsmJit/;../../Dependencies/BeaEngine/BeaEngine/include/;../../Dependencies/RapidXML/;../../Dependencies/WTL/;../../Hades-Common/;../../Hades-Memory/</AdditionalIncludeDirectories>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
-      <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
-    </ClCompile>
-    <Link>
-      <SubSystem>Console</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(SolutionDir)Binaries\$(Configuration)-$(Platform)\;$(SolutionDir)..\Dependencies\AsmJit\Binaries\$(Configuration)-$(Platform)\;$(SolutionDir)..\Dependencies\BeaEngine\Binaries\$(Configuration)-$(Platform)\;$(SolutionDir)..\Dependencies\Lua\Binaries\$(Configuration)-$(Platform)\;$(SolutionDir)..\Dependencies\LuaBind\Binaries\$(Configuration)-$(Platform)\;$(SolutionDir)..\Hades-Memory\Binaries\$(Configuration)-$(Platform)\</AdditionalLibraryDirectories>
-    </Link>
-    <ProjectReference>
-      <LinkLibraryDependencies>false</LinkLibraryDependencies>
-    </ProjectReference>
-    <PostBuildEvent>
-      <Command>xcopy "$(TargetPath)" "$(SolutionDir)Binaries\Full-$(Configuration)\" /y
-xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
-</Command>
-    </PostBuildEvent>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_Static|x64'">
-    <ClCompile>
-      <WarningLevel>Level4</WarningLevel>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
-      <Optimization>MaxSpeed</Optimization>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>../;../../Dependencies/AsmJit/;../../Dependencies/BeaEngine/BeaEngine/include/;../../Dependencies/RapidXML/;../../Dependencies/WTL/;../../Hades-Common/;../../Hades-Memory/</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <TreatWarningAsError>true</TreatWarningAsError>
-      <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
       <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -781,12 +749,44 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>../;../../Dependencies/AsmJit/;../../Dependencies/BeaEngine/BeaEngine/include/;../../Dependencies/RapidXML/;../../Dependencies/WTL/;../../Hades-Common/;../../Hades-Memory/</AdditionalIncludeDirectories>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
+      <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>$(SolutionDir)Binaries\$(Configuration)-$(Platform)\;$(SolutionDir)..\Dependencies\AsmJit\Binaries\$(Configuration)-$(Platform)\;$(SolutionDir)..\Dependencies\BeaEngine\Binaries\$(Configuration)-$(Platform)\;$(SolutionDir)..\Dependencies\Lua\Binaries\$(Configuration)-$(Platform)\;$(SolutionDir)..\Dependencies\LuaBind\Binaries\$(Configuration)-$(Platform)\;$(SolutionDir)..\Hades-Memory\Binaries\$(Configuration)-$(Platform)\</AdditionalLibraryDirectories>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+    <PostBuildEvent>
+      <Command>xcopy "$(TargetPath)" "$(SolutionDir)Binaries\Full-$(Configuration)\" /y
+xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
+</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_Static|x64'">
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>../;../../Dependencies/AsmJit/;../../Dependencies/BeaEngine/BeaEngine/include/;../../Dependencies/RapidXML/;../../Dependencies/WTL/;../../Hades-Common/;../../Hades-Memory/</AdditionalIncludeDirectories>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
+      <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -813,12 +813,12 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>../;../../Dependencies/AsmJit/;../../Dependencies/BeaEngine/BeaEngine/include/;../../Dependencies/RapidXML/;../../Dependencies/WTL/;../../Hades-Common/;../../Hades-Memory/</AdditionalIncludeDirectories>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <AdditionalOptions>/D _WIN32_WINNT=_WIN32_WINNT_WS03 /D WINVER=_WIN32_WINNT_WS03 /D STRICT /D _SCL_SECURE_NO_WARNINGS /D BOOST_FILESYSTEM_VERSION=3 /D BOOST_FILESYSTEM_NO_DEPRECATED %(AdditionalOptions)</AdditionalOptions>
+      <ForcedIncludeFiles>"codeanalysis\warnings.h"</ForcedIncludeFiles>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
