@@ -77,13 +77,25 @@ int _tmain(int argc, TCHAR* argv[])
 
     // Auto-close flag (Set by Boost.ProgramOptions)
     bool KeepOpen = false;
+    // Target address (Set by Boost.ProgramOptions)
+    std::wstring AddressStr;
+    // Number of instructions (Set by Boost.ProgramOptions)
+    DWORD_PTR NumInstructions = 0;
+    // Target process ID (Set by Boost.ProgramOptions)
+    DWORD ProcID = 0;
 
     // Set program option descriptions
     boost::program_options::options_description OptsDesc("Allowed options");
     OptsDesc.add_options()
       ("help", "display help")
       ("keep-open", boost::program_options::wvalue<bool>(&KeepOpen)->
-      zero_tokens(), "keep console window open")
+        zero_tokens(), "keep console window open")
+      ("address", boost::program_options::wvalue<std::wstring>(
+        &AddressStr), "target address")
+      ("instructions", boost::program_options::wvalue<DWORD_PTR>(
+        &NumInstructions), "number of instructions")
+      ("process-id", boost::program_options::wvalue<DWORD>(&ProcID), 
+        "target process id")
       ;
 
     // Parse program options
@@ -109,6 +121,52 @@ int _tmain(int argc, TCHAR* argv[])
       // Quit
       return 1;
     }
+
+    // Sanity check
+    if (!ProcID)
+    {
+      BOOST_THROW_EXCEPTION(Hades::HadesError() << 
+        Hades::ErrorFunction("_tmain") << 
+        Hades::ErrorString("No process ID specified."));
+    }
+    
+    // Get address as integer
+    DWORD_PTR Address = 0;
+    std::wstringstream AddressConverter;
+    AddressConverter << std::hex << AddressStr;
+    AddressConverter >> Address;
+
+    // Sanity check
+    if (!Address)
+    {
+      BOOST_THROW_EXCEPTION(Hades::HadesError() << 
+        Hades::ErrorFunction("_tmain") << 
+        Hades::ErrorString("No instruction count specified."));
+    }
+
+    // Sanity check
+    if (!NumInstructions)
+    {
+      BOOST_THROW_EXCEPTION(Hades::HadesError() << 
+        Hades::ErrorFunction("_tmain") << 
+        Hades::ErrorString("No instruction count specified."));
+    }
+
+    // Create memory manager
+    Hades::Memory::MemoryMgr MyMemory(ProcID);
+
+    // Create disassembler and disassemble target
+    Hades::Memory::Disassembler MyDisassembler(MyMemory);
+    std::vector<Hades::Memory::DisasmData> MyDisasmData (MyDisassembler.
+      Disassemble(reinterpret_cast<PVOID>(Address), NumInstructions));
+
+    // Dump disassembled instructions
+    std::for_each(MyDisasmData.cbegin(), MyDisasmData.cend(), 
+      [] (Hades::Memory::DisasmData const& Current)
+    {
+      std::wcout << reinterpret_cast<PVOID>(Current.Disasm.VirtualAddr) << " " 
+        << Current.Disasm.CompleteInstr << std::endl;
+    });
 
     // Print elapsed time
     std::wcout << "\nElapsed Time: " << ProgTimer.elapsed() << "." << 
