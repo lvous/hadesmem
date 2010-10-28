@@ -94,7 +94,7 @@ namespace Hades
         CurData.Disasm = MyDisasm;
         CurData.Len = Len;
         CurData.Raw = m_pMemory->Read<std::vector<BYTE>>(
-          reinterpret_cast<PVOID>(MyDisasm.EIP), Len);
+          reinterpret_cast<PVOID>(MyDisasm.VirtualAddr), Len);
 
         // Add current instruction to list
         Results.push_back(CurData);
