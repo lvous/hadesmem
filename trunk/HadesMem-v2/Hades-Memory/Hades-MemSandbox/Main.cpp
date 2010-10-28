@@ -43,7 +43,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include "Hades-Memory/Memory.h"
 #include "Hades-Memory/AutoLink.h"
 
-bool GetInput(boost::python::object PythonNamespace) 
+bool GetInput(boost::python::object const& PythonNamespace) 
 {
   // Prompt for input
   std::cout << ">";
