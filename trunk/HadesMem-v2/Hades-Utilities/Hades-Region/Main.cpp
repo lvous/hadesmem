@@ -62,9 +62,9 @@ int _tmain(int argc, TCHAR* argv[])
 
     // Version and copyright output
 #if defined(_M_X64)
-    std::wcout << "Hades-Region AMD64 [Version " << VerNum << "]\n";
+    std::wcout << "Hades-Module AMD64 [Version " << VerNum << "]\n";
 #elif defined(_M_IX86)
-    std::wcout << "Hades-Region IA32 [Version " << VerNum << "]\n";
+    std::wcout << "Hades-Module IA32 [Version " << VerNum << "]\n";
 #else
 #error Unsupported platform!
 #endif
@@ -77,6 +77,8 @@ int _tmain(int argc, TCHAR* argv[])
 
     // Auto-close flag (Set by Boost.ProgramOptions)
     bool KeepOpen = false;
+    // Target process ID (Set by Boost.ProgramOptions)
+    DWORD ProcID = 0;
 
     // Set program option descriptions
     boost::program_options::options_description OptsDesc("Allowed options");
@@ -84,6 +86,8 @@ int _tmain(int argc, TCHAR* argv[])
       ("help", "display help")
       ("keep-open", boost::program_options::wvalue<bool>(&KeepOpen)->
       zero_tokens(), "keep console window open")
+      ("process-id", boost::program_options::wvalue<DWORD>(&ProcID), 
+      "target process id")
       ;
 
     // Parse program options
@@ -108,6 +112,36 @@ int _tmain(int argc, TCHAR* argv[])
 
       // Quit
       return 1;
+    }
+
+    // Sanity check
+    if (!ProcID)
+    {
+      BOOST_THROW_EXCEPTION(Hades::HadesError() << 
+        Hades::ErrorFunction("_tmain") << 
+        Hades::ErrorString("No process ID specified."));
+    }
+
+    // Create memory manager
+    Hades::Memory::MemoryMgr MyMemory(ProcID);
+
+    // Dump region list
+    Hades::Memory::RegionEnum MyRegionEnum(MyMemory);
+    for (Hades::Memory::RegionEnum::RegionListIter i(MyRegionEnum); *i; ++i)
+    {
+      Hades::Memory::Region const& MyRegion = **i;
+
+      std::wcout << "Base: " << MyRegion.GetBase();
+      std::wcout << "\nAllocation Base: " << MyRegion.GetAllocBase();
+      std::wcout << "\nAllocation Protect: " << std::hex << MyRegion.
+        GetAllocProtect() << std::dec;
+      std::wcout << "\nSize: " << reinterpret_cast<PVOID>(MyRegion.GetSize());
+      std::wcout << "\nState: " << std::hex << MyRegion.GetState() << std::dec;
+      std::wcout << "\nProtect: " << std::hex << MyRegion.GetProtect() << 
+        std::dec;
+      std::wcout << "\nType: " << std::hex << MyRegion.GetType() << std::dec;
+
+      std::wcout << "\n\n";
     }
 
     // Print elapsed time
