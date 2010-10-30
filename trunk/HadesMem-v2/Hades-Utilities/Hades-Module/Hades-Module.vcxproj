@@ -380,7 +380,7 @@
     </ProjectReference>
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)Binaries\Full-$(Configuration)\" /y
-xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
+xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\Utilities\" /y
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -409,7 +409,7 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
     </ProjectReference>
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)Binaries\Full-$(Configuration)\" /y
-xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
+xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\Utilities\" /y
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -438,7 +438,7 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
     </ProjectReference>
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)Binaries\Full-$(Configuration)\" /y
-xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
+xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\Utilities\" /y
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -466,7 +466,7 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
     </ProjectReference>
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)Binaries\Full-$(Configuration)\" /y
-xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
+xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\Utilities\" /y
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -493,7 +493,7 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
     </ProjectReference>
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)Binaries\Full-$(Configuration)\" /y
-xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
+xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\Utilities\" /y
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -521,7 +521,7 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
     </ProjectReference>
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)Binaries\Full-$(Configuration)\" /y
-xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
+xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\Utilities\" /y
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -549,7 +549,7 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
     </ProjectReference>
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)Binaries\Full-$(Configuration)\" /y
-xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
+xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\Utilities\" /y
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -576,7 +576,7 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
     </ProjectReference>
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)Binaries\Full-$(Configuration)\" /y
-xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
+xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\Utilities\" /y
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -608,7 +608,7 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
     </ProjectReference>
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)Binaries\Full-$(Configuration)\" /y
-xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
+xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\Utilities\" /y
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -641,7 +641,7 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
     </ProjectReference>
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)Binaries\Full-$(Configuration)\" /y
-xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
+xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\Utilities\" /y
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -674,7 +674,7 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
     </ProjectReference>
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)Binaries\Full-$(Configuration)\" /y
-xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
+xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\Utilities\" /y
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -706,7 +706,7 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
     </ProjectReference>
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)Binaries\Full-$(Configuration)\" /y
-xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
+xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\Utilities\" /y
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -737,7 +737,7 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
     </ProjectReference>
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)Binaries\Full-$(Configuration)\" /y
-xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
+xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\Utilities\" /y
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -769,7 +769,7 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
     </ProjectReference>
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)Binaries\Full-$(Configuration)\" /y
-xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
+xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\Utilities\" /y
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -801,7 +801,7 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
     </ProjectReference>
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)Binaries\Full-$(Configuration)\" /y
-xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
+xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\Utilities\" /y
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -832,7 +832,7 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
     </ProjectReference>
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)Binaries\Full-$(Configuration)\" /y
-xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
+xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\Utilities\" /y
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
