@@ -289,9 +289,9 @@ namespace Hades
     bool MemoryMgr::CanRead(PVOID Address) const
     {
       // Query page protections
-      MEMORY_BASIC_INFORMATION MyMemInfo = { 0 };
-      if (!VirtualQueryEx(m_Process.GetHandle(), Address, &MyMemInfo, 
-        sizeof(MyMemInfo)))
+      MEMORY_BASIC_INFORMATION MyMbi = { 0 };
+      if (!VirtualQueryEx(m_Process.GetHandle(), Address, &MyMbi, 
+        sizeof(MyMbi)))
       {
         DWORD const LastError = GetLastError();
         BOOST_THROW_EXCEPTION(Error() << 
@@ -301,21 +301,22 @@ namespace Hades
       }
 
       // Whether memory is currently readable
-      return MyMemInfo.Protect == PAGE_EXECUTE_READ || 
-        MyMemInfo.Protect == PAGE_EXECUTE_READWRITE || 
-        MyMemInfo.Protect == PAGE_EXECUTE_WRITECOPY || 
-        MyMemInfo.Protect == PAGE_READONLY || 
-        MyMemInfo.Protect == PAGE_READWRITE || 
-        MyMemInfo.Protect == PAGE_WRITECOPY;
+      return 
+        (MyMbi.Protect & PAGE_EXECUTE_READ) == PAGE_EXECUTE_READ || 
+        (MyMbi.Protect & PAGE_EXECUTE_READWRITE) == PAGE_EXECUTE_READWRITE || 
+        (MyMbi.Protect & PAGE_EXECUTE_WRITECOPY) == PAGE_EXECUTE_WRITECOPY || 
+        (MyMbi.Protect & PAGE_READONLY) == PAGE_READONLY || 
+        (MyMbi.Protect & PAGE_READWRITE) == PAGE_READWRITE || 
+        (MyMbi.Protect & PAGE_WRITECOPY) == PAGE_WRITECOPY;
     }
 
     // Whether an address is currently writable
     bool MemoryMgr::CanWrite(PVOID Address) const
     {
       // Query page protections
-      MEMORY_BASIC_INFORMATION MyMemInfo = { 0 };
-      if (!VirtualQueryEx(m_Process.GetHandle(), Address, &MyMemInfo, 
-        sizeof(MyMemInfo)))
+      MEMORY_BASIC_INFORMATION MyMbi = { 0 };
+      if (!VirtualQueryEx(m_Process.GetHandle(), Address, &MyMbi, 
+        sizeof(MyMbi)))
       {
         DWORD const LastError = GetLastError();
         BOOST_THROW_EXCEPTION(Error() << 
@@ -325,10 +326,11 @@ namespace Hades
       }
 
       // Whether memory is currently writable
-      return MyMemInfo.Protect == PAGE_EXECUTE_READWRITE || 
-        MyMemInfo.Protect == PAGE_EXECUTE_WRITECOPY || 
-        MyMemInfo.Protect == PAGE_READWRITE || 
-        MyMemInfo.Protect == PAGE_WRITECOPY;
+      return 
+        (MyMbi.Protect & PAGE_EXECUTE_READWRITE) == PAGE_EXECUTE_READWRITE || 
+        (MyMbi.Protect & PAGE_EXECUTE_WRITECOPY) == PAGE_EXECUTE_WRITECOPY || 
+        (MyMbi.Protect & PAGE_READWRITE) == PAGE_READWRITE || 
+        (MyMbi.Protect & PAGE_WRITECOPY) == PAGE_WRITECOPY;
     }
 
     // Whether an address is contained within a guard page
@@ -347,7 +349,7 @@ namespace Hades
       }
 
       // Whether address is in a guard page
-      return MyMemInfo.Protect == PAGE_GUARD;
+      return (MyMemInfo.Protect & PAGE_GUARD) == PAGE_GUARD;
     }
 
     // Allocate memory
