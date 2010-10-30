@@ -193,19 +193,20 @@ namespace Hades
           break;
         }
 
-        // Check for invalid memory
-        MEMORY_BASIC_INFORMATION MyMbi1 = { 0 };
-        if (!VirtualQueryEx(m_pMemory->GetProcessHandle(), Address, &MyMbi1, 
-          sizeof(MyMbi1)) || (MyMbi1.Protect & PAGE_GUARD) == PAGE_GUARD)
+        // Skip guard pages or pages we are unable to query
+        // Fixme: We should only skip the current page if the current page 
+        // is unreadable/guard. If the next page is unreadable/guard we 
+        // should read all we can then stop.
+        try
         {
-          continue;
+          if (m_pMemory->IsGuard(Address) || m_pMemory->IsGuard(Address + 
+            PageSize))
+          {
+            continue;
+          }
         }
-
-        // Check for invalid memory
-        MEMORY_BASIC_INFORMATION MyMbi2 = { 0 };
-        if (!VirtualQueryEx(m_pMemory->GetProcessHandle(), Address + 
-          PageSize, &MyMbi2, sizeof(MyMbi2)) || (MyMbi2.Protect & 
-          PAGE_GUARD) == PAGE_GUARD)
+        // If querying page protection failed then skip to the next page
+        catch (std::exception const& e)
         {
           continue;
         }
@@ -331,19 +332,20 @@ namespace Hades
           break;
         }
 
-        // Check for invalid memory
-        MEMORY_BASIC_INFORMATION MyMbi1 = { 0 };
-        if (!VirtualQueryEx(m_pMemory->GetProcessHandle(), Address, &MyMbi1, 
-          sizeof(MyMbi1)) || (MyMbi1.Protect & PAGE_GUARD) == PAGE_GUARD)
+        // Skip guard pages or pages we are unable to query
+        // Fixme: We should only skip the current page if the current page 
+        // is unreadable/guard. If the next page is unreadable/guard we 
+        // should read all we can then stop.
+        try
         {
-          continue;
+          if (m_pMemory->IsGuard(Address) || m_pMemory->IsGuard(Address + 
+            PageSize))
+          {
+            continue;
+          }
         }
-
-        // Check for invalid memory
-        MEMORY_BASIC_INFORMATION MyMbi2 = { 0 };
-        if (!VirtualQueryEx(m_pMemory->GetProcessHandle(), Address + PageSize, 
-          &MyMbi2, sizeof(MyMbi2)) || (MyMbi2.Protect & PAGE_GUARD) == 
-          PAGE_GUARD)
+        // If querying page protection failed then skip to the next page
+        catch (std::exception const& e)
         {
           continue;
         }
