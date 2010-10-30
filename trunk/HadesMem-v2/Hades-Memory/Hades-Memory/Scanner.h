@@ -51,8 +51,6 @@ namespace Hades
       { };
 
       // Constructor
-      explicit Scanner(MemoryMgr& MyMemory);
-      Scanner(MemoryMgr& MyMemory, HMODULE Module);
       Scanner(MemoryMgr& MyMemory, PVOID Start, PVOID End);
 
       // Search memory (POD types)
@@ -69,8 +67,7 @@ namespace Hades
       template <typename T>
       PVOID Find(T const& Data, std::basic_string<TCHAR> const& Mask = _T(""), 
         typename boost::enable_if<std::is_same<T, std::vector<typename T::
-        value_type>>>::type* Dummy1 = 0, typename boost::enable_if<std::
-        is_pod<typename T::value_type>>::type* Dummy2 = 0) const;
+        value_type>>>::type* Dummy1 = 0) const;
 
       // Search memory (POD types)
       template <typename T>
@@ -85,20 +82,9 @@ namespace Hades
 
       // Search memory (vector types)
       template <typename T>
-      std::vector<PVOID> FindAll(T const& Data, 
-        std::basic_string<TCHAR> const& Mask = _T(""), 
-        typename boost::enable_if<std::is_same<T, std::vector<typename 
-        T::value_type>>>::type* Dummy1 = 0, typename boost::enable_if<std::
-        is_pod<typename T::value_type>>::type* Dummy2 = 0) const;
-
-      // Load patterns from XML file
-      void LoadFromXML(boost::filesystem::path const& Path);
-
-      // Get address map
-      std::map<std::basic_string<TCHAR>, PVOID> GetAddresses() const;
-
-      // Operator[] overload to allow retrieving addresses by name
-      PVOID operator[](std::basic_string<TCHAR> const& Name) const;
+      std::vector<PVOID> FindAll(T const& Data, std::basic_string<TCHAR> const& 
+        Mask = _T(""), typename boost::enable_if<std::is_same<T, std::vector<
+        typename T::value_type>>>::type* Dummy1 = 0) const;
 
     private:
       // Memory manager instance
@@ -107,9 +93,6 @@ namespace Hades
       // Start and end addresses of search region
       PBYTE m_Start;
       PBYTE m_End;
-
-      // Map to hold addresses
-      std::map<std::basic_string<TCHAR>, PVOID> m_Addresses;
     };
 
     // Search memory (POD types)
@@ -165,9 +148,12 @@ namespace Hades
     template <typename T>
     PVOID Scanner::Find(T const& Data, std::basic_string<TCHAR> const& Mask, 
       typename boost::enable_if<std::is_same<T, std::vector<typename T::
-      value_type>>>::type* /*Dummy1*/, typename boost::enable_if<std::is_pod<
-      typename T::value_type>>::type* /*Dummy2*/) const
+      value_type>>>::type* /*Dummy1*/) const
     {
+      // Ensure type to be read is POD
+      static_assert(std::is_pod<T::value_type>::value, "Scanner::Find: Value "
+        "type of vector must be POD.");
+
       // Ensure there is data to process
       if (Data.empty())
       {
@@ -297,10 +283,12 @@ namespace Hades
     template <typename T>
     std::vector<PVOID> Scanner::FindAll(T const& Data, 
       std::basic_string<TCHAR> const& Mask, typename boost::enable_if<std::
-      is_same<T, std::vector<typename T::value_type>>>::type* /*Dummy1*/, 
-      typename boost::enable_if<std::is_pod<typename T::value_type>>::type* 
-      /*Dummy2*/) const
+      is_same<T, std::vector<typename T::value_type>>>::type* /*Dummy1*/) const
     {
+      // Ensure type to be read is POD
+      static_assert(std::is_pod<T::value_type>::value, "Scanner::FindAll: "
+        "Value type of vector must be POD.");
+
       // Ensure there is data to process
       if (Data.empty())
       {
