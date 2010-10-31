@@ -143,6 +143,17 @@ namespace Hades
       {
         Hades::Memory::Region const& MyRegion = **i;
 
+        if (static_cast<PBYTE>(MyRegion.GetBase()) + MyRegion.GetSize() < 
+          m_Start)
+        {
+          continue;
+        }
+
+        if (MyRegion.GetBase() > m_End)
+        {
+          break;
+        }
+
         if (m_pMemory->IsGuard(MyRegion.GetBase()))
         {
           continue;
@@ -229,6 +240,17 @@ namespace Hades
       for (RegionEnum::RegionListIter i(MyRegionEnum); *i; ++i)
       {
         Hades::Memory::Region const& MyRegion = **i;
+
+        if (static_cast<PBYTE>(MyRegion.GetBase()) + MyRegion.GetSize() < 
+          m_Start)
+        {
+          continue;
+        }
+
+        if (MyRegion.GetBase() > m_End)
+        {
+          break;
+        }
 
         if (m_pMemory->IsGuard(MyRegion.GetBase()))
         {
