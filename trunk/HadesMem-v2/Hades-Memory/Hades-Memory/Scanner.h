@@ -36,6 +36,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #pragma warning(pop)
 
 // Hades
+#include "Region.h"
 #include "MemoryMgr.h"
 
 namespace Hades
@@ -65,9 +66,8 @@ namespace Hades
 
       // Search memory (vector types)
       template <typename T>
-      PVOID Find(T const& Data, std::basic_string<TCHAR> const& Mask = _T(""), 
-        typename boost::enable_if<std::is_same<T, std::vector<typename T::
-        value_type>>>::type* Dummy1 = 0) const;
+      PVOID Find(T const& Data, typename boost::enable_if<std::is_same<T, 
+        std::vector<typename T::value_type>>>::type* Dummy1 = 0) const;
 
       // Search memory (POD types)
       template <typename T>
@@ -82,9 +82,9 @@ namespace Hades
 
       // Search memory (vector types)
       template <typename T>
-      std::vector<PVOID> FindAll(T const& Data, std::basic_string<TCHAR> const& 
-        Mask = _T(""), typename boost::enable_if<std::is_same<T, std::vector<
-        typename T::value_type>>>::type* Dummy1 = 0) const;
+      std::vector<PVOID> FindAll(T const& Data, typename boost::enable_if<std::
+        is_same<T, std::vector<typename T::value_type>>>::type* Dummy1 = 0) 
+        const;
 
     private:
       // Memory manager instance
@@ -107,6 +107,72 @@ namespace Hades
       return Find(Buffer);
     }
 
+    // Search memory (string types)
+    template <typename T>
+    PVOID Scanner::Find(T const& Data, typename boost::enable_if<std::is_same<
+      T, std::basic_string<typename T::value_type>>>::type* /*Dummy*/) const
+    {
+      // Convert string to character buffer
+      std::vector<T::value_type> const MyBuffer(Data.cbegin(), Data.cend());
+      // Use vector specialization of find
+      return Find(MyBuffer);
+    }
+
+    // Search memory (vector types)
+    template <typename T>
+    PVOID Scanner::Find(T const& Data, typename boost::enable_if<std::is_same<
+      T, std::vector<typename T::value_type>>>::type* /*Dummy1*/) const
+    {
+      static_assert(std::is_pod<T::value_type>::value, "Scanner::Find: Value "
+        "type of vector must be POD.");
+
+      if (Data.empty())
+      {
+        BOOST_THROW_EXCEPTION(Error() << 
+          ErrorFunction("Scanner::Find") << 
+          ErrorString("Data container is empty."));
+      }
+
+      RegionEnum MyRegionEnum(*m_pMemory);
+      for (RegionEnum::RegionListIter i(MyRegionEnum); *i; ++i)
+      {
+        Hades::Memory::Region const& MyRegion = **i;
+
+        if (m_pMemory->IsGuard(MyRegion.GetBase()))
+        {
+          continue;
+        }
+
+        std::vector<BYTE> Buffer;
+
+        try
+        {
+          Buffer = m_pMemory->Read<std::vector<BYTE>>(MyRegion.GetBase(), MyRegion.GetSize());
+        }
+        catch (MemoryMgr::Error const& /*e*/)
+        {
+          continue;
+        }
+
+        LPCBYTE pDataRaw = reinterpret_cast<LPCBYTE>(&Data[0]);
+        std::size_t const DataRawSize = Data.size() * sizeof(T::value_type);
+
+        std::vector<BYTE> DataRaw(pDataRaw, pDataRaw + DataRawSize);
+
+        auto Iter = std::search(Buffer.cbegin(), Buffer.cend(), DataRaw.cbegin(), DataRaw.cend());
+        if (Iter != Buffer.cend())
+        {
+          PVOID AddressReal = static_cast<PBYTE>(MyRegion.GetBase()) + std::distance(Buffer.cbegin(), Iter);
+          if (AddressReal >= m_Start && AddressReal <= m_End)
+          {
+            return AddressReal;
+          }
+        }
+      }
+
+      return nullptr;
+    }
+
     // Search memory (POD types)
     template <typename T>
     std::vector<PVOID> Scanner::FindAll(T const& Data, typename boost::
@@ -117,17 +183,6 @@ namespace Hades
       Buffer.push_back(Data);
       // Use vector specialization of FindAll
       return FindAll(Buffer);
-    }
-
-    // Search memory (string types)
-    template <typename T>
-    PVOID Scanner::Find(T const& Data, typename boost::enable_if<std::is_same<
-      T, std::basic_string<typename T::value_type>>>::type* /*Dummy*/) const
-    {
-      // Convert string to character buffer
-      std::vector<T::value_type> const MyBuffer(Data.cbegin(), Data.cend());
-      // Use vector specialization of find
-      return Find(MyBuffer);
     }
 
     template <typename T>
@@ -146,273 +201,59 @@ namespace Hades
     // bugs. Perform a thorough review and rewrite.
     // Fixme: Refactor Find and FindAll to factor out duplicated code.
     template <typename T>
-    PVOID Scanner::Find(T const& Data, std::basic_string<TCHAR> const& Mask, 
-      typename boost::enable_if<std::is_same<T, std::vector<typename T::
-      value_type>>>::type* /*Dummy1*/) const
+    std::vector<PVOID> Scanner::FindAll(T const& Data, typename boost::
+      enable_if<std::is_same<T, std::vector<typename T::value_type>>>::type* 
+      /*Dummy1*/) const
     {
-      // Ensure type to be read is POD
       static_assert(std::is_pod<T::value_type>::value, "Scanner::Find: Value "
         "type of vector must be POD.");
 
-      // Ensure there is data to process
       if (Data.empty())
       {
         BOOST_THROW_EXCEPTION(Error() << 
-          ErrorFunction("MemoryMgr::Find") << 
-          ErrorString("Mask does not match data."));
+          ErrorFunction("Scanner::Find") << 
+          ErrorString("Data container is empty."));
       }
 
-      // Ensure mask matches data
-      if (!Mask.empty() && Mask.size() != Data.size())
-      {
-        BOOST_THROW_EXCEPTION(Error() << 
-          ErrorFunction("MemoryMgr::Find") << 
-          ErrorString("Mask does not match data."));
-      }
-
-      // Get system information
-      SYSTEM_INFO MySystemInfo = { 0 };
-      GetSystemInfo(&MySystemInfo);
-      DWORD const PageSize = MySystemInfo.dwPageSize;
-      PVOID const MinAddr = MySystemInfo.lpMinimumApplicationAddress;
-      PVOID const MaxAddr = MySystemInfo.lpMaximumApplicationAddress;
-
-      // Loop over all memory pages
-      for (PBYTE Address = static_cast<PBYTE>(MinAddr); Address < MaxAddr; 
-        Address += PageSize)
-      {
-        // Skip region if out of bounds
-        if (Address + PageSize - 1 < m_Start)
-        {
-          continue;
-        }
-
-        // Quit if out of bounds
-        if (Address > m_End)
-        {
-          break;
-        }
-
-        // Skip guard pages or pages we are unable to query
-        // Fixme: We should only skip the current page if the current page 
-        // is unreadable/guard. If the next page is unreadable/guard we 
-        // should read all we can then stop.
-        try
-        {
-          if (m_pMemory->IsGuard(Address) || m_pMemory->IsGuard(Address + 
-            PageSize))
-          {
-            continue;
-          }
-        }
-        // If querying page protection failed then skip to the next page
-        catch (std::exception const& e)
-        {
-          continue;
-        }
-
-        // Read vector of Ts into cache
-        std::vector<BYTE> Buffer;
-          
-        try
-        {
-          // Efficiency of assignment should not be an issue here (for 
-          // C++0x).
-          // 12.8/15 states that compilers can perform RVO if possible.
-          // In the case that this is not possible (or the compiler chooses 
-          // not to do it), 13.3.3.2/3 states that an rvalue ref binds to an 
-          // rvalue better than an lvalue ref so the move constructor will 
-          // be chosen.
-          // Fixme: Confirm that under the primary implementation being 
-          // used currently (MSVC10) that a copy never occurs here.
-          // Fixme: If we're reading across a region boundary and we hit 
-          // inaccessible memory we should simply read all we can, rather 
-          // than skipping the block entirely.
-          Buffer = m_pMemory->Read<std::vector<BYTE>>(Address, PageSize + 
-            Data.size() * sizeof(T::value_type));
-        }
-        // Ignore any memory errors, as there's nothing we can do about them
-        // Fixme: Detect memory read errors and drop back to a slower but 
-        // more reliable implementation.
-        catch (MemoryMgr::Error const& /*e*/)
-        {
-          continue;
-        }
-
-        // Loop over entire memory region
-        for (PBYTE Current = &Buffer[0]; Current != &Buffer[0] + 
-          Buffer.size(); ++Current) 
-        {
-          // Check if current address matches buffer
-          bool Found = true;
-          for (std::size_t i = 0; i != Data.size(); ++i)
-          {
-            T::value_type const* CurrentTemp = 
-              reinterpret_cast<T::value_type const*>(Current);
-            if ((Mask.empty() || Mask[i] == L'x') && (CurrentTemp[i] != 
-              Data[i]))
-            {
-              Found = false;
-              break;
-            }
-          }
-
-          // If the buffer matched return the current address
-          if (Found)
-          {
-            // If the buffer matched and the address is valid, return the 
-            // current address.
-            // Fixme: Do this check in the outer loop, and break if possible 
-            // rather than continuing.
-            PVOID const AddressReal = Address + (Current - &Buffer[0]);
-            if (AddressReal >= m_Start && AddressReal <= m_End)
-            {
-              return AddressReal;
-            }
-          }
-        }
-      }
-
-      // Nothing found, return null
-      return nullptr;
-    }
-
-    // Search memory (vector types)
-    // Fixme: This function is extremely inefficient and full of potential 
-    // bugs. Perform a thorough review and rewrite.
-    // Fixme: Refactor Find and FindAll to factor out duplicated code.
-    template <typename T>
-    std::vector<PVOID> Scanner::FindAll(T const& Data, 
-      std::basic_string<TCHAR> const& Mask, typename boost::enable_if<std::
-      is_same<T, std::vector<typename T::value_type>>>::type* /*Dummy1*/) const
-    {
-      // Ensure type to be read is POD
-      static_assert(std::is_pod<T::value_type>::value, "Scanner::FindAll: "
-        "Value type of vector must be POD.");
-
-      // Ensure there is data to process
-      if (Data.empty())
-      {
-        BOOST_THROW_EXCEPTION(Error() << 
-          ErrorFunction("MemoryMgr::Find") << 
-          ErrorString("Mask does not match data."));
-      }
-
-      // Ensure mask matches data
-      if (!Mask.empty() && Mask.size() != Data.size())
-      {
-        BOOST_THROW_EXCEPTION(Error() << 
-          ErrorFunction("MemoryMgr::Find") << 
-          ErrorString("Mask does not match data."));
-      }
-
-      // Addresses of matches
       std::vector<PVOID> Matches;
 
-      // Get system information
-      SYSTEM_INFO MySystemInfo = { 0 };
-      GetSystemInfo(&MySystemInfo);
-      DWORD const PageSize = MySystemInfo.dwPageSize;
-      PVOID const MinAddr = MySystemInfo.lpMinimumApplicationAddress;
-      PVOID const MaxAddr = MySystemInfo.lpMaximumApplicationAddress;
-
-      // Loop over all memory pages
-      for (PBYTE Address = static_cast<PBYTE>(MinAddr); Address < MaxAddr; 
-        Address += PageSize)
+      RegionEnum MyRegionEnum(*m_pMemory);
+      for (RegionEnum::RegionListIter i(MyRegionEnum); *i; ++i)
       {
-        // Skip region if out of bounds
-        if (Address + PageSize - 1 < m_Start)
+        Hades::Memory::Region const& MyRegion = **i;
+
+        if (m_pMemory->IsGuard(MyRegion.GetBase()))
         {
           continue;
         }
 
-        // Quit if out of bounds
-        if (Address > m_End)
-        {
-          break;
-        }
-
-        // Skip guard pages or pages we are unable to query
-        // Fixme: We should only skip the current page if the current page 
-        // is unreadable/guard. If the next page is unreadable/guard we 
-        // should read all we can then stop.
-        try
-        {
-          if (m_pMemory->IsGuard(Address) || m_pMemory->IsGuard(Address + 
-            PageSize))
-          {
-            continue;
-          }
-        }
-        // If querying page protection failed then skip to the next page
-        catch (std::exception const& e)
-        {
-          continue;
-        }
-
-        // Read vector of Ts into cache
         std::vector<BYTE> Buffer;
 
         try
         {
-          // Efficiency of assignment should not be an issue here (for 
-          // C++0x).
-          // 12.8/15 states that compilers can perform RVO if possible.
-          // In the case that this is not possible (or the compiler chooses 
-          // not to do it), 13.3.3.2/3 states that an rvalue ref binds to an 
-          // rvalue better than an lvalue ref so the move constructor will 
-          // be chosen.
-          // Fixme: Confirm that under the primary implementation being 
-          // used currently (MSVC10) that a copy never occurs here.
-          // Fixme: If we're reading across a region boundary and we hit 
-          // inaccessible memory we should simply read all we can, rather 
-          // than skipping the block entirely.
-          Buffer = m_pMemory->Read<std::vector<BYTE>>(Address, PageSize + 
-            Data.size() * sizeof(T::value_type));
+          Buffer = m_pMemory->Read<std::vector<BYTE>>(MyRegion.GetBase(), MyRegion.GetSize());
         }
-        // Ignore any memory errors, as there's nothing we can do about them
-        // Fixme: Detect memory read errors and drop back to a slower but 
-        // more reliable implementation.
         catch (MemoryMgr::Error const& /*e*/)
         {
           continue;
         }
 
-        // Loop over entire memory region
-        for (PBYTE Current = &Buffer[0]; Current != &Buffer[0] + 
-          Buffer.size(); ++Current) 
-        {
-          // Check if current address matches buffer
-          bool Found = true;
-          for (std::size_t i = 0; i != Data.size(); ++i)
-          {
-            T::value_type const* CurrentTemp = 
-              reinterpret_cast<T::value_type const*>(Current);
-            if ((Mask.empty() || Mask[i] == L'x') && (CurrentTemp[i] != 
-              Data[i]))
-            {
-              Found = false;
-              break;
-            }
-          }
+        LPCBYTE pDataRaw = reinterpret_cast<LPCBYTE>(&Data[0]);
+        std::size_t const DataRawSize = Data.size() * sizeof(T::value_type);
 
-          // If the buffer matched return the current address
-          if (Found)
+        std::vector<BYTE> DataRaw(pDataRaw, pDataRaw + DataRawSize);
+
+        auto Iter = std::search(Buffer.cbegin(), Buffer.cend(), DataRaw.cbegin(), DataRaw.cend());
+        if (Iter != Buffer.cend())
+        {
+          PVOID AddressReal = static_cast<PBYTE>(MyRegion.GetBase()) + std::distance(Buffer.cbegin(), Iter);
+          if (AddressReal >= m_Start && AddressReal <= m_End)
           {
-            // If the buffer matched and the address is valid, return the 
-            // current address.
-            // Fixme: Do this check in the outer loop, and break if possible 
-            // rather than continuing.
-            PVOID const AddressReal = Address + (Current - &Buffer[0]);
-            if (AddressReal >= m_Start && AddressReal <= m_End)
-            {
-              Matches.push_back(AddressReal);
-            }
+            Matches.push_back(AddressReal);
           }
         }
       }
 
-      // Return matches
       return Matches;
     }
   }
