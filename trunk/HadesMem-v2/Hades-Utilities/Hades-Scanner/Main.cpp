@@ -62,9 +62,9 @@ int _tmain(int argc, TCHAR* argv[])
 
     // Version and copyright output
 #if defined(_M_X64)
-    std::wcout << "Hades-Scanner AMD64 [Version " << VerNum << "]\n";
+    std::wcout << "Hades-Disassembler AMD64 [Version " << VerNum << "]\n";
 #elif defined(_M_IX86)
-    std::wcout << "Hades-Scanner IA32 [Version " << VerNum << "]\n";
+    std::wcout << "Hades-Disassembler IA32 [Version " << VerNum << "]\n";
 #else
 #error Unsupported platform!
 #endif
@@ -77,13 +77,21 @@ int _tmain(int argc, TCHAR* argv[])
 
     // Auto-close flag (Set by Boost.ProgramOptions)
     bool KeepOpen = false;
+    // Target string (Set by Boost.ProgramOptions)
+    std::string TargetString;
+    // Target process ID (Set by Boost.ProgramOptions)
+    DWORD ProcID = 0;
 
     // Set program option descriptions
     boost::program_options::options_description OptsDesc("Allowed options");
     OptsDesc.add_options()
       ("help", "display help")
       ("keep-open", boost::program_options::wvalue<bool>(&KeepOpen)->
-      zero_tokens(), "keep console window open")
+        zero_tokens(), "keep console window open")
+      ("string", boost::program_options::value<std::string>(
+        &TargetString), "target string")
+      ("process-id", boost::program_options::wvalue<DWORD>(&ProcID), 
+        "target process id")
       ;
 
     // Parse program options
@@ -108,6 +116,47 @@ int _tmain(int argc, TCHAR* argv[])
 
       // Quit
       return 1;
+    }
+
+    // Sanity check
+    if (!ProcID)
+    {
+      BOOST_THROW_EXCEPTION(Hades::HadesError() << 
+        Hades::ErrorFunction("_tmain") << 
+        Hades::ErrorString("No process ID specified."));
+    }
+
+    // Sanity check
+    if (TargetString.empty())
+    {
+      BOOST_THROW_EXCEPTION(Hades::HadesError() << 
+        Hades::ErrorFunction("_tmain") << 
+        Hades::ErrorString("Empty target string."));
+    }
+
+    // Create memory manager
+    Hades::Memory::MemoryMgr MyMemory(ProcID);
+
+    // Create scanner
+    Hades::Memory::Scanner MyScanner(MyMemory, 0, reinterpret_cast<PVOID>(-1));
+
+    // Scan for target
+    std::vector<PVOID> AddrList(MyScanner.FindAll(TargetString));
+
+    // Debug output
+    if (!AddrList.empty())
+    {
+      std::for_each(AddrList.cbegin(), AddrList.cend(), 
+        [&] (PVOID Current)
+      {
+        std::wcout << "Target found at " << Current << "." << std::endl;
+        std::cout << "Full string: " << MyMemory.Read<std::string>(Current) 
+          << std::endl;
+      });
+    }
+    else
+    {
+      std::wcout << "Could not find target." << std::endl;
     }
 
     // Print elapsed time
