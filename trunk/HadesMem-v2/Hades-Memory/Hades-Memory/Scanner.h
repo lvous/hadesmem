@@ -147,7 +147,8 @@ namespace Hades
 
         try
         {
-          Buffer = m_pMemory->Read<std::vector<BYTE>>(MyRegion.GetBase(), MyRegion.GetSize());
+          Buffer = m_pMemory->Read<std::vector<BYTE>>(MyRegion.GetBase(), 
+            MyRegion.GetSize());
         }
         catch (MemoryMgr::Error const& /*e*/)
         {
@@ -159,10 +160,12 @@ namespace Hades
 
         std::vector<BYTE> DataRaw(pDataRaw, pDataRaw + DataRawSize);
 
-        auto Iter = std::search(Buffer.cbegin(), Buffer.cend(), DataRaw.cbegin(), DataRaw.cend());
+        auto Iter = std::search(Buffer.cbegin(), Buffer.cend(), 
+          DataRaw.cbegin(), DataRaw.cend());
         if (Iter != Buffer.cend())
         {
-          PVOID AddressReal = static_cast<PBYTE>(MyRegion.GetBase()) + std::distance(Buffer.cbegin(), Iter);
+          PVOID AddressReal = static_cast<PBYTE>(MyRegion.GetBase()) + 
+            std::distance(Buffer.cbegin(), Iter);
           if (AddressReal >= m_Start && AddressReal <= m_End)
           {
             return AddressReal;
@@ -231,7 +234,8 @@ namespace Hades
 
         try
         {
-          Buffer = m_pMemory->Read<std::vector<BYTE>>(MyRegion.GetBase(), MyRegion.GetSize());
+          Buffer = m_pMemory->Read<std::vector<BYTE>>(MyRegion.GetBase(), 
+            MyRegion.GetSize());
         }
         catch (MemoryMgr::Error const& /*e*/)
         {
@@ -243,10 +247,12 @@ namespace Hades
 
         std::vector<BYTE> DataRaw(pDataRaw, pDataRaw + DataRawSize);
 
-        auto Iter = std::search(Buffer.cbegin(), Buffer.cend(), DataRaw.cbegin(), DataRaw.cend());
+        auto Iter = std::search(Buffer.cbegin(), Buffer.cend(), 
+          DataRaw.cbegin(), DataRaw.cend());
         if (Iter != Buffer.cend())
         {
-          PVOID AddressReal = static_cast<PBYTE>(MyRegion.GetBase()) + std::distance(Buffer.cbegin(), Iter);
+          PVOID AddressReal = static_cast<PBYTE>(MyRegion.GetBase()) + 
+            std::distance(Buffer.cbegin(), Iter);
           if (AddressReal >= m_Start && AddressReal <= m_End)
           {
             Matches.push_back(AddressReal);
