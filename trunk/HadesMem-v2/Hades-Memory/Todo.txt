@@ -1,0 +1,30 @@
+* General
+	* Documentation via BoostBook and QuickBook.
+	* Unit tests for all components.
+	* Python bindings for all components.
+	* Code review and refactor (assertions, concept checking, profiling, etc).
+	* Make types moveable where possible.
+	* Exception safety guarantees (noexcept where possible, provide rollback 
+	support with RAII or Boost.ScopeExit).
+	* Replace integer types with checked types (e.g. SafeInt) where 
+	appropriate.
+	* Implement no-throw operators and constructors where possible.
+	* Implement no-throw swap where possible.
+	* Thread-safety guarantees.
+	* Ensure rule-of-three compliance.
+	* Investigate GCC compilation support.
+	* Fix all 'fixme' items in code.
+* Scanner
+	* Multi-threaded scanning.
+	* Scanning 'options' (writeable only, private only, etc).
+	* Regex scanning.
+	* Reimplement 'mask' support to array scanner.
+	* Improve scanning algorithm.
+* Injector
+	* .NET injection.
+* Patcher
+	* VEH hooking.
+	* Transactional hooking.
+	* Improved relative instruction rebuilding.
+* ManualMap
+	* Improved exception handling support.

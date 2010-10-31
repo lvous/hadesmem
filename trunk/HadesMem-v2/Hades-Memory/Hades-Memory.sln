@@ -14,6 +14,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Hades-MMHelper", "Hades-MMH
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{233D3ACE-BC95-4C2F-8BD8-E96705C6CF19}"
+	ProjectSection(SolutionItems) = preProject
+		Todo.txt = Todo.txt
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PyHadesMem", "PyHadesMem\PyHadesMem.vcxproj", "{E7B3FAE9-3AB9-441B-A157-D4FEDD786C34}"
 	ProjectSection(ProjectDependencies) = postProject
