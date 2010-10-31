@@ -141,7 +141,7 @@ int _tmain(int argc, TCHAR* argv[])
     {
       BOOST_THROW_EXCEPTION(Hades::HadesError() << 
         Hades::ErrorFunction("_tmain") << 
-        Hades::ErrorString("No instruction count specified."));
+        Hades::ErrorString("Invalid address."));
     }
 
     // Sanity check
