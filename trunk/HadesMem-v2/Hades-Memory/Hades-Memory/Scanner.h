@@ -133,6 +133,11 @@ namespace Hades
           ErrorString("Data container is empty."));
       }
 
+      LPCBYTE pDataRaw = reinterpret_cast<LPCBYTE>(&Data[0]);
+      std::size_t const DataRawSize = Data.size() * sizeof(T::value_type);
+
+      std::vector<BYTE> DataRaw(pDataRaw, pDataRaw + DataRawSize);
+
       RegionEnum MyRegionEnum(*m_pMemory);
       for (RegionEnum::RegionListIter i(MyRegionEnum); *i; ++i)
       {
@@ -154,11 +159,6 @@ namespace Hades
         {
           continue;
         }
-
-        LPCBYTE pDataRaw = reinterpret_cast<LPCBYTE>(&Data[0]);
-        std::size_t const DataRawSize = Data.size() * sizeof(T::value_type);
-
-        std::vector<BYTE> DataRaw(pDataRaw, pDataRaw + DataRawSize);
 
         auto Iter = std::search(Buffer.cbegin(), Buffer.cend(), 
           DataRaw.cbegin(), DataRaw.cend());
@@ -218,6 +218,11 @@ namespace Hades
           ErrorString("Data container is empty."));
       }
 
+      LPCBYTE pDataRaw = reinterpret_cast<LPCBYTE>(&Data[0]);
+      std::size_t const DataRawSize = Data.size() * sizeof(T::value_type);
+
+      std::vector<BYTE> DataRaw(pDataRaw, pDataRaw + DataRawSize);
+
       std::vector<PVOID> Matches;
 
       RegionEnum MyRegionEnum(*m_pMemory);
@@ -241,11 +246,6 @@ namespace Hades
         {
           continue;
         }
-
-        LPCBYTE pDataRaw = reinterpret_cast<LPCBYTE>(&Data[0]);
-        std::size_t const DataRawSize = Data.size() * sizeof(T::value_type);
-
-        std::vector<BYTE> DataRaw(pDataRaw, pDataRaw + DataRawSize);
 
         auto Iter = std::search(Buffer.cbegin(), Buffer.cend(), 
           DataRaw.cbegin(), DataRaw.cend());
