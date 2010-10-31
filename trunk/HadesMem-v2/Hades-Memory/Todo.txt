@@ -14,6 +14,7 @@
 	* Ensure rule-of-three compliance.
 	* Investigate GCC compilation support.
 	* Fix all 'fixme' items in code.
+	* Finish implementing basic utilities.
 * Scanner
 	* Multi-threaded scanning.
 	* Scanning 'options' (writeable only, private only, etc).
