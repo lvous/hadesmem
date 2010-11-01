@@ -857,11 +857,13 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DisassemblerWrap.h" />
+    <ClInclude Include="DosHeaderWrap.h" />
     <ClInclude Include="FindPatternWrap.h" />
     <ClInclude Include="InjectorWrap.h" />
     <ClInclude Include="ManualMapWrap.h" />
     <ClInclude Include="MemoryMgrWrap.h" />
     <ClInclude Include="ModuleWrap.h" />
+    <ClInclude Include="PeFileWrap.h" />
     <ClInclude Include="RegionWrap.h" />
     <ClInclude Include="ScannerWrap.h" />
   </ItemGroup>

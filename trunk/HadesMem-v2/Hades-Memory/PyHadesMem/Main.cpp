@@ -33,10 +33,12 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #pragma warning(pop)
 
 // Hades
+#include "PeFileWrap.h"
 #include "ModuleWrap.h"
 #include "RegionWrap.h"
 #include "ScannerWrap.h"
 #include "InjectorWrap.h"
+#include "DosHeaderWrap.h"
 #include "MemoryMgrWrap.h"
 #include "ManualMapWrap.h"
 #include "FindPatternWrap.h"
@@ -70,6 +72,9 @@ BOOST_PYTHON_MODULE(PyHadesMem_IA32)
   ExportModule();
   ExportRegion();
   ExportScanner();
+
+  ExportDosHeader();
+  ExportPeFile();
 }
 
 BOOL WINAPI DllMain(HINSTANCE /*hinstDLL*/, DWORD /*fdwReason*/, 
