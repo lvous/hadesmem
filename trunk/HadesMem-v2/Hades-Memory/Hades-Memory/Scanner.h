@@ -154,11 +154,6 @@ namespace Hades
           break;
         }
 
-        if (m_pMemory->IsGuard(MyRegion.GetBase()))
-        {
-          continue;
-        }
-
         std::vector<BYTE> Buffer;
 
         try
@@ -250,11 +245,6 @@ namespace Hades
         if (MyRegion.GetBase() > m_End)
         {
           break;
-        }
-
-        if (m_pMemory->IsGuard(MyRegion.GetBase()))
-        {
-          continue;
         }
 
         std::vector<BYTE> Buffer;
