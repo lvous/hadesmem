@@ -142,8 +142,9 @@ namespace Hades
     }
 
     // Search memory
-    // Using Boyer–Moore–Horspool. Average complexity of O(N), worst-case 
-    // complexity of O(MN).
+    // Note: Previous implementation used modified Boyer-Moore-Horspool, but 
+    // this was dropped as the C++ 'search' algorithm provided with MSVC 
+    // performs equally if not slightly better than my custom search.
     PVOID FindPattern::Find(std::vector<std::pair<BYTE, bool>> const& Data) 
       const
     {
@@ -152,44 +153,17 @@ namespace Hades
       std::vector<BYTE> Buffer(m_pMemory->Read<std::vector<BYTE>>(m_Start, 
         MemSize));
 
-      // Use Boyer–Moore–Horspool to search for pattern
-      // Note: Based off the implementation provided on Wikipedia's entry 
-      // on the algorithm
-
-      std::size_t Scan = 0;
-      std::size_t const NeedleLen = Data.size();
-      std::size_t SkipTable[UCHAR_MAX + 1];
-
-      for (Scan = 0; Scan <= UCHAR_MAX; Scan = Scan + 1)
+      // Scan memory
+      auto Iter = std::search(Buffer.begin(), Buffer.end(), Data.begin(), 
+        Data.end(), 
+        [&] (BYTE HCur, std::pair<BYTE, bool> NCur)
       {
-        SkipTable[Scan] = NeedleLen;
-      }
+        return (NCur.second) || HCur == NCur.first;
+      });
 
-      std::size_t const NeedleLast = NeedleLen - 1;
-      for (Scan = 0; Scan < NeedleLast; Scan = Scan + 1)
-      {
-        SkipTable[Data[Scan].first] = NeedleLast - Scan;
-      }
-
-      PBYTE Haystack = &Buffer[0];
-      std::size_t HaystackLen = Buffer.size();
-
-      while (HaystackLen >= NeedleLen)
-      {
-        for (Scan = NeedleLast; !Data[Scan].second || (Data[Scan].second && 
-          Haystack[Scan] == Data[Scan].first); Scan = Scan - 1)
-        {
-          if (Scan == 0)
-          {
-            return m_Start + (Haystack - &Buffer[0]);
-          }
-        }
-
-        HaystackLen -= SkipTable[Haystack[NeedleLast]];
-        Haystack += SkipTable[Haystack[NeedleLast]];
-      }
-
-      return nullptr;
+      // Return address if found or null if not found
+      return (Iter != Buffer.end()) ? (m_Start + std::distance(Buffer.begin(), 
+        Iter)) : nullptr;
     }
 
     // Load patterns from XML file
@@ -373,15 +347,15 @@ namespace Hades
           }
         }
 
-        // Check for duplicate entry
-        auto const Iter = m_Addresses.find(boost::lexical_cast<std::
-          basic_string<TCHAR>>(Name));
-        if (Iter != m_Addresses.end())
-        {
-          BOOST_THROW_EXCEPTION(Error() << 
-            ErrorFunction("FindPattern::LoadFromXML") << 
-            ErrorString("Duplicate pattern name."));
-        }
+//         // Check for duplicate entry
+//         auto const Iter = m_Addresses.find(boost::lexical_cast<std::
+//           basic_string<TCHAR>>(Name));
+//         if (Iter != m_Addresses.end())
+//         {
+//           BOOST_THROW_EXCEPTION(Error() << 
+//             ErrorFunction("FindPattern::LoadFromXML") << 
+//             ErrorString("Duplicate pattern name."));
+//         }
 
         // Add address to map
         m_Addresses[boost::lexical_cast<std::basic_string<TCHAR>>(Name)] = 
