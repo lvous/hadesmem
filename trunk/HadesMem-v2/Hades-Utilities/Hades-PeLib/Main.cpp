@@ -77,13 +77,17 @@ int _tmain(int argc, TCHAR* argv[])
 
     // Auto-close flag (Set by Boost.ProgramOptions)
     bool KeepOpen = false;
+    // Target process ID (Set by Boost.ProgramOptions)
+    DWORD ProcID = 0;
 
     // Set program option descriptions
     boost::program_options::options_description OptsDesc("Allowed options");
     OptsDesc.add_options()
       ("help", "display help")
       ("keep-open", boost::program_options::wvalue<bool>(&KeepOpen)->
-      zero_tokens(), "keep console window open")
+        zero_tokens(), "keep console window open")
+      ("process-id", boost::program_options::wvalue<DWORD>(&ProcID), 
+        "target process id")
       ;
 
     // Parse program options
@@ -108,6 +112,49 @@ int _tmain(int argc, TCHAR* argv[])
 
       // Quit
       return 1;
+    }
+
+    // Sanity check
+    if (!ProcID)
+    {
+      BOOST_THROW_EXCEPTION(Hades::HadesError() << 
+        Hades::ErrorFunction("_tmain") << 
+        Hades::ErrorString("No process ID specified."));
+    }
+
+    // Create memory manager
+    Hades::Memory::MemoryMgr MyMemory(ProcID);
+
+    // Dump module list
+    Hades::Memory::ModuleEnum MyModuleEnum(MyMemory);
+    for (Hades::Memory::ModuleEnum::ModuleListIter i(MyModuleEnum); *i; ++i)
+    {
+      Hades::Memory::Module const& MyModule = **i;
+
+      std::wcout << "Base: " << MyModule.GetBase();
+      std::wcout << "\nSize: " << reinterpret_cast<PVOID>(MyModule.GetSize());
+      std::wcout << "\nName: " << boost::lexical_cast<std::wstring>(
+        MyModule.GetName());
+      std::wcout << "\nPath: " << boost::lexical_cast<std::wstring>(
+        MyModule.GetPath());
+
+      Hades::Memory::PeFile MyPeFile(MyMemory, MyModule.GetBase());
+
+      std::wcout << "\n\nSections:";
+
+      Hades::Memory::SectionEnum MySectionEnum(MyPeFile);
+      for (Hades::Memory::SectionEnum::SectionIter j(MySectionEnum); *j; ++j)
+      {
+        Hades::Memory::Section const& MySection = **j;
+
+        std::cout << "\nName: " << MySection.GetName();
+        std::wcout << "\nVirtual Address: " << reinterpret_cast<PVOID>(
+          MySection.GetVirtualAddress());
+        std::wcout << "\nSize: " << reinterpret_cast<PVOID>(MySection.
+          GetVirtualSize());
+      }
+
+      std::wcout << "\n\n";
     }
 
     // Print elapsed time
