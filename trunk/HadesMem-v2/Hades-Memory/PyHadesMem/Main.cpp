@@ -33,26 +33,22 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #pragma warning(pop)
 
 // Hades
+#include "ModuleWrap.h"
+#include "RegionWrap.h"
+#include "ScannerWrap.h"
+#include "InjectorWrap.h"
+#include "MemoryMgrWrap.h"
+#include "ManualMapWrap.h"
+#include "FindPatternWrap.h"
+#include "DisassemblerWrap.h"
 #include "Hades-Common/Error.h"
 #include "Hades-Memory/AutoLink.h"
-#include "Hades-Memory/MemoryMgr.h"
 
 // Custom error translator
 void HadesErrorTranslator(std::exception const& e)
 {
   PyErr_SetString(PyExc_RuntimeError, boost::diagnostic_information(e).
     c_str());
-}
-
-// Export MemoryMgr API
-void ExportMemoryMgr()
-{
-  boost::python::class_<Hades::Memory::MemoryMgr, boost::noncopyable>(
-    "MemoryMgr", boost::python::init<DWORD>())
-    .def(boost::python::init<std::basic_string<TCHAR> const&>())
-    .def(boost::python::init<std::basic_string<TCHAR> const&, 
-    std::basic_string<TCHAR> const&>())
-    ;
 }
 
 #if defined(_M_AMD64) 
@@ -65,7 +61,15 @@ BOOST_PYTHON_MODULE(PyHadesMem_IA32)
 {
   boost::python::register_exception_translator<std::exception>(
     &HadesErrorTranslator);
+
+  ExportDisassembler();
+  ExportFindPattern();
+  ExportInjector();
+  ExportManualMap();
   ExportMemoryMgr();
+  ExportModule();
+  ExportRegion();
+  ExportScanner();
 }
 
 BOOL WINAPI DllMain(HINSTANCE /*hinstDLL*/, DWORD /*fdwReason*/, 

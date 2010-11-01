@@ -855,6 +855,16 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\" /y
   <ItemGroup>
     <ClCompile Include="Main.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="DisassemblerWrap.h" />
+    <ClInclude Include="FindPatternWrap.h" />
+    <ClInclude Include="InjectorWrap.h" />
+    <ClInclude Include="ManualMapWrap.h" />
+    <ClInclude Include="MemoryMgrWrap.h" />
+    <ClInclude Include="ModuleWrap.h" />
+    <ClInclude Include="RegionWrap.h" />
+    <ClInclude Include="ScannerWrap.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
