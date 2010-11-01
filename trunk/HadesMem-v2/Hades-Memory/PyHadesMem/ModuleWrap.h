@@ -31,11 +31,11 @@ inline void ExportModule()
 {
   boost::python::class_<Hades::Memory::Module, boost::noncopyable>(
     "Module", boost::python::init<Hades::Memory::MemoryMgr&, HMODULE>())
-  .def(boost::python::init<Hades::Memory::MemoryMgr&, 
+    .def(boost::python::init<Hades::Memory::MemoryMgr&, 
     std::basic_string<TCHAR> const&>())
-//   .def("GetBase", &Hades::Memory::Module::GetBase)
-  .def("GetSize", &Hades::Memory::Module::GetSize)
-  .def("GetName", &Hades::Memory::Module::GetName)
-  .def("GetPath", &Hades::Memory::Module::GetPath)
-  ;
+//     .def("GetBase", &Hades::Memory::Module::GetBase)
+    .def("GetSize", &Hades::Memory::Module::GetSize)
+    .def("GetName", &Hades::Memory::Module::GetName)
+    .def("GetPath", &Hades::Memory::Module::GetPath)
+    ;
 }

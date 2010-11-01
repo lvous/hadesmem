@@ -32,65 +32,65 @@ inline void ExportScanner()
 {
   boost::python::class_<Hades::Memory::Scanner, boost::noncopyable>(
     "Scanner", boost::python::init<Hades::Memory::MemoryMgr&, PVOID, PVOID>())
-//   .def("FindInt8", &Hades::Memory::Scanner::Find<Hades::Memory::Types::
-//     Int8>)
-//   .def("FindUInt8", &Hades::Memory::Scanner::Find<Hades::Memory::Types::
-//     UInt8>)
-//   .def("FindInt16", &Hades::Memory::Scanner::Find<Hades::Memory::Types::
-//     Int16>)
-//   .def("FindUInt16", &Hades::Memory::Scanner::Find<Hades::Memory::Types::
-//     UInt16>)
-//   .def("FindInt32", &Hades::Memory::Scanner::Find<Hades::Memory::Types::
-//     Int32>)
-//   .def("FindUInt32", &Hades::Memory::Scanner::Find<Hades::Memory::Types::
-//     UInt32>)
-//   .def("FindInt64", &Hades::Memory::Scanner::Find<Hades::Memory::Types::
-//     Int64>)
-//   .def("FindUInt64", &Hades::Memory::Scanner::Find<Hades::Memory::Types::
-//   UInt64>)
-//   .def("FindFloat", &Hades::Memory::Scanner::Find<Hades::Memory::Types::
-//     Float>)
-//   .def("FindDouble", &Hades::Memory::Scanner::Find<Hades::Memory::Types::
-//     Double>)
-//   .def("FindCharA", &Hades::Memory::Scanner::Find<Hades::Memory::Types::
-//     CharA>)
-//   .def("FindCharW", &Hades::Memory::Scanner::Find<Hades::Memory::Types::
-//     CharW>)
-//   .def("FindStringA", &Hades::Memory::Scanner::Find<Hades::Memory::Types::
-//     StringA>)
-//   .def("FindStringW", &Hades::Memory::Scanner::Find<Hades::Memory::Types::
-//     StringW>)
-//   .def("FindPointer", &Hades::Memory::Scanner::Find<Hades::Memory::Types::
-//     Pointer>)
-  .def("FindAllInt8", &Hades::Memory::Scanner::FindAll<Hades::Memory::Types::
-    Int8>)
-  .def("FindAllUInt8", &Hades::Memory::Scanner::FindAll<Hades::Memory::Types::
-    UInt8>)
-  .def("FindAllInt16", &Hades::Memory::Scanner::FindAll<Hades::Memory::Types::
-    Int16>)
-  .def("FindAllUInt16", &Hades::Memory::Scanner::FindAll<Hades::Memory::Types::
-    UInt16>)
-  .def("FindAllInt32", &Hades::Memory::Scanner::FindAll<Hades::Memory::Types::
-    Int32>)
-  .def("FindAllUInt32", &Hades::Memory::Scanner::FindAll<Hades::Memory::Types::
-    UInt32>)
-  .def("FindAllInt64", &Hades::Memory::Scanner::FindAll<Hades::Memory::Types::
-    Int64>)
-  .def("FindAllUInt64", &Hades::Memory::Scanner::FindAll<Hades::Memory::Types::
-    UInt64>)
-  .def("FindAllFloat", &Hades::Memory::Scanner::FindAll<Hades::Memory::Types::
-    Float>)
-  .def("FindAllDouble", &Hades::Memory::Scanner::FindAll<Hades::Memory::Types::
-    Double>)
-  .def("FindAllCharA", &Hades::Memory::Scanner::FindAll<Hades::Memory::Types::
-    CharA>)
-  .def("FindAllCharW", &Hades::Memory::Scanner::FindAll<Hades::Memory::Types::
-    CharW>)
-  .def("FindAllStringA", &Hades::Memory::Scanner::FindAll<Hades::Memory::
-    Types::StringA>)
-  .def("FindAllStringW", &Hades::Memory::Scanner::FindAll<Hades::Memory::
-    Types::StringW>)
-//   .def("FindAllPointer", &Hades::Memory::Scanner::FindAll<Hades::Memory::
-//     Types::Pointer>)
-  ;
+//     .def("FindInt8", &Hades::Memory::Scanner::Find<Hades::Memory::Types::
+//       Int8>)
+//     .def("FindUInt8", &Hades::Memory::Scanner::Find<Hades::Memory::Types::
+//       UInt8>)
+//     .def("FindInt16", &Hades::Memory::Scanner::Find<Hades::Memory::Types::
+//       Int16>)
+//     .def("FindUInt16", &Hades::Memory::Scanner::Find<Hades::Memory::Types::
+//       UInt16>)
+//     .def("FindInt32", &Hades::Memory::Scanner::Find<Hades::Memory::Types::
+//       Int32>)
+//     .def("FindUInt32", &Hades::Memory::Scanner::Find<Hades::Memory::Types::
+//       UInt32>)
+//     .def("FindInt64", &Hades::Memory::Scanner::Find<Hades::Memory::Types::
+//       Int64>)
+//     .def("FindUInt64", &Hades::Memory::Scanner::Find<Hades::Memory::Types::
+//       UInt64>)
+//     .def("FindFloat", &Hades::Memory::Scanner::Find<Hades::Memory::Types::
+//       Float>)
+//     .def("FindDouble", &Hades::Memory::Scanner::Find<Hades::Memory::Types::
+//       Double>)
+//     .def("FindCharA", &Hades::Memory::Scanner::Find<Hades::Memory::Types::
+//       CharA>)
+//     .def("FindCharW", &Hades::Memory::Scanner::Find<Hades::Memory::Types::
+//       CharW>)
+//     .def("FindStringA", &Hades::Memory::Scanner::Find<Hades::Memory::Types::
+//       StringA>)
+//     .def("FindStringW", &Hades::Memory::Scanner::Find<Hades::Memory::Types::
+//       StringW>)
+//     .def("FindPointer", &Hades::Memory::Scanner::Find<Hades::Memory::Types::
+//       Pointer>)
+//     .def("FindAllInt8", &Hades::Memory::Scanner::FindAll<Hades::Memory::
+//       Types::Int8>)
+//     .def("FindAllUInt8", &Hades::Memory::Scanner::FindAll<Hades::Memory::
+//       Types::UInt8>)
+//     .def("FindAllInt16", &Hades::Memory::Scanner::FindAll<Hades::Memory::
+//       Types::Int16>)
+//     .def("FindAllUInt16", &Hades::Memory::Scanner::FindAll<Hades::Memory::
+//       Types::UInt16>)
+//     .def("FindAllInt32", &Hades::Memory::Scanner::FindAll<Hades::Memory::
+//       Types::Int32>)
+//     .def("FindAllUInt32", &Hades::Memory::Scanner::FindAll<Hades::Memory::
+//       Types::UInt32>)
+//     .def("FindAllInt64", &Hades::Memory::Scanner::FindAll<Hades::Memory::
+//       Types::Int64>)
+//     .def("FindAllUInt64", &Hades::Memory::Scanner::FindAll<Hades::Memory::
+//       Types::UInt64>)
+//     .def("FindAllFloat", &Hades::Memory::Scanner::FindAll<Hades::Memory::
+//       Types::Float>)
+//     .def("FindAllDouble", &Hades::Memory::Scanner::FindAll<Hades::Memory::
+//       Types::Double>)
+//     .def("FindAllCharA", &Hades::Memory::Scanner::FindAll<Hades::Memory::
+//       Types::CharA>)
+//     .def("FindAllCharW", &Hades::Memory::Scanner::FindAll<Hades::Memory::
+//       Types::CharW>)
+//     .def("FindAllStringA", &Hades::Memory::Scanner::FindAll<Hades::Memory::
+//       Types::StringA>)
+//     .def("FindAllStringW", &Hades::Memory::Scanner::FindAll<Hades::Memory::
+//       Types::StringW>)
+//     .def("FindAllPointer", &Hades::Memory::Scanner::FindAll<Hades::Memory::
+//       Types::Pointer>)
+    ;
 }

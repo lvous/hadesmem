@@ -29,10 +29,20 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Export PeFile API
 inline void ExportPeFile()
 {
+  // Fixme: Virtual function wrapping may be needed. See Boost.Python docs.
+
   boost::python::class_<Hades::Memory::PeFile, boost::noncopyable>(
     "PeFile", boost::python::init<Hades::Memory::MemoryMgr&, PVOID>())
-//   .def("GetMemoryMgr", &Hades::Memory::PeFile::GetMemoryMgr)
-//   .def("GetBase", &Hades::Memory::PeFile::GetBase)
-//   .def("RvaToVa", &Hades::Memory::PeFile::RvaToVa)
-  ;
+//     .def("GetMemoryMgr", &Hades::Memory::PeFile::GetMemoryMgr)
+//     .def("GetBase", &Hades::Memory::PeFile::GetBase)
+//     .def("RvaToVa", &Hades::Memory::PeFile::RvaToVa)
+    ;
+
+  boost::python::class_<Hades::Memory::PeFileAsData, boost::python::bases<
+    Hades::Memory::PeFile>, boost::noncopyable>("PeFileAsData", 
+    boost::python::init<Hades::Memory::MemoryMgr&, PVOID>())
+//     .def("GetMemoryMgr", &Hades::Memory::PeFile::GetMemoryMgr)
+//     .def("GetBase", &Hades::Memory::PeFile::GetBase)
+//     .def("RvaToVa", &Hades::Memory::PeFile::RvaToVa)
+    ;
 }

@@ -30,8 +30,8 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Export MemoryMgr API
 inline void ExportMemoryMgr()
 {
-  boost::python::class_<Hades::Memory::MemoryMgr, boost::noncopyable>(
-    "MemoryMgr", boost::python::init<DWORD>())
+  boost::python::scope MemoryMgrScope = boost::python::class_<Hades::Memory::
+    MemoryMgr, boost::noncopyable>("MemoryMgr", boost::python::init<DWORD>())
     .def(boost::python::init<std::basic_string<TCHAR> const&>())
     .def(boost::python::init<std::basic_string<TCHAR> const&, 
       std::basic_string<TCHAR> const&>())
@@ -108,5 +108,14 @@ inline void ExportMemoryMgr()
 //     .def("GetRemoteProcAddress", &Hades::Memory::MemoryMgr::
 //       GetRemoteProcAddress)
     .def("FlushCache", &Hades::Memory::MemoryMgr::FlushCache)
+    ;
+
+  boost::python::enum_<Hades::Memory::MemoryMgr::CallConv>("CallConv")
+    .value("CDECL", Hades::Memory::MemoryMgr::CallConv_CDECL)
+    .value("Import", Hades::Memory::MemoryMgr::CallConv_STDCALL)
+    .value("LoadConfig", Hades::Memory::MemoryMgr::CallConv_THISCALL)
+    .value("BoundImport", Hades::Memory::MemoryMgr::CallConv_FASTCALL)
+    .value("IAT", Hades::Memory::MemoryMgr::CallConv_X64)
+    .value("DelayImport", Hades::Memory::MemoryMgr::CallConv_Default)
     ;
 }

@@ -56,5 +56,20 @@
     <ClInclude Include="DosHeaderWrap.h">
       <Filter>Header Files\Wrappers\PeLib</Filter>
     </ClInclude>
+    <ClInclude Include="ExportDirWrap.h">
+      <Filter>Header Files\Wrappers\PeLib</Filter>
+    </ClInclude>
+    <ClInclude Include="ImportDirWrap.h">
+      <Filter>Header Files\Wrappers\PeLib</Filter>
+    </ClInclude>
+    <ClInclude Include="NtHeadersWrap.h">
+      <Filter>Header Files\Wrappers\PeLib</Filter>
+    </ClInclude>
+    <ClInclude Include="SectionWrap.h">
+      <Filter>Header Files\Wrappers\PeLib</Filter>
+    </ClInclude>
+    <ClInclude Include="TlsDirWrap.h">
+      <Filter>Header Files\Wrappers\PeLib</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -36,8 +36,13 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include "PeFileWrap.h"
 #include "ModuleWrap.h"
 #include "RegionWrap.h"
+#include "TlsDirWrap.h"
 #include "ScannerWrap.h"
+#include "SectionWrap.h"
 #include "InjectorWrap.h"
+#include "NtHeadersWrap.h"
+#include "ExportDirWrap.h"
+#include "ImportDirWrap.h"
 #include "DosHeaderWrap.h"
 #include "MemoryMgrWrap.h"
 #include "ManualMapWrap.h"
@@ -74,7 +79,12 @@ BOOST_PYTHON_MODULE(PyHadesMem_IA32)
   ExportScanner();
 
   ExportDosHeader();
+  ExportExportDir();
+  ExportImportDir();
+  ExportNtHeaders();
   ExportPeFile();
+  ExportSection();
+  ExportTlsDir();
 }
 
 BOOL WINAPI DllMain(HINSTANCE /*hinstDLL*/, DWORD /*fdwReason*/, 

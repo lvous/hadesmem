@@ -31,7 +31,7 @@ inline void ExportInjector()
 {
   boost::python::class_<Hades::Memory::Injector, boost::noncopyable>(
     "Injector", boost::python::init<Hades::Memory::MemoryMgr&>())
-//   .def("InjectDll", &Hades::Memory::Injector::InjectDll)
-  .def("CallExport", &Hades::Memory::Injector::CallExport)
-  ;
+//     .def("InjectDll", &Hades::Memory::Injector::InjectDll)
+    .def("CallExport", &Hades::Memory::Injector::CallExport)
+    ;
 }

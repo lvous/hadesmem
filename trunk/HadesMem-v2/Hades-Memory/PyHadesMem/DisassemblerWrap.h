@@ -31,7 +31,7 @@ inline void ExportDisassembler()
 {
   boost::python::class_<Hades::Memory::Disassembler, boost::noncopyable>(
     "Disassembler", boost::python::init<Hades::Memory::MemoryMgr&>())
-  .def("DisassembleToStr", &Hades::Memory::Disassembler::DisassembleToStr)
-  .def("Disassemble", &Hades::Memory::Disassembler::Disassemble)
-  ;
+    .def("DisassembleToStr", &Hades::Memory::Disassembler::DisassembleToStr)
+    .def("Disassemble", &Hades::Memory::Disassembler::Disassemble)
+    ;
 }

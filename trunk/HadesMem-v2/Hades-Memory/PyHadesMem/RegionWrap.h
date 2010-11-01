@@ -31,12 +31,12 @@ inline void ExportRegion()
 {
   boost::python::class_<Hades::Memory::Region, boost::noncopyable>(
     "Region", boost::python::init<Hades::Memory::MemoryMgr&, PVOID>())
-//   .def("GetBase", &Hades::Memory::Region::GetBase)
-//   .def("GetAllocBase", &Hades::Memory::Region::GetAllocBase)
-  .def("GetAllocProtect", &Hades::Memory::Region::GetAllocProtect)
-  .def("GetSize", &Hades::Memory::Region::GetSize)
-  .def("GetState", &Hades::Memory::Region::GetState)
-  .def("GetProtect", &Hades::Memory::Region::GetProtect)
-  .def("GetType", &Hades::Memory::Region::GetType)
-  ;
+//     .def("GetBase", &Hades::Memory::Region::GetBase)
+//     .def("GetAllocBase", &Hades::Memory::Region::GetAllocBase)
+    .def("GetAllocProtect", &Hades::Memory::Region::GetAllocProtect)
+    .def("GetSize", &Hades::Memory::Region::GetSize)
+    .def("GetState", &Hades::Memory::Region::GetState)
+    .def("GetProtect", &Hades::Memory::Region::GetProtect)
+    .def("GetType", &Hades::Memory::Region::GetType)
+    ;
 }

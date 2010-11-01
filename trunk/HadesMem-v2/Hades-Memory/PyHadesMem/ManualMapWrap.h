@@ -31,6 +31,6 @@ inline void ExportManualMap()
 {
   boost::python::class_<Hades::Memory::ManualMap, boost::noncopyable>(
     "ManualMap", boost::python::init<Hades::Memory::MemoryMgr&>())
-//   .def("Map", &Hades::Memory::ManualMap::Map)
-  ;
+//     .def("Map", &Hades::Memory::ManualMap::Map)
+    ;
 }
