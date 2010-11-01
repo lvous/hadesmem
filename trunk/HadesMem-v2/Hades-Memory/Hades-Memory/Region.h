@@ -100,6 +100,9 @@ namespace Hades
       // Get first region
       std::unique_ptr<Region> First() 
       {
+        m_Address = nullptr;
+        ZeroMemory(&m_Current, sizeof(m_Current));
+
         if (!VirtualQueryEx(m_pMemory->GetProcessHandle(), m_Address, 
           &m_Current, sizeof(m_Current)))
         {
