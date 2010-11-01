@@ -78,6 +78,7 @@
 	* 'Start' attribute support.
 	* Data/Rdata scanning support (for 'start' attribute and constant scans).
 	* Support for loading XML file from resource or memory.
+	* Dump results to file.
 * PeLib
 	* Finish implementing matching 'setters' for existing 'getters'.
 	* Add modules to support more of the PE file format.
