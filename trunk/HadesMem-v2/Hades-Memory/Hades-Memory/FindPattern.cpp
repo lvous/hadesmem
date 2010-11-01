@@ -158,12 +158,14 @@ namespace Hades
         Data.end(), 
         [&] (BYTE HCur, std::pair<BYTE, bool> NCur)
       {
-        return (NCur.second) || HCur == NCur.first;
+        return (NCur.second) || (HCur == NCur.first);
       });
 
       // Return address if found or null if not found
-      return (Iter != Buffer.end()) ? (m_Start + std::distance(Buffer.begin(), 
-        Iter)) : nullptr;
+      return 
+        (Iter != Buffer.end()) 
+        ? (m_Start + std::distance(Buffer.begin(), Iter)) 
+        : nullptr;
     }
 
     // Load patterns from XML file
