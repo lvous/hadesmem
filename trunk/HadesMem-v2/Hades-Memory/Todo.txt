@@ -1,3 +1,5 @@
+* Prioritize this list.
+
 * General
 	* Documentation via BoostBook and QuickBook.
 	* Unit tests for all components.
@@ -75,6 +77,7 @@
 	* Multi-threaded scanning.
 	* 'Start' attribute support.
 	* Data/Rdata scanning support (for 'start' attribute and constant scans).
+	* Support for loading XML file from resource or memory.
 * PeLib
 	* Finish implementing matching 'setters' for existing 'getters'.
 	* Add modules to support more of the PE file format.
