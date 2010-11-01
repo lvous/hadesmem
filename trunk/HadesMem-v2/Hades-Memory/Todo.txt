@@ -29,3 +29,5 @@
 	* Improved relative instruction rebuilding.
 * ManualMap
 	* Improved exception handling support.
+* FindPattern
+	* Pattern generator.
