@@ -56,10 +56,6 @@ namespace
     PAGE_READONLY,          /* 5 = READABLE, SHARED */
     PAGE_EXECUTE_READ,      /* 6 = READABLE, EXECUTABLE */
     PAGE_EXECUTE_READ,      /* 7 = READABLE, EXECUTABLE, SHARED */
-    /*
-    * FIXME? do we really need the WriteCopy field in segments? can't we use
-    * PAGE_WRITECOPY here?
-    */
     PAGE_READWRITE,         /* 8 = WRITABLE */
     PAGE_READWRITE,         /* 9 = WRITABLE, SHARED */
     PAGE_EXECUTE_READWRITE, /* 10 = WRITABLE, EXECUTABLE */
