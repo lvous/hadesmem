@@ -22,6 +22,7 @@
 	* Fix all 'fixme' items in code.
 	* Finish implementing basic utilities.
 	* Investigate cross-architecture process manipulation (x64 -> x86 only).
+	* Move scripting projects into their own solution.
 * New Modules
 	* Process creation APIs.
 	* Debugging APIs.
