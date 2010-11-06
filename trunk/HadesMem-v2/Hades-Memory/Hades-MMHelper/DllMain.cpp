@@ -90,7 +90,7 @@ LONG CALLBACK VectoredHandler(__in PEXCEPTION_POINTERS ExceptionInfo)
       return EXCEPTION_CONTINUE_EXECUTION;
 
     case ExceptionContinueSearch:
-      break;
+      return EXCEPTION_CONTINUE_SEARCH;
 
     case ExceptionNestedException:
     case ExceptionCollidedUnwind:
@@ -168,7 +168,12 @@ void InitializeSEH()
     return;
   }
 #elif defined(_M_IX86) 
-  return;
+  // Add VCH
+  if (!AddVectoredContinueHandler(1, &VectoredHandler))
+  {
+    MessageBox(NULL, _T("Failed to add VCH."), _T("Hades-MMHelper"), MB_OK);
+  }
+
 #else 
 #error "Unsupported architecture."
 #endif
@@ -199,11 +204,8 @@ extern "C" __declspec(dllexport) DWORD __stdcall Test(HMODULE /*Module*/)
     DebugBreak();
   }
 
-  // Add VEH
-  if (!AddVectoredExceptionHandler(1, &VectoredHandler))
-  {
-    MessageBox(NULL, _T("Failed to add VEH."), _T("Hades-MMHelper"), MB_OK);
-  }
+  // Initialize exception handling support
+  InitializeSEH();
 
   // Test IAT
   MessageBox(NULL, _T("Testing IAT."), _T("Hades-MMHelper"), MB_OK);
@@ -217,9 +219,6 @@ extern "C" __declspec(dllexport) DWORD __stdcall Test(HMODULE /*Module*/)
   typedef void (* tTestRelocs)();
   tTestRelocs pTestRelocs = reinterpret_cast<tTestRelocs>(&TestRelocs);
   pTestRelocs();
-
-  // Initialize exception handling support
-  InitializeSEH();
 
   // Test SEH
   TestSEH();
@@ -240,74 +239,6 @@ extern "C" __declspec(dllexport) DWORD __stdcall Initialize(HMODULE /*Module*/)
   }
 
   // Test return values
-  return 1234;
-}
-
-std::shared_ptr<Hades::Memory::MemoryMgr> g_pMyMemory;
-std::shared_ptr<Hades::Memory::PatchDetour> g_pNtGetTickCount;
-
-ULONG NTAPI NtGetTickCount_Hook()
-{
-  MessageBoxA(NULL, "Hook called!", "NtGetTickCount", MB_OK);
-
-  PVOID const pTrampoline = g_pNtGetTickCount->GetTrampoline();
-  typedef ULONG (NTAPI* tNtGetTickCount)();
-  tNtGetTickCount pNtGetTickCount = reinterpret_cast<tNtGetTickCount>(
-    pTrampoline);
-
-  return pNtGetTickCount();
-}
-
-extern "C" __declspec(dllexport) DWORD __stdcall TestPatcher(
-  HMODULE /*Module*/)
-{
-  try
-  {
-    if (!g_pMyMemory)
-    {
-      g_pMyMemory.reset(new Hades::Memory::MemoryMgr(GetCurrentProcessId()));
-    }
-
-    if (!g_pNtGetTickCount)
-    {
-      HMODULE NtdllMod = GetModuleHandleW(L"Ntdll.dll");
-      if (!NtdllMod)
-      {
-        DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(Hades::HadesError() << 
-          Hades::ErrorFunction("TestPatcher") << 
-          Hades::ErrorString("Could not get handle to Ntdll.") << 
-          Hades::ErrorCodeWin(LastError));
-      }
-
-      FARPROC pNtGetTickCount = GetProcAddress(NtdllMod, "NtGetTickCount");
-      if (!pNtGetTickCount)
-      {
-        DWORD LastError = GetLastError();
-        BOOST_THROW_EXCEPTION(Hades::HadesError() << 
-          Hades::ErrorFunction("TestPatcher") << 
-          Hades::ErrorString("Could not get pointer to NtGetTickCount.") << 
-          Hades::ErrorCodeWin(LastError));
-      }
-
-      g_pNtGetTickCount.reset(new Hades::Memory::PatchDetour(
-        *g_pMyMemory, pNtGetTickCount, &NtGetTickCount_Hook));
-
-      g_pNtGetTickCount->Apply();
-
-      pNtGetTickCount();
-
-      pNtGetTickCount();
-
-      g_pNtGetTickCount->Remove();
-    }
-  }
-  catch (std::exception const& e)
-  {
-    MessageBoxA(NULL, boost::diagnostic_information(e).c_str(), "TestPatcher", 
-      MB_OK);
-  }
-
   return 1234;
 }
 
