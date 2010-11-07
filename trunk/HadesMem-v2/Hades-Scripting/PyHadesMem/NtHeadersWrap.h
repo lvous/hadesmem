@@ -30,8 +30,8 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 inline void ExportNtHeaders()
 {
   boost::python::scope NtHeadersScope = boost::python::class_<
-    Hades::Memory::NtHeaders, boost::noncopyable>("NtHeaders", 
-    boost::python::init<Hades::Memory::PeFile&>())
+    Hades::Memory::NtHeaders>("NtHeaders", boost::python::init<
+    Hades::Memory::PeFile&>())
 //     .def("GetBase", &Hades::Memory::NtHeaders::GetBase)
     .def("IsSignatureValid", &Hades::Memory::NtHeaders::IsSignatureValid)
     .def("EnsureSignatureValid", &Hades::Memory::NtHeaders::

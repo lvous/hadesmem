@@ -31,7 +31,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 inline void ExportMemoryMgr()
 {
   boost::python::scope MemoryMgrScope = boost::python::class_<Hades::Memory::
-    MemoryMgr, boost::noncopyable>("MemoryMgr", boost::python::init<DWORD>())
+    MemoryMgr>("MemoryMgr", boost::python::init<DWORD>())
     .def(boost::python::init<std::basic_string<TCHAR> const&>())
     .def(boost::python::init<std::basic_string<TCHAR> const&, 
       std::basic_string<TCHAR> const&>())

@@ -29,8 +29,8 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Export Disassembler API
 inline void ExportDisassembler()
 {
-  boost::python::class_<Hades::Memory::Disassembler, boost::noncopyable>(
-    "Disassembler", boost::python::init<Hades::Memory::MemoryMgr&>())
+  boost::python::class_<Hades::Memory::Disassembler>("Disassembler", 
+    boost::python::init<Hades::Memory::MemoryMgr&>())
     .def("DisassembleToStr", &Hades::Memory::Disassembler::DisassembleToStr)
     .def("Disassemble", &Hades::Memory::Disassembler::Disassemble)
     ;

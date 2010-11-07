@@ -29,8 +29,8 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Export TlsDir API
 inline void ExportTlsDir()
 {
-  boost::python::class_<Hades::Memory::TlsDir, boost::noncopyable>(
-    "TlsDir", boost::python::init<Hades::Memory::PeFile&>())
+  boost::python::class_<Hades::Memory::TlsDir>("TlsDir", boost::python::init<
+    Hades::Memory::PeFile&>())
     .def("IsValid", &Hades::Memory::TlsDir::IsValid)
     .def("EnsureValid", &Hades::Memory::TlsDir::EnsureValid)
     .def("GetStartAddressOfRawData", &Hades::Memory::TlsDir::GetStartAddressOfRawData)

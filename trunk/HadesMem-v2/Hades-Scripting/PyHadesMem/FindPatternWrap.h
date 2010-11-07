@@ -29,8 +29,8 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Export FindPattern API
 inline void ExportFindPattern()
 {
-  boost::python::class_<Hades::Memory::FindPattern, boost::noncopyable>(
-    "FindPattern", boost::python::init<Hades::Memory::MemoryMgr&>())
+  boost::python::class_<Hades::Memory::FindPattern>("FindPattern", 
+    boost::python::init<Hades::Memory::MemoryMgr&>())
     .def(boost::python::init<Hades::Memory::MemoryMgr&, HMODULE>())
 //     .def("Find", &Hades::Memory::FindPattern::Find)
     .def("LoadFromXML", &Hades::Memory::FindPattern::LoadFromXML)

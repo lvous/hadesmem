@@ -30,8 +30,8 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Export Scanner API
 inline void ExportScanner()
 {
-  boost::python::class_<Hades::Memory::Scanner, boost::noncopyable>(
-    "Scanner", boost::python::init<Hades::Memory::MemoryMgr&, PVOID, PVOID>())
+  boost::python::class_<Hades::Memory::Scanner>("Scanner", boost::python::init<
+    Hades::Memory::MemoryMgr&, PVOID, PVOID>())
 //     .def("FindInt8", &Hades::Memory::Scanner::Find<Hades::Memory::Types::
 //       Int8>)
 //     .def("FindUInt8", &Hades::Memory::Scanner::Find<Hades::Memory::Types::

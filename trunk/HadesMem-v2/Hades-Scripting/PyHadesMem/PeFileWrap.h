@@ -31,16 +31,8 @@ inline void ExportPeFile()
 {
   // Fixme: Virtual function wrapping may be needed. See Boost.Python docs.
 
-  boost::python::class_<Hades::Memory::PeFile, boost::noncopyable>(
-    "PeFile", boost::python::init<Hades::Memory::MemoryMgr&, PVOID>())
-//     .def("GetMemoryMgr", &Hades::Memory::PeFile::GetMemoryMgr)
-//     .def("GetBase", &Hades::Memory::PeFile::GetBase)
-//     .def("RvaToVa", &Hades::Memory::PeFile::RvaToVa)
-    ;
-
-  boost::python::class_<Hades::Memory::PeFileAsData, boost::python::bases<
-    Hades::Memory::PeFile>, boost::noncopyable>("PeFileAsData", 
-    boost::python::init<Hades::Memory::MemoryMgr&, PVOID>())
+  boost::python::class_<Hades::Memory::PeFile>("PeFile", boost::python::init<
+    Hades::Memory::MemoryMgr&, PVOID, Hades::Memory::PeFile::FileType>())
 //     .def("GetMemoryMgr", &Hades::Memory::PeFile::GetMemoryMgr)
 //     .def("GetBase", &Hades::Memory::PeFile::GetBase)
 //     .def("RvaToVa", &Hades::Memory::PeFile::RvaToVa)

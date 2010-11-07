@@ -30,8 +30,8 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Export Section API
 inline void ExportSection()
 {
-  boost::python::class_<Hades::Memory::Section, boost::noncopyable>(
-    "Section", boost::python::init<Hades::Memory::PeFile&, WORD>())
+  boost::python::class_<Hades::Memory::Section>("Section", boost::python::init<
+    Hades::Memory::PeFile&, WORD>())
     .def("GetName", &Hades::Memory::Section::GetName)
     .def("GetVirtualAddress", &Hades::Memory::Section::GetVirtualAddress)
     .def("GetVirtualSize", &Hades::Memory::Section::GetVirtualSize)

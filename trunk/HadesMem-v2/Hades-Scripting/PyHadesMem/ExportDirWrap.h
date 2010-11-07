@@ -30,8 +30,8 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Export ExportDir API
 inline void ExportExportDir()
 {
-  boost::python::class_<Hades::Memory::ExportDir, boost::noncopyable>(
-    "ExportDir", boost::python::init<Hades::Memory::PeFile&>())
+  boost::python::class_<Hades::Memory::ExportDir>("ExportDir", 
+    boost::python::init<Hades::Memory::PeFile&>())
     .def("IsValid", &Hades::Memory::ExportDir::IsValid)
     .def("EnsureValid", &Hades::Memory::ExportDir::EnsureValid)
     .def("GetCharacteristics", &Hades::Memory::ExportDir::GetCharacteristics)
