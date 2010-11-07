@@ -31,7 +31,7 @@ inline void ExportNtHeaders()
 {
   boost::python::scope NtHeadersScope = boost::python::class_<
     Hades::Memory::NtHeaders>("NtHeaders", boost::python::init<
-    Hades::Memory::PeFile&>())
+    Hades::Memory::PeFile const&>())
 //     .def("GetBase", &Hades::Memory::NtHeaders::GetBase)
     .def("IsSignatureValid", &Hades::Memory::NtHeaders::IsSignatureValid)
     .def("EnsureSignatureValid", &Hades::Memory::NtHeaders::

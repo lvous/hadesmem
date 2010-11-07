@@ -30,7 +30,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 inline void ExportRegion()
 {
   boost::python::class_<Hades::Memory::Region>("Region", boost::python::init<
-    Hades::Memory::MemoryMgr&, PVOID>())
+    Hades::Memory::MemoryMgr const&, PVOID>())
 //     .def("GetBase", &Hades::Memory::Region::GetBase)
 //     .def("GetAllocBase", &Hades::Memory::Region::GetAllocBase)
     .def("GetAllocProtect", &Hades::Memory::Region::GetAllocProtect)

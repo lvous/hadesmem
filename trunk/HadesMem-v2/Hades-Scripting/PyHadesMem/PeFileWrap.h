@@ -32,7 +32,7 @@ inline void ExportPeFile()
   // Fixme: Virtual function wrapping may be needed. See Boost.Python docs.
 
   boost::python::class_<Hades::Memory::PeFile>("PeFile", boost::python::init<
-    Hades::Memory::MemoryMgr&, PVOID, Hades::Memory::PeFile::FileType>())
+    Hades::Memory::MemoryMgr const&, PVOID, Hades::Memory::PeFile::FileType>())
 //     .def("GetMemoryMgr", &Hades::Memory::PeFile::GetMemoryMgr)
 //     .def("GetBase", &Hades::Memory::PeFile::GetBase)
 //     .def("RvaToVa", &Hades::Memory::PeFile::RvaToVa)

@@ -31,7 +31,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 inline void ExportImportDir()
 {
   boost::python::class_<Hades::Memory::ImportDir>("ImportDir", 
-    boost::python::init<Hades::Memory::PeFile&, PIMAGE_IMPORT_DESCRIPTOR>())
+    boost::python::init<Hades::Memory::PeFile const&, PIMAGE_IMPORT_DESCRIPTOR>())
     .def("IsValid", &Hades::Memory::ImportDir::IsValid)
     .def("EnsureValid", &Hades::Memory::ImportDir::EnsureValid)
 //     .def("GetBase", &Hades::Memory::ImportDir::GetBase)
@@ -45,7 +45,7 @@ inline void ExportImportDir()
     ;
 
   boost::python::class_<Hades::Memory::ImportThunk, boost::noncopyable>(
-    "ImportThunk", boost::python::init<Hades::Memory::PeFile&, PVOID>())
+    "ImportThunk", boost::python::init<Hades::Memory::PeFile const&, PVOID>())
     .def("IsValid", &Hades::Memory::ImportThunk::IsValid)
     .def("Advance", &Hades::Memory::ImportThunk::Advance)
     .def("GetAddressOfData", &Hades::Memory::ImportThunk::GetAddressOfData)
@@ -59,13 +59,13 @@ inline void ExportImportDir()
     ;
 
   boost::python::class_<Hades::Memory::ImportDirEnum, boost::noncopyable>(
-    "ImportDirEnum", boost::python::init<Hades::Memory::PeFile&>())
+    "ImportDirEnum", boost::python::init<Hades::Memory::PeFile const&>())
     .def("First", &Hades::Memory::ImportDirEnum::First)
     .def("Next", &Hades::Memory::ImportDirEnum::Next)
     ;
 
   boost::python::class_<Hades::Memory::ImportThunkEnum, boost::noncopyable>(
-    "ImportThunkEnum", boost::python::init<Hades::Memory::PeFile&, DWORD>())
+    "ImportThunkEnum", boost::python::init<Hades::Memory::PeFile const&, DWORD>())
     .def("First", &Hades::Memory::ImportThunkEnum::First)
     .def("Next", &Hades::Memory::ImportThunkEnum::Next)
     ;

@@ -31,7 +31,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 inline void ExportExportDir()
 {
   boost::python::class_<Hades::Memory::ExportDir>("ExportDir", 
-    boost::python::init<Hades::Memory::PeFile&>())
+    boost::python::init<Hades::Memory::PeFile const&>())
     .def("IsValid", &Hades::Memory::ExportDir::IsValid)
     .def("EnsureValid", &Hades::Memory::ExportDir::EnsureValid)
     .def("GetCharacteristics", &Hades::Memory::ExportDir::GetCharacteristics)
@@ -52,7 +52,7 @@ inline void ExportExportDir()
     ;
 
   boost::python::class_<Hades::Memory::ExportEnum, boost::noncopyable>(
-    "ExportEnum", boost::python::init<Hades::Memory::PeFile&>())
+    "ExportEnum", boost::python::init<Hades::Memory::PeFile const&>())
     .def("First", &Hades::Memory::ExportEnum::First)
     .def("Next", &Hades::Memory::ExportEnum::Next)
     ;

@@ -30,8 +30,8 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 inline void ExportModule()
 {
   boost::python::class_<Hades::Memory::Module>("Module", boost::python::init<
-    Hades::Memory::MemoryMgr&, HMODULE>())
-    .def(boost::python::init<Hades::Memory::MemoryMgr&, 
+    Hades::Memory::MemoryMgr const&, HMODULE>())
+    .def(boost::python::init<Hades::Memory::MemoryMgr const&, 
     std::basic_string<TCHAR> const&>())
 //     .def("GetBase", &Hades::Memory::Module::GetBase)
     .def("GetSize", &Hades::Memory::Module::GetSize)

@@ -30,7 +30,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 inline void ExportManualMap()
 {
   boost::python::class_<Hades::Memory::ManualMap>("ManualMap", 
-    boost::python::init<Hades::Memory::MemoryMgr&>())
+    boost::python::init<Hades::Memory::MemoryMgr const&>())
 //     .def("Map", &Hades::Memory::ManualMap::Map)
     ;
 }

@@ -30,7 +30,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 inline void ExportInjector()
 {
   boost::python::class_<Hades::Memory::Injector>("Injector", 
-    boost::python::init<Hades::Memory::MemoryMgr&>())
+    boost::python::init<Hades::Memory::MemoryMgr const&>())
 //     .def("InjectDll", &Hades::Memory::Injector::InjectDll)
     .def("CallExport", &Hades::Memory::Injector::CallExport)
     ;

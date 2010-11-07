@@ -30,7 +30,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 inline void ExportDosHeader()
 {
   boost::python::class_<Hades::Memory::DosHeader>("DosHeader", 
-    boost::python::init<Hades::Memory::PeFile&>())
+    boost::python::init<Hades::Memory::PeFile const&>())
     .def("IsMagicValid", &Hades::Memory::DosHeader::IsMagicValid)
     .def("EnsureMagicValid", &Hades::Memory::DosHeader::EnsureMagicValid)
     .def("GetMagic", &Hades::Memory::DosHeader::GetMagic)
