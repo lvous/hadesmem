@@ -44,7 +44,7 @@ namespace Hades
   namespace Memory
   {
     // Memory searching class
-    class Scanner : private boost::noncopyable
+    class Scanner
     {
     public:
       // Scanner exception type
