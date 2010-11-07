@@ -35,13 +35,14 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Hades
 #include "Fwd.h"
 #include "Error.h"
+#include "MemoryMgr.h"
 
 namespace Hades
 {
   namespace Memory
   {
     // Import directory wrapper
-    class ImportDir : private boost::noncopyable
+    class ImportDir
     {
     public:
       // ImportDir error type
@@ -49,8 +50,8 @@ namespace Hades
       { };
 
       // Constructor
-      explicit ImportDir(PeFile& MyPeFile, PIMAGE_IMPORT_DESCRIPTOR pImpDesc = 
-        nullptr);
+      explicit ImportDir(PeFile const& MyPeFile, 
+        PIMAGE_IMPORT_DESCRIPTOR pImpDesc = nullptr);
 
       // Whether import directory is valid
       bool IsValid() const;
@@ -83,9 +84,9 @@ namespace Hades
       DWORD GetFirstThunk() const;
 
     private:
-      PeFile* m_pPeFile;
+      PeFile m_PeFile;
 
-      MemoryMgr* m_pMemory;
+      MemoryMgr m_Memory;
 
       mutable PIMAGE_IMPORT_DESCRIPTOR m_pImpDesc;
     };
@@ -99,7 +100,7 @@ namespace Hades
       { };
 
       // Constructor
-      ImportThunk(PeFile& MyPeFile, PVOID pThunk);
+      ImportThunk(PeFile const& MyPeFile, PVOID pThunk);
 
       // Whether thunk is valid
       bool IsValid() const;
@@ -132,9 +133,9 @@ namespace Hades
       void SetFunction(DWORD_PTR Function) const;
 
     private:
-      PeFile* m_pPeFile;
+      PeFile m_PeFile;
 
-      MemoryMgr* m_pMemory;
+      MemoryMgr m_Memory;
 
       mutable PIMAGE_THUNK_DATA m_pThunk;
 

@@ -34,13 +34,15 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Hades
 #include "Fwd.h"
 #include "Error.h"
+#include "PeFile.h"
+#include "MemoryMgr.h"
 
 namespace Hades
 {
   namespace Memory
   {
     // PE file TLS directory
-    class TlsDir : private boost::noncopyable
+    class TlsDir
     {
     public:
       // TlsDir error class
@@ -48,7 +50,7 @@ namespace Hades
       { };
 
       // Constructor
-      TlsDir(PeFile& MyPeFile);
+      TlsDir(PeFile const& MyPeFile);
 
       // Whether TLS directory is valid
       bool IsValid() const;
@@ -85,10 +87,10 @@ namespace Hades
 
     private:
       // PE file
-      PeFile* m_pPeFile;
+      PeFile m_PeFile;
 
       // Memory instance
-      MemoryMgr* m_pMemory;
+      MemoryMgr m_Memory;
     };
   }
 }

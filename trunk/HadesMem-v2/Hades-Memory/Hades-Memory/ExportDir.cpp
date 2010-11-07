@@ -32,9 +32,9 @@ namespace Hades
   namespace Memory
   {
     // Constructor
-    ExportDir::ExportDir(PeFile& MyPeFile)
-      : m_pPeFile(&MyPeFile), 
-      m_pMemory(&m_pPeFile->GetMemoryMgr()), 
+    ExportDir::ExportDir(PeFile const& MyPeFile)
+      : m_PeFile(MyPeFile), 
+      m_Memory(m_PeFile.GetMemoryMgr()), 
       m_pBase(nullptr)
     { }
 
@@ -42,7 +42,7 @@ namespace Hades
     bool ExportDir::IsValid() const
     {
       // Get NT headers
-      NtHeaders const MyNtHeaders(*m_pPeFile);
+      NtHeaders const MyNtHeaders(m_PeFile);
 
       // Get export dir data
       DWORD const DataDirSize(MyNtHeaders.GetDataDirectorySize(NtHeaders::
@@ -69,7 +69,7 @@ namespace Hades
     DWORD ExportDir::GetCharacteristics() const
     {
       PBYTE const pExportDir = GetBase();
-      return m_pMemory->Read<DWORD>(pExportDir + FIELD_OFFSET(
+      return m_Memory.Read<DWORD>(pExportDir + FIELD_OFFSET(
         IMAGE_EXPORT_DIRECTORY, Characteristics));
     }
 
@@ -77,7 +77,7 @@ namespace Hades
     DWORD ExportDir::GetTimeDateStamp() const
     {
       PBYTE const pExportDir = GetBase();
-      return m_pMemory->Read<DWORD>(pExportDir + FIELD_OFFSET(
+      return m_Memory.Read<DWORD>(pExportDir + FIELD_OFFSET(
         IMAGE_EXPORT_DIRECTORY, TimeDateStamp));
     }
 
@@ -85,7 +85,7 @@ namespace Hades
     WORD ExportDir::GetMajorVersion() const
     {
       PBYTE const pExportDir = GetBase();
-      return m_pMemory->Read<WORD>(pExportDir + FIELD_OFFSET(
+      return m_Memory.Read<WORD>(pExportDir + FIELD_OFFSET(
         IMAGE_EXPORT_DIRECTORY, MajorVersion));
     }
 
@@ -93,7 +93,7 @@ namespace Hades
     WORD ExportDir::GetMinorVersion() const
     {
       PBYTE const pExportDir = GetBase();
-      return m_pMemory->Read<WORD>(pExportDir + FIELD_OFFSET(
+      return m_Memory.Read<WORD>(pExportDir + FIELD_OFFSET(
         IMAGE_EXPORT_DIRECTORY, MinorVersion));
     }
 
@@ -104,7 +104,7 @@ namespace Hades
       PBYTE const pExpDirBase = GetBase();
 
       // Read RVA of module name
-      DWORD const NameRva = m_pMemory->Read<DWORD>(pExpDirBase + FIELD_OFFSET(
+      DWORD const NameRva = m_Memory.Read<DWORD>(pExpDirBase + FIELD_OFFSET(
         IMAGE_EXPORT_DIRECTORY, Name));
 
       // Ensure there is a module name to process
@@ -114,14 +114,14 @@ namespace Hades
       }
 
       // Read module name
-      return m_pMemory->Read<std::string>(m_pPeFile->RvaToVa(NameRva));
+      return m_Memory.Read<std::string>(m_PeFile.RvaToVa(NameRva));
     }
 
     // Get ordinal base
     DWORD ExportDir::GetOrdinalBase() const
     {
       PBYTE const pExportDir = GetBase();
-      return m_pMemory->Read<DWORD>(pExportDir + FIELD_OFFSET(
+      return m_Memory.Read<DWORD>(pExportDir + FIELD_OFFSET(
         IMAGE_EXPORT_DIRECTORY, Base));
     }
 
@@ -129,7 +129,7 @@ namespace Hades
     DWORD ExportDir::GetNumberOfFunctions() const
     {
       PBYTE const pExportDir = GetBase();
-      return m_pMemory->Read<DWORD>(pExportDir + FIELD_OFFSET(
+      return m_Memory.Read<DWORD>(pExportDir + FIELD_OFFSET(
         IMAGE_EXPORT_DIRECTORY, NumberOfFunctions));
     }
 
@@ -137,7 +137,7 @@ namespace Hades
     DWORD ExportDir::GetNumberOfNames() const
     {
       PBYTE const pExportDir = GetBase();
-      return m_pMemory->Read<DWORD>(pExportDir + FIELD_OFFSET(
+      return m_Memory.Read<DWORD>(pExportDir + FIELD_OFFSET(
         IMAGE_EXPORT_DIRECTORY, NumberOfNames));
     }
 
@@ -145,7 +145,7 @@ namespace Hades
     DWORD ExportDir::GetAddressOfFunctions() const
     {
       PBYTE const pExportDir = GetBase();
-      return m_pMemory->Read<DWORD>(pExportDir + FIELD_OFFSET(
+      return m_Memory.Read<DWORD>(pExportDir + FIELD_OFFSET(
         IMAGE_EXPORT_DIRECTORY, AddressOfFunctions));
     }
 
@@ -153,7 +153,7 @@ namespace Hades
     DWORD ExportDir::GetAddressOfNames() const
     {
       PBYTE const pExportDir = GetBase();
-      return m_pMemory->Read<DWORD>(pExportDir + FIELD_OFFSET(
+      return m_Memory.Read<DWORD>(pExportDir + FIELD_OFFSET(
         IMAGE_EXPORT_DIRECTORY, AddressOfNames));
     }
 
@@ -161,7 +161,7 @@ namespace Hades
     DWORD ExportDir::GetAddressOfNameOrdinals() const
     {
       PBYTE const pExportDir = GetBase();
-      return m_pMemory->Read<DWORD>(pExportDir + FIELD_OFFSET(
+      return m_Memory.Read<DWORD>(pExportDir + FIELD_OFFSET(
         IMAGE_EXPORT_DIRECTORY, AddressOfNameOrdinals));
     }
 
@@ -172,7 +172,7 @@ namespace Hades
       if (!m_pBase)
       {
         // Get NT headers
-        NtHeaders const MyNtHeaders(*m_pPeFile);
+        NtHeaders const MyNtHeaders(m_PeFile);
 
         // Get export dir data
         DWORD const DataDirSize = MyNtHeaders.GetDataDirectorySize(NtHeaders::
@@ -187,7 +187,7 @@ namespace Hades
         }
 
         // Init base address
-        m_pBase = static_cast<PBYTE>(m_pPeFile->RvaToVa(DataDirVa));
+        m_pBase = static_cast<PBYTE>(m_PeFile.RvaToVa(DataDirVa));
       }
 
       // Return base address
@@ -198,13 +198,13 @@ namespace Hades
     IMAGE_EXPORT_DIRECTORY ExportDir::GetExportDirRaw() const
     {
       // Get raw export dir
-      return m_pMemory->Read<IMAGE_EXPORT_DIRECTORY>(GetBase());
+      return m_Memory.Read<IMAGE_EXPORT_DIRECTORY>(GetBase());
     }
 
     // Constructor
-    Export::Export(PeFile& MyPeFile, DWORD Number) 
-      : m_pPeFile(&MyPeFile), 
-      m_pMemory(&MyPeFile.GetMemoryMgr()), 
+    Export::Export(PeFile const& MyPeFile, DWORD Number) 
+      : m_PeFile(MyPeFile), 
+      m_Memory(MyPeFile.GetMemoryMgr()), 
       m_Rva(0), 
       m_Va(nullptr), 
       m_Name(), 
@@ -214,10 +214,10 @@ namespace Hades
       m_Forwarded(false)
     {
       // Get NT headers
-      NtHeaders const MyNtHeaders(*m_pPeFile);
+      NtHeaders const MyNtHeaders(m_PeFile);
 
       // Get export directory
-      ExportDir const MyExportDir(*m_pPeFile);
+      ExportDir const MyExportDir(m_PeFile);
 
       // Ensure export number is valid
       if (Number > MyExportDir.GetNumberOfFunctions())
@@ -228,13 +228,13 @@ namespace Hades
       }
 
       // Get pointer to function name ordinals
-      WORD* pOrdinals = static_cast<WORD*>(m_pPeFile->RvaToVa(MyExportDir.
+      WORD* pOrdinals = static_cast<WORD*>(m_PeFile.RvaToVa(MyExportDir.
         GetAddressOfNameOrdinals()));
       // Get pointer to functions
-      DWORD* pFunctions = static_cast<DWORD*>(m_pPeFile->RvaToVa(MyExportDir.
+      DWORD* pFunctions = static_cast<DWORD*>(m_PeFile.RvaToVa(MyExportDir.
         GetAddressOfFunctions()));
       // Get pointer to function names
-      DWORD* pNames = static_cast<DWORD*>(m_pPeFile->RvaToVa(MyExportDir.
+      DWORD* pNames = static_cast<DWORD*>(m_PeFile.RvaToVa(MyExportDir.
         GetAddressOfNames()));
 
       // Get data directory size
@@ -254,20 +254,20 @@ namespace Hades
 
       // Find ordinal name (and set if applicable)
       DWORD const NumberOfNames = MyExportDir.GetNumberOfNames();
-      std::vector<WORD> NameOrdinals(m_pMemory->Read<std::vector<WORD>>(
+      std::vector<WORD> NameOrdinals(m_Memory.Read<std::vector<WORD>>(
         pOrdinals, NumberOfNames));
       auto NameOrdIter = std::find(NameOrdinals.begin(), NameOrdinals.end(), 
         Number);
       if (NameOrdIter != NameOrdinals.end())
       {
         m_ByName = true;
-        DWORD const NameRva = m_pMemory->Read<DWORD>(pNames + std::distance(
+        DWORD const NameRva = m_Memory.Read<DWORD>(pNames + std::distance(
           NameOrdinals.begin(), NameOrdIter));
-        m_Name = m_pMemory->Read<std::string>(m_pPeFile->RvaToVa(NameRva));
+        m_Name = m_Memory.Read<std::string>(m_PeFile.RvaToVa(NameRva));
       }
 
       // Get function RVA (unchecked)
-      DWORD const FuncRva = m_pMemory->Read<DWORD>(pFunctions + Number);
+      DWORD const FuncRva = m_Memory.Read<DWORD>(pFunctions + Number);
 
       // Check function RVA. If it lies inside the export dir region 
       // then it's a forwarded export. Otherwise it's a regular RVA.
@@ -277,14 +277,13 @@ namespace Hades
         // Fixme: Provide member which returns the 'split' version of the 
         // forwarder. (i.e. module and name)
         m_Forwarded = true;
-        m_Forwarder = m_pMemory->Read<std::string>(m_pPeFile->RvaToVa(
-          FuncRva));
+        m_Forwarder = m_Memory.Read<std::string>(m_PeFile.RvaToVa(FuncRva));
       }
       else
       {
         // Set export RVA/VA
         m_Rva = FuncRva;
-        m_Va = m_pPeFile->RvaToVa(FuncRva);
+        m_Va = m_PeFile.RvaToVa(FuncRva);
       }
     }
   }

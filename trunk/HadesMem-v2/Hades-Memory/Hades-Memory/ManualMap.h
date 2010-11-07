@@ -35,13 +35,14 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Hades
 #include "Fwd.h"
 #include "Error.h"
+#include "MemoryMgr.h"
 
 namespace Hades
 {
   namespace Memory
   {
     // Manual mapping class
-    class ManualMap : private boost::noncopyable
+    class ManualMap
     {
     public:
       // ManualMap exception type
@@ -49,7 +50,7 @@ namespace Hades
       { };
 
       // Constructor
-      ManualMap(MemoryMgr& MyMemory);
+      ManualMap(MemoryMgr const& MyMemory);
 
       // Manually map DLL
       PVOID Map(boost::filesystem::path const& Path, 
@@ -66,7 +67,7 @@ namespace Hades
       void FixRelocations(PeFile& MyPeFile, PVOID RemoteAddr) const;
 
       // MemoryMgr instance
-      MemoryMgr* m_pMemory;
+      MemoryMgr m_Memory;
     };
   }
 }

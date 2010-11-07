@@ -25,8 +25,8 @@ namespace Hades
   namespace Memory
   {
     // Constructor
-    Scanner::Scanner(MemoryMgr& MyMemory, PVOID Start, PVOID End) 
-      : m_pMemory(&MyMemory), 
+    Scanner::Scanner(MemoryMgr const& MyMemory, PVOID Start, PVOID End) 
+      : m_Memory(MyMemory), 
       m_Start(static_cast<PBYTE>(Start)), 
       m_End(static_cast<PBYTE>(End))
     {

@@ -28,9 +28,9 @@ namespace Hades
   namespace Memory
   {
     // Constructor
-    NtHeaders::NtHeaders(PeFile& MyPeFile)
-      : m_pPeFile(&MyPeFile), 
-      m_pMemory(&m_pPeFile->GetMemoryMgr()), 
+    NtHeaders::NtHeaders(PeFile const& MyPeFile)
+      : m_PeFile(MyPeFile), 
+      m_Memory(m_PeFile.GetMemoryMgr()), 
       m_pBase(nullptr)
     {
       // Ensure signature is valid
@@ -43,8 +43,8 @@ namespace Hades
       // Initialize if necessary
       if (!m_pBase)
       {
-        DosHeader MyDosHeader(*m_pPeFile);
-        m_pBase = m_pPeFile->GetBase() + MyDosHeader.GetNewHeaderOffset();
+        DosHeader MyDosHeader(m_PeFile);
+        m_pBase = m_PeFile.GetBase() + MyDosHeader.GetNewHeaderOffset();
       }
 
       // Return base address
@@ -71,14 +71,14 @@ namespace Hades
     // Get signature
     DWORD NtHeaders::GetSignature() const
     {
-      return m_pMemory->Read<DWORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      return m_Memory.Read<DWORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         Signature));
     }
 
     // Set signature
     void NtHeaders::SetSignature(DWORD Signature) const
     {
-      m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, Signature), 
+      m_Memory.Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, Signature), 
         Signature);
 
       if (GetSignature() != Signature)
@@ -92,14 +92,14 @@ namespace Hades
     // Get machine
     WORD NtHeaders::GetMachine() const
     {
-      return m_pMemory->Read<WORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      return m_Memory.Read<WORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         FileHeader.Machine));
     }
 
     // Set machine
     void NtHeaders::SetMachine(WORD Machine) const
     {
-      m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, FileHeader.
+      m_Memory.Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, FileHeader.
         Machine), Machine);
 
       if (GetMachine() != Machine)
@@ -113,14 +113,14 @@ namespace Hades
     // Get number of sections
     WORD NtHeaders::GetNumberOfSections() const
     {
-      return m_pMemory->Read<WORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      return m_Memory.Read<WORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         FileHeader.NumberOfSections));
     }
 
     // Set number of sections
     void NtHeaders::SetNumberOfSections(WORD NumberOfSections) const
     {
-      m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, FileHeader.
+      m_Memory.Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, FileHeader.
         NumberOfSections), NumberOfSections);
 
       if (GetNumberOfSections() != NumberOfSections)
@@ -134,14 +134,14 @@ namespace Hades
     // Get time date stamp
     DWORD NtHeaders::GetTimeDateStamp() const
     {
-      return m_pMemory->Read<DWORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      return m_Memory.Read<DWORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         FileHeader.TimeDateStamp));
     }
 
     // Set time date stamp
     void NtHeaders::SetTimeDateStamp(DWORD TimeDateStamp) const
     {
-      m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, FileHeader.
+      m_Memory.Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, FileHeader.
         TimeDateStamp), TimeDateStamp);
 
       if (GetTimeDateStamp() != TimeDateStamp)
@@ -155,14 +155,14 @@ namespace Hades
     // Get pointer to symbol table
     DWORD NtHeaders::GetPointerToSymbolTable() const
     {
-      return m_pMemory->Read<DWORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      return m_Memory.Read<DWORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         FileHeader.PointerToSymbolTable));
     }
 
     // Set pointer to symbol table
     void NtHeaders::SetPointerToSymbolTable(DWORD PointerToSymbolTable) const
     {
-      m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, FileHeader.
+      m_Memory.Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, FileHeader.
         PointerToSymbolTable), PointerToSymbolTable);
 
       if (GetPointerToSymbolTable() != PointerToSymbolTable)
@@ -176,14 +176,14 @@ namespace Hades
     // Get number of symbols
     DWORD NtHeaders::GetNumberOfSymbols() const
     {
-      return m_pMemory->Read<DWORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      return m_Memory.Read<DWORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         FileHeader.NumberOfSymbols));
     }
 
     // Set number of symbols
     void NtHeaders::SetNumberOfSymbols(DWORD NumberOfSymbols) const
     {
-      m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, FileHeader.
+      m_Memory.Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, FileHeader.
         NumberOfSymbols), NumberOfSymbols);
 
       if (GetNumberOfSymbols() != NumberOfSymbols)
@@ -197,14 +197,14 @@ namespace Hades
     // Get size of optional header
     WORD NtHeaders::GetSizeOfOptionalHeader() const
     {
-      return m_pMemory->Read<WORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      return m_Memory.Read<WORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         FileHeader.SizeOfOptionalHeader));
     }
 
     // Set size of optional header
     void NtHeaders::SetSizeOfOptionalHeader(WORD SizeOfOptionalHeader) const
     {
-      m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, FileHeader.
+      m_Memory.Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, FileHeader.
         SizeOfOptionalHeader), SizeOfOptionalHeader);
 
       if (GetSizeOfOptionalHeader() != SizeOfOptionalHeader)
@@ -218,14 +218,14 @@ namespace Hades
     // Get characteristics
     WORD NtHeaders::GetCharacteristics() const
     {
-      return m_pMemory->Read<WORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      return m_Memory.Read<WORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         FileHeader.Characteristics));
     }
 
     // Set characteristics
     void NtHeaders::SetCharacteristics(WORD Characteristics) const
     {
-      m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, FileHeader.
+      m_Memory.Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, FileHeader.
         Characteristics), Characteristics);
 
       if (GetCharacteristics() != Characteristics)
@@ -239,14 +239,14 @@ namespace Hades
     // Get magic
     WORD NtHeaders::GetMagic() const
     {
-      return m_pMemory->Read<WORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      return m_Memory.Read<WORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.Magic));
     }
 
     // Set magic
     void NtHeaders::SetMagic(WORD Magic) const
     {
-      m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      m_Memory.Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.Magic), Magic);
 
       if (GetMagic() != Magic)
@@ -260,14 +260,14 @@ namespace Hades
     // Get major linker version
     BYTE NtHeaders::GetMajorLinkerVersion() const
     {
-      return m_pMemory->Read<BYTE>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      return m_Memory.Read<BYTE>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.MajorLinkerVersion));
     }
 
     // Set major linker version
     void NtHeaders::SetMajorLinkerVersion(BYTE MajorLinkerVersion) const
     {
-      m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      m_Memory.Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.MajorLinkerVersion), MajorLinkerVersion);
 
       if (GetMajorLinkerVersion() != MajorLinkerVersion)
@@ -281,14 +281,14 @@ namespace Hades
     // Get minor linker version
     BYTE NtHeaders::GetMinorLinkerVersion() const
     {
-      return m_pMemory->Read<BYTE>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      return m_Memory.Read<BYTE>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.MinorLinkerVersion));
     }
 
     // Set minor linker version
     void NtHeaders::SetMinorLinkerVersion(BYTE MinorLinkerVersion) const
     {
-      m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      m_Memory.Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.MinorLinkerVersion), MinorLinkerVersion);
 
       if (GetMinorLinkerVersion() != MinorLinkerVersion)
@@ -302,14 +302,14 @@ namespace Hades
     // Get size of code
     DWORD NtHeaders::GetSizeOfCode() const
     {
-      return m_pMemory->Read<DWORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      return m_Memory.Read<DWORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.SizeOfCode));
     }
 
     // Set size of code
     void NtHeaders::SetSizeOfCode(DWORD SizeOfCode) const
     {
-      m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      m_Memory.Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.SizeOfCode), SizeOfCode);
 
       if (GetSizeOfCode() != SizeOfCode)
@@ -323,14 +323,14 @@ namespace Hades
     // Get size of initialized data
     DWORD NtHeaders::GetSizeOfInitializedData() const
     {
-      return m_pMemory->Read<DWORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      return m_Memory.Read<DWORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.SizeOfInitializedData));
     }
 
     // Set size of initialized data
     void NtHeaders::SetSizeOfInitializedData(DWORD SizeOfInitializedData) const
     {
-      m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      m_Memory.Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.SizeOfInitializedData), SizeOfInitializedData);
 
       if (GetSizeOfInitializedData() != SizeOfInitializedData)
@@ -344,7 +344,7 @@ namespace Hades
     // Get size of uninitialized data
     DWORD NtHeaders::GetSizeOfUninitializedData() const
     {
-      return m_pMemory->Read<DWORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      return m_Memory.Read<DWORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.SizeOfUninitializedData));
     }
 
@@ -352,7 +352,7 @@ namespace Hades
     void NtHeaders::SetSizeOfUninitializedData(DWORD SizeOfUninitializedData) 
       const
     {
-      m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      m_Memory.Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.SizeOfUninitializedData), SizeOfUninitializedData);
 
       if (GetSizeOfUninitializedData() != SizeOfUninitializedData)
@@ -366,14 +366,14 @@ namespace Hades
     // Get address of entry point
     DWORD NtHeaders::GetAddressOfEntryPoint() const
     {
-      return m_pMemory->Read<DWORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      return m_Memory.Read<DWORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.AddressOfEntryPoint));
     }
 
     // Set address of entry point
     void NtHeaders::SetAddressOfEntryPoint(DWORD AddressOfEntryPoint) const
     {
-      m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      m_Memory.Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.AddressOfEntryPoint), AddressOfEntryPoint);
 
       if (GetAddressOfEntryPoint() != AddressOfEntryPoint)
@@ -387,14 +387,14 @@ namespace Hades
     // Get base of code
     DWORD NtHeaders::GetBaseOfCode() const
     {
-      return m_pMemory->Read<DWORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      return m_Memory.Read<DWORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.BaseOfCode));
     }
 
     // Set base of code
     void NtHeaders::SetBaseOfCode(DWORD BaseOfCode) const
     {
-      m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      m_Memory.Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.BaseOfCode), BaseOfCode);
 
       if (GetBaseOfCode() != BaseOfCode)
@@ -409,14 +409,14 @@ namespace Hades
     // Get base of data
     DWORD NtHeaders::GetBaseOfData() const
     {
-      return m_pMemory->Read<DWORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      return m_Memory.Read<DWORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.BaseOfData));
     }
 
     // Set base of data
     void NtHeaders::SetBaseOfData(DWORD BaseOfData) const
     {
-      m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      m_Memory.Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.BaseOfData), BaseOfData);
 
       if (GetBaseOfData() != BaseOfData)
@@ -431,14 +431,14 @@ namespace Hades
     // Get image base
     ULONG_PTR NtHeaders::GetImageBase() const
     {
-      return m_pMemory->Read<ULONG_PTR>(GetBase() + FIELD_OFFSET(
+      return m_Memory.Read<ULONG_PTR>(GetBase() + FIELD_OFFSET(
         IMAGE_NT_HEADERS, OptionalHeader.ImageBase));
     }
 
     // Set image base
     void NtHeaders::SetImageBase(ULONG_PTR ImageBase) const
     {
-      m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      m_Memory.Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.ImageBase), ImageBase);
 
       if (GetImageBase() != ImageBase)
@@ -452,14 +452,14 @@ namespace Hades
     // Get section alignment
     DWORD NtHeaders::GetSectionAlignment() const
     {
-      return m_pMemory->Read<DWORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      return m_Memory.Read<DWORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.SectionAlignment));
     }
 
     // Set section alignment
     void NtHeaders::SetSectionAlignment(DWORD SectionAlignment) const
     {
-      m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      m_Memory.Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.SectionAlignment), SectionAlignment);
 
       if (GetSectionAlignment() != SectionAlignment)
@@ -473,14 +473,14 @@ namespace Hades
     // Get file alignment
     DWORD NtHeaders::GetFileAlignment() const
     {
-      return m_pMemory->Read<DWORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      return m_Memory.Read<DWORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.FileAlignment));
     }
 
     // Set file alignment
     void NtHeaders::SetFileAlignment(DWORD FileAlignment) const
     {
-      m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      m_Memory.Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.FileAlignment), FileAlignment);
 
       if (GetFileAlignment() != FileAlignment)
@@ -494,7 +494,7 @@ namespace Hades
     // Get major operating system version
     WORD NtHeaders::GetMajorOperatingSystemVersion() const
     {
-      return m_pMemory->Read<WORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      return m_Memory.Read<WORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.FileAlignment));
     }
 
@@ -502,7 +502,7 @@ namespace Hades
     void NtHeaders::SetMajorOperatingSystemVersion(
       WORD MajorOperatingSystemVersion) const
     {
-      m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      m_Memory.Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.MajorOperatingSystemVersion), 
         MajorOperatingSystemVersion);
 
@@ -517,7 +517,7 @@ namespace Hades
     // Get minor operating system version
     WORD NtHeaders::GetMinorOperatingSystemVersion() const
     {
-      return m_pMemory->Read<WORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      return m_Memory.Read<WORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.MinorOperatingSystemVersion));
     }
 
@@ -525,7 +525,7 @@ namespace Hades
     void NtHeaders::SetMinorOperatingSystemVersion(
       WORD MinorOperatingSystemVersion) const
     {
-      m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      m_Memory.Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.MinorOperatingSystemVersion), 
         MinorOperatingSystemVersion);
 
@@ -540,14 +540,14 @@ namespace Hades
     // Get major image version
     WORD NtHeaders::GetMajorImageVersion() const
     {
-      return m_pMemory->Read<WORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      return m_Memory.Read<WORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.MajorImageVersion));
     }
 
     // Set major image version
     void NtHeaders::SetMajorImageVersion(WORD MajorImageVersion) const
     {
-      m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      m_Memory.Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.MajorImageVersion), MajorImageVersion);
 
       if (GetMajorImageVersion() != MajorImageVersion)
@@ -561,14 +561,14 @@ namespace Hades
     // Get minor image version
     WORD NtHeaders::GetMinorImageVersion() const
     {
-      return m_pMemory->Read<WORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      return m_Memory.Read<WORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.MinorImageVersion));
     }
 
     // Set minor image version
     void NtHeaders::SetMinorImageVersion(WORD MinorImageVersion) const
     {
-      m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      m_Memory.Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.MinorImageVersion), MinorImageVersion);
 
       if (GetMinorImageVersion() != MinorImageVersion)
@@ -582,14 +582,14 @@ namespace Hades
     // Get major subsystem version
     WORD NtHeaders::GetMajorSubsystemVersion() const
     {
-      return m_pMemory->Read<WORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      return m_Memory.Read<WORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.MajorSubsystemVersion));
     }
 
     // Set major subsystem version
     void NtHeaders::SetMajorSubsystemVersion(WORD MajorSubsystemVersion) const
     {
-      m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      m_Memory.Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.MajorSubsystemVersion), MajorSubsystemVersion);
 
       if (GetMajorSubsystemVersion() != MajorSubsystemVersion)
@@ -603,14 +603,14 @@ namespace Hades
     // Get minor subsystem version
     WORD NtHeaders::GetMinorSubsystemVersion() const
     {
-      return m_pMemory->Read<WORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      return m_Memory.Read<WORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.MinorSubsystemVersion));
     }
 
     // Set minor subsystem version
     void NtHeaders::SetMinorSubsystemVersion(WORD MinorSubsystemVersion) const
     {
-      m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      m_Memory.Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.MinorSubsystemVersion), MinorSubsystemVersion);
 
       if (GetMinorSubsystemVersion() != MinorSubsystemVersion)
@@ -624,14 +624,14 @@ namespace Hades
     // Get Win32 version value
     DWORD NtHeaders::GetWin32VersionValue() const
     {
-      return m_pMemory->Read<DWORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      return m_Memory.Read<DWORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.Win32VersionValue));
     }
 
     // Set Win32 version value
     void NtHeaders::SetWin32VersionValue(DWORD Win32VersionValue) const
     {
-      m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      m_Memory.Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.Win32VersionValue), Win32VersionValue);
 
       if (GetWin32VersionValue() != Win32VersionValue)
@@ -645,14 +645,14 @@ namespace Hades
     // Get size of image
     DWORD NtHeaders::GetSizeOfImage() const
     {
-      return m_pMemory->Read<DWORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      return m_Memory.Read<DWORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.SizeOfImage));
     }
 
     // Set size of image
     void NtHeaders::SetSizeOfImage(DWORD SizeOfImage) const
     {
-      m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      m_Memory.Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.SizeOfImage), SizeOfImage);
 
       if (GetSizeOfImage() != SizeOfImage)
@@ -666,14 +666,14 @@ namespace Hades
     // Get size of headers
     DWORD NtHeaders::GetSizeOfHeaders() const
     {
-      return m_pMemory->Read<DWORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      return m_Memory.Read<DWORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.SizeOfHeaders));
     }
 
     // Set size of headers
     void NtHeaders::SetSizeOfHeaders(DWORD SizeOfHeaders) const
     {
-      m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      m_Memory.Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.SizeOfHeaders), SizeOfHeaders);
 
       if (GetSizeOfHeaders() != SizeOfHeaders)
@@ -687,14 +687,14 @@ namespace Hades
     // Get checksum
     DWORD NtHeaders::GetCheckSum() const
     {
-      return m_pMemory->Read<DWORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      return m_Memory.Read<DWORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.CheckSum));
     }
 
     // Set checksum
     void NtHeaders::SetCheckSum(DWORD CheckSum) const
     {
-      m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      m_Memory.Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.CheckSum), CheckSum);
 
       if (GetCheckSum() != CheckSum)
@@ -708,14 +708,14 @@ namespace Hades
     // Get subsystem
     WORD NtHeaders::GetSubsystem() const
     {
-      return m_pMemory->Read<WORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      return m_Memory.Read<WORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.Subsystem));
     }
 
     // Set subsystem
     void NtHeaders::SetSubsystem(WORD Subsystem) const
     {
-      m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      m_Memory.Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.Subsystem), Subsystem);
 
       if (GetSubsystem() != Subsystem)
@@ -729,14 +729,14 @@ namespace Hades
     // Get DLL characteristics
     WORD NtHeaders::GetDllCharacteristics() const
     {
-      return m_pMemory->Read<WORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      return m_Memory.Read<WORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.DllCharacteristics));
     }
 
     // Set DLL characteristics
     void NtHeaders::SetDllCharacteristics(WORD DllCharacteristics) const
     {
-      m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      m_Memory.Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.DllCharacteristics), DllCharacteristics);
 
       if (GetDllCharacteristics() != DllCharacteristics)
@@ -750,14 +750,14 @@ namespace Hades
     // Get size of stack reserve
     ULONG_PTR NtHeaders::GetSizeOfStackReserve() const
     {
-      return m_pMemory->Read<ULONG_PTR>(GetBase() + FIELD_OFFSET(
+      return m_Memory.Read<ULONG_PTR>(GetBase() + FIELD_OFFSET(
         IMAGE_NT_HEADERS, OptionalHeader.SizeOfStackReserve));
     }
 
     // Set size of stack reserve
     void NtHeaders::SetSizeOfStackReserve(ULONG_PTR SizeOfStackReserve) const
     {
-      m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      m_Memory.Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.SizeOfStackReserve), SizeOfStackReserve);
 
       if (GetSizeOfStackReserve() != SizeOfStackReserve)
@@ -771,14 +771,14 @@ namespace Hades
     // Get size of stack commit
     ULONG_PTR NtHeaders::GetSizeOfStackCommit() const
     {
-      return m_pMemory->Read<ULONG_PTR>(GetBase() + FIELD_OFFSET(
+      return m_Memory.Read<ULONG_PTR>(GetBase() + FIELD_OFFSET(
         IMAGE_NT_HEADERS, OptionalHeader.SizeOfStackCommit));
     }
 
     // Set size of stack commit
     void NtHeaders::SetSizeOfStackCommit(ULONG_PTR SizeOfStackCommit) const
     {
-      m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      m_Memory.Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.SizeOfStackCommit), SizeOfStackCommit);
 
       if (GetSizeOfStackCommit() != SizeOfStackCommit)
@@ -792,14 +792,14 @@ namespace Hades
     // Get size of heap reserve
     ULONG_PTR NtHeaders::GetSizeOfHeapReserve() const
     {
-      return m_pMemory->Read<ULONG_PTR>(GetBase() + FIELD_OFFSET(
+      return m_Memory.Read<ULONG_PTR>(GetBase() + FIELD_OFFSET(
         IMAGE_NT_HEADERS, OptionalHeader.SizeOfHeapReserve));
     }
 
     // Set size of heap reserve
     void NtHeaders::SetSizeOfHeapReserve(ULONG_PTR SizeOfHeapReserve) const
     {
-      m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      m_Memory.Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.SizeOfHeapReserve), SizeOfHeapReserve);
 
       if (GetSizeOfHeapReserve() != SizeOfHeapReserve)
@@ -813,14 +813,14 @@ namespace Hades
     // Get size of heap commit
     ULONG_PTR NtHeaders::GetSizeOfHeapCommit() const
     {
-      return m_pMemory->Read<ULONG_PTR>(GetBase() + FIELD_OFFSET(
+      return m_Memory.Read<ULONG_PTR>(GetBase() + FIELD_OFFSET(
         IMAGE_NT_HEADERS, OptionalHeader.SizeOfHeapCommit));
     }
 
     // Set size of heap commit
     void NtHeaders::SetSizeOfHeapCommit(ULONG_PTR SizeOfHeapCommit) const
     {
-      m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      m_Memory.Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.SizeOfHeapCommit), SizeOfHeapCommit);
 
       if (GetSizeOfHeapCommit() != SizeOfHeapCommit)
@@ -834,14 +834,14 @@ namespace Hades
     // Get loader flags
     DWORD NtHeaders::GetLoaderFlags() const
     {
-      return m_pMemory->Read<DWORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      return m_Memory.Read<DWORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.LoaderFlags));
     }
 
     // Set loader flags
     void NtHeaders::SetLoaderFlags(DWORD LoaderFlags) const
     {
-      m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      m_Memory.Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.LoaderFlags), LoaderFlags);
 
       if (GetLoaderFlags() != LoaderFlags)
@@ -855,14 +855,14 @@ namespace Hades
     // Get number of RVA and sizes
     DWORD NtHeaders::GetNumberOfRvaAndSizes() const
     {
-      return m_pMemory->Read<DWORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      return m_Memory.Read<DWORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.NumberOfRvaAndSizes));
     }
 
     // Set number of RVA and sizes
     void NtHeaders::SetNumberOfRvaAndSizes(DWORD NumberOfRvaAndSizes) const
     {
-      m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      m_Memory.Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.NumberOfRvaAndSizes), NumberOfRvaAndSizes);
 
       if (GetNumberOfRvaAndSizes() != NumberOfRvaAndSizes)
@@ -876,7 +876,7 @@ namespace Hades
     // Get data directory virtual address
     DWORD NtHeaders::GetDataDirectoryVirtualAddress(DataDir MyDataDir) const
     {
-      return m_pMemory->Read<DWORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      return m_Memory.Read<DWORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.DataDirectory[0]) + MyDataDir * sizeof(
         IMAGE_DATA_DIRECTORY) + FIELD_OFFSET(IMAGE_DATA_DIRECTORY, 
         VirtualAddress));
@@ -886,7 +886,7 @@ namespace Hades
     void NtHeaders::SetDataDirectoryVirtualAddress(DataDir MyDataDir, 
       DWORD DataDirectoryVirtualAddress) const
     {
-      m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      m_Memory.Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.DataDirectory[0]) + MyDataDir * sizeof(
         IMAGE_DATA_DIRECTORY) + FIELD_OFFSET(IMAGE_DATA_DIRECTORY, 
         VirtualAddress), DataDirectoryVirtualAddress);
@@ -903,7 +903,7 @@ namespace Hades
     // Get data directory size
     DWORD NtHeaders::GetDataDirectorySize(DataDir MyDataDir) const
     {
-      return m_pMemory->Read<DWORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      return m_Memory.Read<DWORD>(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.DataDirectory[0]) + MyDataDir * sizeof(
         IMAGE_DATA_DIRECTORY) + FIELD_OFFSET(IMAGE_DATA_DIRECTORY, 
         Size));
@@ -913,7 +913,7 @@ namespace Hades
     void NtHeaders::SetDataDirectorySize(DataDir MyDataDir, 
       DWORD DataDirectorySize) const
     {
-      m_pMemory->Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
+      m_Memory.Write(GetBase() + FIELD_OFFSET(IMAGE_NT_HEADERS, 
         OptionalHeader.DataDirectory[0]) + MyDataDir * sizeof(
         IMAGE_DATA_DIRECTORY) + FIELD_OFFSET(IMAGE_DATA_DIRECTORY, Size), 
         DataDirectorySize);
@@ -929,7 +929,7 @@ namespace Hades
     // Get raw NT headers
     IMAGE_NT_HEADERS NtHeaders::GetHeadersRaw() const
     {
-      return m_pMemory->Read<IMAGE_NT_HEADERS>(GetBase());
+      return m_Memory.Read<IMAGE_NT_HEADERS>(GetBase());
     }
   }
 }

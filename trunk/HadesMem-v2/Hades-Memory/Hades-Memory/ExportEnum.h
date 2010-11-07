@@ -43,33 +43,33 @@ namespace Hades
     {
     public:
       // Constructor
-      explicit ExportEnum(PeFile& MyPeFile) 
-        : m_pPeFile(&MyPeFile), 
+      explicit ExportEnum(PeFile const& MyPeFile) 
+        : m_PeFile(MyPeFile), 
         m_Current(0)
       { }
 
       // Get first section
       std::unique_ptr<Export> First() 
       {
-        ExportDir const MyExportDir(*m_pPeFile);
+        ExportDir const MyExportDir(m_PeFile);
         DWORD NumberOfFunctions = MyExportDir.GetNumberOfFunctions();
 
         m_Current = 0;
 
         return NumberOfFunctions ? std::unique_ptr<Export>(new Export(
-          *m_pPeFile, m_Current)) : std::unique_ptr<Export>(nullptr);
+          m_PeFile, m_Current)) : std::unique_ptr<Export>(nullptr);
       }
 
       // Get next section
       std::unique_ptr<Export> Next()
       {
-        ExportDir const MyExportDir(*m_pPeFile);
+        ExportDir const MyExportDir(m_PeFile);
         DWORD NumberOfFunctions = MyExportDir.GetNumberOfFunctions();
 
         ++m_Current;
 
         return (m_Current < NumberOfFunctions) ? std::unique_ptr<Export>(
-          new Export(*m_pPeFile, m_Current)) : std::unique_ptr<Export>(
+          new Export(m_PeFile, m_Current)) : std::unique_ptr<Export>(
           nullptr);
       }
 
@@ -87,9 +87,6 @@ namespace Hades
         }
 
       private:
-        // Disable assignment
-        ExportIter& operator= (ExportIter const&);
-
         // Allow Boost.Iterator access to internals
         friend class boost::iterator_core_access;
 
@@ -114,11 +111,8 @@ namespace Hades
       };
 
     private:
-      // Disable assignment
-      ExportEnum& operator= (ExportEnum const&);
-
       // Memory instance
-      PeFile* m_pPeFile;
+      PeFile m_PeFile;
 
       // Current function number
       DWORD m_Current;

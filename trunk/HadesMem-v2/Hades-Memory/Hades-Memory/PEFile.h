@@ -31,49 +31,48 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Hades
 #include "Fwd.h"
 #include "Error.h"
+#include "MemoryMgr.h"
 
 namespace Hades
 {
   namespace Memory
   {
     // PE file format wrapper
-    class PeFile : private boost::noncopyable
+    class PeFile
     {
     public:
       // PeFile exception type
       class Error : public virtual HadesMemError 
       { };
 
+      enum FileType
+      {
+        FileType_Image, 
+        FileType_Data
+      };
+
       // Constructor
-      PeFile(MemoryMgr& MyMemory, PVOID Address);
+      PeFile(MemoryMgr const& MyMemory, PVOID Address, FileType Type = 
+        FileType_Image);
 
       // Get memory manager
-      MemoryMgr& GetMemoryMgr() const;
+      MemoryMgr GetMemoryMgr() const;
 
       // Get base address
       PBYTE GetBase() const;
 
       // Convert RVA to VA
-      virtual PVOID RvaToVa(DWORD Rva) const;
+      PVOID RvaToVa(DWORD Rva) const;
 
-    private:
+    protected:
       // Memory instance
-      MemoryMgr* m_pMemory;
+      MemoryMgr m_Memory;
 
       // Base address
       PBYTE m_pBase;
-    };
 
-    // PE file format wrapper
-    // For PE files mapped as data rather than images
-    class PeFileAsData : public PeFile
-    {
-    public:
-      // Constructor
-      PeFileAsData(MemoryMgr& MyMemory, PVOID Address);
-
-      // Convert RVA to VA
-      virtual PVOID RvaToVa(DWORD Rva) const;
+      // File type
+      FileType m_Type;
     };
   }
 }

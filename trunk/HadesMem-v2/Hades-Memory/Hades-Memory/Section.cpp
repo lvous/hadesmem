@@ -31,9 +31,9 @@ namespace Hades
   namespace Memory
   {
     // Constructor
-    Section::Section(PeFile& MyPeFile, WORD Number)
-      : m_pPeFile(&MyPeFile), 
-      m_pMemory(&m_pPeFile->GetMemoryMgr()), 
+    Section::Section(PeFile const& MyPeFile, WORD Number)
+      : m_PeFile(MyPeFile), 
+      m_Memory(m_PeFile.GetMemoryMgr()), 
       m_SectionNum(Number)
     { }
 
@@ -44,7 +44,7 @@ namespace Hades
       PBYTE const pSecHdr = GetBase();
 
       // Read RVA of module name
-      std::array<char, 8> const NameData(m_pMemory->Read<std::array<char, 8>>(
+      std::array<char, 8> const NameData(m_Memory.Read<std::array<char, 8>>(
         pSecHdr + FIELD_OFFSET(IMAGE_SECTION_HEADER, Name)));
 
       // Convert section name to string
@@ -62,7 +62,7 @@ namespace Hades
     DWORD Section::GetVirtualAddress() const
     {
       PBYTE const pSection = GetBase();
-      return m_pMemory->Read<DWORD>(pSection + FIELD_OFFSET(
+      return m_Memory.Read<DWORD>(pSection + FIELD_OFFSET(
         IMAGE_SECTION_HEADER, VirtualAddress));
     }
 
@@ -70,7 +70,7 @@ namespace Hades
     DWORD Section::GetVirtualSize() const
     {
       PBYTE const pSection = GetBase();
-      return m_pMemory->Read<DWORD>(pSection + FIELD_OFFSET(
+      return m_Memory.Read<DWORD>(pSection + FIELD_OFFSET(
         IMAGE_SECTION_HEADER, Misc.VirtualSize));
     }
 
@@ -78,7 +78,7 @@ namespace Hades
     DWORD Section::GetSizeOfRawData() const
     {
       PBYTE const pSection = GetBase();
-      return m_pMemory->Read<DWORD>(pSection + FIELD_OFFSET(
+      return m_Memory.Read<DWORD>(pSection + FIELD_OFFSET(
         IMAGE_SECTION_HEADER, SizeOfRawData));
     }
 
@@ -86,7 +86,7 @@ namespace Hades
     DWORD Section::GetPointerToRawData() const
     {
       PBYTE const pSection = GetBase();
-      return m_pMemory->Read<DWORD>(pSection + FIELD_OFFSET(
+      return m_Memory.Read<DWORD>(pSection + FIELD_OFFSET(
         IMAGE_SECTION_HEADER, PointerToRawData));
     }
 
@@ -94,7 +94,7 @@ namespace Hades
     DWORD Section::GetPointerToRelocations() const
     {
       PBYTE const pSection = GetBase();
-      return m_pMemory->Read<DWORD>(pSection + FIELD_OFFSET(
+      return m_Memory.Read<DWORD>(pSection + FIELD_OFFSET(
         IMAGE_SECTION_HEADER, PointerToRelocations));
     }
 
@@ -102,7 +102,7 @@ namespace Hades
     DWORD Section::GetPointerToLinenumbers() const
     {
       PBYTE const pSection = GetBase();
-      return m_pMemory->Read<DWORD>(pSection + FIELD_OFFSET(
+      return m_Memory.Read<DWORD>(pSection + FIELD_OFFSET(
         IMAGE_SECTION_HEADER, PointerToLinenumbers));
     }
 
@@ -110,7 +110,7 @@ namespace Hades
     WORD Section::GetNumberOfRelocations() const
     {
       PBYTE const pSection = GetBase();
-      return m_pMemory->Read<WORD>(pSection + FIELD_OFFSET(
+      return m_Memory.Read<WORD>(pSection + FIELD_OFFSET(
         IMAGE_SECTION_HEADER, NumberOfRelocations));
     }
 
@@ -118,7 +118,7 @@ namespace Hades
     WORD Section::GetNumberOfLinenumbers() const
     {
       PBYTE const pSection = GetBase();
-      return m_pMemory->Read<WORD>(pSection + FIELD_OFFSET(
+      return m_Memory.Read<WORD>(pSection + FIELD_OFFSET(
         IMAGE_SECTION_HEADER, NumberOfLinenumbers));
     }
 
@@ -126,7 +126,7 @@ namespace Hades
     DWORD Section::GetCharacteristics() const
     {
       PBYTE const pSection = GetBase();
-      return m_pMemory->Read<DWORD>(pSection + FIELD_OFFSET(
+      return m_Memory.Read<DWORD>(pSection + FIELD_OFFSET(
         IMAGE_SECTION_HEADER, Characteristics));
     }
 
@@ -134,7 +134,7 @@ namespace Hades
     PBYTE Section::GetBase() const
     {
       // Get NT headers
-      NtHeaders const MyNtHeaders(*m_pPeFile);
+      NtHeaders const MyNtHeaders(m_PeFile);
 
       // Ensure section number is valid
       if (m_SectionNum >= MyNtHeaders.GetNumberOfSections())
@@ -168,7 +168,7 @@ namespace Hades
     IMAGE_SECTION_HEADER Section::GetSectionHeaderRaw() const
     {
       // Get target raw section header
-      return m_pMemory->Read<IMAGE_SECTION_HEADER>(GetBase());
+      return m_Memory.Read<IMAGE_SECTION_HEADER>(GetBase());
     }
   }
 }

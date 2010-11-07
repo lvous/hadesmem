@@ -45,33 +45,33 @@ namespace Hades
     {
     public:
       // Constructor
-      explicit SectionEnum(PeFile& MyPeFile) 
-        : m_pPeFile(&MyPeFile), 
+      explicit SectionEnum(PeFile const& MyPeFile) 
+        : m_PeFile(MyPeFile), 
         m_Current(0)
       { }
 
       // Get first section
       std::unique_ptr<Section> First() 
       {
-        NtHeaders const MyNtHeaders(*m_pPeFile);
+        NtHeaders const MyNtHeaders(m_PeFile);
         WORD NumberOfSections = MyNtHeaders.GetNumberOfSections();
 
         m_Current = 0;
 
         return NumberOfSections ? std::unique_ptr<Section>(new Section(
-          *m_pPeFile, m_Current)) : std::unique_ptr<Section>(nullptr);
+          m_PeFile, m_Current)) : std::unique_ptr<Section>(nullptr);
       }
 
       // Get next section
       std::unique_ptr<Section> Next()
       {
-        NtHeaders const MyNtHeaders(*m_pPeFile);
+        NtHeaders const MyNtHeaders(m_PeFile);
         WORD const NumberOfSections = MyNtHeaders.GetNumberOfSections();
 
         ++m_Current;
 
         return (m_Current < NumberOfSections) ? std::unique_ptr<Section>(
-          new Section(*m_pPeFile, m_Current)) : std::unique_ptr<Section>(
+          new Section(m_PeFile, m_Current)) : std::unique_ptr<Section>(
           nullptr);
       }
 
@@ -89,9 +89,6 @@ namespace Hades
         }
 
       private:
-        // Disable assignment
-        SectionIter& operator= (SectionIter const&);
-
         // Allow Boost.Iterator access to internals
         friend class boost::iterator_core_access;
 
@@ -116,11 +113,8 @@ namespace Hades
       };
 
     private:
-      // Disable assignment
-      SectionEnum& operator= (SectionEnum const&);
-
       // Memory instance
-      PeFile* m_pPeFile;
+      PeFile m_PeFile;
 
       // Current section number
       WORD m_Current;

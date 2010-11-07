@@ -52,7 +52,7 @@ namespace Hades
       { };
 
       // Constructor
-      Scanner(MemoryMgr& MyMemory, PVOID Start, PVOID End);
+      Scanner(MemoryMgr const& MyMemory, PVOID Start, PVOID End);
 
       // Search memory (POD types)
       template <typename T>
@@ -88,7 +88,7 @@ namespace Hades
 
     private:
       // Memory manager instance
-      MemoryMgr* m_pMemory;
+      MemoryMgr m_Memory;
 
       // Start and end addresses of search region
       PBYTE m_Start;
@@ -138,7 +138,7 @@ namespace Hades
 
       std::vector<BYTE> DataRaw(pDataRaw, pDataRaw + DataRawSize);
 
-      RegionEnum MyRegionEnum(*m_pMemory);
+      RegionEnum MyRegionEnum(m_Memory);
       for (RegionEnum::RegionListIter i(MyRegionEnum); *i; ++i)
       {
         Hades::Memory::Region const& MyRegion = **i;
@@ -158,7 +158,7 @@ namespace Hades
 
         try
         {
-          Buffer = m_pMemory->Read<std::vector<BYTE>>(MyRegion.GetBase(), 
+          Buffer = m_Memory.Read<std::vector<BYTE>>(MyRegion.GetBase(), 
             MyRegion.GetSize());
         }
         catch (MemoryMgr::Error const& /*e*/)
@@ -231,7 +231,7 @@ namespace Hades
 
       std::vector<PVOID> Matches;
 
-      RegionEnum MyRegionEnum(*m_pMemory);
+      RegionEnum MyRegionEnum(m_Memory);
       for (RegionEnum::RegionListIter i(MyRegionEnum); *i; ++i)
       {
         Hades::Memory::Region const& MyRegion = **i;
@@ -251,7 +251,7 @@ namespace Hades
 
         try
         {
-          Buffer = m_pMemory->Read<std::vector<BYTE>>(MyRegion.GetBase(), 
+          Buffer = m_Memory.Read<std::vector<BYTE>>(MyRegion.GetBase(), 
             MyRegion.GetSize());
         }
         catch (MemoryMgr::Error const& /*e*/)

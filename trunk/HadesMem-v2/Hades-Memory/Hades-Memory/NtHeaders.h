@@ -31,13 +31,14 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Hades
 #include "Fwd.h"
 #include "Error.h"
+#include "MemoryMgr.h"
 
 namespace Hades
 {
   namespace Memory
   {
     // PE file NT headers
-    class NtHeaders : private boost::noncopyable
+    class NtHeaders
     {
     public:
       // NT headers error class
@@ -65,7 +66,7 @@ namespace Hades
       };
 
       // Constructor
-      explicit NtHeaders(PeFile& MyPeFile);
+      explicit NtHeaders(PeFile const& MyPeFile);
 
       // Get base of NT headers
       PBYTE GetBase() const;
@@ -327,10 +328,10 @@ namespace Hades
 
     private:
       // PE file
-      PeFile* m_pPeFile;
+      PeFile m_PeFile;
 
       // Memory instance
-      MemoryMgr* m_pMemory;
+      MemoryMgr m_Memory;
 
       // Base address
       mutable PBYTE m_pBase;

@@ -34,13 +34,14 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Hades
 #include "Fwd.h"
 #include "Error.h"
+#include "MemoryMgr.h"
 
 namespace Hades
 {
   namespace Memory
   {
     // PE file export directory
-    class ExportDir : private boost::noncopyable
+    class ExportDir
     {
     public:
       // ExportDir error class
@@ -48,7 +49,7 @@ namespace Hades
       { };
 
       // Constructor
-      ExportDir(PeFile& MyPeFile);
+      ExportDir(PeFile const& MyPeFile);
 
       // Whether export directory is valid
       bool IsValid() const;
@@ -97,10 +98,10 @@ namespace Hades
 
     private:
       // PE file
-      PeFile* m_pPeFile;
+      PeFile m_PeFile;
 
       // Memory instance
-      MemoryMgr* m_pMemory;
+      MemoryMgr m_Memory;
 
       // Base of export dir
       mutable PBYTE m_pBase;
@@ -111,7 +112,7 @@ namespace Hades
     {
     public:
       // Constructor
-      Export(PeFile& MyPeFile, DWORD Number);
+      Export(PeFile const& MyPeFile, DWORD Number);
 
       // Get RVA
       DWORD GetRva() const
@@ -157,9 +158,9 @@ namespace Hades
 
     private:
       // PE file instance
-      PeFile* m_pPeFile;
+      PeFile m_PeFile;
       // Memory instance
-      MemoryMgr* m_pMemory;
+      MemoryMgr m_Memory;
 
       // RVA
       DWORD m_Rva;

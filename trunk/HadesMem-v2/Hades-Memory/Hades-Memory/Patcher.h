@@ -34,6 +34,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Hades
 #include "Fwd.h"
 #include "Error.h"
+#include "MemoryMgr.h"
 
 namespace Hades
 {
@@ -41,7 +42,7 @@ namespace Hades
   {
     // Patch class.
     // Abstract base class for different patch types.
-    class Patch : private boost::noncopyable
+    class Patch
     {
     public:
       // Patch exception type
@@ -49,7 +50,7 @@ namespace Hades
       { };
 
       // Constructor
-      explicit Patch(MemoryMgr& MyMemory);
+      explicit Patch(MemoryMgr const& MyMemory);
 
       // Destructor
       virtual ~Patch();
@@ -64,7 +65,7 @@ namespace Hades
 
     protected:
       // Memory manager instance
-      MemoryMgr* m_pMemory;
+      MemoryMgr m_Memory;
 
       // Whether patch is currently applied
       bool m_Applied;
@@ -76,7 +77,7 @@ namespace Hades
     {
     public:
       // Constructor
-      PatchRaw(MemoryMgr& MyMemory, PVOID Target, 
+      PatchRaw(MemoryMgr const& MyMemory, PVOID Target, 
         std::vector<BYTE> const& Data);
 
       // Apply patch
@@ -102,7 +103,7 @@ namespace Hades
     {
     public:
       // Constructor
-      PatchDetour(MemoryMgr& MyMemory, PVOID Target, PVOID Detour);
+      PatchDetour(MemoryMgr const& MyMemory, PVOID Target, PVOID Detour);
 
       // Apply patch
       virtual void Apply();

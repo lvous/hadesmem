@@ -47,19 +47,19 @@ namespace Hades
     {
     public:
       // Constructor
-      explicit ImportDirEnum(PeFile& MyPeFile) 
-        : m_pPeFile(&MyPeFile), 
+      explicit ImportDirEnum(PeFile const& MyPeFile) 
+        : m_PeFile(MyPeFile), 
         m_pImpDesc(nullptr)
       { }
 
       // Get first import thunk
       std::unique_ptr<ImportDir> First() 
       {
-        ImportDir MyImportDir(*m_pPeFile);
+        ImportDir MyImportDir(m_PeFile);
         m_pImpDesc = reinterpret_cast<PIMAGE_IMPORT_DESCRIPTOR>(MyImportDir.
           GetBase());
         return MyImportDir.GetCharacteristics() ? 
-          std::unique_ptr<ImportDir>(new ImportDir(*m_pPeFile, m_pImpDesc)) 
+          std::unique_ptr<ImportDir>(new ImportDir(m_PeFile, m_pImpDesc)) 
           : std::unique_ptr<ImportDir>(nullptr);
       }
 
@@ -67,9 +67,9 @@ namespace Hades
       std::unique_ptr<ImportDir> Next()
       {
         ++m_pImpDesc;
-        ImportDir MyImportDir(*m_pPeFile, m_pImpDesc);
+        ImportDir MyImportDir(m_PeFile, m_pImpDesc);
         return MyImportDir.GetCharacteristics() ? 
-          std::unique_ptr<ImportDir>(new ImportDir(*m_pPeFile, m_pImpDesc)) 
+          std::unique_ptr<ImportDir>(new ImportDir(m_PeFile, m_pImpDesc)) 
           : std::unique_ptr<ImportDir>(nullptr);
       }
 
@@ -87,9 +87,6 @@ namespace Hades
         }
 
       private:
-        // Disable assignment
-        ImportDirIter& operator= (ImportDirIter const&);
-
         // Allow Boost.Iterator access to internals
         friend class boost::iterator_core_access;
 
@@ -114,11 +111,8 @@ namespace Hades
       };
 
     private:
-      // Disable assignment
-      ImportDirEnum& operator= (ImportDirEnum const&);
-
       // Memory instance
-      PeFile* m_pPeFile;
+      PeFile m_PeFile;
 
       // Current thunk pointer
       PIMAGE_IMPORT_DESCRIPTOR m_pImpDesc;
@@ -129,21 +123,21 @@ namespace Hades
     {
     public:
       // Constructor
-      ImportThunkEnum(PeFile& MyPeFile, DWORD FirstThunk) 
-        : m_pPeFile(&MyPeFile), 
+      ImportThunkEnum(PeFile const& MyPeFile, DWORD FirstThunk) 
+        : m_PeFile(MyPeFile), 
         m_FirstThunk(FirstThunk), 
-        m_pThunk(reinterpret_cast<PIMAGE_THUNK_DATA>(
-          m_pPeFile->RvaToVa(FirstThunk)))
+        m_pThunk(reinterpret_cast<PIMAGE_THUNK_DATA>(m_PeFile.RvaToVa(
+          FirstThunk)))
       { }
 
       // Get first import thunk
       std::unique_ptr<ImportThunk> First() 
       {
-        m_pThunk = reinterpret_cast<PIMAGE_THUNK_DATA>(m_pPeFile->RvaToVa(
+        m_pThunk = reinterpret_cast<PIMAGE_THUNK_DATA>(m_PeFile.RvaToVa(
           m_FirstThunk));
-        ImportThunk MyImportThunk(*m_pPeFile, m_pThunk);
+        ImportThunk MyImportThunk(m_PeFile, m_pThunk);
         return MyImportThunk.IsValid() ? 
-          std::unique_ptr<ImportThunk>(new ImportThunk(*m_pPeFile, m_pThunk)) 
+          std::unique_ptr<ImportThunk>(new ImportThunk(m_PeFile, m_pThunk)) 
           : std::unique_ptr<ImportThunk>(nullptr);
       }
 
@@ -151,9 +145,9 @@ namespace Hades
       std::unique_ptr<ImportThunk> Next()
       {
         ++m_pThunk;
-        ImportThunk MyImportThunk(*m_pPeFile, m_pThunk);
+        ImportThunk MyImportThunk(m_PeFile, m_pThunk);
         return MyImportThunk.IsValid() ? 
-          std::unique_ptr<ImportThunk>(new ImportThunk(*m_pPeFile, m_pThunk)) 
+          std::unique_ptr<ImportThunk>(new ImportThunk(m_PeFile, m_pThunk)) 
           : std::unique_ptr<ImportThunk>(nullptr);
       }
 
@@ -171,9 +165,6 @@ namespace Hades
         }
 
       private:
-        // Disable assignment
-        ImportThunkIter& operator= (ImportThunkIter const&);
-
         // Allow Boost.Iterator access to internals
         friend class boost::iterator_core_access;
 
@@ -198,11 +189,8 @@ namespace Hades
       };
 
     private:
-      // Disable assignment
-      ImportThunkEnum& operator= (ImportThunkEnum const&);
-
       // Memory instance
-      PeFile* m_pPeFile;
+      PeFile m_PeFile;
 
       // Store first thunk RVA so 'First' can be called repeatedly
       DWORD m_FirstThunk;

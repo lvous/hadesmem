@@ -47,17 +47,17 @@ namespace Hades
   namespace Memory
   {
     // Constructor
-    FindPattern::FindPattern(MemoryMgr& MyMemory) 
-      : m_pMemory(&MyMemory), 
+    FindPattern::FindPattern(MemoryMgr const& MyMemory) 
+      : m_Memory(MyMemory), 
       m_Start(nullptr), 
       m_End(nullptr), 
       m_Addresses()
     {
       // Get pointer to image headers
-      ModuleEnum MyModuleEnum(*m_pMemory);
+      ModuleEnum MyModuleEnum(m_Memory);
       PBYTE const pBase = reinterpret_cast<PBYTE>(MyModuleEnum.First()->
         GetBase());
-      PeFile MyPeFile(*m_pMemory, pBase);
+      PeFile MyPeFile(m_Memory, pBase);
       DosHeader const MyDosHeader(MyPeFile);
       NtHeaders const MyNtHeaders(MyPeFile);
 
@@ -69,15 +69,15 @@ namespace Hades
     }
 
     // Constructor
-    FindPattern::FindPattern(MemoryMgr& MyMemory, HMODULE Module) 
-      : m_pMemory(&MyMemory), 
+    FindPattern::FindPattern(MemoryMgr const& MyMemory, HMODULE Module) 
+      : m_Memory(MyMemory), 
       m_Start(nullptr), 
       m_End(nullptr), 
       m_Addresses()
     {
       // Ensure file is a valid PE file
       PBYTE const pBase = reinterpret_cast<PBYTE>(Module);
-      PeFile MyPeFile(*m_pMemory, pBase);
+      PeFile MyPeFile(m_Memory, pBase);
       DosHeader const MyDosHeader(MyPeFile);
       NtHeaders const MyNtHeaders(MyPeFile);
 
@@ -150,7 +150,7 @@ namespace Hades
     {
       // Cache all memory to be scanned
       std::size_t MemSize = m_End - m_Start;
-      std::vector<BYTE> Buffer(m_pMemory->Read<std::vector<BYTE>>(m_Start, 
+      std::vector<BYTE> Buffer(m_Memory.Read<std::vector<BYTE>>(m_Start, 
         MemSize));
 
       // Scan memory
@@ -286,7 +286,7 @@ namespace Hades
             else if (OptionName == L"Lea")
             {
               // Perform absolute 'dereference'
-              Address = m_pMemory->Read<PBYTE>(Address);
+              Address = m_Memory.Read<PBYTE>(Address);
             }
             // Handle 'Rel' option (rel deref)
             else if (OptionName == L"Rel")
@@ -336,7 +336,7 @@ namespace Hades
               }
 
               // Perform relative 'dereference'
-              Address = m_pMemory->Read<PBYTE>(Address) + 
+              Address = m_Memory.Read<PBYTE>(Address) + 
                 reinterpret_cast<DWORD_PTR>(Address) + Size - Offset;
             }
             else
@@ -349,15 +349,15 @@ namespace Hades
           }
         }
 
-//         // Check for duplicate entry
-//         auto const Iter = m_Addresses.find(boost::lexical_cast<std::
-//           basic_string<TCHAR>>(Name));
-//         if (Iter != m_Addresses.end())
-//         {
-//           BOOST_THROW_EXCEPTION(Error() << 
-//             ErrorFunction("FindPattern::LoadFromXML") << 
-//             ErrorString("Duplicate pattern name."));
-//         }
+        // Check for duplicate entry
+        auto const Iter = m_Addresses.find(boost::lexical_cast<std::
+          basic_string<TCHAR>>(Name));
+        if (Iter != m_Addresses.end())
+        {
+          BOOST_THROW_EXCEPTION(Error() << 
+            ErrorFunction("FindPattern::LoadFromXML") << 
+            ErrorString("Duplicate pattern name."));
+        }
 
         // Add address to map
         m_Addresses[boost::lexical_cast<std::basic_string<TCHAR>>(Name)] = 

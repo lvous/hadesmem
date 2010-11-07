@@ -37,6 +37,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Hades
 #include "Fwd.h"
 #include "Error.h"
+#include "MemoryMgr.h"
 #include "Hades-Common/I18n.h"
 
 // Image base linker 'trick'
@@ -47,7 +48,7 @@ namespace Hades
   namespace Memory
   {
     // DLL injection class
-    class Injector : private boost::noncopyable
+    class Injector
     {
     public:
       // Injector exception type
@@ -55,7 +56,7 @@ namespace Hades
       { };
 
       // Constructor
-      Injector(MemoryMgr& MyMemory);
+      Injector(MemoryMgr const& MyMemory);
 
       // Inject DLL
       HMODULE InjectDll(boost::filesystem::path const& Path, 
@@ -67,7 +68,7 @@ namespace Hades
 
     private:
       // MemoryMgr instance
-      MemoryMgr* m_pMemory;
+      MemoryMgr m_Memory;
     };
     
     // Data returned by CreateAndInject API

@@ -30,8 +30,8 @@ namespace Hades
   namespace Memory
   {
     // Constructor
-    Disassembler::Disassembler(MemoryMgr& pMyMemory) 
-      : m_pMemory(&pMyMemory)
+    Disassembler::Disassembler(MemoryMgr const& MyMemory) 
+      : m_MemoryMgr(MyMemory)
     { }
 
     // Test disassembler
@@ -60,7 +60,7 @@ namespace Hades
     {
       // Read data into buffer
       int MaxInstructionSize = 15;
-      std::vector<BYTE> Buffer(m_pMemory->Read<std::vector<BYTE>>(Address, 
+      std::vector<BYTE> Buffer(m_MemoryMgr.Read<std::vector<BYTE>>(Address, 
         NumInstructions * MaxInstructionSize));
 
       // Set up disasm structure for BeaEngine
@@ -93,7 +93,7 @@ namespace Hades
         DisasmData CurData;
         CurData.Disasm = MyDisasm;
         CurData.Len = Len;
-        CurData.Raw = m_pMemory->Read<std::vector<BYTE>>(
+        CurData.Raw = m_MemoryMgr.Read<std::vector<BYTE>>(
           reinterpret_cast<PVOID>(MyDisasm.VirtualAddr), Len);
 
         // Add current instruction to list

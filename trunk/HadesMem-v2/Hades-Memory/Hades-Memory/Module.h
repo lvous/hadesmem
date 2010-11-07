@@ -46,7 +46,7 @@ namespace Hades
   namespace Memory
   {
     // Module managing class
-    class Module : private boost::noncopyable
+    class Module
     {
     public:
       // Module exception type
@@ -54,13 +54,14 @@ namespace Hades
       { };
 
       // Create module
-      Module(MemoryMgr& MyMemory, MODULEENTRY32 const& ModuleEntry);
+      Module(MemoryMgr const& MyMemory, MODULEENTRY32 const& ModuleEntry);
 
       // Find module by handle
-      Module(MemoryMgr& MyMemory, HMODULE Handle);
+      Module(MemoryMgr const& MyMemory, HMODULE Handle);
 
       // Find module by name
-      Module(MemoryMgr& MyMemory, std::basic_string<TCHAR> const& ModuleName);
+      Module(MemoryMgr const& MyMemory, 
+        std::basic_string<TCHAR> const& ModuleName);
 
       // Get module base
       HMODULE GetBase() const;
@@ -74,7 +75,7 @@ namespace Hades
 
     private:
       // Memory instance
-      MemoryMgr* m_pMemory;
+      MemoryMgr m_Memory;
 
       // Module base address
       HMODULE m_Base;
@@ -87,12 +88,12 @@ namespace Hades
     };
 
     // Module enumerator
-    class ModuleEnum
+    class ModuleEnum : private boost::noncopyable
     {
     public:
       // Constructor
-      ModuleEnum(MemoryMgr& MyMemory) 
-        : m_pMemory(&MyMemory), 
+      ModuleEnum(MemoryMgr const& MyMemory) 
+        : m_Memory(MyMemory), 
         m_Snap(), 
         m_ModuleEntry()
       {
@@ -104,7 +105,7 @@ namespace Hades
       std::unique_ptr<Module> First() 
       {
         // Grab a new snapshot of the process
-        m_Snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, m_pMemory->
+        m_Snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, m_Memory.
           GetProcessID());
         if (m_Snap == INVALID_HANDLE_VALUE)
         {
@@ -125,7 +126,7 @@ namespace Hades
             ErrorCodeWin(LastError));
         }
 
-        return std::unique_ptr<Module>(new Module(*m_pMemory, m_ModuleEntry));
+        return std::unique_ptr<Module>(new Module(m_Memory, m_ModuleEntry));
       }
 
       // Get next module
@@ -134,13 +135,14 @@ namespace Hades
         // Fixme: Check GetLastError to ensure EOL and throw an exception 
         // on an actual error.
         return Module32Next(m_Snap, &m_ModuleEntry) ? std::unique_ptr<Module>(
-          new Module(*m_pMemory, m_ModuleEntry)) : std::unique_ptr<Module>(
+          new Module(m_Memory, m_ModuleEntry)) : std::unique_ptr<Module>(
           nullptr);
       }
 
       // Module iterator
       class ModuleListIter : public boost::iterator_facade<ModuleListIter, 
-        std::unique_ptr<Module>, boost::incrementable_traversal_tag>
+        std::unique_ptr<Module>, boost::incrementable_traversal_tag>, 
+        private boost::noncopyable
       {
       public:
         // Constructor
@@ -151,9 +153,6 @@ namespace Hades
         }
 
       private:
-        // Disable assignment
-        ModuleListIter& operator= (ModuleListIter const&);
-
         // Allow Boost.Iterator access to internals
         friend class boost::iterator_core_access;
         
@@ -178,11 +177,8 @@ namespace Hades
       };
 
     private:
-      // Disable assignment
-      ModuleEnum& operator= (ModuleEnum const&);
-
       // Memory instance
-      MemoryMgr* m_pMemory;
+      MemoryMgr m_Memory;
 
       // Toolhelp32 snapshot handle
       Windows::EnsureCloseSnap m_Snap;

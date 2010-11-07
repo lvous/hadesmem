@@ -141,22 +141,34 @@ namespace Hades
       Open(m_ID);
     }
 
-    // Move constructor
-    Process::Process(Process&& MyProcess) 
+    // Copy constructor
+    Process::Process(Process const& MyProcess) 
       : m_Handle(nullptr), 
-      m_ID(0)
+      m_ID(MyProcess.m_ID)
     {
-      *this = std::move(MyProcess);
+      if (m_ID == GetCurrentProcessId())
+      {
+        m_Handle = GetCurrentProcess();
+      }
+      else
+      {
+        Open(m_ID);
+      }
     }
 
-    // Move assignment
-    Process& Process::operator=(Process&& MyProcess)
+    // Copy assignment
+    Process& Process::operator=(Process const& MyProcess)
     {
-      this->m_Handle = std::move(MyProcess.m_Handle);
-      MyProcess.m_Handle = nullptr;
+      m_ID = MyProcess.m_ID;
 
-      this->m_ID = MyProcess.m_ID;
-      MyProcess.m_ID = 0;
+      if (m_ID == GetCurrentProcessId())
+      {
+        m_Handle = GetCurrentProcess();
+      }
+      else
+      {
+        Open(m_ID);
+      }
 
       return *this;
     }

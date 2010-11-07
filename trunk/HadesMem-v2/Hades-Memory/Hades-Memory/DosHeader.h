@@ -34,13 +34,14 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Hades
 #include "Fwd.h"
 #include "Error.h"
+#include "MemoryMgr.h"
 
 namespace Hades
 {
   namespace Memory
   {
     // PE file DOS header
-    class DosHeader : private boost::noncopyable
+    class DosHeader
     {
     public:
       // DOS header error class
@@ -48,7 +49,7 @@ namespace Hades
       { };
 
       // Constructor
-      explicit DosHeader(PeFile& MyPeFile);
+      explicit DosHeader(PeFile const& MyPeFile);
 
       // Whether magic is valid
       bool IsMagicValid() const;
@@ -172,10 +173,10 @@ namespace Hades
 
     private:
       // PE file
-      PeFile* m_pPeFile;
+      PeFile m_PeFile;
 
       // Memory instance
-      MemoryMgr* m_pMemory;
+      MemoryMgr m_Memory;
 
       // DOS header base
       PBYTE m_pBase;

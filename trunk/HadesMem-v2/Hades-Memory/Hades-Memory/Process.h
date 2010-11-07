@@ -43,7 +43,7 @@ namespace Hades
   namespace Memory
   {
     // Process managing class
-    class Process : private boost::noncopyable
+    class Process
     {
     public:
       // Process exception type
@@ -60,11 +60,17 @@ namespace Hades
       Process(std::basic_string<TCHAR> const& WindowName, 
         std::basic_string<TCHAR> const& ClassName);
 
+      // Copy constructor
+      Process(Process const& MyProcess);
+
+      // Copy assignment
+      Process& operator=(Process const& MyProcess);
+
       // Move constructor
       Process(Process&& MyProcess);
 
       // Move assignment
-      Process& operator= (Process&& MyProcess);
+      Process& operator=(Process&& MyProcess);
 
       // Get process handle
       HANDLE GetHandle() const;

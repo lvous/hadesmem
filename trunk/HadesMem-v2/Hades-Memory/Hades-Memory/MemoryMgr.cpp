@@ -70,19 +70,6 @@ namespace Hades
       : m_Process(WindowName, ClassName) 
     { }
 
-    // Move constructor
-    MemoryMgr::MemoryMgr(MemoryMgr&& MyMemoryMgr) 
-      : m_Process(std::move(MyMemoryMgr.m_Process))
-    { }
-
-    // Move assignment operator
-    MemoryMgr& MemoryMgr::operator=(MemoryMgr&& MyMemoryMgr) 
-    {
-      m_Process = std::move(MyMemoryMgr.m_Process);
-
-      return *this;
-    }
-
     // Call remote function
     DWORD_PTR MemoryMgr::Call(PVOID Address, std::vector<PVOID> const& Args, 
       CallConv MyCallConv) const 

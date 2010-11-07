@@ -34,13 +34,14 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Hades
 #include "Fwd.h"
 #include "Error.h"
+#include "MemoryMgr.h"
 
 namespace Hades
 {
   namespace Memory
   {
     // PE file section
-    class Section : private boost::noncopyable
+    class Section
     {
     public:
       // Section error class
@@ -48,7 +49,7 @@ namespace Hades
       { };
 
       // Constructor
-      Section(PeFile& MyPeFile, WORD Number);
+      Section(PeFile const& MyPeFile, WORD Number);
 
       // Get name
       std::string GetName() const;
@@ -88,10 +89,10 @@ namespace Hades
 
     private:
       // PE file
-      PeFile* m_pPeFile;
+      PeFile m_PeFile;
 
       // Memory instance
-      MemoryMgr* m_pMemory;
+      MemoryMgr m_Memory;
 
       // Section number
       WORD m_SectionNum;

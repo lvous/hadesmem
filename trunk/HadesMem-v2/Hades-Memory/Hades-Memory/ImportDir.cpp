@@ -32,9 +32,9 @@ namespace Hades
   namespace Memory
   {
     // Constructor
-    ImportDir::ImportDir(PeFile& MyPeFile, PIMAGE_IMPORT_DESCRIPTOR pImpDesc) 
-      : m_pPeFile(&MyPeFile), 
-      m_pMemory(&m_pPeFile->GetMemoryMgr()), 
+    ImportDir::ImportDir(PeFile const& MyPeFile, PIMAGE_IMPORT_DESCRIPTOR pImpDesc) 
+      : m_PeFile(MyPeFile), 
+      m_Memory(m_PeFile.GetMemoryMgr()), 
       m_pImpDesc(pImpDesc)
     { }
 
@@ -42,7 +42,7 @@ namespace Hades
     bool ImportDir::IsValid() const
     {
       // Get NT headers
-      NtHeaders const MyNtHeaders(*m_pPeFile);
+      NtHeaders const MyNtHeaders(m_PeFile);
 
       // Get import dir data
       DWORD const DataDirSize(MyNtHeaders.GetDataDirectorySize(NtHeaders::
@@ -72,7 +72,7 @@ namespace Hades
       if (!m_pImpDesc)
       {
         // Get NT headers
-        NtHeaders const MyNtHeaders(*m_pPeFile);
+        NtHeaders const MyNtHeaders(m_PeFile);
 
         // Get import dir data
         DWORD const DataDirSize = MyNtHeaders.GetDataDirectorySize(NtHeaders::
@@ -87,7 +87,7 @@ namespace Hades
         }
 
         // Init base address
-        m_pImpDesc = static_cast<PIMAGE_IMPORT_DESCRIPTOR>(m_pPeFile->RvaToVa(
+        m_pImpDesc = static_cast<PIMAGE_IMPORT_DESCRIPTOR>(m_PeFile.RvaToVa(
           DataDirVa));
       }
 
@@ -104,48 +104,48 @@ namespace Hades
     // Get characteristics
     DWORD ImportDir::GetCharacteristics() const
     {
-      return m_pMemory->Read<DWORD>(GetBase() + FIELD_OFFSET(
+      return m_Memory.Read<DWORD>(GetBase() + FIELD_OFFSET(
         IMAGE_IMPORT_DESCRIPTOR, Characteristics));
     }
 
     // Get time and date stamp
     DWORD ImportDir::GetTimeDateStamp() const
     {
-      return m_pMemory->Read<DWORD>(GetBase() + FIELD_OFFSET(
+      return m_Memory.Read<DWORD>(GetBase() + FIELD_OFFSET(
         IMAGE_IMPORT_DESCRIPTOR, TimeDateStamp));
     }
 
     // Get forwarder chain
     DWORD ImportDir::GetForwarderChain() const
     {
-      return m_pMemory->Read<DWORD>(GetBase() + FIELD_OFFSET(
+      return m_Memory.Read<DWORD>(GetBase() + FIELD_OFFSET(
         IMAGE_IMPORT_DESCRIPTOR, ForwarderChain));
     }
 
     // Get name (raw)
     DWORD ImportDir::GetNameRaw() const
     {
-      return m_pMemory->Read<DWORD>(GetBase() + FIELD_OFFSET(
+      return m_Memory.Read<DWORD>(GetBase() + FIELD_OFFSET(
         IMAGE_IMPORT_DESCRIPTOR, Name));
     }
 
     // Get name
     std::string ImportDir::GetName() const
     {
-      return m_pMemory->Read<std::string>(m_pPeFile->RvaToVa(GetNameRaw()));
+      return m_Memory.Read<std::string>(m_PeFile.RvaToVa(GetNameRaw()));
     }
 
     // Get first think
     DWORD ImportDir::GetFirstThunk() const
     {
-      return m_pMemory->Read<DWORD>(GetBase() + FIELD_OFFSET(
+      return m_Memory.Read<DWORD>(GetBase() + FIELD_OFFSET(
         IMAGE_IMPORT_DESCRIPTOR, FirstThunk));
     }
 
     // Constructor
-    ImportThunk::ImportThunk(PeFile& MyPeFile, PVOID pThunk) 
-      : m_pPeFile(&MyPeFile), 
-      m_pMemory(&MyPeFile.GetMemoryMgr()), 
+    ImportThunk::ImportThunk(PeFile const& MyPeFile, PVOID pThunk) 
+      : m_PeFile(MyPeFile), 
+      m_Memory(MyPeFile.GetMemoryMgr()), 
       m_pThunk(static_cast<PIMAGE_THUNK_DATA>(pThunk)), 
       m_pBase(reinterpret_cast<PBYTE>(m_pThunk))
     { }
@@ -166,14 +166,14 @@ namespace Hades
     // Get address of data
     DWORD_PTR ImportThunk::GetAddressOfData() const
     {
-      return m_pMemory->Read<DWORD_PTR>(m_pBase + FIELD_OFFSET(
+      return m_Memory.Read<DWORD_PTR>(m_pBase + FIELD_OFFSET(
         IMAGE_THUNK_DATA, u1.AddressOfData));
     }
 
     // Get ordinal (raw)
     DWORD_PTR ImportThunk::GetOrdinalRaw() const
     {
-      return m_pMemory->Read<DWORD_PTR>(m_pBase + FIELD_OFFSET(
+      return m_Memory.Read<DWORD_PTR>(m_pBase + FIELD_OFFSET(
         IMAGE_THUNK_DATA, u1.Ordinal));
     }
 
@@ -192,32 +192,32 @@ namespace Hades
     // Get function
     DWORD_PTR ImportThunk::GetFunction() const
     {
-      return m_pMemory->Read<DWORD_PTR>(m_pBase + FIELD_OFFSET(
+      return m_Memory.Read<DWORD_PTR>(m_pBase + FIELD_OFFSET(
         IMAGE_THUNK_DATA, u1.Function));
     }
 
     // Get hint
     WORD ImportThunk::GetHint() const
     {
-      PBYTE const pNameImport = static_cast<PBYTE>(m_pPeFile->RvaToVa(
+      PBYTE const pNameImport = static_cast<PBYTE>(m_PeFile.RvaToVa(
         static_cast<DWORD>(GetAddressOfData())));
-      return m_pMemory->Read<WORD>(pNameImport + FIELD_OFFSET(
+      return m_Memory.Read<WORD>(pNameImport + FIELD_OFFSET(
         IMAGE_IMPORT_BY_NAME, Hint));
     }
 
     // Get name
     std::string ImportThunk::GetName() const
     {
-      PBYTE const pNameImport = static_cast<PBYTE>(m_pPeFile->RvaToVa(
+      PBYTE const pNameImport = static_cast<PBYTE>(m_PeFile.RvaToVa(
         static_cast<DWORD>(GetAddressOfData())));
-      return m_pMemory->Read<std::string>(pNameImport + FIELD_OFFSET(
+      return m_Memory.Read<std::string>(pNameImport + FIELD_OFFSET(
         IMAGE_IMPORT_BY_NAME, Name));
     }
 
     // Set function
     void ImportThunk::SetFunction(DWORD_PTR Function) const
     {
-      return m_pMemory->Write(m_pBase + FIELD_OFFSET(IMAGE_THUNK_DATA, 
+      return m_Memory.Write(m_pBase + FIELD_OFFSET(IMAGE_THUNK_DATA, 
         u1.Function), Function);
     }
   }

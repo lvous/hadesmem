@@ -27,8 +27,8 @@ namespace Hades
   namespace Memory
   {
     // Constructor
-    Patch::Patch(MemoryMgr& MyMemory) 
-      : m_pMemory(&MyMemory), 
+    Patch::Patch(MemoryMgr const& MyMemory) 
+      : m_Memory(MyMemory), 
       m_Applied(false)
     { }
 
@@ -43,7 +43,7 @@ namespace Hades
     }
 
     // Constructor
-    PatchRaw::PatchRaw(MemoryMgr& MyMemory, PVOID Target, 
+    PatchRaw::PatchRaw(MemoryMgr const& MyMemory, PVOID Target, 
       std::vector<BYTE> const& Data) 
       : Patch(MyMemory), 
       m_Target(Target), 
@@ -61,12 +61,12 @@ namespace Hades
       }
 
       // Backup original data
-      m_Orig = m_pMemory->Read<std::vector<BYTE>>(m_Target, m_Data.size());
+      m_Orig = m_Memory.Read<std::vector<BYTE>>(m_Target, m_Data.size());
       // Write target data
-      m_pMemory->Write(m_Target, m_Data);
+      m_Memory.Write(m_Target, m_Data);
 
       // Flush cache
-      m_pMemory->FlushCache(m_Target, m_Data.size());
+      m_Memory.FlushCache(m_Target, m_Data.size());
 
       // Patch is applied
       m_Applied = true;
@@ -82,17 +82,17 @@ namespace Hades
       }
 
       // Restore original data
-      m_pMemory->Write(m_Target, m_Orig);
+      m_Memory.Write(m_Target, m_Orig);
 
       // Flush cache
-      m_pMemory->FlushCache(m_Target, m_Orig.size());
+      m_Memory.FlushCache(m_Target, m_Orig.size());
 
       // Patch is removed
       m_Applied = false;
     }
 
     // Constructor
-    PatchDetour::PatchDetour(MemoryMgr& MyMemory, PVOID Target, 
+    PatchDetour::PatchDetour(MemoryMgr const& MyMemory, PVOID Target, 
       PVOID Detour) 
       : Patch(MyMemory), 
       m_Target(Target), 
@@ -116,11 +116,11 @@ namespace Hades
       // Allocate trampoline buffer
       // Fixme: Ensure trampoline is within range for a RIP-relative 
       // JMP under x64.
-      m_Trampoline = m_pMemory->Alloc(TrampSize);
+      m_Trampoline = m_Memory.Alloc(TrampSize);
       PBYTE TrampCur = static_cast<PBYTE>(m_Trampoline);
 
       // Disassemble target (for worst case scenario)
-      Disassembler MyDisasm(*m_pMemory);
+      Disassembler MyDisasm(m_Memory);
       std::vector<DisasmData> MyDisasmData(MyDisasm.Disassemble(m_Target, 
         TrampSize));
 
@@ -152,7 +152,7 @@ namespace Hades
         // Handle 'generic' instructions
         else
         {
-          m_pMemory->Write(TrampCur, CurRaw);
+          m_Memory.Write(TrampCur, CurRaw);
           TrampCur += CurLen;
         }
 
@@ -165,16 +165,16 @@ namespace Hades
       TrampCur += GetJumpSize();
 
       // Flush instruction cache
-      m_pMemory->FlushCache(m_Trampoline, InstrSize + GetJumpSize());
+      m_Memory.FlushCache(m_Trampoline, InstrSize + GetJumpSize());
 
       // Backup original code
-      m_Orig = m_pMemory->Read<std::vector<BYTE>>(m_Target, GetJumpSize());
+      m_Orig = m_Memory.Read<std::vector<BYTE>>(m_Target, GetJumpSize());
 
       // Write jump to detour
       WriteJump(m_Target, m_Detour);
 
       // Flush instruction cache
-      m_pMemory->FlushCache(m_Target, m_Orig.size());
+      m_Memory.FlushCache(m_Target, m_Orig.size());
 
       // Patch is applied
       m_Applied = true;
@@ -190,13 +190,13 @@ namespace Hades
       }
 
       // Remove detour
-      m_pMemory->Write(m_Target, m_Orig);
+      m_Memory.Write(m_Target, m_Orig);
 
       // Free trampoline
       // Fixme: Use RAII for the remote memory buffer used to store the 
       // trampoline. Currently, if detour removal (above) fails and an 
       // exception is thrown, the memory will potentially be 'leaked'.
-      m_pMemory->Free(m_Trampoline);
+      m_Memory.Free(m_Trampoline);
 
       // Patch has been removed
       m_Applied = false;
@@ -235,7 +235,7 @@ namespace Hades
 #error "Unsupported architecture."
 #endif
       // Write code to address
-      m_pMemory->Write(Address, JumpBuf);
+      m_Memory.Write(Address, JumpBuf);
     }
 
     // Get size of jump instruction for current platform

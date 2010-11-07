@@ -41,6 +41,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Hades
 #include "Fwd.h"
 #include "Error.h"
+#include "MemoryMgr.h"
 
 namespace Hades
 {
@@ -55,7 +56,7 @@ namespace Hades
     };
 
     // Disassembler managing class
-    class Disassembler : private boost::noncopyable
+    class Disassembler
     {
     public:
       // Disassembler exception type
@@ -63,7 +64,7 @@ namespace Hades
       { };
 
       // Constructor
-      explicit Disassembler(MemoryMgr& pMyMemory);
+      explicit Disassembler(MemoryMgr const& MyMemory);
 
       // Disassemble target and get results as strings
       std::vector<std::string> DisassembleToStr(PVOID Address, 
@@ -75,7 +76,7 @@ namespace Hades
 
     private:
       // MemoryMgr instance
-      MemoryMgr* m_pMemory;
+      MemoryMgr m_MemoryMgr;
     };
   }
 }

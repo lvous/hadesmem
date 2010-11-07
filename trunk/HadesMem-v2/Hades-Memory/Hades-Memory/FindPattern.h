@@ -37,6 +37,8 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #pragma warning(pop)
 
 // Hades
+#include "Fwd.h"
+#include "Error.h"
 #include "MemoryMgr.h"
 
 namespace Hades
@@ -44,7 +46,7 @@ namespace Hades
   namespace Memory
   {
     // Pattern finding class
-    class FindPattern : private boost::noncopyable
+    class FindPattern
     {
     public:
       // FindPattern exception type
@@ -52,8 +54,8 @@ namespace Hades
       { };
 
       // Constructor
-      explicit FindPattern(MemoryMgr& MyMemory);
-      FindPattern(MemoryMgr& MyMemory, HMODULE Module);
+      explicit FindPattern(MemoryMgr const& MyMemory);
+      FindPattern(MemoryMgr const& MyMemory, HMODULE Module);
 
       // Find pattern
       PVOID Find(std::basic_string<TCHAR> const& Data, 
@@ -73,7 +75,7 @@ namespace Hades
       PVOID Find(std::vector<std::pair<BYTE, bool>> const& Data) const;
 
       // Memory manager instance
-      MemoryMgr* m_pMemory;
+      MemoryMgr m_Memory;
 
       // Start and end addresses of search region
       PBYTE m_Start;

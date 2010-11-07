@@ -31,9 +31,9 @@ namespace Hades
   namespace Memory
   {
     // Find module by name
-    Module::Module(MemoryMgr& MyMemory, 
+    Module::Module(MemoryMgr const& MyMemory, 
       std::basic_string<TCHAR> const& ModuleName) 
-      : m_pMemory(&MyMemory), 
+      : m_Memory(MyMemory), 
       m_Base(nullptr), 
       m_Size(0), 
       m_Name(), 
@@ -86,8 +86,8 @@ namespace Hades
     }
 
     // Find module by handle
-    Module::Module(MemoryMgr& MyMemory, HMODULE Handle) 
-      : m_pMemory(&MyMemory), 
+    Module::Module(MemoryMgr const& MyMemory, HMODULE Handle) 
+      : m_Memory(MyMemory), 
       m_Base(nullptr), 
       m_Size(0), 
       m_Name(), 
@@ -133,8 +133,8 @@ namespace Hades
       m_Path = ModEntry.szExePath;
     }
 
-    Module::Module(MemoryMgr& MyMemory, MODULEENTRY32 const& ModuleEntry) 
-      : m_pMemory(&MyMemory), 
+    Module::Module(MemoryMgr const& MyMemory, MODULEENTRY32 const& ModuleEntry) 
+      : m_Memory(MyMemory), 
       m_Base(ModuleEntry.hModule), 
       m_Size(ModuleEntry.modBaseSize), 
       m_Name(ModuleEntry.szModule), 

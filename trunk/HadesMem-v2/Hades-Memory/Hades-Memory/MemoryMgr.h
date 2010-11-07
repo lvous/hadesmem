@@ -52,7 +52,7 @@ namespace Hades
   namespace Memory
   {
     // Memory managing class
-    class MemoryMgr : private boost::noncopyable
+    class MemoryMgr
     {
     public:
       // Memory exception type
@@ -68,12 +68,6 @@ namespace Hades
       // Open process from window name and class
       MemoryMgr(std::basic_string<TCHAR> const& WindowName, 
         std::basic_string<TCHAR> const& ClassName);
-
-      // Move constructor
-      MemoryMgr(MemoryMgr&& MyMemoryMgr);
-
-      // Move assignment operator
-      MemoryMgr& operator=(MemoryMgr&& MyMemoryMgr);
 
       // Calling conventions
       enum CallConv

@@ -28,16 +28,16 @@ namespace Hades
   namespace Memory
   {
     // Constructor
-    TlsDir::TlsDir(PeFile& MyPeFile)
-      : m_pPeFile(&MyPeFile), 
-      m_pMemory(&m_pPeFile->GetMemoryMgr())
+    TlsDir::TlsDir(PeFile const& MyPeFile)
+      : m_PeFile(MyPeFile), 
+      m_Memory(m_PeFile.GetMemoryMgr())
     { }
 
     // Whether TLS directory is valid
     bool TlsDir::IsValid() const
     {
       // Get NT headers
-      NtHeaders const MyNtHeaders(*m_pPeFile);
+      NtHeaders const MyNtHeaders(m_PeFile);
 
       // Get TLS dir data
       DWORD const DataDirSize(MyNtHeaders.GetDataDirectorySize(NtHeaders::
@@ -64,7 +64,7 @@ namespace Hades
     DWORD_PTR TlsDir::GetStartAddressOfRawData() const
     {
       PBYTE const pTlsDir = GetBase();
-      return m_pMemory->Read<DWORD_PTR>(pTlsDir + FIELD_OFFSET(
+      return m_Memory.Read<DWORD_PTR>(pTlsDir + FIELD_OFFSET(
         IMAGE_TLS_DIRECTORY, StartAddressOfRawData));
     }
 
@@ -72,7 +72,7 @@ namespace Hades
     DWORD_PTR TlsDir::GetEndAddressOfRawData() const
     {
       PBYTE const pTlsDir = GetBase();
-      return m_pMemory->Read<DWORD_PTR>(pTlsDir + FIELD_OFFSET(
+      return m_Memory.Read<DWORD_PTR>(pTlsDir + FIELD_OFFSET(
         IMAGE_TLS_DIRECTORY, EndAddressOfRawData));
     }
 
@@ -80,7 +80,7 @@ namespace Hades
     DWORD_PTR TlsDir::GetAddressOfIndex() const
     {
       PBYTE const pTlsDir = GetBase();
-      return m_pMemory->Read<DWORD_PTR>(pTlsDir + FIELD_OFFSET(
+      return m_Memory.Read<DWORD_PTR>(pTlsDir + FIELD_OFFSET(
         IMAGE_TLS_DIRECTORY, AddressOfIndex));
     }
 
@@ -88,7 +88,7 @@ namespace Hades
     DWORD_PTR TlsDir::GetAddressOfCallBacks() const
     {
       PBYTE const pTlsDir = GetBase();
-      return m_pMemory->Read<DWORD_PTR>(pTlsDir + FIELD_OFFSET(
+      return m_Memory.Read<DWORD_PTR>(pTlsDir + FIELD_OFFSET(
         IMAGE_TLS_DIRECTORY, AddressOfCallBacks));
     }
 
@@ -96,7 +96,7 @@ namespace Hades
     DWORD TlsDir::GetSizeOfZeroFill() const
     {
       PBYTE const pTlsDir = GetBase();
-      return m_pMemory->Read<DWORD>(pTlsDir + FIELD_OFFSET(
+      return m_Memory.Read<DWORD>(pTlsDir + FIELD_OFFSET(
         IMAGE_TLS_DIRECTORY, SizeOfZeroFill));
     }
 
@@ -104,7 +104,7 @@ namespace Hades
     DWORD TlsDir::GetCharacteristics() const
     {
       PBYTE const pTlsDir = GetBase();
-      return m_pMemory->Read<DWORD>(pTlsDir + FIELD_OFFSET(
+      return m_Memory.Read<DWORD>(pTlsDir + FIELD_OFFSET(
         IMAGE_TLS_DIRECTORY, Characteristics));
     }
 
@@ -115,17 +115,17 @@ namespace Hades
       std::vector<PIMAGE_TLS_CALLBACK> Callbacks;
 
       // Get NT headers
-      NtHeaders MyNtHeaders(*m_pPeFile);
+      NtHeaders MyNtHeaders(m_PeFile);
 
       // Get pointer to callback list
       PIMAGE_TLS_CALLBACK* pCallbacks = reinterpret_cast<PIMAGE_TLS_CALLBACK*>(
-        m_pPeFile->RvaToVa(static_cast<DWORD>(GetAddressOfCallBacks() - 
+        m_PeFile.RvaToVa(static_cast<DWORD>(GetAddressOfCallBacks() - 
         MyNtHeaders.GetImageBase())));
 
       // Loop over all callbacks
-      for (PIMAGE_TLS_CALLBACK pCallback = m_pMemory->
-        Read<PIMAGE_TLS_CALLBACK>(pCallbacks); pCallback; pCallback = 
-        m_pMemory->Read<PIMAGE_TLS_CALLBACK>(++pCallbacks))
+      for (PIMAGE_TLS_CALLBACK pCallback = m_Memory.Read<PIMAGE_TLS_CALLBACK>(
+        pCallbacks); pCallback; pCallback = m_Memory.Read<PIMAGE_TLS_CALLBACK>(
+        ++pCallbacks))
       {
         PIMAGE_TLS_CALLBACK pCallbackReal = 
           reinterpret_cast<PIMAGE_TLS_CALLBACK>((reinterpret_cast<PBYTE>(
@@ -141,7 +141,7 @@ namespace Hades
     PBYTE TlsDir::GetBase() const
     {
       // Get NT headers
-      NtHeaders const MyNtHeaders(*m_pPeFile);
+      NtHeaders const MyNtHeaders(m_PeFile);
 
       // Get export dir data
       DWORD const DataDirSize = MyNtHeaders.GetDataDirectorySize(NtHeaders::
@@ -155,14 +155,14 @@ namespace Hades
           ErrorString("PE file has no TLS directory."));
       }
 
-      return static_cast<PBYTE>(m_pPeFile->RvaToVa(DataDirVa));
+      return static_cast<PBYTE>(m_PeFile.RvaToVa(DataDirVa));
     }
 
     // Get raw TLS dir
     IMAGE_TLS_DIRECTORY TlsDir::GetTlsDirRaw() const
     {
       // Get raw TLS dir
-      return m_pMemory->Read<IMAGE_TLS_DIRECTORY>(GetBase());
+      return m_Memory.Read<IMAGE_TLS_DIRECTORY>(GetBase());
     }
   }
 }

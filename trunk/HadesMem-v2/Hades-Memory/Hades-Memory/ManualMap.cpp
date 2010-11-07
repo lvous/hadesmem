@@ -72,8 +72,8 @@ namespace Hades
   namespace Memory
   {
     // Constructor
-    ManualMap::ManualMap(MemoryMgr& MyMemory) 
-      : m_pMemory(&MyMemory)
+    ManualMap::ManualMap(MemoryMgr const& MyMemory) 
+      : m_Memory(MyMemory)
     { }
 
     // Manually map DLL
@@ -120,13 +120,13 @@ namespace Hades
 
       // Ensure file is a valid PE file
       std::cout << "Performing PE file format validation." << std::endl;
-      PeFileAsData MyPeFile(MyMemoryLocal, pBase);
+      PeFile MyPeFile(MyMemoryLocal, pBase, PeFile::FileType_Data);
       DosHeader const MyDosHeader(MyPeFile);
       NtHeaders const MyNtHeaders(MyPeFile);
 
       // Allocate memory for image
       std::cout << "Allocating remote memory for image." << std::endl;
-      PVOID const RemoteBase = m_pMemory->Alloc(MyNtHeaders.GetSizeOfImage());
+      PVOID const RemoteBase = m_Memory.Alloc(MyNtHeaders.GetSizeOfImage());
       std::cout << "Image base address: " << RemoteBase << "." << std::endl;
       std::cout << "Image size: " << std::hex << MyNtHeaders.GetSizeOfImage() 
         << std::dec << "." << std::endl;
@@ -153,7 +153,7 @@ namespace Hades
       // Write DOS header to process
       std::cout << "Writing DOS header." << std::endl;
       std::cout << "DOS Header: " << RemoteBase << std::endl;
-      m_pMemory->Write(RemoteBase, *reinterpret_cast<PIMAGE_DOS_HEADER>(
+      m_Memory.Write(RemoteBase, *reinterpret_cast<PIMAGE_DOS_HEADER>(
         pBase));
 
       // Write NT headers to process
@@ -166,7 +166,7 @@ namespace Hades
       std::cout << "Writing NT header." << std::endl;
       std::cout << "NT Header: " << static_cast<PVOID>(TargetAddr) << 
         std::endl;
-      m_pMemory->Write(TargetAddr, PeHeaderBuf);
+      m_Memory.Write(TargetAddr, PeHeaderBuf);
 
       // Write sections to process
       MapSections(MyPeFile, RemoteBase);
@@ -177,7 +177,7 @@ namespace Hades
       std::cout << "Entry Point: " << EntryPoint << "." << std::endl;
 
       // Get address of export in remote process
-      PVOID const ExportAddr = m_pMemory->GetRemoteProcAddress(
+      PVOID const ExportAddr = m_Memory.GetRemoteProcAddress(
         reinterpret_cast<HMODULE>(RemoteBase), Path, Export.c_str());
       std::cout << "Export Address: " << ExportAddr << "." << std::endl;
 
@@ -201,7 +201,7 @@ namespace Hades
         TlsCallArgs.push_back(0);
         TlsCallArgs.push_back(reinterpret_cast<PVOID>(DLL_PROCESS_ATTACH));
         TlsCallArgs.push_back(RemoteBase);
-        DWORD_PTR const TlsRet = m_pMemory->Call(reinterpret_cast<PBYTE>(
+        DWORD_PTR const TlsRet = m_Memory.Call(reinterpret_cast<PBYTE>(
           RemoteBase) + reinterpret_cast<DWORD_PTR>(pCallback), TlsCallArgs);
         std::cout << "TLS Callback Returned: " << TlsRet << "." << std::endl;
       });
@@ -211,7 +211,7 @@ namespace Hades
       EpArgs.push_back(0);
       EpArgs.push_back(reinterpret_cast<PVOID>(DLL_PROCESS_ATTACH));
       EpArgs.push_back(RemoteBase);
-      DWORD_PTR const EpRet = m_pMemory->Call(EntryPoint, EpArgs);
+      DWORD_PTR const EpRet = m_Memory.Call(EntryPoint, EpArgs);
       std::cout << "Entry Point Returned: " << EpRet << "." << std::endl;
 
       // Call remote export (if specified)
@@ -219,7 +219,7 @@ namespace Hades
       {
         std::vector<PVOID> ExpArgs;
         ExpArgs.push_back(RemoteBase);
-        DWORD_PTR const ExpRet = m_pMemory->Call(ExportAddr, ExpArgs);
+        DWORD_PTR const ExpRet = m_Memory.Call(ExportAddr, ExpArgs);
         std::cout << "Export Returned: " << ExpRet << "." << std::endl;
       }
 
@@ -264,7 +264,7 @@ namespace Hades
         std::vector<BYTE> const SectionData(DataStart, DataEnd);
 
         // Write section data to process
-        m_pMemory->Write(TargetAddr, SectionData);
+        m_Memory.Write(TargetAddr, SectionData);
 
         // Get section characteristics
         DWORD SecCharacteristics = Current.GetCharacteristics();
@@ -296,7 +296,7 @@ namespace Hades
 
         // Set the proper page protections for this section
         DWORD OldProtect;
-        if (!VirtualProtectEx(m_pMemory->GetProcessHandle(), TargetAddr, 
+        if (!VirtualProtectEx(m_Memory.GetProcessHandle(), TargetAddr, 
           SizeOfRawData, SecProtect, &OldProtect))
         {
           DWORD const LastError = GetLastError();
@@ -354,7 +354,7 @@ namespace Hades
         std::cout << "Module Name: " << ModuleName << "." << std::endl;
 
         // Check whether dependent module is already loaded
-        ModuleEnum MyModuleList(*m_pMemory);
+        ModuleEnum MyModuleList(m_Memory);
         std::unique_ptr<Module> MyModule;
         for (ModuleEnum::ModuleListIter j(MyModuleList); *j; ++j)
         {
@@ -375,7 +375,7 @@ namespace Hades
         {
           // Inject dependent DLL
           std::cout << "Injecting dependent DLL." << std::endl;
-          Injector const MyInjector(*m_pMemory);
+          Injector const MyInjector(m_Memory);
           CurModBase = MyInjector.InjectDll(ModuleName, false);
           CurModName = ModuleNameT;
         }
@@ -401,12 +401,12 @@ namespace Hades
           FARPROC FuncAddr = 0;
           if (ImpThunk.ByOrdinal())
           {
-            FuncAddr = m_pMemory->GetRemoteProcAddress(CurModBase, CurModName, 
+            FuncAddr = m_Memory.GetRemoteProcAddress(CurModBase, CurModName, 
               ImpThunk.GetOrdinal());
           }
           else
           {
-            FuncAddr = m_pMemory->GetRemoteProcAddress(CurModBase, CurModName, 
+            FuncAddr = m_Memory.GetRemoteProcAddress(CurModBase, CurModName, 
               ImpThunk.GetName());
           }
 

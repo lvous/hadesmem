@@ -42,7 +42,7 @@ namespace Hades
   namespace Memory
   {
     // Memory region managing class
-    class Region : private boost::noncopyable
+    class Region
     {
     public:
       // MemRegion exception type
@@ -50,10 +50,10 @@ namespace Hades
       { };
 
       // Constructor
-      Region(MemoryMgr& MyMemory, PVOID Address);
+      Region(MemoryMgr const& MyMemory, PVOID Address);
 
       // Constructor
-      Region(MemoryMgr& MyMemory, MEMORY_BASIC_INFORMATION const& MyMbi);
+      Region(MemoryMgr const& MyMemory, MEMORY_BASIC_INFORMATION const& MyMbi);
 
       // Get base address
       PVOID GetBase() const;
@@ -78,19 +78,19 @@ namespace Hades
 
     private:
       // MemoryMgr instance
-      MemoryMgr* m_pMemory;
+      MemoryMgr m_Memory;
 
       // Region information
       MEMORY_BASIC_INFORMATION m_RegionInfo;
     };
 
     // Region enumerator
-    class RegionEnum
+    class RegionEnum : private boost::noncopyable
     {
     public:
       // Constructor
-      RegionEnum(MemoryMgr& MyMemory) 
-        : m_pMemory(&MyMemory), 
+      RegionEnum(MemoryMgr const& MyMemory) 
+        : m_Memory(MyMemory), 
         m_Address(nullptr), 
         m_Current()
       {
@@ -103,7 +103,7 @@ namespace Hades
         m_Address = nullptr;
         ZeroMemory(&m_Current, sizeof(m_Current));
 
-        if (!VirtualQueryEx(m_pMemory->GetProcessHandle(), m_Address, 
+        if (!VirtualQueryEx(m_Memory.GetProcessHandle(), m_Address, 
           &m_Current, sizeof(m_Current)))
         {
           DWORD const LastError = GetLastError();
@@ -113,7 +113,7 @@ namespace Hades
             ErrorCodeWin(LastError));
         }
 
-        return std::unique_ptr<Region>(new Region(*m_pMemory, m_Current));
+        return std::unique_ptr<Region>(new Region(m_Memory, m_Current));
       }
 
       // Get next region
@@ -126,14 +126,15 @@ namespace Hades
         // Get region info
         // Fixme: Check GetLastError to ensure EOL and throw an exception 
         // on an actual error.
-        return VirtualQueryEx(m_pMemory->GetProcessHandle(), m_Address, 
+        return VirtualQueryEx(m_Memory.GetProcessHandle(), m_Address, 
           &m_Current, sizeof(m_Current)) ? std::unique_ptr<Region>(new Region(
-          *m_pMemory, m_Current)) : std::unique_ptr<Region>(nullptr);
+          m_Memory, m_Current)) : std::unique_ptr<Region>(nullptr);
       }
 
       // Region iterator
       class RegionListIter : public boost::iterator_facade<RegionListIter, 
-        std::unique_ptr<Region>, boost::incrementable_traversal_tag>
+        std::unique_ptr<Region>, boost::incrementable_traversal_tag>, 
+        private boost::noncopyable
       {
       public:
         // Constructor
@@ -144,9 +145,6 @@ namespace Hades
         }
 
       private:
-        // Disable assignment
-        RegionListIter& operator= (RegionListIter const&);
-
         // Allow Boost.Iterator access to internals
         friend class boost::iterator_core_access;
 
@@ -171,11 +169,8 @@ namespace Hades
       };
 
     private:
-      // Disable assignment
-      RegionEnum& operator= (RegionEnum const&);
-
       // Memory instance
-      MemoryMgr* m_pMemory;
+      MemoryMgr m_Memory;
 
       // Current address
       PVOID m_Address;
