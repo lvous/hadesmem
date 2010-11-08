@@ -39,7 +39,7 @@
 * MemoryMgr
 	* Improve 'safety' of remote function caller via EH to minimize risk of 
 	crashing target.
-	* Improve genericity of parameter passign in remote function caller.
+	* Improve genericity of parameter passing in remote function caller.
 * Disassembler
 	* Decode calls/jumps to function names where possible.
 	* NOP/UnNOP support.
