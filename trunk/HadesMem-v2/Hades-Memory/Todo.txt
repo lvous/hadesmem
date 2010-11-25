@@ -68,7 +68,7 @@
 * Patcher
 	* VEH hooking (Both INT3 and DR).
 	* Transactional hooking.
-	* Improved relative instruction rebuilding.
+	* Improved relative instruction rebuilding (including conditionals).
 	* Sanity checking for target process.
 	* Freeze target when hooking.
 	* VMT hooking.
