@@ -36,8 +36,8 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Image base linker 'trick'
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 
-// Fixme: This entire module is a complete cluster-fuck. Rewrite to move from 
-// 'PoC' quality to at least 'alpha' or 'beta' quality.
+// Fixme: This entire module is a complete mess. Rewrite to move from 'PoC' 
+// quality to at least 'alpha' or 'beta' quality.
 
 typedef struct _EXCEPTION_REGISTRATION_RECORD
 {
