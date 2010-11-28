@@ -25,6 +25,7 @@
 	* Write 'all in one' test utility.
 	* Premake support (will help GCC test port).
 	* Process enumeration APIs.
+	* Symbol APIs.
 * New Modules
 	* Process creation APIs.
 	* Debugging APIs.
