@@ -27,87 +27,98 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include "Hades-Memory/Types.h"
 #include "Hades-Memory/MemoryMgr.h"
 
+class MemoryMgrWrap : public Hades::Memory::MemoryMgr
+{
+public:
+  explicit MemoryMgrWrap(DWORD ProcID) 
+    : Hades::Memory::MemoryMgr(ProcID)
+  { }
+
+  explicit MemoryMgrWrap(std::basic_string<TCHAR> const& ProcName) 
+    : Hades::Memory::MemoryMgr(ProcName)
+  { }
+
+  explicit MemoryMgrWrap(std::basic_string<TCHAR> const& WindowName, 
+    std::basic_string<TCHAR> const& ClassName) 
+    : Hades::Memory::MemoryMgr(WindowName, ClassName)
+  { }
+
+  DWORD_PTR Call(DWORD_PTR Address, std::vector<DWORD_PTR> const& Args, 
+    CallConv MyCallConv) const
+  {
+    std::vector<PVOID> ArgsNew;
+    ArgsNew.reserve(Args.size());
+    std::transform(Args.begin(), Args.end(), std::back_inserter(ArgsNew), 
+      [] (DWORD_PTR Current) 
+    {
+      return reinterpret_cast<PVOID>(Current);
+    });
+
+    return Hades::Memory::MemoryMgr::Call(reinterpret_cast<PVOID>(Address), 
+      ArgsNew, MyCallConv);
+  }
+
+  DWORD_PTR Alloc(SIZE_T Size) const
+  {
+    return reinterpret_cast<DWORD_PTR>(Hades::Memory::MemoryMgr::Alloc(Size));
+  }
+
+  DWORD_PTR GetProcessHandle() const
+  {
+    return reinterpret_cast<DWORD_PTR>(Hades::Memory::MemoryMgr::
+      GetProcessHandle());
+  }
+};
+
 // Export MemoryMgr API
 inline void ExportMemoryMgr()
 {
-  boost::python::scope MemoryMgrScope = boost::python::class_<Hades::Memory::
-    MemoryMgr>("MemoryMgr", boost::python::init<DWORD>())
+  boost::python::scope MemoryMgrScope = boost::python::class_<MemoryMgrWrap>(
+    "MemoryMgr", boost::python::init<DWORD>())
     .def(boost::python::init<std::basic_string<TCHAR> const&>())
     .def(boost::python::init<std::basic_string<TCHAR> const&, 
       std::basic_string<TCHAR> const&>())
-    .def("Call", &Hades::Memory::MemoryMgr::Call)
-    .def("ReadInt8", &Hades::Memory::MemoryMgr::Read<Hades::Memory::Types::
-      Int8>)
-    .def("ReadUInt8", &Hades::Memory::MemoryMgr::Read<Hades::Memory::Types::
-      UInt8>)
-    .def("ReadInt16", &Hades::Memory::MemoryMgr::Read<Hades::Memory::Types::
-      Int16>)
-    .def("ReadUInt16", &Hades::Memory::MemoryMgr::Read<Hades::Memory::Types::
-      UInt16>)
-    .def("ReadInt32", &Hades::Memory::MemoryMgr::Read<Hades::Memory::Types::
-      Int32>)
-    .def("ReadUInt32", &Hades::Memory::MemoryMgr::Read<Hades::Memory::Types::
-      UInt32>)
-    .def("ReadInt64", &Hades::Memory::MemoryMgr::Read<Hades::Memory::Types::
-      Int64>)
-    .def("ReadUInt64", &Hades::Memory::MemoryMgr::Read<Hades::Memory::Types::
-      UInt64>)
-    .def("ReadFloat", &Hades::Memory::MemoryMgr::Read<Hades::Memory::Types::
-      Float>)
-    .def("ReadDouble", &Hades::Memory::MemoryMgr::Read<Hades::Memory::Types::
-      Double>)
-    .def("ReadCharA", &Hades::Memory::MemoryMgr::Read<Hades::Memory::Types::
-      CharA>)
-    .def("ReadCharW", &Hades::Memory::MemoryMgr::Read<Hades::Memory::Types::
-      CharW>)
-    .def("ReadStringA", &Hades::Memory::MemoryMgr::Read<Hades::Memory::Types::
-      StringA>)
-    .def("ReadStringW", &Hades::Memory::MemoryMgr::Read<Hades::Memory::Types::
-      StringW>)
-//     .def("ReadPointer", &Hades::Memory::MemoryMgr::Read<Hades::Memory::
-//       Types::Pointer>)
-    .def("WriteInt8", &Hades::Memory::MemoryMgr::Write<Hades::Memory::Types::
-      Int8>)
-    .def("WriteUInt8", &Hades::Memory::MemoryMgr::Write<Hades::Memory::Types::
-      UInt8>)
-    .def("WriteInt16", &Hades::Memory::MemoryMgr::Write<Hades::Memory::Types::
-      Int16>)
-    .def("WriteUInt16", &Hades::Memory::MemoryMgr::Write<Hades::Memory::Types::
-      UInt16>)
-    .def("WriteInt32", &Hades::Memory::MemoryMgr::Write<Hades::Memory::Types::
-      Int32>)
-    .def("WriteUInt32", &Hades::Memory::MemoryMgr::Write<Hades::Memory::Types::
-      UInt32>)
-    .def("WriteInt64", &Hades::Memory::MemoryMgr::Write<Hades::Memory::Types::
-      Int64>)
-    .def("WriteUInt64", &Hades::Memory::MemoryMgr::Write<Hades::Memory::Types::
-      UInt64>)
-    .def("WriteFloat", &Hades::Memory::MemoryMgr::Write<Hades::Memory::Types::
-      Float>)
-    .def("WriteDouble", &Hades::Memory::MemoryMgr::Write<Hades::Memory::Types::
-      Double>)
-    .def("WriteCharA", &Hades::Memory::MemoryMgr::Write<Hades::Memory::Types::
-      CharA>)
-    .def("WriteCharW", &Hades::Memory::MemoryMgr::Write<Hades::Memory::Types::
-      CharW>)
-    .def("WriteStringA", &Hades::Memory::MemoryMgr::Write<Hades::Memory::
-      Types::StringA>)
-    .def("WriteStringW", &Hades::Memory::MemoryMgr::Write<Hades::Memory::
-    Types::StringW>)
-    .def("WritePointer", &Hades::Memory::MemoryMgr::Write<Hades::Memory::
-      Types::Pointer>)
-    .def("CanRead", &Hades::Memory::MemoryMgr::CanRead)
-    .def("CanWrite", &Hades::Memory::MemoryMgr::CanWrite)
-    .def("IsGuard", &Hades::Memory::MemoryMgr::IsGuard)
-//     .def("Alloc", &Hades::Memory::MemoryMgr::Alloc)
-    .def("Free", &Hades::Memory::MemoryMgr::Free)
-    .def("GetProcessID", &Hades::Memory::MemoryMgr::GetProcessID)
-//     .def("GetProcessHandle", &Hades::Memory::MemoryMgr::GetProcessHandle)
-//     .def("GetRemoteProcAddress", &Hades::Memory::MemoryMgr::
-//       GetRemoteProcAddress)
-//     .def("GetRemoteProcAddress", &Hades::Memory::MemoryMgr::
-//       GetRemoteProcAddress)
-    .def("FlushCache", &Hades::Memory::MemoryMgr::FlushCache)
+    .def("Call", &MemoryMgrWrap::Call)
+    .def("ReadInt8", &MemoryMgrWrap::Read<Hades::Memory::Types::Int8>)
+    .def("ReadUInt8", &MemoryMgrWrap::Read<Hades::Memory::Types::UInt8>)
+    .def("ReadInt16", &MemoryMgrWrap::Read<Hades::Memory::Types::Int16>)
+    .def("ReadUInt16", &MemoryMgrWrap::Read<Hades::Memory::Types::UInt16>)
+    .def("ReadInt32", &MemoryMgrWrap::Read<Hades::Memory::Types::Int32>)
+    .def("ReadUInt32", &MemoryMgrWrap::Read<Hades::Memory::Types::UInt32>)
+    .def("ReadInt64", &MemoryMgrWrap::Read<Hades::Memory::Types::Int64>)
+    .def("ReadUInt64", &MemoryMgrWrap::Read<Hades::Memory::Types::UInt64>)
+    .def("ReadFloat", &MemoryMgrWrap::Read<Hades::Memory::Types::Float>)
+    .def("ReadDouble", &MemoryMgrWrap::Read<Hades::Memory::Types::Double>)
+    .def("ReadCharA", &MemoryMgrWrap::Read<Hades::Memory::Types::CharA>)
+    .def("ReadCharW", &MemoryMgrWrap::Read<Hades::Memory::Types::CharW>)
+    .def("ReadStringA", &MemoryMgrWrap::Read<Hades::Memory::Types::StringA>)
+    .def("ReadStringW", &MemoryMgrWrap::Read<Hades::Memory::Types::StringW>)
+//     .def("ReadPointer", &MemoryMgrWrap::Read<Hades::Memory::Types::Pointer>)
+    .def("WriteInt8", &MemoryMgrWrap::Write<Hades::Memory::Types::Int8>)
+    .def("WriteUInt8", &MemoryMgrWrap::Write<Hades::Memory::Types::UInt8>)
+    .def("WriteInt16", &MemoryMgrWrap::Write<Hades::Memory::Types::Int16>)
+    .def("WriteUInt16", &MemoryMgrWrap::Write<Hades::Memory::Types::UInt16>)
+    .def("WriteInt32", &MemoryMgrWrap::Write<Hades::Memory::Types::Int32>)
+    .def("WriteUInt32", &MemoryMgrWrap::Write<Hades::Memory::Types::UInt32>)
+    .def("WriteInt64", &MemoryMgrWrap::Write<Hades::Memory::Types::Int64>)
+    .def("WriteUInt64", &MemoryMgrWrap::Write<Hades::Memory::Types::UInt64>)
+    .def("WriteFloat", &MemoryMgrWrap::Write<Hades::Memory::Types::Float>)
+    .def("WriteDouble", &MemoryMgrWrap::Write<Hades::Memory::Types::Double>)
+    .def("WriteCharA", &MemoryMgrWrap::Write<Hades::Memory::Types::CharA>)
+    .def("WriteCharW", &MemoryMgrWrap::Write<Hades::Memory::Types::CharW>)
+    .def("WriteStringA", &MemoryMgrWrap::Write<Hades::Memory::Types::StringA>)
+    .def("WriteStringW", &MemoryMgrWrap::Write<Hades::Memory::Types::StringW>)
+    .def("WritePointer", &MemoryMgrWrap::Write<Hades::Memory::Types::Pointer>)
+    .def("CanRead", &MemoryMgrWrap::CanRead)
+    .def("CanWrite", &MemoryMgrWrap::CanWrite)
+    .def("IsGuard", &MemoryMgrWrap::IsGuard)
+    .def("Alloc", &MemoryMgrWrap::Alloc)
+    .def("Free", &MemoryMgrWrap::Free)
+    .def("GetProcessID", &MemoryMgrWrap::GetProcessID)
+    .def("GetProcessHandle", &MemoryMgrWrap::GetProcessHandle)
+//     .def("GetRemoteProcAddress", &MemoryMgrWrap::GetRemoteProcAddress)
+//     .def("GetRemoteProcAddress", &MemoryMgrWrap::GetRemoteProcAddress)
+    .def("FlushCache", &MemoryMgrWrap::FlushCache)
     ;
 
   boost::python::enum_<Hades::Memory::MemoryMgr::CallConv>("CallConv")

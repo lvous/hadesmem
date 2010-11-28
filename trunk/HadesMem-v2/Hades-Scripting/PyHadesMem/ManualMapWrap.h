@@ -26,11 +26,26 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Hades
 #include "Hades-Memory/ManualMap.h"
 
+class ManualMapWrap : public Hades::Memory::ManualMap
+{
+public:
+  explicit ManualMapWrap(Hades::Memory::MemoryMgr const& MyMem) 
+    : Hades::Memory::ManualMap(MyMem)
+  { }
+
+  DWORD_PTR Map(std::basic_string<TCHAR> const& Path, 
+    std::string const& Export, bool InjectHelper) const
+  {
+    return reinterpret_cast<DWORD_PTR>(Hades::Memory::ManualMap::Map(Path, 
+      Export, InjectHelper));
+  }
+};
+
 // Export ManualMap API
 inline void ExportManualMap()
 {
-  boost::python::class_<Hades::Memory::ManualMap>("ManualMap", 
-    boost::python::init<Hades::Memory::MemoryMgr const&>())
-//     .def("Map", &Hades::Memory::ManualMap::Map)
+  boost::python::class_<ManualMapWrap>("ManualMap", boost::python::init<
+    Hades::Memory::MemoryMgr const&>())
+    .def("Map", &ManualMapWrap::Map)
     ;
 }

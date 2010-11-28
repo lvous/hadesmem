@@ -26,12 +26,34 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Hades
 #include "Hades-Memory/Injector.h"
 
+class InjectorWrap : public Hades::Memory::Injector
+{
+public:
+  explicit InjectorWrap(Hades::Memory::MemoryMgr const& MyMem) 
+    : Hades::Memory::Injector(MyMem)
+  { }
+
+  DWORD_PTR InjectDll(std::basic_string<TCHAR> const& Path, 
+    bool PathResolution) const
+  {
+    return reinterpret_cast<DWORD_PTR>(Hades::Memory::Injector::InjectDll(Path, 
+      PathResolution));
+  }
+
+  DWORD_PTR CallExport(std::basic_string<TCHAR> const& Path, 
+    DWORD_PTR ModuleRemote, std::string const& Export) const
+  {
+    return Hades::Memory::Injector::CallExport(Path, reinterpret_cast<HMODULE>(
+      ModuleRemote), Export);
+  }
+};
+
 // Export Injector API
 inline void ExportInjector()
 {
-  boost::python::class_<Hades::Memory::Injector>("Injector", 
-    boost::python::init<Hades::Memory::MemoryMgr const&>())
-//     .def("InjectDll", &Hades::Memory::Injector::InjectDll)
-    .def("CallExport", &Hades::Memory::Injector::CallExport)
+  boost::python::class_<InjectorWrap>("Injector", boost::python::init<
+    Hades::Memory::MemoryMgr const&>())
+    .def("InjectDll", &InjectorWrap::InjectDll)
+    .def("CallExport", &InjectorWrap::CallExport)
     ;
 }

@@ -26,14 +26,45 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Hades
 #include "Hades-Memory/FindPattern.h"
 
+class FindPatternWrap : public Hades::Memory::FindPattern
+{
+public:
+  explicit FindPatternWrap(Hades::Memory::MemoryMgr const& MyMem) 
+    : Hades::Memory::FindPattern(MyMem)
+  { }
+
+  FindPatternWrap(Hades::Memory::MemoryMgr const& MyMem, DWORD_PTR ModuleBase) 
+    : Hades::Memory::FindPattern(MyMem, reinterpret_cast<HMODULE>(ModuleBase))
+  { }
+
+  DWORD_PTR Find(std::basic_string<TCHAR> const& Data, 
+    std::basic_string<TCHAR> const& Mask) const
+  {
+    return reinterpret_cast<DWORD_PTR>(Hades::Memory::FindPattern::Find(Data, 
+      Mask));
+  }
+
+  void LoadFromXML(std::basic_string<TCHAR> const& Path)
+  {
+    return Hades::Memory::FindPattern::LoadFromXML(Path);
+  }
+
+  DWORD_PTR GetAddress(std::basic_string<TCHAR> const& Name) const
+  {
+    Hades::Memory::FindPattern const& Me = *this;
+    return reinterpret_cast<DWORD_PTR>(Me[Name]);
+  }
+};
+
 // Export FindPattern API
 inline void ExportFindPattern()
 {
-  boost::python::class_<Hades::Memory::FindPattern>("FindPattern", 
-    boost::python::init<Hades::Memory::MemoryMgr const&>())
-    .def(boost::python::init<Hades::Memory::MemoryMgr const&, HMODULE>())
-//     .def("Find", &Hades::Memory::FindPattern::Find)
-    .def("LoadFromXML", &Hades::Memory::FindPattern::LoadFromXML)
-    .def("GetAddresses", &Hades::Memory::FindPattern::GetAddresses)
+  boost::python::class_<FindPatternWrap>("FindPattern", boost::python::init<
+    Hades::Memory::MemoryMgr const&>())
+    .def(boost::python::init<Hades::Memory::MemoryMgr const&, DWORD_PTR>())
+    .def("Find", &FindPatternWrap::Find)
+    .def("LoadFromXML", &FindPatternWrap::LoadFromXML)
+    .def("GetAddresses", &FindPatternWrap::GetAddresses)
+    .def("GetAddress", &FindPatternWrap::GetAddress)
     ;
 }

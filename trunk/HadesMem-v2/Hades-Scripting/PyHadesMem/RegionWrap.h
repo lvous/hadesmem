@@ -26,17 +26,35 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Hades
 #include "Hades-Memory/Region.h"
 
+class RegionWrap : public Hades::Memory::Region
+{
+public:
+  RegionWrap(Hades::Memory::MemoryMgr const& MyMem, DWORD_PTR Base) 
+    : Hades::Memory::Region(MyMem, reinterpret_cast<PVOID>(Base))
+  { }
+
+  DWORD_PTR GetBase() const
+  {
+    return reinterpret_cast<DWORD_PTR>(Hades::Memory::Region::GetBase());
+  }
+
+  DWORD_PTR GetAllocBase() const
+  {
+    return reinterpret_cast<DWORD_PTR>(Hades::Memory::Region::GetBase());
+  }
+};
+
 // Export Region API
 inline void ExportRegion()
 {
-  boost::python::class_<Hades::Memory::Region>("Region", boost::python::init<
-    Hades::Memory::MemoryMgr const&, PVOID>())
-//     .def("GetBase", &Hades::Memory::Region::GetBase)
-//     .def("GetAllocBase", &Hades::Memory::Region::GetAllocBase)
-    .def("GetAllocProtect", &Hades::Memory::Region::GetAllocProtect)
-    .def("GetSize", &Hades::Memory::Region::GetSize)
-    .def("GetState", &Hades::Memory::Region::GetState)
-    .def("GetProtect", &Hades::Memory::Region::GetProtect)
-    .def("GetType", &Hades::Memory::Region::GetType)
+  boost::python::class_<RegionWrap>("Region", boost::python::init<
+    Hades::Memory::MemoryMgr const&, DWORD_PTR>())
+    .def("GetBase", &RegionWrap::GetBase)
+    .def("GetAllocBase", &RegionWrap::GetAllocBase)
+    .def("GetAllocProtect", &RegionWrap::GetAllocProtect)
+    .def("GetSize", &RegionWrap::GetSize)
+    .def("GetState", &RegionWrap::GetState)
+    .def("GetProtect", &RegionWrap::GetProtect)
+    .def("GetType", &RegionWrap::GetType)
     ;
 }
