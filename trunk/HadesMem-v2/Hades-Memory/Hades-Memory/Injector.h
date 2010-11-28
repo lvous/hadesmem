@@ -56,7 +56,7 @@ namespace Hades
       { };
 
       // Constructor
-      Injector(MemoryMgr const& MyMemory);
+      explicit Injector(MemoryMgr const& MyMemory);
 
       // Inject DLL
       HMODULE InjectDll(boost::filesystem::path const& Path, 

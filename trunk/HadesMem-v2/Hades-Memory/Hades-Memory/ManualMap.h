@@ -50,7 +50,7 @@ namespace Hades
       { };
 
       // Constructor
-      ManualMap(MemoryMgr const& MyMemory);
+      explicit ManualMap(MemoryMgr const& MyMemory);
 
       // Manually map DLL
       PVOID Map(boost::filesystem::path const& Path, 
