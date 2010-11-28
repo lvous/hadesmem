@@ -68,6 +68,20 @@ public:
     return reinterpret_cast<DWORD_PTR>(Hades::Memory::MemoryMgr::
       GetProcessHandle());
   }
+
+  DWORD_PTR GetRemoteProcAddressByName(HMODULE RemoteMod, 
+    std::basic_string<TCHAR> const& Module, std::string const& Function) const
+  {
+    return reinterpret_cast<DWORD_PTR>(Hades::Memory::MemoryMgr::
+      GetRemoteProcAddress(RemoteMod, Module, Function));
+  }
+
+  DWORD_PTR GetRemoteProcAddressByOrdinal(HMODULE RemoteMod, 
+    std::basic_string<TCHAR> const& Module, WORD Function) const
+  {
+    return reinterpret_cast<DWORD_PTR>(Hades::Memory::MemoryMgr::
+      GetRemoteProcAddress(RemoteMod, Module, Function));
+  }
 };
 
 // Export MemoryMgr API
@@ -116,8 +130,8 @@ inline void ExportMemoryMgr()
     .def("Free", &MemoryMgrWrap::Free)
     .def("GetProcessID", &MemoryMgrWrap::GetProcessID)
     .def("GetProcessHandle", &MemoryMgrWrap::GetProcessHandle)
-//     .def("GetRemoteProcAddress", &MemoryMgrWrap::GetRemoteProcAddress)
-//     .def("GetRemoteProcAddress", &MemoryMgrWrap::GetRemoteProcAddress)
+    .def("GetRemoteProcAddress", &MemoryMgrWrap::GetRemoteProcAddressByName)
+    .def("GetRemoteProcAddress", &MemoryMgrWrap::GetRemoteProcAddressByOrdinal)
     .def("FlushCache", &MemoryMgrWrap::FlushCache)
     ;
 
