@@ -137,10 +137,10 @@ inline void ExportMemoryMgr()
 
   boost::python::enum_<Hades::Memory::MemoryMgr::CallConv>("CallConv")
     .value("CDECL", Hades::Memory::MemoryMgr::CallConv_CDECL)
-    .value("Import", Hades::Memory::MemoryMgr::CallConv_STDCALL)
-    .value("LoadConfig", Hades::Memory::MemoryMgr::CallConv_THISCALL)
-    .value("BoundImport", Hades::Memory::MemoryMgr::CallConv_FASTCALL)
-    .value("IAT", Hades::Memory::MemoryMgr::CallConv_X64)
-    .value("DelayImport", Hades::Memory::MemoryMgr::CallConv_Default)
+    .value("STDCALL", Hades::Memory::MemoryMgr::CallConv_STDCALL)
+    .value("THISCALL", Hades::Memory::MemoryMgr::CallConv_THISCALL)
+    .value("FASTCALL", Hades::Memory::MemoryMgr::CallConv_FASTCALL)
+    .value("X64", Hades::Memory::MemoryMgr::CallConv_X64)
+    .value("Default", Hades::Memory::MemoryMgr::CallConv_Default)
     ;
 }
