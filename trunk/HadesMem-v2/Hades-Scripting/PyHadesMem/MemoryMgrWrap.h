@@ -88,10 +88,7 @@ public:
 inline void ExportMemoryMgr()
 {
   boost::python::class_<Hades::Memory::MemoryMgr>("MemoryMgrBase", 
-    boost::python::init<DWORD>())
-    .def(boost::python::init<std::basic_string<TCHAR> const&>())
-    .def(boost::python::init<std::basic_string<TCHAR> const&, 
-      std::basic_string<TCHAR> const&>())
+    boost::python::no_init)
     ;
 
   boost::python::scope MemoryMgrScope = boost::python::class_<MemoryMgrWrap, 
