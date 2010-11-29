@@ -47,8 +47,13 @@ public:
 // Export Module API
 inline void ExportModule()
 {
-  boost::python::class_<ModuleWrap>("Module", boost::python::init<
-    Hades::Memory::MemoryMgr const&, DWORD_PTR>())
+  boost::python::class_<Hades::Memory::Module>("ModuleBase", 
+    boost::python::no_init)
+    ;
+
+  boost::python::class_<ModuleWrap, boost::python::bases<Hades::Memory::
+    Region>>("Module", boost::python::init<Hades::Memory::MemoryMgr const&, 
+    DWORD_PTR>())
     .def(boost::python::init<Hades::Memory::MemoryMgr const&, 
       std::basic_string<TCHAR> const&>())
     .def("GetBase", &ModuleWrap::GetBase)

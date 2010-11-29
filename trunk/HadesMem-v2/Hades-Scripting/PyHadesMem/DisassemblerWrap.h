@@ -51,7 +51,12 @@ public:
 // Export Disassembler API
 inline void ExportDisassembler()
 {
-  boost::python::class_<DisassemblerWrap>("Disassembler", boost::python::init<
+  boost::python::class_<Hades::Memory::Disassembler>("DisassemblerBase", 
+    boost::python::no_init)
+    ;
+
+  boost::python::class_<DisassemblerWrap, boost::python::bases<Hades::Memory::
+    Disassembler>>("Disassembler", boost::python::init<
     Hades::Memory::MemoryMgr const&>())
     .def("DisassembleToStr", &DisassemblerWrap::DisassembleToStr)
     .def("Disassemble", &DisassemblerWrap::Disassemble)

@@ -51,7 +51,12 @@ public:
 // Export Injector API
 inline void ExportInjector()
 {
-  boost::python::class_<InjectorWrap>("Injector", boost::python::init<
+  boost::python::class_<Hades::Memory::Injector>("InjectorBase", 
+    boost::python::no_init)
+    ;
+
+  boost::python::class_<InjectorWrap, boost::python::bases<Hades::Memory::
+    Injector>>("Injector", boost::python::init<
     Hades::Memory::MemoryMgr const&>())
     .def("InjectDll", &InjectorWrap::InjectDll)
     .def("CallExport", &InjectorWrap::CallExport)

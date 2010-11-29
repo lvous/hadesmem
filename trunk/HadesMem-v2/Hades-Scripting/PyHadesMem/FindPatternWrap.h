@@ -59,7 +59,12 @@ public:
 // Export FindPattern API
 inline void ExportFindPattern()
 {
-  boost::python::class_<FindPatternWrap>("FindPattern", boost::python::init<
+  boost::python::class_<Hades::Memory::FindPattern>("FindPatternBase", 
+    boost::python::no_init)
+    ;
+
+  boost::python::class_<FindPatternWrap, boost::python::bases<Hades::Memory::
+    FindPattern>>("FindPattern", boost::python::init<
     Hades::Memory::MemoryMgr const&>())
     .def(boost::python::init<Hades::Memory::MemoryMgr const&, DWORD_PTR>())
     .def("Find", &FindPatternWrap::Find)

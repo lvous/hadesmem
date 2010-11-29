@@ -47,8 +47,13 @@ public:
 // Export Region API
 inline void ExportRegion()
 {
-  boost::python::class_<RegionWrap>("Region", boost::python::init<
-    Hades::Memory::MemoryMgr const&, DWORD_PTR>())
+  boost::python::class_<Hades::Memory::Region>("RegionBase", 
+    boost::python::no_init)
+    ;
+
+  boost::python::class_<RegionWrap, boost::python::bases<Hades::Memory::
+    Region>>("Region", boost::python::init<Hades::Memory::MemoryMgr const&, 
+    DWORD_PTR>())
     .def("GetBase", &RegionWrap::GetBase)
     .def("GetAllocBase", &RegionWrap::GetAllocBase)
     .def("GetAllocProtect", &RegionWrap::GetAllocProtect)

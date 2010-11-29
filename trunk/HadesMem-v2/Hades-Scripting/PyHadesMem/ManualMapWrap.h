@@ -44,7 +44,12 @@ public:
 // Export ManualMap API
 inline void ExportManualMap()
 {
-  boost::python::class_<ManualMapWrap>("ManualMap", boost::python::init<
+  boost::python::class_<Hades::Memory::ManualMap>("ManualMapBase", 
+    boost::python::no_init)
+    ;
+
+  boost::python::class_<ManualMapWrap, boost::python::bases<Hades::Memory::
+    ManualMap>>("ManualMap", boost::python::init<
     Hades::Memory::MemoryMgr const&>())
     .def("Map", &ManualMapWrap::Map)
     ;
