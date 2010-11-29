@@ -24,8 +24,6 @@
 	* Investigate cross-architecture process manipulation (x64 -> x86 only).
 	* Write 'all in one' test utility.
 	* Premake support (will help GCC test port).
-	* Process enumeration APIs.
-	* Symbol APIs.
 * New Modules
 	* Process creation APIs.
 	* Debugging APIs.
@@ -37,6 +35,8 @@
 	* Stack trace APIs.
 	* Thread/process information APIs.
 	* String based assembler with x64 support.
+	* Process enumeration APIs.
+	* Symbol APIs.
 * MemoryMgr
 	* Improve 'safety' of remote function caller via EH to minimize risk of 
 	crashing target.
