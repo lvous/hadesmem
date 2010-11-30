@@ -52,7 +52,7 @@ inline void ExportModule()
     ;
 
   boost::python::class_<ModuleWrap, boost::python::bases<Hades::Memory::
-    Region>>("Module", boost::python::init<Hades::Memory::MemoryMgr const&, 
+    Module>>("Module", boost::python::init<Hades::Memory::MemoryMgr const&, 
     DWORD_PTR>())
     .def(boost::python::init<Hades::Memory::MemoryMgr const&, 
       std::basic_string<TCHAR> const&>())
