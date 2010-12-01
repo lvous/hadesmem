@@ -65,6 +65,10 @@ public:
 // Export Scanner API
 inline void ExportScanner()
 {
+  boost::python::class_<Hades::Memory::Scanner>("ScannerBase", 
+    boost::python::no_init)
+    ;
+
   boost::python::class_<ScannerWrap>("Scanner", boost::python::init<
     Hades::Memory::MemoryMgr const&, DWORD_PTR, DWORD_PTR>())
     .def("FindInt8", &ScannerWrap::Find<Hades::Memory::Types::Int8>)
