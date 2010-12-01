@@ -44,11 +44,48 @@ public:
   }
 };
 
+struct RegionIterWrap
+{
+  static RegionWrap next(Hades::Memory::RegionEnum::RegionListIter& o)
+  {
+    if (!*o)
+    {
+      PyErr_SetString(PyExc_StopIteration, "No more data.");
+      boost::python::throw_error_already_set();
+    }
+
+    auto MyRegionWrap(*static_cast<RegionWrap*>(&**o));
+
+    ++o;
+
+    return MyRegionWrap;
+  }
+
+  static boost::python::object pass_through(boost::python::object const& o) 
+  {
+    return o;
+  }
+
+  static void wrap(const char* python_name)
+  {
+    boost::python::class_<Hades::Memory::RegionEnum::RegionListIter, 
+      boost::noncopyable>(python_name, 
+      boost::python::init<Hades::Memory::RegionEnum&>())
+      .def("next", next)
+      .def("__iter__", pass_through)
+      ;
+  }
+};
+
 // Export Region API
 inline void ExportRegion()
 {
   boost::python::class_<Hades::Memory::Region>("RegionBase", 
     boost::python::no_init)
+    ;
+
+  boost::python::class_<Hades::Memory::RegionEnum, boost::noncopyable>(
+    "RegionEnum", boost::python::init<Hades::Memory::MemoryMgr const&>())
     ;
 
   boost::python::class_<RegionWrap, boost::python::bases<Hades::Memory::
@@ -62,4 +99,6 @@ inline void ExportRegion()
     .def("GetProtect", &RegionWrap::GetProtect)
     .def("GetType", &RegionWrap::GetType)
     ;
+
+  RegionIterWrap::wrap("RegionIter"); 
 }

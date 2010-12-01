@@ -44,11 +44,48 @@ public:
   }
 };
 
+struct ModuleIterWrap
+{
+  static ModuleWrap next(Hades::Memory::ModuleEnum::ModuleListIter& o)
+  {
+    if (!*o)
+    {
+      PyErr_SetString(PyExc_StopIteration, "No more data.");
+      boost::python::throw_error_already_set();
+    }
+
+    auto MyModuleWrap(*static_cast<ModuleWrap*>(&**o));
+
+    ++o;
+
+    return MyModuleWrap;
+  }
+
+  static boost::python::object pass_through(boost::python::object const& o) 
+  {
+    return o;
+  }
+
+  static void wrap(const char* python_name)
+  {
+    boost::python::class_<Hades::Memory::ModuleEnum::ModuleListIter, 
+      boost::noncopyable>(python_name, 
+      boost::python::init<Hades::Memory::ModuleEnum&>())
+      .def("next", next)
+      .def("__iter__", pass_through)
+      ;
+  }
+};
+
 // Export Module API
 inline void ExportModule()
 {
   boost::python::class_<Hades::Memory::Module>("ModuleBase", 
     boost::python::no_init)
+    ;
+
+  boost::python::class_<Hades::Memory::ModuleEnum, boost::noncopyable>(
+    "ModuleEnum", boost::python::init<Hades::Memory::MemoryMgr const&>())
     ;
 
   boost::python::class_<ModuleWrap, boost::python::bases<Hades::Memory::
@@ -61,4 +98,6 @@ inline void ExportModule()
     .def("GetName", &ModuleWrap::GetName)
     .def("GetPath", &ModuleWrap::GetPath)
     ;
+
+  ModuleIterWrap::wrap("ModuleIter"); 
 }
