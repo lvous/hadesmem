@@ -44,34 +44,21 @@ public:
 
   DWORD_PTR FindPointer(DWORD_PTR Data)
   {
-    return reinterpret_cast<DWORD_PTR>(Hades::Memory::Scanner::Find(Data));
+    return Find(Data);
   }
 
   template <typename T>
   std::vector<DWORD_PTR> FindAll(T Data)
   {
     std::vector<PVOID> Temp(Hades::Memory::Scanner::FindAll(Data));
-    std::vector<DWORD_PTR> New;
-    New.reserve(Temp.size());
-    std::transform(Temp.begin(), Temp.end(), std::back_inserter(New), 
-      [] (PVOID Current)
-    {
-      return reinterpret_cast<DWORD_PTR>(Current);
-    });
+    std::vector<DWORD_PTR> New(reinterpret_cast<DWORD_PTR*>(&Temp[0]), 
+      reinterpret_cast<DWORD_PTR*>(&Temp[0]) + Temp.size());
     return New;
   }
 
   std::vector<DWORD_PTR> FindAllPointer(DWORD_PTR Data)
   {
-    std::vector<PVOID> Temp(Hades::Memory::Scanner::FindAll(Data));
-    std::vector<DWORD_PTR> New;
-    New.reserve(Temp.size());
-    std::transform(Temp.begin(), Temp.end(), std::back_inserter(New), 
-      [] (PVOID Current)
-    {
-      return reinterpret_cast<DWORD_PTR>(Current);
-    });
-    return New;
+    return FindAll(Data);
   }
 };
 

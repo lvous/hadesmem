@@ -91,8 +91,7 @@ public:
 
   DWORD_PTR ReadPointer(DWORD_PTR Address)
   {
-    return Hades::Memory::MemoryMgr::Read<DWORD_PTR>(reinterpret_cast<PVOID>(
-      Address));
+    return Read<DWORD_PTR>(Address);
   }
 
   template <typename T>
@@ -103,7 +102,7 @@ public:
 
   void WritePointer(DWORD_PTR Address, DWORD_PTR Data)
   {
-    Hades::Memory::MemoryMgr::Write(reinterpret_cast<PVOID>(Address), Data);
+    Write(Address, Data);
   }
 };
 
