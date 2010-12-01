@@ -82,6 +82,29 @@ public:
     return reinterpret_cast<DWORD_PTR>(Hades::Memory::MemoryMgr::
       GetRemoteProcAddress(RemoteMod, Module, Function));
   }
+
+  template <typename T>
+  T Read(DWORD_PTR Address)
+  {
+    return Hades::Memory::MemoryMgr::Read<T>(reinterpret_cast<PVOID>(Address));
+  }
+
+  DWORD_PTR ReadPointer(DWORD_PTR Address)
+  {
+    return Hades::Memory::MemoryMgr::Read<DWORD_PTR>(reinterpret_cast<PVOID>(
+      Address));
+  }
+
+  template <typename T>
+  void Write(DWORD_PTR Address, T Data)
+  {
+    Hades::Memory::MemoryMgr::Write(reinterpret_cast<PVOID>(Address), Data);
+  }
+
+  void WritePointer(DWORD_PTR Address, DWORD_PTR Data)
+  {
+    Hades::Memory::MemoryMgr::Write(reinterpret_cast<PVOID>(Address), Data);
+  }
 };
 
 // Export MemoryMgr API
@@ -112,7 +135,7 @@ inline void ExportMemoryMgr()
     .def("ReadCharW", &MemoryMgrWrap::Read<Hades::Memory::Types::CharW>)
     .def("ReadStringA", &MemoryMgrWrap::Read<Hades::Memory::Types::StringA>)
     .def("ReadStringW", &MemoryMgrWrap::Read<Hades::Memory::Types::StringW>)
-//     .def("ReadPointer", &MemoryMgrWrap::Read<Hades::Memory::Types::Pointer>)
+    .def("ReadPointer", &MemoryMgrWrap::ReadPointer)
     .def("WriteInt8", &MemoryMgrWrap::Write<Hades::Memory::Types::Int8>)
     .def("WriteUInt8", &MemoryMgrWrap::Write<Hades::Memory::Types::UInt8>)
     .def("WriteInt16", &MemoryMgrWrap::Write<Hades::Memory::Types::Int16>)
