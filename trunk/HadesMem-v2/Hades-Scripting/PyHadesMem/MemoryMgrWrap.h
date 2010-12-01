@@ -84,23 +84,23 @@ public:
   }
 
   template <typename T>
-  T Read(DWORD_PTR Address)
+  T Read(DWORD_PTR Address) const
   {
     return Hades::Memory::MemoryMgr::Read<T>(reinterpret_cast<PVOID>(Address));
   }
 
-  DWORD_PTR ReadPointer(DWORD_PTR Address)
+  DWORD_PTR ReadPointer(DWORD_PTR Address) const
   {
     return Read<DWORD_PTR>(Address);
   }
 
   template <typename T>
-  void Write(DWORD_PTR Address, T Data)
+  void Write(DWORD_PTR Address, T Data) const
   {
     Hades::Memory::MemoryMgr::Write(reinterpret_cast<PVOID>(Address), Data);
   }
 
-  void WritePointer(DWORD_PTR Address, DWORD_PTR Data)
+  void WritePointer(DWORD_PTR Address, DWORD_PTR Data) const
   {
     Write(Address, Data);
   }

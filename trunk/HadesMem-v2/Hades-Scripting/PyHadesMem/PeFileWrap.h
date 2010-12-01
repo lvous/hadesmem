@@ -26,15 +26,43 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Hades
 #include "Hades-Memory/PeFile.h"
 
+class PeFileWrap : public Hades::Memory::PeFile
+{
+public:
+  PeFileWrap(Hades::Memory::MemoryMgr const& MyMemory, DWORD_PTR Address, 
+    Hades::Memory::PeFile::FileType MyFileType)
+    : Hades::Memory::PeFile(MyMemory, reinterpret_cast<PVOID>(Address), 
+    MyFileType)
+  { }
+
+  DWORD_PTR GetBase() const
+  {
+    return reinterpret_cast<DWORD_PTR>(Hades::Memory::PeFile::GetBase());
+  }
+
+  DWORD_PTR RvaToVa(DWORD Rva) const
+  {
+    return reinterpret_cast<DWORD_PTR>(Hades::Memory::PeFile::RvaToVa(Rva));
+  }
+};
+
 // Export PeFile API
 inline void ExportPeFile()
 {
-  // Fixme: Virtual function wrapping may be needed. See Boost.Python docs.
+  boost::python::class_<Hades::Memory::PeFile>("PeFileBase", 
+    boost::python::no_init)
+    ;
 
-  boost::python::class_<Hades::Memory::PeFile>("PeFile", boost::python::init<
-    Hades::Memory::MemoryMgr const&, PVOID, Hades::Memory::PeFile::FileType>())
-//     .def("GetMemoryMgr", &Hades::Memory::PeFile::GetMemoryMgr)
-//     .def("GetBase", &Hades::Memory::PeFile::GetBase)
-//     .def("RvaToVa", &Hades::Memory::PeFile::RvaToVa)
+  boost::python::scope PeFileScope = boost::python::class_<PeFileWrap>(
+    "PeFile", boost::python::init<Hades::Memory::MemoryMgr const&, DWORD_PTR, 
+    Hades::Memory::PeFile::FileType>())
+    .def("GetMemoryMgr", &PeFileWrap::GetMemoryMgr)
+    .def("GetBase", &PeFileWrap::GetBase)
+    .def("RvaToVa", &PeFileWrap::RvaToVa)
+    ;
+
+  boost::python::enum_<Hades::Memory::PeFile::FileType>("FileType")
+    .value("Image", Hades::Memory::PeFile::FileType_Image)
+    .value("Data", Hades::Memory::PeFile::FileType_Data)
     ;
 }

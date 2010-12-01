@@ -37,18 +37,18 @@ public:
   { }
 
   template <typename T>
-  DWORD_PTR Find(T Data)
+  DWORD_PTR Find(T Data) const
   {
     return reinterpret_cast<DWORD_PTR>(Hades::Memory::Scanner::Find(Data));
   }
 
-  DWORD_PTR FindPointer(DWORD_PTR Data)
+  DWORD_PTR FindPointer(DWORD_PTR Data) const
   {
     return Find(Data);
   }
 
   template <typename T>
-  std::vector<DWORD_PTR> FindAll(T Data)
+  std::vector<DWORD_PTR> FindAll(T Data) const
   {
     std::vector<PVOID> Temp(Hades::Memory::Scanner::FindAll(Data));
     std::vector<DWORD_PTR> New(reinterpret_cast<DWORD_PTR*>(&Temp[0]), 
@@ -56,7 +56,7 @@ public:
     return New;
   }
 
-  std::vector<DWORD_PTR> FindAllPointer(DWORD_PTR Data)
+  std::vector<DWORD_PTR> FindAllPointer(DWORD_PTR Data) const
   {
     return FindAll(Data);
   }
