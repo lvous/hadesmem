@@ -146,10 +146,8 @@ inline void ExportNtHeaders()
       SetSizeOfHeapReserve)
     .def("GetSizeOfHeapCommit", &Hades::Memory::NtHeaders::GetSizeOfHeapCommit)
     .def("SetSizeOfHeapCommit", &Hades::Memory::NtHeaders::SetSizeOfHeapCommit)
-    .def("GetLoaderFlags", &Hades::Memory::NtHeaders::
-      GetLoaderFlags)
-    .def("SetLoaderFlags", &Hades::Memory::NtHeaders::
-      SetLoaderFlags)
+    .def("GetLoaderFlags", &Hades::Memory::NtHeaders::GetLoaderFlags)
+    .def("SetLoaderFlags", &Hades::Memory::NtHeaders::SetLoaderFlags)
     .def("GetNumberOfRvaAndSizes", &Hades::Memory::NtHeaders::
       GetNumberOfRvaAndSizes)
     .def("SetNumberOfRvaAndSizes", &Hades::Memory::NtHeaders::

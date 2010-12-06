@@ -40,7 +40,8 @@ inline void ExportExportDir()
     .def("GetMinorVersion", &Hades::Memory::ExportDir::GetMinorVersion)
     .def("GetName", &Hades::Memory::ExportDir::GetName)
     .def("GetOrdinalBase", &Hades::Memory::ExportDir::GetOrdinalBase)
-    .def("GetNumberOfFunctions", &Hades::Memory::ExportDir::GetNumberOfFunctions)
+    .def("GetNumberOfFunctions", &Hades::Memory::ExportDir::
+      GetNumberOfFunctions)
     .def("GetNumberOfNames", &Hades::Memory::ExportDir::GetNumberOfNames)
     .def("GetAddressOfFunctions", &Hades::Memory::ExportDir::
     GetAddressOfFunctions)

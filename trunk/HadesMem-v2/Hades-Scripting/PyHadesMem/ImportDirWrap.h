@@ -31,7 +31,8 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 inline void ExportImportDir()
 {
   boost::python::class_<Hades::Memory::ImportDir>("ImportDir", 
-    boost::python::init<Hades::Memory::PeFile const&, PIMAGE_IMPORT_DESCRIPTOR>())
+    boost::python::init<Hades::Memory::PeFile const&, 
+    PIMAGE_IMPORT_DESCRIPTOR>())
     .def("IsValid", &Hades::Memory::ImportDir::IsValid)
     .def("EnsureValid", &Hades::Memory::ImportDir::EnsureValid)
 //     .def("GetBase", &Hades::Memory::ImportDir::GetBase)
@@ -65,7 +66,8 @@ inline void ExportImportDir()
     ;
 
   boost::python::class_<Hades::Memory::ImportThunkEnum, boost::noncopyable>(
-    "ImportThunkEnum", boost::python::init<Hades::Memory::PeFile const&, DWORD>())
+    "ImportThunkEnum", boost::python::init<Hades::Memory::PeFile const&, 
+    DWORD>())
     .def("First", &Hades::Memory::ImportThunkEnum::First)
     .def("Next", &Hades::Memory::ImportThunkEnum::Next)
     ;

@@ -37,10 +37,14 @@ inline void ExportSection()
     .def("GetVirtualSize", &Hades::Memory::Section::GetVirtualSize)
     .def("GetSizeOfRawData", &Hades::Memory::Section::GetSizeOfRawData)
     .def("GetPointerToRawData", &Hades::Memory::Section::GetPointerToRawData)
-    .def("GetPointerToRelocations", &Hades::Memory::Section::GetPointerToRelocations)
-    .def("GetPointerToLinenumbers", &Hades::Memory::Section::GetPointerToLinenumbers)
-    .def("GetNumberOfRelocations", &Hades::Memory::Section::GetNumberOfRelocations)
-    .def("GetNumberOfLinenumbers", &Hades::Memory::Section::GetNumberOfLinenumbers)
+    .def("GetPointerToRelocations", &Hades::Memory::Section::
+      GetPointerToRelocations)
+    .def("GetPointerToLinenumbers", &Hades::Memory::Section::
+      GetPointerToLinenumbers)
+    .def("GetNumberOfRelocations", &Hades::Memory::Section::
+      GetNumberOfRelocations)
+    .def("GetNumberOfLinenumbers", &Hades::Memory::Section::
+      GetNumberOfLinenumbers)
     .def("GetCharacteristics", &Hades::Memory::Section::GetCharacteristics)
 //     .def("GetBase", &Hades::Memory::Section::GetBase)
     .def("GetSectionHeaderRaw", &Hades::Memory::Section::GetSectionHeaderRaw)

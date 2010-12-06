@@ -33,10 +33,13 @@ inline void ExportTlsDir()
     Hades::Memory::PeFile const&>())
     .def("IsValid", &Hades::Memory::TlsDir::IsValid)
     .def("EnsureValid", &Hades::Memory::TlsDir::EnsureValid)
-    .def("GetStartAddressOfRawData", &Hades::Memory::TlsDir::GetStartAddressOfRawData)
-    .def("GetEndAddressOfRawData", &Hades::Memory::TlsDir::GetEndAddressOfRawData)
+    .def("GetStartAddressOfRawData", &Hades::Memory::TlsDir::
+      GetStartAddressOfRawData)
+    .def("GetEndAddressOfRawData", &Hades::Memory::TlsDir::
+      GetEndAddressOfRawData)
     .def("GetAddressOfIndex", &Hades::Memory::TlsDir::GetAddressOfIndex)
-    .def("GetAddressOfCallBacks", &Hades::Memory::TlsDir::GetAddressOfCallBacks)
+    .def("GetAddressOfCallBacks", &Hades::Memory::TlsDir::
+      GetAddressOfCallBacks)
     .def("GetSizeOfZeroFill", &Hades::Memory::TlsDir::GetSizeOfZeroFill)
     .def("GetCharacteristics", &Hades::Memory::TlsDir::GetCharacteristics)
     .def("GetCallbacks", &Hades::Memory::TlsDir::GetCallbacks)
