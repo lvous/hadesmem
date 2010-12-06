@@ -21,6 +21,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #pragma warning(push, 1)
 #pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
 #include <boost/python.hpp>
+#include <boost/python/stl_iterator.hpp>
 #pragma warning(pop)
 
 // Hades
@@ -43,12 +44,13 @@ public:
     : Hades::Memory::MemoryMgr(WindowName, ClassName)
   { }
 
-  DWORD_PTR Call(DWORD_PTR Address, std::vector<DWORD_PTR> const& Args, 
+  DWORD_PTR Call(DWORD_PTR Address, boost::python::object const& Args, 
     CallConv MyCallConv) const
   {
+    boost::python::stl_input_iterator<DWORD_PTR> ArgsBeg(Args), ArgsEnd;
+
     std::vector<PVOID> ArgsNew;
-    ArgsNew.reserve(Args.size());
-    std::transform(Args.begin(), Args.end(), std::back_inserter(ArgsNew), 
+    std::transform(ArgsBeg, ArgsEnd, std::back_inserter(ArgsNew), 
       [] (DWORD_PTR Current) 
     {
       return reinterpret_cast<PVOID>(Current);
