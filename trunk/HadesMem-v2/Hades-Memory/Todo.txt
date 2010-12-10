@@ -24,6 +24,8 @@
 	* Investigate cross-architecture process manipulation (x64 -> x86 only).
 	* Write 'all in one' test utility.
 	* Premake support (will help GCC test port).
+	* Fix 'solution folders' problem when attemtping to compile under 
+	MSVC express editions.
 * New Modules
 	* Process creation APIs.
 	* Debugging APIs.
