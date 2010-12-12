@@ -64,6 +64,9 @@ namespace Hades
       // Convert RVA to VA
       PVOID RvaToVa(DWORD Rva) const;
 
+      // Get file type
+      FileType GetType() const;
+
     protected:
       // Memory instance
       MemoryMgr m_Memory;

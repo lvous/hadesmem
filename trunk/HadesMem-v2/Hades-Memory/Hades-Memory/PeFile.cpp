@@ -122,5 +122,11 @@ namespace Hades
           ErrorString("Unhandled file type."));
       }
     }
+
+    // Get file type
+    PeFile::FileType PeFile::GetType() const
+    {
+      return m_Type;
+    }
   }
 }
