@@ -93,7 +93,7 @@ namespace Hades
     };
 
     // Import thunk wrapper
-    class ImportThunk : private boost::noncopyable
+    class ImportThunk
     {
     public:
       // ImportDir error type
