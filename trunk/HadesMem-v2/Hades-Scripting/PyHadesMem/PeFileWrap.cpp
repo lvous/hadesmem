@@ -53,7 +53,8 @@ void ExportPeFile()
     boost::python::no_init)
     ;
 
-  boost::python::scope PeFileScope = boost::python::class_<PeFileWrap>(
+  boost::python::scope PeFileScope = boost::python::class_<PeFileWrap, 
+    boost::python::bases<Hades::Memory::PeFile>>(
     "PeFile", boost::python::init<Hades::Memory::MemoryMgr const&, DWORD_PTR, 
     Hades::Memory::PeFile::FileType>())
     .def("GetMemoryMgr", &PeFileWrap::GetMemoryMgr)

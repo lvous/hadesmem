@@ -84,10 +84,6 @@ void ExportModule()
     boost::python::no_init)
     ;
 
-  boost::python::class_<Hades::Memory::ModuleEnum, boost::noncopyable>(
-    "ModuleEnum", boost::python::init<Hades::Memory::MemoryMgr const&>())
-    ;
-
   boost::python::class_<ModuleWrap, boost::python::bases<Hades::Memory::
     Module>>("Module", boost::python::init<Hades::Memory::MemoryMgr const&, 
     DWORD_PTR>())
@@ -97,6 +93,10 @@ void ExportModule()
     .def("GetSize", &ModuleWrap::GetSize)
     .def("GetName", &ModuleWrap::GetName)
     .def("GetPath", &ModuleWrap::GetPath)
+    ;
+
+  boost::python::class_<Hades::Memory::ModuleEnum, boost::noncopyable>(
+    "ModuleEnum", boost::python::init<Hades::Memory::MemoryMgr const&>())
     ;
 
   ModuleIterWrap::wrap("ModuleIter"); 
