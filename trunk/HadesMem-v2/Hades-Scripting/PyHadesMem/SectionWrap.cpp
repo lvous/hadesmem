@@ -76,7 +76,7 @@ struct SectionIterWrap
 // Export Section API
 void ExportSection()
 {
-  boost::python::class_<Hades::Memory::NtHeaders>("SectionBase", 
+  boost::python::class_<Hades::Memory::Section>("SectionBase", 
     boost::python::no_init)
     ;
 
