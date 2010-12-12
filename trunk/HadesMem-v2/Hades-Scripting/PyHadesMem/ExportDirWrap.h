@@ -17,44 +17,4 @@ You should have received a copy of the GNU General Public License
 along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-// Boost
-#pragma warning(push, 1)
-#pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
-#include <boost/python.hpp>
-#pragma warning(pop)
-
-// Hades
-#include "Hades-Memory/ExportDir.h"
-#include "Hades-Memory/ExportEnum.h"
-
-// Export ExportDir API
-inline void ExportExportDir()
-{
-  boost::python::class_<Hades::Memory::ExportDir>("ExportDir", 
-    boost::python::init<Hades::Memory::PeFile const&>())
-    .def("IsValid", &Hades::Memory::ExportDir::IsValid)
-    .def("EnsureValid", &Hades::Memory::ExportDir::EnsureValid)
-    .def("GetCharacteristics", &Hades::Memory::ExportDir::GetCharacteristics)
-    .def("GetTimeDateStamp", &Hades::Memory::ExportDir::GetTimeDateStamp)
-    .def("GetMajorVersion", &Hades::Memory::ExportDir::GetMajorVersion)
-    .def("GetMinorVersion", &Hades::Memory::ExportDir::GetMinorVersion)
-    .def("GetName", &Hades::Memory::ExportDir::GetName)
-    .def("GetOrdinalBase", &Hades::Memory::ExportDir::GetOrdinalBase)
-    .def("GetNumberOfFunctions", &Hades::Memory::ExportDir::
-      GetNumberOfFunctions)
-    .def("GetNumberOfNames", &Hades::Memory::ExportDir::GetNumberOfNames)
-    .def("GetAddressOfFunctions", &Hades::Memory::ExportDir::
-    GetAddressOfFunctions)
-    .def("GetAddressOfNames", &Hades::Memory::ExportDir::GetAddressOfNames)
-    .def("GetAddressOfNameOrdinals", &Hades::Memory::ExportDir::
-    GetAddressOfNameOrdinals)
-//     .def("GetBase", &Hades::Memory::ExportDir::GetBase)
-    .def("GetExportDirRaw", &Hades::Memory::ExportDir::GetExportDirRaw)
-    ;
-
-  boost::python::class_<Hades::Memory::ExportEnum, boost::noncopyable>(
-    "ExportEnum", boost::python::init<Hades::Memory::PeFile const&>())
-    .def("First", &Hades::Memory::ExportEnum::First)
-    .def("Next", &Hades::Memory::ExportEnum::Next)
-    ;
-}
+void ExportExportDir();

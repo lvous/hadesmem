@@ -853,7 +853,22 @@ xcopy "$(TargetPath)" "$(SolutionDir)..\Binaries\Full-$(Configuration)\Scripting
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="DisassemblerWrap.cpp" />
+    <ClCompile Include="DosHeaderWrap.cpp" />
+    <ClCompile Include="ExportDirWrap.cpp" />
+    <ClCompile Include="FindPatternWrap.cpp" />
+    <ClCompile Include="ImportDirWrap.cpp" />
+    <ClCompile Include="InjectorWrap.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="ManualMapWrap.cpp" />
+    <ClCompile Include="MemoryMgrWrap.cpp" />
+    <ClCompile Include="ModuleWrap.cpp" />
+    <ClCompile Include="NtHeadersWrap.cpp" />
+    <ClCompile Include="PeFileWrap.cpp" />
+    <ClCompile Include="RegionWrap.cpp" />
+    <ClCompile Include="ScannerWrap.cpp" />
+    <ClCompile Include="SectionWrap.cpp" />
+    <ClCompile Include="TlsDirWrap.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DisassemblerWrap.h" />

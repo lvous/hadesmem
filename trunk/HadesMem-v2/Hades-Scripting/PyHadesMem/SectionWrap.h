@@ -17,42 +17,4 @@ You should have received a copy of the GNU General Public License
 along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-// Boost
-#pragma warning(push, 1)
-#pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
-#include <boost/python.hpp>
-#pragma warning(pop)
-
-// Hades
-#include "Hades-Memory/Section.h"
-#include "Hades-Memory/SectionEnum.h"
-
-// Export Section API
-inline void ExportSection()
-{
-  boost::python::class_<Hades::Memory::Section>("Section", boost::python::init<
-    Hades::Memory::PeFile const&, WORD>())
-    .def("GetName", &Hades::Memory::Section::GetName)
-    .def("GetVirtualAddress", &Hades::Memory::Section::GetVirtualAddress)
-    .def("GetVirtualSize", &Hades::Memory::Section::GetVirtualSize)
-    .def("GetSizeOfRawData", &Hades::Memory::Section::GetSizeOfRawData)
-    .def("GetPointerToRawData", &Hades::Memory::Section::GetPointerToRawData)
-    .def("GetPointerToRelocations", &Hades::Memory::Section::
-      GetPointerToRelocations)
-    .def("GetPointerToLinenumbers", &Hades::Memory::Section::
-      GetPointerToLinenumbers)
-    .def("GetNumberOfRelocations", &Hades::Memory::Section::
-      GetNumberOfRelocations)
-    .def("GetNumberOfLinenumbers", &Hades::Memory::Section::
-      GetNumberOfLinenumbers)
-    .def("GetCharacteristics", &Hades::Memory::Section::GetCharacteristics)
-//     .def("GetBase", &Hades::Memory::Section::GetBase)
-    .def("GetSectionHeaderRaw", &Hades::Memory::Section::GetSectionHeaderRaw)
-    ;
-
-  boost::python::class_<Hades::Memory::SectionEnum, boost::noncopyable>(
-    "SectionEnum", boost::python::init<Hades::Memory::PeFile const&>())
-    .def("First", &Hades::Memory::SectionEnum::First)
-    .def("Next", &Hades::Memory::SectionEnum::Next)
-    ;
-}
+void ExportSection();

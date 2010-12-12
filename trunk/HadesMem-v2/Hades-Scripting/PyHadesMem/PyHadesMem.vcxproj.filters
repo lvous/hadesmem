@@ -19,10 +19,61 @@
     <Filter Include="Header Files\Wrappers\PeLib">
       <UniqueIdentifier>{b9af0137-47ac-4f7c-98a3-ce37fcd56cb5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Wrappers">
+      <UniqueIdentifier>{3edb03a9-0a9e-408d-95fb-4acd781c525b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Wrappers\PeLib">
+      <UniqueIdentifier>{bd0e58ae-b4bf-4ba9-90c2-af7808cdb86b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DisassemblerWrap.cpp">
+      <Filter>Source Files\Wrappers</Filter>
+    </ClCompile>
+    <ClCompile Include="FindPatternWrap.cpp">
+      <Filter>Source Files\Wrappers</Filter>
+    </ClCompile>
+    <ClCompile Include="InjectorWrap.cpp">
+      <Filter>Source Files\Wrappers</Filter>
+    </ClCompile>
+    <ClCompile Include="ManualMapWrap.cpp">
+      <Filter>Source Files\Wrappers</Filter>
+    </ClCompile>
+    <ClCompile Include="MemoryMgrWrap.cpp">
+      <Filter>Source Files\Wrappers</Filter>
+    </ClCompile>
+    <ClCompile Include="ModuleWrap.cpp">
+      <Filter>Source Files\Wrappers</Filter>
+    </ClCompile>
+    <ClCompile Include="RegionWrap.cpp">
+      <Filter>Source Files\Wrappers</Filter>
+    </ClCompile>
+    <ClCompile Include="ScannerWrap.cpp">
+      <Filter>Source Files\Wrappers</Filter>
+    </ClCompile>
+    <ClCompile Include="DosHeaderWrap.cpp">
+      <Filter>Source Files\Wrappers\PeLib</Filter>
+    </ClCompile>
+    <ClCompile Include="ExportDirWrap.cpp">
+      <Filter>Source Files\Wrappers\PeLib</Filter>
+    </ClCompile>
+    <ClCompile Include="ImportDirWrap.cpp">
+      <Filter>Source Files\Wrappers\PeLib</Filter>
+    </ClCompile>
+    <ClCompile Include="NtHeadersWrap.cpp">
+      <Filter>Source Files\Wrappers\PeLib</Filter>
+    </ClCompile>
+    <ClCompile Include="PeFileWrap.cpp">
+      <Filter>Source Files\Wrappers\PeLib</Filter>
+    </ClCompile>
+    <ClCompile Include="SectionWrap.cpp">
+      <Filter>Source Files\Wrappers\PeLib</Filter>
+    </ClCompile>
+    <ClCompile Include="TlsDirWrap.cpp">
+      <Filter>Source Files\Wrappers\PeLib</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

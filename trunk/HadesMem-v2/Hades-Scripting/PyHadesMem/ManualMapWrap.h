@@ -17,40 +17,4 @@ You should have received a copy of the GNU General Public License
 along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-// Boost
-#pragma warning(push, 1)
-#pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
-#include <boost/python.hpp>
-#pragma warning(pop)
-
-// Hades
-#include "Hades-Memory/ManualMap.h"
-
-class ManualMapWrap : public Hades::Memory::ManualMap
-{
-public:
-  explicit ManualMapWrap(Hades::Memory::MemoryMgr const& MyMem) 
-    : Hades::Memory::ManualMap(MyMem)
-  { }
-
-  DWORD_PTR Map(std::basic_string<TCHAR> const& Path, 
-    std::string const& Export, bool InjectHelper) const
-  {
-    return reinterpret_cast<DWORD_PTR>(Hades::Memory::ManualMap::Map(Path, 
-      Export, InjectHelper));
-  }
-};
-
-// Export ManualMap API
-inline void ExportManualMap()
-{
-  boost::python::class_<Hades::Memory::ManualMap>("ManualMapBase", 
-    boost::python::no_init)
-    ;
-
-  boost::python::class_<ManualMapWrap, boost::python::bases<Hades::Memory::
-    ManualMap>>("ManualMap", boost::python::init<
-    Hades::Memory::MemoryMgr const&>())
-    .def("Map", &ManualMapWrap::Map)
-    ;
-}
+void ExportManualMap();
