@@ -23,6 +23,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 // C++ Standard Library
 #include <string>
+#include <vector>
 #include <iostream>
 
 // Boost
@@ -68,6 +69,11 @@ BOOST_PYTHON_MODULE(PyHadesMem_IA32)
 {
   boost::python::register_exception_translator<std::exception>(
     &HadesErrorTranslator);
+
+  boost::python::class_<std::vector<DWORD_PTR>>("PointerVec", 
+    boost::python::no_init)
+    .def("__iter__", boost::python::iterator<std::vector<DWORD_PTR>>())
+    ;
 
   ExportDisassembler();
   ExportFindPattern();

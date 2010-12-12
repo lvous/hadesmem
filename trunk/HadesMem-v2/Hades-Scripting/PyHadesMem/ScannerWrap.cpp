@@ -102,9 +102,4 @@ void ExportScanner()
     .def("FindAllStringW", &ScannerWrap::FindAll<Hades::Memory::Types::StringW>)
     .def("FindAllPointer", &ScannerWrap::FindAllPointer)
     ;
-
-  boost::python::class_<std::vector<DWORD_PTR>>("PointerVec", 
-    boost::python::no_init)
-    .def("__iter__", boost::python::iterator<std::vector<DWORD_PTR>>())
-    ;
 }

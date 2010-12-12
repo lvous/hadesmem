@@ -26,24 +26,48 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Hades
 #include "Hades-Memory/TlsDir.h"
 
+class TlsDirWrap : public Hades::Memory::TlsDir
+{
+public:
+  explicit TlsDirWrap(Hades::Memory::PeFile const& MyPeFile) 
+    : Hades::Memory::TlsDir(MyPeFile)
+  { }
+
+  std::vector<DWORD_PTR> GetCallbacks() const
+  {
+    std::vector<PIMAGE_TLS_CALLBACK> Temp(Hades::Memory::TlsDir::
+      GetCallbacks());
+    std::vector<DWORD_PTR> New(reinterpret_cast<DWORD_PTR*>(&Temp[0]), 
+      reinterpret_cast<DWORD_PTR*>(&Temp[0]) + Temp.size());
+    return New;
+  }
+
+  DWORD_PTR GetBase() const
+  {
+    return reinterpret_cast<DWORD_PTR>(Hades::Memory::TlsDir::GetBase());
+  }
+};
+
 // Export TlsDir API
 void ExportTlsDir()
 {
-  boost::python::class_<Hades::Memory::TlsDir>("TlsDir", boost::python::init<
+  boost::python::class_<Hades::Memory::TlsDir>("TlsDirBase", 
+    boost::python::no_init)
+    ;
+
+  boost::python::class_<TlsDirWrap, boost::python::bases<
+    Hades::Memory::TlsDir>>("TlsDir", boost::python::init<
     Hades::Memory::PeFile const&>())
-    .def("IsValid", &Hades::Memory::TlsDir::IsValid)
-    .def("EnsureValid", &Hades::Memory::TlsDir::EnsureValid)
-    .def("GetStartAddressOfRawData", &Hades::Memory::TlsDir::
-    GetStartAddressOfRawData)
-    .def("GetEndAddressOfRawData", &Hades::Memory::TlsDir::
-    GetEndAddressOfRawData)
-    .def("GetAddressOfIndex", &Hades::Memory::TlsDir::GetAddressOfIndex)
-    .def("GetAddressOfCallBacks", &Hades::Memory::TlsDir::
-    GetAddressOfCallBacks)
-    .def("GetSizeOfZeroFill", &Hades::Memory::TlsDir::GetSizeOfZeroFill)
-    .def("GetCharacteristics", &Hades::Memory::TlsDir::GetCharacteristics)
-    .def("GetCallbacks", &Hades::Memory::TlsDir::GetCallbacks)
-    //     .def("GetBase", &Hades::Memory::TlsDir::GetBase)
-    .def("GetTlsDirRaw", &Hades::Memory::TlsDir::GetTlsDirRaw)
+    .def("IsValid", &TlsDirWrap::IsValid)
+    .def("EnsureValid", &TlsDirWrap::EnsureValid)
+    .def("GetStartAddressOfRawData", &TlsDirWrap::GetStartAddressOfRawData)
+    .def("GetEndAddressOfRawData", &TlsDirWrap::GetEndAddressOfRawData)
+    .def("GetAddressOfIndex", &TlsDirWrap::GetAddressOfIndex)
+    .def("GetAddressOfCallBacks", &TlsDirWrap::GetAddressOfCallBacks)
+    .def("GetSizeOfZeroFill", &TlsDirWrap::GetSizeOfZeroFill)
+    .def("GetCharacteristics", &TlsDirWrap::GetCharacteristics)
+    .def("GetCallbacks", &TlsDirWrap::GetCallbacks)
+    .def("GetBase", &TlsDirWrap::GetBase)
+    .def("GetTlsDirRaw", &TlsDirWrap::GetTlsDirRaw)
     ;
 }

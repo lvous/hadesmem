@@ -30,7 +30,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 class ExportDirWrap : public Hades::Memory::ExportDir
 {
 public:
-  ExportDirWrap(Hades::Memory::PeFile const& MyPeFile)
+  explicit ExportDirWrap(Hades::Memory::PeFile const& MyPeFile)
     : Hades::Memory::ExportDir(MyPeFile)
   { }
 
@@ -43,7 +43,7 @@ public:
 class ExportWrap : public Hades::Memory::Export
 {
 public:
-  ExportWrap(Hades::Memory::PeFile const& MyPeFile, DWORD Number)
+  explicit ExportWrap(Hades::Memory::PeFile const& MyPeFile, DWORD Number)
     : Hades::Memory::Export(MyPeFile, Number)
   { }
 

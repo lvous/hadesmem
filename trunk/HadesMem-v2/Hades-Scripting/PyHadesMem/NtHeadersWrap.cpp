@@ -29,7 +29,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 class NtHeadersWrap : public Hades::Memory::NtHeaders
 {
 public:
-  NtHeadersWrap(Hades::Memory::PeFile const& MyPeFile)
+  explicit NtHeadersWrap(Hades::Memory::PeFile const& MyPeFile)
     : Hades::Memory::NtHeaders(MyPeFile)
   { }
 

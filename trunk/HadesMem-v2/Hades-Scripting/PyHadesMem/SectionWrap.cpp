@@ -27,32 +27,79 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include "Hades-Memory/Section.h"
 #include "Hades-Memory/SectionEnum.h"
 
+class SectionWrap : public Hades::Memory::Section
+{
+public:
+  SectionWrap(Hades::Memory::PeFile const& MyPeFile, WORD Number)
+    : Hades::Memory::Section(MyPeFile, Number)
+  { }
+
+  DWORD_PTR GetBase() const
+  {
+    return reinterpret_cast<DWORD_PTR>(Hades::Memory::Section::GetBase());
+  }
+};
+
+struct SectionIterWrap
+{
+  static SectionWrap next(Hades::Memory::SectionEnum::SectionIter& o)
+  {
+    if (!*o)
+    {
+      PyErr_SetString(PyExc_StopIteration, "No more data.");
+      boost::python::throw_error_already_set();
+    }
+
+    auto MySection(*static_cast<SectionWrap*>(&**o));
+
+    ++o;
+
+    return MySection;
+  }
+
+  static boost::python::object pass_through(boost::python::object const& o) 
+  {
+    return o;
+  }
+
+  static void wrap(const char* python_name)
+  {
+    boost::python::class_<Hades::Memory::SectionEnum::SectionIter, 
+      boost::noncopyable>(python_name, 
+      boost::python::init<Hades::Memory::SectionEnum&>())
+      .def("next", next)
+      .def("__iter__", pass_through)
+      ;
+  }
+};
+
 // Export Section API
 void ExportSection()
 {
-  boost::python::class_<Hades::Memory::Section>("Section", boost::python::init<
+  boost::python::class_<Hades::Memory::NtHeaders>("SectionBase", 
+    boost::python::no_init)
+    ;
+
+  boost::python::class_<SectionWrap, boost::python::bases<
+    Hades::Memory::Section>>("Section", boost::python::init<
     Hades::Memory::PeFile const&, WORD>())
     .def("GetName", &Hades::Memory::Section::GetName)
-    .def("GetVirtualAddress", &Hades::Memory::Section::GetVirtualAddress)
-    .def("GetVirtualSize", &Hades::Memory::Section::GetVirtualSize)
-    .def("GetSizeOfRawData", &Hades::Memory::Section::GetSizeOfRawData)
-    .def("GetPointerToRawData", &Hades::Memory::Section::GetPointerToRawData)
-    .def("GetPointerToRelocations", &Hades::Memory::Section::
-      GetPointerToRelocations)
-    .def("GetPointerToLinenumbers", &Hades::Memory::Section::
-      GetPointerToLinenumbers)
-    .def("GetNumberOfRelocations", &Hades::Memory::Section::
-      GetNumberOfRelocations)
-    .def("GetNumberOfLinenumbers", &Hades::Memory::Section::
-      GetNumberOfLinenumbers)
-    .def("GetCharacteristics", &Hades::Memory::Section::GetCharacteristics)
-//     .def("GetBase", &Hades::Memory::Section::GetBase)
-    .def("GetSectionHeaderRaw", &Hades::Memory::Section::GetSectionHeaderRaw)
+    .def("GetVirtualAddress", &SectionWrap::GetVirtualAddress)
+    .def("GetVirtualSize", &SectionWrap::GetVirtualSize)
+    .def("GetSizeOfRawData", &SectionWrap::GetSizeOfRawData)
+    .def("GetPointerToRawData", &SectionWrap::GetPointerToRawData)
+    .def("GetPointerToRelocations", &SectionWrap::GetPointerToRelocations)
+    .def("GetPointerToLinenumbers", &SectionWrap::GetPointerToLinenumbers)
+    .def("GetNumberOfRelocations", &SectionWrap::GetNumberOfRelocations)
+    .def("GetNumberOfLinenumbers", &SectionWrap::GetNumberOfLinenumbers)
+    .def("GetCharacteristics", &SectionWrap::GetCharacteristics)
+    .def("GetBase", &SectionWrap::GetBase)
+    .def("GetSectionHeaderRaw", &SectionWrap::GetSectionHeaderRaw)
     ;
 
   boost::python::class_<Hades::Memory::SectionEnum, boost::noncopyable>(
     "SectionEnum", boost::python::init<Hades::Memory::PeFile const&>())
-    .def("First", &Hades::Memory::SectionEnum::First)
-    .def("Next", &Hades::Memory::SectionEnum::Next)
     ;
+
+  SectionIterWrap::wrap("SectionIter"); 
 }
