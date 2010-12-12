@@ -31,6 +31,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Hades
 #include "Fwd.h"
 #include "Error.h"
+#include "PeFile.h"
 #include "MemoryMgr.h"
 
 namespace Hades
