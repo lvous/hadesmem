@@ -164,8 +164,7 @@ void ExportImportDir()
     ;
 
   boost::python::class_<Hades::Memory::ImportThunkEnum, boost::noncopyable>(
-    "ImportEnum", boost::python::init<Hades::Memory::PeFile const&, 
-    Hades::Memory::ImportDir const&, DWORD>())
+    "ImportEnum", boost::python::init<Hades::Memory::PeFile const&, DWORD>())
     ;
 
   ImportThunkIterWrap::wrap("ImportIter"); 
