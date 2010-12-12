@@ -32,7 +32,8 @@ namespace Hades
   namespace Memory
   {
     // Constructor
-    ImportDir::ImportDir(PeFile const& MyPeFile, PIMAGE_IMPORT_DESCRIPTOR pImpDesc) 
+    ImportDir::ImportDir(PeFile const& MyPeFile, 
+      PIMAGE_IMPORT_DESCRIPTOR pImpDesc) 
       : m_PeFile(MyPeFile), 
       m_Memory(m_PeFile.GetMemoryMgr()), 
       m_pImpDesc(pImpDesc)
