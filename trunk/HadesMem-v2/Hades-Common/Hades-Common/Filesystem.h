@@ -57,7 +57,7 @@ namespace Hades
       if (!File)
       {
         BOOST_THROW_EXCEPTION(FilesystemError() << 
-          ErrorFunction("FileToBuffer") << 
+          ErrorFunction("BufferToFile") << 
           ErrorString("Could not open file."));
       }
 
