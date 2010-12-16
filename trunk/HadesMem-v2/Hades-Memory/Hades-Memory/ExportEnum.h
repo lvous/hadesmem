@@ -25,6 +25,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Boost
 #pragma warning(push, 1)
 #pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
+#include <boost/optional.hpp>
 #include <boost/iterator/iterator_facade.hpp>
 #pragma warning(pop)
 
@@ -45,7 +46,7 @@ namespace Hades
       // Constructor
       explicit ExportEnum(PeFile const& MyPeFile) 
         : m_PeFile(MyPeFile), 
-        m_Current(0)
+        m_Current()
       { }
 
       // Get first section
@@ -53,11 +54,15 @@ namespace Hades
       {
         ExportDir const MyExportDir(m_PeFile);
         DWORD NumberOfFunctions = MyExportDir.GetNumberOfFunctions();
-
-        m_Current = 0;
-
-        return NumberOfFunctions ? std::unique_ptr<Export>(new Export(
-          m_PeFile, m_Current)) : std::unique_ptr<Export>(nullptr);
+        if (NumberOfFunctions)
+        {
+          m_Current.reset(Export(m_PeFile, MyExportDir.GetOrdinalBase()));
+          return std::unique_ptr<Export>(new Export(m_Current.get()));
+        }
+        else
+        {
+          return std::unique_ptr<Export>(nullptr);
+        }
       }
 
       // Get next section
@@ -65,12 +70,16 @@ namespace Hades
       {
         ExportDir const MyExportDir(m_PeFile);
         DWORD NumberOfFunctions = MyExportDir.GetNumberOfFunctions();
-
-        ++m_Current;
-
-        return (m_Current < NumberOfFunctions) ? std::unique_ptr<Export>(
-          new Export(m_PeFile, m_Current)) : std::unique_ptr<Export>(
-          nullptr);
+        DWORD NextOrdinal = m_Current->GetOrdinal() + 1;
+        if (NextOrdinal - MyExportDir.GetOrdinalBase() < NumberOfFunctions)
+        {
+          m_Current.reset(Export(m_PeFile, NextOrdinal));
+          return std::unique_ptr<Export>(new Export(m_Current.get()));
+        }
+        else
+        {
+          return std::unique_ptr<Export>(nullptr);
+        }
       }
 
       // Section iterator
@@ -114,8 +123,8 @@ namespace Hades
       // Memory instance
       PeFile m_PeFile;
 
-      // Current function number
-      DWORD m_Current;
+      // Current export
+      boost::optional<Export> m_Current;
     };
   }
 }

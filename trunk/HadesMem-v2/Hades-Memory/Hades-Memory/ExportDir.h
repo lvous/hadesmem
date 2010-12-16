@@ -113,7 +113,7 @@ namespace Hades
     {
     public:
       // Constructor
-      Export(PeFile const& MyPeFile, DWORD Number);
+      Export(PeFile const& MyPeFile, DWORD Ordinal);
 
       // Get RVA
       DWORD GetRva() const
