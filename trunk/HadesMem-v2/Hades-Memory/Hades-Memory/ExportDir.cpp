@@ -219,9 +219,11 @@ namespace Hades
       // Get export directory
       ExportDir const MyExportDir(m_PeFile);
 
+      // Current function offset
+      DWORD Offset = Ordinal - MyExportDir.GetOrdinalBase();
+
       // Ensure export number is valid
-      if (Ordinal - MyExportDir.GetOrdinalBase() > 
-        MyExportDir.GetNumberOfFunctions())
+      if (Offset > MyExportDir.GetNumberOfFunctions())
       {
         BOOST_THROW_EXCEPTION(ExportDir::Error() << 
           ErrorFunction("Export::Export") << 
@@ -250,6 +252,22 @@ namespace Hades
       // Get end of export dir
       DWORD const ExportDirEnd = ExportDirStart + DataDirSize;
 
+      // Find next exported entry
+      for (; !m_Memory.Read<DWORD>(pFunctions + Offset) && 
+        Offset <= MyExportDir.GetNumberOfFunctions(); ++Offset)
+        ;
+
+      // Ensure export number is valid
+      if (Offset > MyExportDir.GetNumberOfFunctions())
+      {
+        BOOST_THROW_EXCEPTION(ExportDir::Error() << 
+          ErrorFunction("Export::Export") << 
+          ErrorString("Invalid export number."));
+      }
+
+      // Set new ordinal
+      Ordinal = Offset + MyExportDir.GetOrdinalBase();
+
       // Set ordinal
       m_Ordinal = static_cast<WORD>(Ordinal);
 
@@ -258,7 +276,7 @@ namespace Hades
       std::vector<WORD> NameOrdinals(m_Memory.Read<std::vector<WORD>>(
         pOrdinals, NumberOfNames));
       auto NameOrdIter = std::find(NameOrdinals.begin(), NameOrdinals.end(), 
-        Ordinal - MyExportDir.GetOrdinalBase());
+        Offset);
       if (NameOrdIter != NameOrdinals.end())
       {
         m_ByName = true;
@@ -268,8 +286,7 @@ namespace Hades
       }
 
       // Get function RVA (unchecked)
-      DWORD const FuncRva = m_Memory.Read<DWORD>(pFunctions + Ordinal - 
-        MyExportDir.GetOrdinalBase());
+      DWORD const FuncRva = m_Memory.Read<DWORD>(pFunctions + Offset);
 
       // Check function RVA. If it lies inside the export dir region 
       // then it's a forwarded export. Otherwise it's a regular RVA.
