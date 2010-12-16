@@ -264,7 +264,10 @@ namespace Hades
         std::vector<BYTE> const SectionData(DataStart, DataEnd);
 
         // Write section data to process
-        m_Memory.Write(TargetAddr, SectionData);
+        if (!SectionData.empty())
+        {
+          m_Memory.Write(TargetAddr, SectionData);
+        }
 
         // Get section characteristics
         DWORD SecCharacteristics = Current.GetCharacteristics();
@@ -297,7 +300,7 @@ namespace Hades
         // Set the proper page protections for this section
         DWORD OldProtect;
         if (!VirtualProtectEx(m_Memory.GetProcessHandle(), TargetAddr, 
-          SizeOfRawData, SecProtect, &OldProtect))
+          VirtualSize, SecProtect, &OldProtect))
         {
           DWORD const LastError = GetLastError();
           BOOST_THROW_EXCEPTION(Error() << 
@@ -393,10 +396,6 @@ namespace Hades
           // Get import thunk
           ImportThunk& ImpThunk = **j;
 
-          // Get name of function
-          std::string const ImpName(ImpThunk.GetName());
-          std::cout << "Function Name: " << ImpName << "." << std::endl;
-
           // Get function address in remote process
           FARPROC FuncAddr = 0;
           if (ImpThunk.ByOrdinal())
@@ -406,6 +405,10 @@ namespace Hades
           }
           else
           {
+            // Get name of function
+            std::string const ImpName(ImpThunk.GetName());
+            std::cout << "Function Name: " << ImpName << "." << std::endl;
+
             FuncAddr = m_Memory.GetRemoteProcAddress(CurModBase, CurModName, 
               ImpThunk.GetName());
           }
