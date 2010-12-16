@@ -25,6 +25,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Boost
 #pragma warning(push, 1)
 #pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
+#include <boost/optional.hpp>
 #include <boost/iterator/iterator_facade.hpp>
 #pragma warning(pop)
 
@@ -40,84 +41,59 @@ namespace Hades
 {
   namespace Memory
   {
-    // Section enumerator
-    class SectionEnum : private boost::noncopyable
+    // Section iterator
+    class SectionIter : public boost::iterator_facade<SectionIter, 
+      boost::optional<Section>, boost::incrementable_traversal_tag>
     {
     public:
       // Constructor
-      explicit SectionEnum(PeFile const& MyPeFile) 
+      explicit SectionIter(PeFile const& MyPeFile) 
         : m_PeFile(MyPeFile), 
-        m_Current(0)
-      { }
-
-      // Get first section
-      std::unique_ptr<Section> First() 
+        m_CurrentNum(0), 
+        m_Current()
       {
         NtHeaders const MyNtHeaders(m_PeFile);
         WORD NumberOfSections = MyNtHeaders.GetNumberOfSections();
-
-        m_Current = 0;
-
-        return NumberOfSections ? std::unique_ptr<Section>(new Section(
-          m_PeFile, m_Current)) : std::unique_ptr<Section>(nullptr);
+        if (NumberOfSections)
+        {
+          m_Current = Section(m_PeFile, m_CurrentNum);
+        }
       }
 
-      // Get next section
-      std::unique_ptr<Section> Next()
+    private:
+      // Allow Boost.Iterator access to internals
+      friend class boost::iterator_core_access;
+
+      // For Boost.Iterator
+      void increment() 
       {
         NtHeaders const MyNtHeaders(m_PeFile);
         WORD const NumberOfSections = MyNtHeaders.GetNumberOfSections();
 
-        ++m_Current;
-
-        return (m_Current < NumberOfSections) ? std::unique_ptr<Section>(
-          new Section(m_PeFile, m_Current)) : std::unique_ptr<Section>(
-          nullptr);
+        if (++m_CurrentNum < NumberOfSections)
+        {
+          m_Current = Section(m_PeFile, m_CurrentNum);
+        }
+        else
+        {
+          m_Current = boost::optional<Section>();
+        }
       }
 
-      // Section iterator
-      class SectionIter : public boost::iterator_facade<SectionIter, 
-        std::unique_ptr<Section>, boost::incrementable_traversal_tag>,  
-        private boost::noncopyable
+      // For Boost.Iterator
+      boost::optional<Section>& dereference() const
       {
-      public:
-        // Constructor
-        explicit SectionIter(SectionEnum& MySectionEnum) 
-          : m_SectionEnum(MySectionEnum)
-        {
-          m_Current = m_SectionEnum.First();
-        }
+        return m_Current;
+      }
 
-      private:
-        // Allow Boost.Iterator access to internals
-        friend class boost::iterator_core_access;
-
-        // For Boost.Iterator
-        void increment() 
-        {
-          m_Current = m_SectionEnum.Next();
-        }
-
-        // For Boost.Iterator
-        std::unique_ptr<Section>& dereference() const
-        {
-          return m_Current;
-        }
-
-        // Parent
-        SectionEnum& m_SectionEnum;
-
-        // Current section
-        // Mutable due to 'dereference' being marked as 'const'
-        mutable std::unique_ptr<Section> m_Current;
-      };
-
-    private:
       // Memory instance
       PeFile m_PeFile;
 
       // Current section number
-      WORD m_Current;
+      WORD m_CurrentNum;
+
+      // Current section
+      mutable boost::optional<Section> m_Current;
     };
   }
 }

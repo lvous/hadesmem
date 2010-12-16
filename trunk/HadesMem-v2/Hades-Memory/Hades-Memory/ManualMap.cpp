@@ -234,8 +234,7 @@ namespace Hades
       std::cout << "Mapping sections." << std::endl;
 
       // Enumerate all sections
-      SectionEnum MySectionEnum(MyPeFile);
-      for (SectionEnum::SectionIter i(MySectionEnum); *i; ++i)
+      for (SectionIter i(MyPeFile); *i; ++i)
       {
         // Get section
         Section& Current = **i;
