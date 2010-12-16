@@ -28,7 +28,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Boost
 #pragma warning(push, 1)
 #pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
-#include <boost/noncopyable.hpp>
+#include <boost/optional.hpp>
 #include <boost/iterator/iterator_facade.hpp>
 #pragma warning(pop)
 
@@ -42,161 +42,100 @@ namespace Hades
 {
   namespace Memory
   {
-    // Section enumerator
-    class ImportDirEnum : private boost::noncopyable
+    // Section iterator
+    class ImportDirIter : public boost::iterator_facade<ImportDirIter, 
+      boost::optional<ImportDir>, boost::incrementable_traversal_tag>
     {
     public:
       // Constructor
-      explicit ImportDirEnum(PeFile const& MyPeFile) 
+      explicit ImportDirIter(PeFile const& MyPeFile) 
         : m_PeFile(MyPeFile), 
-        m_pImpDesc(nullptr)
-      { }
-
-      // Get first import thunk
-      std::unique_ptr<ImportDir> First() 
+        m_Current(m_PeFile)
       {
-        ImportDir MyImportDir(m_PeFile);
-        m_pImpDesc = reinterpret_cast<PIMAGE_IMPORT_DESCRIPTOR>(MyImportDir.
-          GetBase());
-        return MyImportDir.GetCharacteristics() ? 
-          std::unique_ptr<ImportDir>(new ImportDir(m_PeFile, m_pImpDesc)) 
-          : std::unique_ptr<ImportDir>(nullptr);
+        if (!m_Current->GetCharacteristics())
+        {
+          m_Current = boost::optional<ImportDir>();
+        }
       }
-
-      // Get next import thunk
-      std::unique_ptr<ImportDir> Next()
-      {
-        ++m_pImpDesc;
-        ImportDir MyImportDir(m_PeFile, m_pImpDesc);
-        return MyImportDir.GetCharacteristics() ? 
-          std::unique_ptr<ImportDir>(new ImportDir(m_PeFile, m_pImpDesc)) 
-          : std::unique_ptr<ImportDir>(nullptr);
-      }
-
-      // Section iterator
-      class ImportDirIter : public boost::iterator_facade<ImportDirIter, 
-        std::unique_ptr<ImportDir>, boost::incrementable_traversal_tag>,  
-        private boost::noncopyable
-      {
-      public:
-        // Constructor
-        explicit ImportDirIter(ImportDirEnum& MyImportDirEnum) 
-          : m_ImportDirEnum(MyImportDirEnum)
-        {
-          m_Current = m_ImportDirEnum.First();
-        }
-
-      private:
-        // Allow Boost.Iterator access to internals
-        friend class boost::iterator_core_access;
-
-        // For Boost.Iterator
-        void increment() 
-        {
-          m_Current = m_ImportDirEnum.Next();
-        }
-
-        // For Boost.Iterator
-        std::unique_ptr<ImportDir>& dereference() const
-        {
-          return m_Current;
-        }
-
-        // Parent
-        ImportDirEnum& m_ImportDirEnum;
-
-        // Current import dir
-        // Mutable due to 'dereference' being marked as 'const'
-        mutable std::unique_ptr<ImportDir> m_Current;
-      };
 
     private:
+      // Allow Boost.Iterator access to internals
+      friend class boost::iterator_core_access;
+
+      // For Boost.Iterator
+      void increment() 
+      {
+        auto pImpDesc = reinterpret_cast<PIMAGE_IMPORT_DESCRIPTOR>(
+          m_Current->GetBase());
+        m_Current = ImportDir(m_PeFile, ++pImpDesc);
+        if (!m_Current->GetCharacteristics())
+        {
+          m_Current = boost::optional<ImportDir>();
+        }
+      }
+
+      // For Boost.Iterator
+      boost::optional<ImportDir>& dereference() const
+      {
+        return m_Current;
+      }
+
       // Memory instance
       PeFile m_PeFile;
 
       // Current thunk pointer
       PIMAGE_IMPORT_DESCRIPTOR m_pImpDesc;
+
+      // Current import dir
+      mutable boost::optional<ImportDir> m_Current;
     };
 
-    // Section enumerator
-    class ImportThunkEnum : private boost::noncopyable
+    // Section iterator
+    class ImportThunkIter : public boost::iterator_facade<ImportThunkIter, 
+      boost::optional<ImportThunk>, boost::incrementable_traversal_tag>
     {
     public:
       // Constructor
-      ImportThunkEnum(PeFile const& MyPeFile, DWORD FirstThunk) 
+      explicit ImportThunkIter(PeFile const& MyPeFile, DWORD FirstThunk) 
         : m_PeFile(MyPeFile), 
-        m_FirstThunk(FirstThunk), 
         m_pThunk(reinterpret_cast<PIMAGE_THUNK_DATA>(m_PeFile.RvaToVa(
-          FirstThunk)))
-      { }
-
-      // Get first import thunk
-      std::unique_ptr<ImportThunk> First() 
+          FirstThunk))), 
+        m_Current(ImportThunk(m_PeFile, m_pThunk))
       {
-        m_pThunk = reinterpret_cast<PIMAGE_THUNK_DATA>(m_PeFile.RvaToVa(
-          m_FirstThunk));
-        ImportThunk MyImportThunk(m_PeFile, m_pThunk);
-        return MyImportThunk.IsValid() ? 
-          std::unique_ptr<ImportThunk>(new ImportThunk(m_PeFile, m_pThunk)) 
-          : std::unique_ptr<ImportThunk>(nullptr);
+        if (!m_Current->IsValid())
+        {
+          m_Current = boost::optional<ImportThunk>();
+        }
       }
-
-      // Get next import thunk
-      std::unique_ptr<ImportThunk> Next()
-      {
-        ++m_pThunk;
-        ImportThunk MyImportThunk(m_PeFile, m_pThunk);
-        return MyImportThunk.IsValid() ? 
-          std::unique_ptr<ImportThunk>(new ImportThunk(m_PeFile, m_pThunk)) 
-          : std::unique_ptr<ImportThunk>(nullptr);
-      }
-
-      // Section iterator
-      class ImportThunkIter : public boost::iterator_facade<ImportThunkIter, 
-        std::unique_ptr<ImportThunk>, boost::incrementable_traversal_tag>,  
-        private boost::noncopyable
-      {
-      public:
-        // Constructor
-        explicit ImportThunkIter(ImportThunkEnum& MyImportThunkEnum) 
-          : m_ImportThunkEnum(MyImportThunkEnum)
-        {
-          m_Current = m_ImportThunkEnum.First();
-        }
-
-      private:
-        // Allow Boost.Iterator access to internals
-        friend class boost::iterator_core_access;
-
-        // For Boost.Iterator
-        void increment() 
-        {
-          m_Current = m_ImportThunkEnum.Next();
-        }
-
-        // For Boost.Iterator
-        std::unique_ptr<ImportThunk>& dereference() const
-        {
-          return m_Current;
-        }
-
-        // Parent
-        ImportThunkEnum& m_ImportThunkEnum;
-
-        // Current import thunk
-        // Mutable due to 'dereference' being marked as 'const'
-        mutable std::unique_ptr<ImportThunk> m_Current;
-      };
 
     private:
+      // Allow Boost.Iterator access to internals
+      friend class boost::iterator_core_access;
+
+      // For Boost.Iterator
+      void increment() 
+      {
+        m_Current = ImportThunk(m_PeFile, ++m_pThunk);
+        if (!m_Current->IsValid())
+        {
+          m_Current = boost::optional<ImportThunk>();
+        }
+      }
+
+      // For Boost.Iterator
+      boost::optional<ImportThunk>& dereference() const
+      {
+        return m_Current;
+      }
+
       // Memory instance
       PeFile m_PeFile;
 
-      // Store first thunk RVA so 'First' can be called repeatedly
-      DWORD m_FirstThunk;
-
       // Current thunk pointer
       PIMAGE_THUNK_DATA m_pThunk;
+
+      // Current import thunk
+      mutable boost::optional<ImportThunk> m_Current;
     };
   }
 }

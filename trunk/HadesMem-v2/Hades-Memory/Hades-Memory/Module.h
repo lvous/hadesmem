@@ -31,7 +31,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Boost
 #pragma warning(push, 1)
 #pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
-#include <boost/noncopyable.hpp>
+#include <boost/optional.hpp>
 #include <boost/iterator/iterator_facade.hpp>
 #pragma warning(pop)
 
@@ -87,22 +87,17 @@ namespace Hades
       std::basic_string<TCHAR> m_Path;
     };
 
-    // Module enumerator
-    class ModuleEnum : private boost::noncopyable
+    // Module iterator
+    class ModuleListIter : public boost::iterator_facade<ModuleListIter, 
+      boost::optional<Module>, boost::incrementable_traversal_tag>, 
+      private boost::noncopyable
     {
     public:
       // Constructor
-      ModuleEnum(MemoryMgr const& MyMemory) 
+      ModuleListIter(MemoryMgr const& MyMemory) 
         : m_Memory(MyMemory), 
         m_Snap(), 
-        m_ModuleEntry()
-      {
-        ZeroMemory(&m_ModuleEntry, sizeof(m_ModuleEntry));
-        m_ModuleEntry.dwSize = sizeof(m_ModuleEntry);
-      }
-
-      // Get first module
-      std::unique_ptr<Module> First() 
+        m_Current()
       {
         // Grab a new snapshot of the process
         m_Snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, m_Memory.
@@ -117,7 +112,8 @@ namespace Hades
         }
 
         // Get first module entry
-        if (!Module32First(m_Snap, &m_ModuleEntry))
+        MODULEENTRY32 MyModuleEntry = { sizeof(MyModuleEntry) };
+        if (!Module32First(m_Snap, &MyModuleEntry))
         {
           DWORD const LastError = GetLastError();
           BOOST_THROW_EXCEPTION(Module::Error() << 
@@ -126,65 +122,51 @@ namespace Hades
             ErrorCodeWin(LastError));
         }
 
-        return std::unique_ptr<Module>(new Module(m_Memory, m_ModuleEntry));
+        m_Current = Module(m_Memory, MyModuleEntry);
       }
-
-      // Get next module
-      std::unique_ptr<Module> Next()
-      {
-        // Fixme: Check GetLastError to ensure EOL and throw an exception 
-        // on an actual error.
-        return Module32Next(m_Snap, &m_ModuleEntry) ? std::unique_ptr<Module>(
-          new Module(m_Memory, m_ModuleEntry)) : std::unique_ptr<Module>(
-          nullptr);
-      }
-
-      // Module iterator
-      class ModuleListIter : public boost::iterator_facade<ModuleListIter, 
-        std::unique_ptr<Module>, boost::incrementable_traversal_tag>, 
-        private boost::noncopyable
-      {
-      public:
-        // Constructor
-        ModuleListIter(ModuleEnum& MyModuleList) 
-          : m_ModuleEnum(MyModuleList)
-        {
-          m_Current = m_ModuleEnum.First();
-        }
-
-      private:
-        // Allow Boost.Iterator access to internals
-        friend class boost::iterator_core_access;
-        
-        // For Boost.Iterator
-        void increment() 
-        {
-          m_Current = m_ModuleEnum.Next();
-        }
-
-        // For Boost.Iterator
-        std::unique_ptr<Module>& dereference() const
-        {
-          return m_Current;
-        }
-
-        // Parent
-        ModuleEnum& m_ModuleEnum;
-
-        // Current module
-        // Mutable due to 'dereference' being marked as 'const'
-        mutable std::unique_ptr<Module> m_Current;
-      };
 
     private:
+      // Allow Boost.Iterator access to internals
+      friend class boost::iterator_core_access;
+
+      // For Boost.Iterator
+      void increment() 
+      {
+
+        MODULEENTRY32 MyModuleEntry = { sizeof(MyModuleEntry) };
+        if (!Module32Next(m_Snap, &MyModuleEntry))
+        {
+          if (GetLastError() != ERROR_NO_MORE_FILES)
+          {
+            DWORD const LastError = GetLastError();
+            BOOST_THROW_EXCEPTION(Module::Error() << 
+              ErrorFunction("ModuleEnum::Next") << 
+              ErrorString("Error enumerating module list.") << 
+              ErrorCodeWin(LastError));
+          }
+
+          m_Current = boost::optional<Module>();
+        }
+        else
+        {
+          m_Current = Module(m_Memory, MyModuleEntry);
+        }
+      }
+
+      // For Boost.Iterator
+      boost::optional<Module>& dereference() const
+      {
+        return m_Current;
+      }
+
       // Memory instance
       MemoryMgr m_Memory;
 
       // Toolhelp32 snapshot handle
       Windows::EnsureCloseSnap m_Snap;
-      
-      // Current module entry
-      MODULEENTRY32 m_ModuleEntry;
+
+      // Current module
+      mutable boost::optional<Module> m_Current;
     };
   }
 }

@@ -332,16 +332,14 @@ namespace Hades
       std::cout << "Fixing imports." << std::endl;
 
       // Loop through all the required modules
-      ImportDirEnum MyImportDirEnum(MyPeFile);
-      for (ImportDirEnum::ImportDirIter i(MyImportDirEnum); *i; ++i)
+      for (ImportDirIter i(MyPeFile); *i; ++i)
       {
         // Get import dir
         ImportDir& MyImportDir = **i;
 
         // Check for forwarded imports
         // Fixme: Handle forwarded imports
-        if (MyImportDir.GetForwarderChain() != static_cast<DWORD>(-1) && 
-          MyImportDir.GetForwarderChain() != 0)
+        if (MyImportDir.GetTimeDateStamp())
         {
           BOOST_THROW_EXCEPTION(Error() << 
             ErrorFunction("ManualMap::FixImports") << 
@@ -357,15 +355,14 @@ namespace Hades
         std::cout << "Module Name: " << ModuleName << "." << std::endl;
 
         // Check whether dependent module is already loaded
-        ModuleEnum MyModuleList(m_Memory);
-        std::unique_ptr<Module> MyModule;
-        for (ModuleEnum::ModuleListIter j(MyModuleList); *j; ++j)
+        boost::optional<Module> MyModule;
+        for (ModuleListIter j(m_Memory); *j; ++j)
         {
           Module& Current = **j;
           if (boost::to_lower_copy(Current.GetName()) == ModuleNameLowerT || 
             boost::to_lower_copy(Current.GetPath()) == ModuleNameLowerT)
           {
-            MyModule = std::move(*j);
+            MyModule = *j;
           }
         }
 
@@ -389,9 +386,7 @@ namespace Hades
         }
 
         // Loop over import thunks for current module
-        ImportThunkEnum MyImportThunkEnum(MyPeFile, MyImportDir.
-          GetFirstThunk());
-        for (ImportThunkEnum::ImportThunkIter j(MyImportThunkEnum); *j; ++j)
+        for (ImportThunkIter j(MyPeFile, MyImportDir.GetFirstThunk()); *j; ++j)
         {
           // Get import thunk
           ImportThunk& ImpThunk = **j;

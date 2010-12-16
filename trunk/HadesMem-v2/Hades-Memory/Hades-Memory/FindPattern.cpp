@@ -54,9 +54,8 @@ namespace Hades
       m_Addresses()
     {
       // Get pointer to image headers
-      ModuleEnum MyModuleEnum(m_Memory);
-      PBYTE const pBase = reinterpret_cast<PBYTE>(MyModuleEnum.First()->
-        GetBase());
+      ModuleListIter ModIter(m_Memory);
+      PBYTE const pBase = reinterpret_cast<PBYTE>((*ModIter)->GetBase());
       PeFile MyPeFile(m_Memory, pBase);
       DosHeader const MyDosHeader(MyPeFile);
       NtHeaders const MyNtHeaders(MyPeFile);

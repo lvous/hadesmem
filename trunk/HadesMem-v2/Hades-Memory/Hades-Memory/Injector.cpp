@@ -215,15 +215,14 @@ namespace Hades
         boost::lexical_cast<std::basic_string<TCHAR>>(PathString)));
 
       // Look for target module
-      ModuleEnum MyModuleList(m_Memory);
-      std::unique_ptr<Module> MyModule;
-      for (ModuleEnum::ModuleListIter MyIter(MyModuleList); *MyIter; ++MyIter)
+      boost::optional<Module> MyModule;
+      for (ModuleListIter MyIter(m_Memory); *MyIter; ++MyIter)
       {
         if (PathResolution)
         {
           if (boost::filesystem::equivalent((*MyIter)->GetPath(), PathReal))
           {
-            MyModule = std::move(*MyIter);
+            MyModule = *MyIter;
           }
         }
         else
@@ -231,7 +230,7 @@ namespace Hades
           if (boost::to_lower_copy((*MyIter)->GetName()) == PathRealLower || 
             boost::to_lower_copy((*MyIter)->GetPath()) == PathRealLower)
           {
-            MyModule = std::move(*MyIter);
+            MyModule = *MyIter;
           }
         }
       }

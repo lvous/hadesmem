@@ -28,7 +28,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Boost
 #pragma warning(push, 1)
 #pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
-#include <boost/noncopyable.hpp>
+#include <boost/optional.hpp>
 #include <boost/iterator/iterator_facade.hpp>
 #pragma warning(pop)
 
@@ -84,27 +84,21 @@ namespace Hades
       MEMORY_BASIC_INFORMATION m_RegionInfo;
     };
 
-    // Region enumerator
-    class RegionEnum : private boost::noncopyable
+    // Region iterator
+    class RegionListIter : public boost::iterator_facade<RegionListIter, 
+      boost::optional<Region>, boost::incrementable_traversal_tag>
     {
     public:
       // Constructor
-      RegionEnum(MemoryMgr const& MyMemory) 
+      RegionListIter(MemoryMgr const& MyMemory) 
         : m_Memory(MyMemory), 
-        m_Address(nullptr), 
+        m_BaseAddress(nullptr), 
+        m_RegionSize(0), 
         m_Current()
       {
-        ZeroMemory(&m_Current, sizeof(m_Current));
-      }
-
-      // Get first region
-      std::unique_ptr<Region> First() 
-      {
-        m_Address = nullptr;
-        ZeroMemory(&m_Current, sizeof(m_Current));
-
-        if (!VirtualQueryEx(m_Memory.GetProcessHandle(), m_Address, 
-          &m_Current, sizeof(m_Current)))
+        MEMORY_BASIC_INFORMATION MyMbi = { 0 };
+        if (!VirtualQueryEx(m_Memory.GetProcessHandle(), m_BaseAddress, &MyMbi, 
+          sizeof(MyMbi)))
         {
           DWORD const LastError = GetLastError();
           BOOST_THROW_EXCEPTION(Region::Error() << 
@@ -113,70 +107,58 @@ namespace Hades
             ErrorCodeWin(LastError));
         }
 
-        return std::unique_ptr<Region>(new Region(m_Memory, m_Current));
+        m_BaseAddress = MyMbi.BaseAddress;
+        m_RegionSize = MyMbi.RegionSize;
+
+        m_Current = Region(m_Memory, MyMbi);
       }
 
-      // Get next region
-      std::unique_ptr<Region> Next()
+    private:
+      // Allow Boost.Iterator access to internals
+      friend class boost::iterator_core_access;
+
+      // For Boost.Iterator
+      void increment() 
       {
         // Advance to next region
-        m_Address = reinterpret_cast<PBYTE>(m_Current.BaseAddress) + 
-          m_Current.RegionSize;
+        m_BaseAddress = static_cast<PBYTE>(m_BaseAddress) + m_RegionSize;
 
         // Get region info
         // Fixme: Check GetLastError to ensure EOL and throw an exception 
         // on an actual error.
-        return VirtualQueryEx(m_Memory.GetProcessHandle(), m_Address, 
-          &m_Current, sizeof(m_Current)) ? std::unique_ptr<Region>(new Region(
-          m_Memory, m_Current)) : std::unique_ptr<Region>(nullptr);
+        MEMORY_BASIC_INFORMATION MyMbi = { 0 };
+        if (VirtualQueryEx(m_Memory.GetProcessHandle(), m_BaseAddress, &MyMbi, 
+          sizeof(MyMbi)))
+        {
+          m_BaseAddress = MyMbi.BaseAddress;
+          m_RegionSize = MyMbi.RegionSize;
+
+          m_Current = Region(m_Memory, MyMbi);
+        }
+        else
+        {
+          m_Current = boost::optional<Region>();
+        }
       }
 
-      // Region iterator
-      class RegionListIter : public boost::iterator_facade<RegionListIter, 
-        std::unique_ptr<Region>, boost::incrementable_traversal_tag>, 
-        private boost::noncopyable
+      // For Boost.Iterator
+      boost::optional<Region>& dereference() const
       {
-      public:
-        // Constructor
-        RegionListIter(RegionEnum& MyRegionEnum) 
-          : m_RegionEnum(MyRegionEnum)
-        {
-          m_Current = m_RegionEnum.First();
-        }
+        return m_Current;
+      }
 
-      private:
-        // Allow Boost.Iterator access to internals
-        friend class boost::iterator_core_access;
-
-        // For Boost.Iterator
-        void increment() 
-        {
-          m_Current = m_RegionEnum.Next();
-        }
-
-        // For Boost.Iterator
-        std::unique_ptr<Region>& dereference() const
-        {
-          return m_Current;
-        }
-
-        // Parent
-        RegionEnum& m_RegionEnum;
-
-        // Current region
-        // Mutable due to 'dereference' being marked as 'const'
-        mutable std::unique_ptr<Region> m_Current;
-      };
-
-    private:
       // Memory instance
       MemoryMgr m_Memory;
 
       // Current address
-      PVOID m_Address;
+      PVOID m_BaseAddress;
 
-      // Current region info
-      MEMORY_BASIC_INFORMATION m_Current;
+      // Current region size
+      SIZE_T m_RegionSize;
+
+      // Current region
+      mutable boost::optional<Region> m_Current;
     };
+
   }
 }

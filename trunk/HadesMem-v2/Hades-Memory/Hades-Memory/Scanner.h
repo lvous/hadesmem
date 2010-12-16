@@ -138,8 +138,7 @@ namespace Hades
 
       std::vector<BYTE> DataRaw(pDataRaw, pDataRaw + DataRawSize);
 
-      RegionEnum MyRegionEnum(m_Memory);
-      for (RegionEnum::RegionListIter i(MyRegionEnum); *i; ++i)
+      for (RegionListIter i(m_Memory); *i; ++i)
       {
         Hades::Memory::Region const& MyRegion = **i;
 
@@ -231,8 +230,7 @@ namespace Hades
 
       std::vector<PVOID> Matches;
 
-      RegionEnum MyRegionEnum(m_Memory);
-      for (RegionEnum::RegionListIter i(MyRegionEnum); *i; ++i)
+      for (RegionListIter i(m_Memory); *i; ++i)
       {
         Hades::Memory::Region const& MyRegion = **i;
 

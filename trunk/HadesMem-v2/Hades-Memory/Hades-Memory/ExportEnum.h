@@ -39,92 +39,55 @@ namespace Hades
 {
   namespace Memory
   {
-    // Export enumerator
-    class ExportEnum : private boost::noncopyable
+    // Section iterator
+    class ExportIter : public boost::iterator_facade<ExportIter, 
+      boost::optional<Export>, boost::incrementable_traversal_tag>
     {
     public:
       // Constructor
-      explicit ExportEnum(PeFile const& MyPeFile) 
+      explicit ExportIter(PeFile const& MyPeFile)
         : m_PeFile(MyPeFile), 
         m_Current()
-      { }
-
-      // Get first section
-      std::unique_ptr<Export> First() 
       {
         ExportDir const MyExportDir(m_PeFile);
         DWORD NumberOfFunctions = MyExportDir.GetNumberOfFunctions();
         if (NumberOfFunctions)
         {
-          m_Current.reset(Export(m_PeFile, MyExportDir.GetOrdinalBase()));
-          return std::unique_ptr<Export>(new Export(m_Current.get()));
-        }
-        else
-        {
-          return std::unique_ptr<Export>(nullptr);
+          m_Current = Export(m_PeFile, MyExportDir.GetOrdinalBase());
         }
       }
 
-      // Get next section
-      std::unique_ptr<Export> Next()
+    private:
+      // Allow Boost.Iterator access to internals
+      friend class boost::iterator_core_access;
+
+      // For Boost.Iterator
+      void increment() 
       {
         ExportDir const MyExportDir(m_PeFile);
         DWORD NumberOfFunctions = MyExportDir.GetNumberOfFunctions();
         DWORD NextOrdinal = m_Current->GetOrdinal() + 1;
         if (NextOrdinal - MyExportDir.GetOrdinalBase() < NumberOfFunctions)
         {
-          m_Current.reset(Export(m_PeFile, NextOrdinal));
-          return std::unique_ptr<Export>(new Export(m_Current.get()));
+          m_Current = Export(m_PeFile, NextOrdinal);
         }
         else
         {
-          return std::unique_ptr<Export>(nullptr);
+          m_Current = boost::optional<Export>();
         }
       }
 
-      // Section iterator
-      class ExportIter : public boost::iterator_facade<ExportIter, 
-        std::unique_ptr<Export>, boost::incrementable_traversal_tag>, 
-        private boost::noncopyable
+      // For Boost.Iterator
+      boost::optional<Export>& dereference() const
       {
-      public:
-        // Constructor
-        explicit ExportIter(ExportEnum& MyExportEnum) 
-          : m_ExportEnum(MyExportEnum)
-        {
-          m_Current = m_ExportEnum.First();
-        }
+        return m_Current;
+      }
 
-      private:
-        // Allow Boost.Iterator access to internals
-        friend class boost::iterator_core_access;
-
-        // For Boost.Iterator
-        void increment() 
-        {
-          m_Current = m_ExportEnum.Next();
-        }
-
-        // For Boost.Iterator
-        std::unique_ptr<Export>& dereference() const
-        {
-          return m_Current;
-        }
-
-        // Parent
-        ExportEnum& m_ExportEnum;
-
-        // Current section
-        // Mutable due to 'dereference' being marked as 'const'
-        mutable std::unique_ptr<Export> m_Current;
-      };
-
-    private:
       // Memory instance
       PeFile m_PeFile;
 
-      // Current export
-      boost::optional<Export> m_Current;
+      // Current section
+      mutable boost::optional<Export> m_Current;
     };
   }
 }
