@@ -46,7 +46,7 @@ public:
 
 struct ModuleIterWrap
 {
-  static ModuleWrap next(Hades::Memory::ModuleEnum::ModuleListIter& o)
+  static ModuleWrap next(Hades::Memory::ModuleListIter& o)
   {
     if (!*o)
     {
@@ -68,9 +68,8 @@ struct ModuleIterWrap
 
   static void wrap(const char* python_name)
   {
-    boost::python::class_<Hades::Memory::ModuleEnum::ModuleListIter, 
-      boost::noncopyable>(python_name, 
-      boost::python::init<Hades::Memory::ModuleEnum&>())
+    boost::python::class_<Hades::Memory::ModuleListIter, boost::noncopyable>(
+      python_name, boost::python::init<Hades::Memory::MemoryMgr const&>())
       .def("next", next)
       .def("__iter__", pass_through)
       ;
@@ -93,10 +92,6 @@ void ExportModule()
     .def("GetSize", &ModuleWrap::GetSize)
     .def("GetName", &ModuleWrap::GetName)
     .def("GetPath", &ModuleWrap::GetPath)
-    ;
-
-  boost::python::class_<Hades::Memory::ModuleEnum, boost::noncopyable>(
-    "ModuleEnum", boost::python::init<Hades::Memory::MemoryMgr const&>())
     ;
 
   ModuleIterWrap::wrap("ModuleIter"); 

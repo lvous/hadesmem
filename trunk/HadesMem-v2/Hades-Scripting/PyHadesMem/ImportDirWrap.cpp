@@ -46,7 +46,7 @@ public:
 
 struct ImportDirIterWrap
 {
-  static ImportDirWrap next(Hades::Memory::ImportDirEnum::ImportDirIter& o)
+  static ImportDirWrap next(Hades::Memory::ImportDirIter& o)
   {
     if (!*o)
     {
@@ -68,9 +68,8 @@ struct ImportDirIterWrap
 
   static void wrap(const char* python_name)
   {
-    boost::python::class_<Hades::Memory::ImportDirEnum::ImportDirIter, 
-      boost::noncopyable>(python_name, 
-      boost::python::init<Hades::Memory::ImportDirEnum&>())
+    boost::python::class_<Hades::Memory::ImportDirIter>(python_name, 
+      boost::python::init<Hades::Memory::PeFile const&>())
       .def("next", next)
       .def("__iter__", pass_through)
       ;
@@ -87,8 +86,7 @@ public:
 
 struct ImportThunkIterWrap
 {
-  static ImportThunkWrap next(
-    Hades::Memory::ImportThunkEnum::ImportThunkIter& o)
+  static ImportThunkWrap next(Hades::Memory::ImportThunkIter& o)
   {
     if (!*o)
     {
@@ -110,9 +108,8 @@ struct ImportThunkIterWrap
 
   static void wrap(const char* python_name)
   {
-    boost::python::class_<Hades::Memory::ImportThunkEnum::ImportThunkIter, 
-      boost::noncopyable>(python_name, 
-      boost::python::init<Hades::Memory::ImportThunkEnum&>())
+    boost::python::class_<Hades::Memory::ImportThunkIter>(python_name, 
+      boost::python::init<Hades::Memory::PeFile const&, DWORD>())
       .def("next", next)
       .def("__iter__", pass_through)
       ;
@@ -141,10 +138,6 @@ void ExportImportDir()
     .def("GetFirstThunk", &ImportDirWrap::GetFirstThunk)
     ;
 
-  boost::python::class_<Hades::Memory::ImportDirEnum, boost::noncopyable>(
-    "ImportDirEnum", boost::python::init<Hades::Memory::PeFile const&>())
-    ;
-
   ImportDirIterWrap::wrap("ImportDirIter"); 
 
   boost::python::class_<Hades::Memory::ImportThunk>("ImportBase", 
@@ -164,10 +157,6 @@ void ExportImportDir()
     .def("GetHint", &ImportThunkWrap::GetHint)
     .def("GetName", &ImportThunkWrap::GetName)
     .def("SetFunction", &ImportThunkWrap::SetFunction)
-    ;
-
-  boost::python::class_<Hades::Memory::ImportThunkEnum, boost::noncopyable>(
-    "ImportEnum", boost::python::init<Hades::Memory::PeFile const&, DWORD>())
     ;
 
   ImportThunkIterWrap::wrap("ImportIter"); 

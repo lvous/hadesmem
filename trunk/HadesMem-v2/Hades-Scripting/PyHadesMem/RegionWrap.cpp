@@ -46,7 +46,7 @@ public:
 
 struct RegionIterWrap
 {
-  static RegionWrap next(Hades::Memory::RegionEnum::RegionListIter& o)
+  static RegionWrap next(Hades::Memory::RegionListIter& o)
   {
     if (!*o)
     {
@@ -68,9 +68,8 @@ struct RegionIterWrap
 
   static void wrap(const char* python_name)
   {
-    boost::python::class_<Hades::Memory::RegionEnum::RegionListIter, 
-      boost::noncopyable>(python_name, 
-      boost::python::init<Hades::Memory::RegionEnum&>())
+    boost::python::class_<Hades::Memory::RegionListIter>(python_name, 
+      boost::python::init<Hades::Memory::MemoryMgr const&>())
       .def("next", next)
       .def("__iter__", pass_through)
       ;
@@ -82,10 +81,6 @@ void ExportRegion()
 {
   boost::python::class_<Hades::Memory::Region>("RegionBase", 
     boost::python::no_init)
-    ;
-
-  boost::python::class_<Hades::Memory::RegionEnum, boost::noncopyable>(
-    "RegionEnum", boost::python::init<Hades::Memory::MemoryMgr const&>())
     ;
 
   boost::python::class_<RegionWrap, boost::python::bases<Hades::Memory::

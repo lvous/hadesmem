@@ -57,7 +57,7 @@ public:
 
 struct ExportDirIterWrap
 {
-  static ExportWrap next(Hades::Memory::ExportEnum::ExportIter& o)
+  static ExportWrap next(Hades::Memory::ExportIter& o)
   {
     if (!*o)
     {
@@ -79,9 +79,8 @@ struct ExportDirIterWrap
 
   static void wrap(const char* python_name)
   {
-    boost::python::class_<Hades::Memory::ExportEnum::ExportIter, 
-      boost::noncopyable>(python_name, 
-      boost::python::init<Hades::Memory::ExportEnum&>())
+    boost::python::class_<Hades::Memory::ExportIter>(python_name, 
+      boost::python::init<Hades::Memory::PeFile const&>())
       .def("next", next)
       .def("__iter__", pass_through)
       ;
@@ -129,10 +128,6 @@ void ExportExportDir()
     .def("GetOrdinal", &ExportWrap::GetOrdinal)
     .def("ByName", &ExportWrap::ByName)
     .def("Forwarded", &ExportWrap::Forwarded)
-    ;
-
-  boost::python::class_<Hades::Memory::ExportEnum, boost::noncopyable>(
-    "ExportEnum", boost::python::init<Hades::Memory::PeFile const&>())
     ;
 
   ExportDirIterWrap::wrap("ExportIter"); 
