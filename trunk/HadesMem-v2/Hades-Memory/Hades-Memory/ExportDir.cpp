@@ -271,18 +271,20 @@ namespace Hades
       // Set ordinal
       m_Ordinal = static_cast<WORD>(Ordinal);
 
-      // Find ordinal name (and set if applicable)
-      DWORD const NumberOfNames = MyExportDir.GetNumberOfNames();
-      std::vector<WORD> NameOrdinals(m_Memory.Read<std::vector<WORD>>(
-        pOrdinals, NumberOfNames));
-      auto NameOrdIter = std::find(NameOrdinals.begin(), NameOrdinals.end(), 
-        Offset);
-      if (NameOrdIter != NameOrdinals.end())
+      // Find ordinal name and set (if applicable)
+      if (DWORD const NumberOfNames = MyExportDir.GetNumberOfNames())
       {
-        m_ByName = true;
-        DWORD const NameRva = m_Memory.Read<DWORD>(pNames + std::distance(
-          NameOrdinals.begin(), NameOrdIter));
-        m_Name = m_Memory.Read<std::string>(m_PeFile.RvaToVa(NameRva));
+        std::vector<WORD> NameOrdinals(m_Memory.Read<std::vector<WORD>>(
+          pOrdinals, NumberOfNames));
+        auto NameOrdIter = std::find(NameOrdinals.begin(), NameOrdinals.end(), 
+          Offset);
+        if (NameOrdIter != NameOrdinals.end())
+        {
+          m_ByName = true;
+          DWORD const NameRva = m_Memory.Read<DWORD>(pNames + std::distance(
+            NameOrdinals.begin(), NameOrdIter));
+          m_Name = m_Memory.Read<std::string>(m_PeFile.RvaToVa(NameRva));
+        }
       }
 
       // Get function RVA (unchecked)
