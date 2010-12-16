@@ -47,7 +47,7 @@ namespace Hades
     class FilesystemError : public virtual HadesError 
     { };
 
-    // Load a file into a buffer
+    // Load a buffer into a file
     inline void BufferToFile(std::vector<BYTE> const& Buffer, 
       boost::filesystem::path const& Path)
     {
