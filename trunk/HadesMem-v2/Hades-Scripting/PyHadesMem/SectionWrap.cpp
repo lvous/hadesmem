@@ -42,7 +42,7 @@ public:
 
 struct SectionIterWrap
 {
-  static SectionWrap next(Hades::Memory::SectionEnum::SectionIter& o)
+  static SectionWrap next(Hades::Memory::SectionIter& o)
   {
     if (!*o)
     {
@@ -64,9 +64,8 @@ struct SectionIterWrap
 
   static void wrap(const char* python_name)
   {
-    boost::python::class_<Hades::Memory::SectionEnum::SectionIter, 
-      boost::noncopyable>(python_name, 
-      boost::python::init<Hades::Memory::SectionEnum&>())
+    boost::python::class_<Hades::Memory::SectionIter>(python_name, 
+      boost::python::init<Hades::Memory::PeFile const&>())
       .def("next", next)
       .def("__iter__", pass_through)
       ;
@@ -95,10 +94,6 @@ void ExportSection()
     .def("GetCharacteristics", &SectionWrap::GetCharacteristics)
     .def("GetBase", &SectionWrap::GetBase)
     .def("GetSectionHeaderRaw", &SectionWrap::GetSectionHeaderRaw)
-    ;
-
-  boost::python::class_<Hades::Memory::SectionEnum, boost::noncopyable>(
-    "SectionEnum", boost::python::init<Hades::Memory::PeFile const&>())
     ;
 
   SectionIterWrap::wrap("SectionIter"); 
