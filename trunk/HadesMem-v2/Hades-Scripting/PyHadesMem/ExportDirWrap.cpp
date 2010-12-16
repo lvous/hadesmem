@@ -27,8 +27,6 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include "Hades-Memory/ExportDir.h"
 #include "Hades-Memory/ExportEnum.h"
 
-// Todo: Investigate buggy export dumping
-
 class ExportDirWrap : public Hades::Memory::ExportDir
 {
 public:

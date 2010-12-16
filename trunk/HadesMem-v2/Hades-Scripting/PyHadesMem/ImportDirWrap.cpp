@@ -27,9 +27,6 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include "Hades-Memory/ImportDir.h"
 #include "Hades-Memory/ImportEnum.h"
 
-// Todo: Fix ImportEnum constructor params
-// Todo: More sanity checking
-
 class ImportDirWrap : public Hades::Memory::ImportDir
 {
 public:
