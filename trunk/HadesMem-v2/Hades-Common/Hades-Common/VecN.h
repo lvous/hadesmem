@@ -35,12 +35,12 @@ namespace Hades
   namespace Math
   {
     // N-Dimensional Vector
-    template <class ElemT, unsigned int Num>
+    template <class ElemT, std::size_t Num>
     class VecN
     {
     public:
       // ElemT used to store elements
-      typedef std::tr1::array<ElemT, Num> DataT;    
+      typedef std::array<ElemT, Num> DataT;    
 
       // Element placeholders. For convenience only.
       enum Elems
@@ -179,7 +179,7 @@ namespace Hades
       VecN<ElemT, Num> operator*= (ElemT Rhs) 
       {
         std::transform(m_Data.begin(), m_Data.end(), m_Data.begin(), 
-          std::bind(std::multiplies<ElemT>(), _1, Rhs));
+          std::bind(std::multiplies<ElemT>(), std::placeholders::_1, Rhs));
         return *this;
       }
 
@@ -258,8 +258,8 @@ namespace Hades
         ElemT Len = Length(v);
         if (Len != static_cast<ElemT>(0))
         {
-          std::transform(v.m_Data.begin(), v.m_Data.end(), v.m_Data.begin(), 
-            std::bind(std::divides<ElemT>(), _1, Len));
+          std::transform(v.m_Data.cbegin(), v.m_Data.end(), v.m_Data.begin(), 
+            std::bind(std::divides<ElemT>(), std::placeholders::_1, Len));
         }
         return Len;
       }
