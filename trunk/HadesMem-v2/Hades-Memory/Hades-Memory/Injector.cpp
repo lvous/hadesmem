@@ -101,7 +101,7 @@ namespace Hades
         }
 
         // Return data to caller
-        return std::tie(MyMemory, ModBase, ExportRet);
+        return std::make_tuple(MyMemory, ModBase, ExportRet);
       }
       // Catch exceptions
       catch (std::exception const& /*e*/)
