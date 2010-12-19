@@ -58,6 +58,8 @@ namespace Hades
         Other.m_String = 0;
 
         this->m_Buffer = std::move(Other.m_Buffer);
+
+        return *this;
       }
 
       // Destructor
