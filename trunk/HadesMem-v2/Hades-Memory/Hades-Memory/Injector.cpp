@@ -42,7 +42,8 @@ namespace Hades
   namespace Memory
   {
     // Create process (as suspended) and inject DLL
-    CreateAndInjectData CreateAndInject(boost::filesystem::path const& Path, 
+    std::tuple<MemoryMgr, HMODULE, DWORD_PTR> CreateAndInject(
+      boost::filesystem::path const& Path, 
       std::basic_string<TCHAR> const& Args, 
       std::basic_string<TCHAR> const& Module, 
       std::string const& Export)
@@ -77,11 +78,10 @@ namespace Hades
       try
       {
         // Memory manager instance
-        std::unique_ptr<MemoryMgr> MyMemory(new MemoryMgr(ProcInfo.
-          dwProcessId));
+        MemoryMgr MyMemory(ProcInfo.dwProcessId);
 
         // Create DLL injector
-        Hades::Memory::Injector const MyInjector(*MyMemory);
+        Hades::Memory::Injector const MyInjector(MyMemory);
 
         // Inject DLL
         HMODULE const ModBase = MyInjector.InjectDll(Module);
@@ -101,11 +101,7 @@ namespace Hades
         }
 
         // Return data to caller
-        CreateAndInjectData MyData;
-        MyData.pMemory = std::move(MyMemory);
-        MyData.ModuleBase = ModBase;
-        MyData.ExportRet = ExportRet;
-        return MyData;
+        return std::tie(MyMemory, ModBase, ExportRet);
       }
       // Catch exceptions
       catch (std::exception const& /*e*/)

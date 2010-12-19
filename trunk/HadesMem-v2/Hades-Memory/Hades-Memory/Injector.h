@@ -23,7 +23,7 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include <Windows.h>
 
 // C++ Standard Library
-#include <memory>
+#include <tuple>
 #include <string>
 #include <utility>
 
@@ -71,43 +71,9 @@ namespace Hades
       MemoryMgr m_Memory;
     };
     
-    // Data returned by CreateAndInject API
-    struct CreateAndInjectData : private boost::noncopyable
-    {
-      CreateAndInjectData() 
-        : pMemory(), 
-        ModuleBase(nullptr), 
-        ExportRet(0)
-      { }
-
-      CreateAndInjectData(CreateAndInjectData&& Other)
-        : pMemory(), 
-        ModuleBase(nullptr), 
-        ExportRet(0)
-      {
-        *this = std::move(Other);
-      }
-
-      CreateAndInjectData& operator=(CreateAndInjectData&& Other)
-      {
-        this->pMemory = std::move(Other.pMemory);
-
-        this->ModuleBase = Other.ModuleBase;
-        Other.ModuleBase = nullptr;
-
-        this->ExportRet = Other.ExportRet;
-        Other.ExportRet = 0;
-
-        return *this;
-      }
-
-      std::unique_ptr<MemoryMgr> pMemory;
-      HMODULE ModuleBase;
-      DWORD_PTR ExportRet;
-    };
-
     // Create process (as suspended) and inject DLL
-    CreateAndInjectData CreateAndInject(boost::filesystem::path const& Path, 
+    std::tuple<MemoryMgr, HMODULE, DWORD_PTR> CreateAndInject(
+      boost::filesystem::path const& Path, 
       std::basic_string<TCHAR> const& Args, 
       std::basic_string<TCHAR> const& Module, 
       std::string const& Export);
