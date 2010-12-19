@@ -26,6 +26,35 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 // Hades
 #include "Hades-Memory/Injector.h"
 
+template <class T1, class T2, class T3>
+boost::python::tuple tuple_to_python(std::tuple<T1, T2, T3> const& x)
+{
+  return boost::python::make_tuple(std::get<0>(x), std::get<1>(x), 
+    std::get<2>(x));
+}
+
+template <class T>
+struct tupleconverter
+{
+  static PyObject* convert(T const& x)
+  {
+    return boost::python::incref(tuple_to_python(x).ptr());
+  }
+};
+
+std::tuple<Hades::Memory::MemoryMgr, DWORD_PTR, DWORD_PTR> CreateAndInject(
+  std::basic_string<TCHAR> const& Path, 
+  std::basic_string<TCHAR> const& Args, 
+  std::basic_string<TCHAR> const& Module, 
+  std::string const& Export)
+{
+  auto InjectData(Hades::Memory::CreateAndInject(Path, Args, Module, Export));
+  Hades::Memory::MemoryMgr MyMemory(std::get<0>(InjectData));
+  DWORD_PTR ModuleBase = reinterpret_cast<DWORD_PTR>(std::get<1>(InjectData));
+  DWORD_PTR ExportRet = std::get<2>(InjectData);
+  return std::make_tuple(MyMemory, ModuleBase, ExportRet);
+}
+
 class InjectorWrap : public Hades::Memory::Injector
 {
 public:
@@ -61,4 +90,10 @@ void ExportInjector()
     .def("InjectDll", &InjectorWrap::InjectDll)
     .def("CallExport", &InjectorWrap::CallExport)
     ;
+
+  boost::python::def("CreateAndInject", &CreateAndInject);
+
+  boost::python::to_python_converter<std::tuple<Hades::Memory::MemoryMgr, 
+    DWORD_PTR, DWORD_PTR>, tupleconverter<std::tuple<Hades::Memory::MemoryMgr, 
+    DWORD_PTR, DWORD_PTR>>>();
 }
