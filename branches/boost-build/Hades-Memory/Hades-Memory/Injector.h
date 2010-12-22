@@ -70,6 +70,7 @@ namespace Hades
     // Create process (as suspended) and inject DLL
     std::tuple<MemoryMgr, HMODULE, DWORD_PTR> CreateAndInject(
       boost::filesystem::path const& Path, 
+      boost::filesystem::path const& WorkDir, 
       std::basic_string<TCHAR> const& Args, 
       std::basic_string<TCHAR> const& Module, 
       std::string const& Export);

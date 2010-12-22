@@ -43,6 +43,7 @@ namespace Hades
     // Create process (as suspended) and inject DLL
     std::tuple<MemoryMgr, HMODULE, DWORD_PTR> CreateAndInject(
       boost::filesystem::path const& Path, 
+      boost::filesystem::path const& WorkDir, 
       std::basic_string<TCHAR> const& Args, 
       std::basic_string<TCHAR> const& Module, 
       std::string const& Export)
@@ -57,11 +58,28 @@ namespace Hades
       // Copy command line to buffer
       std::vector<TCHAR> ProcArgs(CommandLine.cbegin(), CommandLine.cend());
       ProcArgs.push_back(L'\0');
+      
+      // Set working directory
+      boost::filesystem::path WorkDirReal;
+			if (!WorkDir.empty())
+			{
+				WorkDirReal = WorkDir;
+			}
+			else if (Path.has_parent_path())
+			{
+				WorkDirReal = Path.parent_path();
+			}
+			else
+			{
+				WorkDirReal = _T("./");
+			}
+
 
       // Attempt process creation
       if (!CreateProcess(Path.string<std::basic_string<TCHAR>>().c_str(), 
-        &ProcArgs[0], NULL, NULL, FALSE, CREATE_SUSPENDED, NULL, NULL, 
-        &StartInfo, &ProcInfo))
+        &ProcArgs[0], NULL, NULL, FALSE, CREATE_SUSPENDED, NULL, 
+        WorkDirReal.string<std::basic_string<TCHAR>>().c_str(), &StartInfo, 
+        &ProcInfo))
       {
         DWORD const LastError = GetLastError();
         BOOST_THROW_EXCEPTION(Injector::Error() << 
