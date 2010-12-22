@@ -1,1 +1,1 @@
-bjam --toolset=msvc address-model=32 debug
+bjam --toolset=msvc -j 4 address-model=32 debug

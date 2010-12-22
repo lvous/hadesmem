@@ -1,1 +1,1 @@
-bjam --toolset=msvc address-model=64 release
+bjam --toolset=msvc -j 4 address-model=64 release
