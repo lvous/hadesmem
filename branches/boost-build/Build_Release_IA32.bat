@@ -1,1 +1,1 @@
-bjam --toolset=msvc -j 4 address-model=32 release
+bjam --toolset=msvc -j 4 address-model=32 release > Build_Release_IA32.txt
