@@ -58,13 +58,7 @@ void HadesErrorTranslator(std::exception const& e)
     c_str());
 }
 
-#if defined(_M_AMD64) 
-BOOST_PYTHON_MODULE(PyHadesMem_AMD64)
-#elif defined(_M_IX86) 
-BOOST_PYTHON_MODULE(PyHadesMem_IA32)
-#else 
-#error "Unsupported architecture."
-#endif
+BOOST_PYTHON_MODULE(PyHadesMem)
 {
   boost::python::register_exception_translator<std::exception>(
     &HadesErrorTranslator);
