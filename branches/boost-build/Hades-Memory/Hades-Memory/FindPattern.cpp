@@ -155,7 +155,7 @@ namespace Hades
         Data.end(), 
         [&] (BYTE HCur, std::pair<BYTE, bool> NCur)
       {
-        return (NCur.second) || (HCur == NCur.first);
+        return (!NCur.second) || (HCur == NCur.first);
       });
 
       // Return address if found or null if not found
