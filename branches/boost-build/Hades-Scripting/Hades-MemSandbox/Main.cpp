@@ -174,19 +174,10 @@ int _tmain(int argc, TCHAR* argv[])
     // Retrieve the main module's namespace
     boost::python::object PythonGlobal(PythonMain.attr("__dict__"));
 
-    // PyHadesMem import statment
-#if defined(_M_X64)
-    std::string const PyHadesMemImp("import PyHadesMem_AMD64 as PyHadesMem");
-#elif defined(_M_IX86)
-    std::string const PyHadesMemImp("import PyHadesMem_IA32 as PyHadesMem");
-#else
-#error Unsupported platform!
-#endif
-
     try
     {
       // Import PyHadesMem
-      boost::python::exec(PyHadesMemImp.c_str(), PythonGlobal, PythonGlobal);
+      boost::python::exec("import PyHadesMem", PythonGlobal, PythonGlobal);
     }
     catch (...)
     {

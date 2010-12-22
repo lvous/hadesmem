@@ -1,11 +1,11 @@
 # Hades-Common/Jamfile.v2
 
-project 
-  : requirements <link>static
+project
+  : requirements <library>/boost//date_time/<link>static 
   ;
-  
+
 alias Hades-Common 
-  : /boost//date_time 
+  : /boost//date_time/<link>static 
   : 
   : 
   : <include>"."

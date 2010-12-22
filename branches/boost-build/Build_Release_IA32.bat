@@ -1,0 +1,1 @@
+bjam --toolset=msvc address-model=32 release

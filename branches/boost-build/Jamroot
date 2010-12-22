@@ -33,7 +33,46 @@ build-project Hades-Memory
 build-project Hades-Scripting 
   ;
   
-install dist 
+rule Install-Rule ( properties * ) 
+{
+  local result 
+    ;
+  
+  if <address-model>32 in $(properties) 
+  {
+    if <variant>debug in $(properties)
+    {
+      result += <location>Bin/Debug/IA32 
+        ;
+    }
+    
+    if <variant>release in $(properties)
+    {
+      result += <location>Bin/Release/IA32 
+        ;
+    }
+  }
+  
+  if <address-model>64 in $(properties) 
+  {
+    if <variant>debug in $(properties)
+    {
+      result += <location>Bin/Debug/AMD64 
+        ;
+    }
+    
+    if <variant>release in $(properties)
+    {
+      result += <location>Bin/Release/AMD64 
+        ;
+    }
+  }
+  
+  return $(result) 
+    ;
+}
+  
+install Bin 
   : Hades-Memory Hades-Scripting 
-  : <install-dependencies>on <install-type>SHARED_LIB <install-type>EXE <install-type>PYTHON_EXTENSION 
+  : <conditional>@Install-Rule <install-dependencies>on <install-type>SHARED_LIB <install-type>EXE <install-type>PYTHON_EXTENSION 
   ;

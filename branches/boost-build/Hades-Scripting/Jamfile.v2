@@ -14,11 +14,11 @@ if ![python.configured]
 }
 
 project
-  : requirements <library>/boost/python//boost_python 
+  : requirements <library>/boost//python/<link>static <library>/boost//program_options/<link>static 
   ;
 
 exe Hades-MemSandbox 
-  : [ glob Hades-MemSandbox/*.cpp ] /Hades-Memory//Hades-Memory /boost//program_options 
+  : [ glob Hades-MemSandbox/*.cpp ] /Hades-Memory//Hades-Memory 
   : <link>static 
   : 
   : <include>"." 
