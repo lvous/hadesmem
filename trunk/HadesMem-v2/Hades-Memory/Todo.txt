@@ -2,6 +2,7 @@
 
 * General
 	* Documentation via BoostBook and QuickBook.
+	* Move to Boost.Build.
 	* Unit tests for all components.
 	* Code review and refactor.
 		* More assertions.
@@ -22,6 +23,7 @@
 	* Write 'all in one' test utility.
 	* Fix 'solution folders' problem when attemtping to compile under 
 	MSVC express editions.
+	* Change XML parser library from RapidXML to Boost.Spirit.
 * New Modules
 	* Process creation APIs.
 	* Debugging APIs.
