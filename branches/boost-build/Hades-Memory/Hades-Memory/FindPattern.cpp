@@ -93,7 +93,7 @@ namespace Hades
       if (Data.empty() || Mask.empty())
       {
         BOOST_THROW_EXCEPTION(Error() << 
-          ErrorFunction("Scanner::LoadFromXML") << 
+          ErrorFunction("FindPattern::Find") << 
           ErrorString("Empty pattern or mask data."));
       }
 
@@ -101,7 +101,7 @@ namespace Hades
       if (Data.size() % 2)
       {
         BOOST_THROW_EXCEPTION(Error() << 
-          ErrorFunction("Scanner::LoadFromXML") << 
+          ErrorFunction("FindPattern::Find") << 
           ErrorString("Data size invalid."));
       }
 
@@ -109,7 +109,7 @@ namespace Hades
       if (Mask.size() * 2 != Data.size())
       {
         BOOST_THROW_EXCEPTION(Error() << 
-          ErrorFunction("Scanner::LoadFromXML") << 
+          ErrorFunction("FindPattern::Find") << 
           ErrorString("Mask size invalid."));
       }
 
@@ -124,7 +124,7 @@ namespace Hades
         if (!(Converter >> std::hex >> Current >> std::dec))
         {
           BOOST_THROW_EXCEPTION(Error() << 
-            ErrorFunction("Scanner::LoadFromXML") << 
+            ErrorFunction("FindPattern::Find") << 
             ErrorString("Invalid data conversion."));
         }
 

@@ -39,9 +39,6 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #include "MemoryMgr.h"
 #include "Hades-Common/I18n.h"
 
-// Image base linker 'trick'
-EXTERN_C IMAGE_DOS_HEADER __ImageBase;
-
 namespace Hades
 {
   namespace Memory
