@@ -60,7 +60,7 @@
 // an exception.
 
 // #define ASMJIT_HIDDEN
-#define ASMJIT_API
+// #define ASMJIT_API
 // #define ASMJIT_NOTHROW
 
 

@@ -1,4 +1,4 @@
-AsmJit - Complete x86/x64 JIT Assembler for C++ Language - Version SVN
+AsmJit - Complete x86/x64 JIT Assembler for C++ Language - Version 1.0
 ======================================================================
 
 http://code.google.com/p/asmjit/
@@ -27,9 +27,9 @@ binary stream that represents encoded x86/x64 assembler opcodes. Together
 with operands and labels it can be used to generate complete code.
 
 There is also class named Compiler that allows to develop crossplatform
-assembler code without worring about function calling conventions and 
+assembler code without worring about function calling conventions and
 registers allocation. It can be also used to write 32 bit and 64 bit portable
-code. Compiler is recommended class to use for code generation.
+code. Compiler is recommended class to use for high level code generation.
 
 Building & Configuring
 ======================
@@ -72,8 +72,8 @@ Supported compilers
 ===================
 
 AsmJit is successfully tested by following compilers:
-- MSVC (VC7.1 and VC8.0)
-- GCC (3.4.X+ including MinGW and 4.1.X+, 4.3.X+)
+- MSVC (VC6.0, VC7.1, VC8.0)
+- GCC (3.4.X+ including MinGW and 4.1.X+, 4.3.X+, 4.4.X+)
 
 If you are using different compiler and you have troubles, please use AsmJit
 mailing list or create an Issue (see project home page).
@@ -81,11 +81,10 @@ mailing list or create an Issue (see project home page).
 Supported platforms
 ===================
 
-Fully supported platforms at this time are X86 (32-bit) and X64 (64 bit).
-Other platforms need volunteers to support them. Also note that AsmJit is
-designed to generate assembler binary only for host CPU, don't try to generate
-64 bit assembler in 32 bit mode and vica versa - this is not designed to work
-and will not work.
+Fully supported platforms at this time are X86 (32-bit) and X86_64/X64 (64-bit).
+Other platforms need volunteers. Also note that AsmJit is designed to generate
+assembler binary only for host CPU, don't try to generate 64-bit assembler in
+32 bit mode and vica versa - this is not designed to work and will not work.
 
 Examples
 ========
@@ -95,16 +94,17 @@ Examples and tests can be found in these places:
 - AsmJit wiki <http://code.google.com/p/asmjit/w/list>
 - AsmJit Test directory (in this package)
 
-Licence
+License
 =======
 
 AsmJit can be distributed under MIT licence:
 <http://www.opensource.org/licenses/mit-license.php>
 
-Older versions of AsmJit also contained Google's V8 licence and Sun licence
-(where original Assembler class from Google's V8 is). But because AsmJit were
-completely rewritten and contains complete new codebase, these licences were
-removed (code from Google's V8 is not used in new versions of AsmJit anymore).
+Older versions of AsmJit also contained Google's V8 and Sun licenses (where
+original Assembler class from Google's V8 is). But because AsmJit were
+completely rewritten and it now contains complete new codebase, these licenses
+were removed (code from Google's V8 is not used in new versions of AsmJit
+anymore).
 
 Google Groups and Mailing Lists
 ===============================
