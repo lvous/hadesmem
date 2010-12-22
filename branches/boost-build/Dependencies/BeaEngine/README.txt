@@ -27,4 +27,4 @@ Igor Gutnik - Developer (ported the project on linux)
 
 Contributors :
 
-	andrewl, bax, William Pomian, Ange Albertini, Pyrae, Vincent Roy, Kharneth, Eedy, Neitsa, KumaT, Rafal Cyran, 29a metal, sessiondiy, Tim, vince, Igor Gutnik, ouadji, Helle, Baboon.
+	andrewl, bax, William Pomian, Ange Albertini, Pyrae, Vincent Roy, Kharneth, Eedy, Neitsa, KumaT, Rafal Cyran, 29a metal, sessiondiy, Tim, vince, Igor Gutnik, ouadji, Helle, Baboon, pop9080, ktion23.
