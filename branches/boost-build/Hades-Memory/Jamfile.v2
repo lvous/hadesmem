@@ -1,0 +1,25 @@
+# Hades-Memory/Jamfile.v2
+
+lib user32 
+  : 
+  : <name>user32 
+  ;
+
+lib advapi32 
+  : 
+  : <name>advapi32 
+  ;
+
+lib Hades-Memory 
+  : [ glob Hades-Memory/*.cpp ] /Hades-Common//Hades-Common /Dependencies//AsmJit /Dependencies//BeaEngine /Dependencies//RapidXML user32 advapi32 
+  : <link>static 
+  : 
+  : <include>"." 
+  ;
+
+lib Hades-MMHelper 
+  : [ glob Hades-MMHelper/*.cpp ] Hades-Memory user32 /boost//thread /boost//filesystem 
+  : <link>shared 
+  : 
+  : 
+  ;

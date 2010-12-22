@@ -24,7 +24,6 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 // Boost
 #pragma warning(push, 1)
-#pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
 #include <boost/noncopyable.hpp>
 #pragma warning(pop)
 

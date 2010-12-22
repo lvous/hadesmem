@@ -19,7 +19,6 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 // Boost
 #pragma warning(push, 1)
-#pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
 #include <boost/thread.hpp>
 #include <boost/exception/all.hpp>
 #pragma warning(pop)
@@ -110,7 +109,6 @@ LONG CALLBACK VectoredHandler(__in PEXCEPTION_POINTERS ExceptionInfo)
 }
 
 #pragma warning(push, 1)
-#pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
 void TestSEH()
 {
   // Test SEH

@@ -23,13 +23,11 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 
 // Boost
 #pragma warning(push, 1)
-#pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
 #include <boost/lexical_cast.hpp>
 #pragma warning(pop)
 
 // RapidXML
 #pragma warning(push, 1)
-#pragma warning (disable: ALL_CODE_ANALYSIS_WARNINGS)
 #include <RapidXML/rapidxml.hpp>
 #pragma warning(pop)
 

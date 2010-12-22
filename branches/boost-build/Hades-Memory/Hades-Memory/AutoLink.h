@@ -20,8 +20,8 @@ along with HadesMem.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 // Auto-link Hades-Memory
-#pragma comment(lib, "Hades-Memory.lib")
+//#pragma comment(lib, "Hades-Memory.lib")
 
 // Auto-link dependencies
-#pragma comment(lib, "AsmJit.lib")
-#pragma comment(lib, "BeaEngine.lib")
+//#pragma comment(lib, "AsmJit.lib")
+//#pragma comment(lib, "BeaEngine.lib")

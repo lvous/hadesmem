@@ -1,0 +1,39 @@
+use-project /Dependencies
+  : Dependencies 
+  ;
+  
+use-project /Hades-Common 
+  : Hades-Common 
+  ; 
+  
+use-project /Hades-Memory 
+  : Hades-Memory 
+  ; 
+   
+use-project /Hades-Scripting 
+  : Hades-Scripting
+  ; 
+ 
+use-project /boost 
+  : E:/Code/Boost 
+  ;
+  
+project 
+  : requirements <include>E:/Code/Boost <define>BOOST_FILESYSTEM_VERSION=3 <runtime-link>shared 
+  : default-build debug 
+  ;
+
+path-constant TOP 
+  : . 
+  ;
+
+build-project Hades-Memory 
+  ;
+  
+build-project Hades-Scripting 
+  ;
+  
+install dist 
+  : Hades-Memory Hades-Scripting 
+  : <install-dependencies>on <install-type>SHARED_LIB <install-type>EXE <install-type>PYTHON_EXTENSION 
+  ;
