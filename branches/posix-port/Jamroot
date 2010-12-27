@@ -1,0 +1,80 @@
+use-project /HadesMem
+  : HadesMem
+  ;
+ 
+ use-project /Dependencies
+  : Dependencies 
+  ;
+  
+use-project /Common 
+  : Common 
+  ; 
+  
+use-project /Memory 
+  : Memory 
+  ; 
+   
+use-project /Scripting 
+  : Scripting
+  ; 
+  
+project 
+  : requirements <define>BOOST_FILESYSTEM_VERSION=3 <define>UNICODE <define>_UNICODE <runtime-link>shared 
+  <toolset>gcc:<cxxflags>"-std=c++0x" <toolset>gcc:<warnings>off <toolset>gcc:<define>nullptr=NULL
+  <toolset>msvc:<warnings>all 
+  : default-build debug 
+  ;
+
+path-constant TOP 
+  : . 
+  ;
+
+build-project Memory 
+  ;
+  
+build-project Scripting 
+  ;
+  
+rule Install-Rule ( properties * ) 
+{
+  local result 
+    ;
+  
+  if <address-model>32 in $(properties) 
+  {
+    if <variant>debug in $(properties)
+    {
+      result += <location>Bin/Debug/IA32 
+        ;
+    }
+    
+    if <variant>release in $(properties)
+    {
+      result += <location>Bin/Release/IA32 
+        ;
+    }
+  }
+  
+  if <address-model>64 in $(properties) 
+  {
+    if <variant>debug in $(properties)
+    {
+      result += <location>Bin/Debug/AMD64 
+        ;
+    }
+    
+    if <variant>release in $(properties)
+    {
+      result += <location>Bin/Release/AMD64 
+        ;
+    }
+  }
+  
+  return $(result) 
+    ;
+}
+  
+install Bin 
+  : Memory Scripting 
+  : <conditional>@Install-Rule <install-dependencies>on <install-type>SHARED_LIB <install-type>EXE <install-type>PYTHON_EXTENSION 
+  ;
