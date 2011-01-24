@@ -1,0 +1,36 @@
+# Dependencies/Jamfile.v2
+
+lib AsmJit 
+  : 
+    [ glob AsmJit/*.cpp ] 
+  : 
+    <warnings>off 
+    <link>static 
+  : 
+  : 
+    <include>"." 
+  ;
+
+lib BeaEngine 
+  : 
+    [ glob BeaEngine/*.c ] 
+  : 
+    <include>"./BeaEngine/" 
+    <include>"./BeaEngine/includes/" 
+    <define>BEA_ENGINE_STATIC 
+    <warnings>off 
+    <link>static 
+  : 
+  : 
+    <include>"." 
+    <include>"./BeaEngine/" 
+    <define>BEA_ENGINE_STATIC 
+  ;
+
+alias RapidXML 
+  : 
+  : 
+  : 
+  : 
+    <include>"."
+  ;
