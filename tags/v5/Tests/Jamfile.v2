@@ -1,0 +1,38 @@
+# Tests/Jamfile.v2
+
+import testing 
+  ;
+
+project 
+  : 
+    requirements 
+    <toolset>msvc:<warnings>all 
+    <toolset>gcc:<warnings>all 
+    <toolset>msvc:<warnings-as-errors>on 
+    <toolset>gcc:<warnings-as-errors>on 
+    <toolset>gcc:<cxxflags>-Wextra 
+    <toolset>gcc:<cxxflags>-pedantic-errors 
+    <library>/Memory//Memory 
+    <library>/boost//unit_test_framework/<link>static 
+    <toolset>gcc:<linkflags>-Wl,--allow-multiple-definition
+  ;
+
+test-suite Memory
+  :
+    [ run DisassemblerTest.cpp ]
+    [ run DosHeaderTest.cpp ]
+    [ run ExportDirTest.cpp ]
+    [ run FindPatternTest.cpp ]
+    [ run ImportDirTest.cpp ]
+    [ run InjectorTest.cpp ]
+    [ run PatcherTest.cpp ]
+    [ run MemoryMgrTest.cpp ]
+    [ run ModuleTest.cpp ]
+    [ run NtHeadersTest.cpp ]
+    [ run PeFileTest.cpp ]
+    [ run ProcessTest.cpp ]
+    [ run RegionTest.cpp ]
+    [ run ScannerTest.cpp ]
+    [ run SectionTest.cpp ]
+    [ run TlsDirTest.cpp ]
+  ;
