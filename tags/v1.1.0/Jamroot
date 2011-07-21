@@ -1,0 +1,77 @@
+path-constant TOP 
+  : 
+    .
+  ;
+
+use-project /boost 
+  : 
+    Src/Dependencies/Boost 
+  ;
+
+use-project /Dependencies 
+  : 
+    Src/Dependencies 
+  ;
+
+use-project /Memory 
+  : 
+    Src/Memory 
+  ; 
+
+use-project /Tests 
+  : 
+    Tests 
+  ; 
+
+project Hades 
+  : 
+    requirements 
+    <define>BOOST_FILESYSTEM_VERSION=3 
+    <define>BOOST_SYSTEM_NO_DEPRECATED 
+    <define>BOOST_FILESYSTEM_NO_DEPRECATED 
+    <define>UNICODE 
+    <define>_UNICODE 
+    <define>STRICT 
+    <define>WIN32_LEAN_AND_MEAN 
+    <define>NTDDI_VERSION=NTDDI_WINXPSP2 
+    <define>_WIN32_WINNT=_WIN32_WINNT_WINXP 
+    <define>WINVER=_WIN32_WINNT_WINXP 
+    <runtime-link>shared 
+    <threading>multi 
+    <toolset>gcc:<cxxflags>-std=c++0x 
+    <toolset>gcc,<variant>debug:<cxxflags>-fstack-check
+    <toolset>clang:<cxxflags>-std=c++0x 
+    <toolset>intel:<cxxflags>/Qstd=c++0x 
+    <toolset>msvc:<cxxflags>/wd4503 
+  : 
+    default-build debug 
+  : 
+    build-dir Bin 
+  ;
+  
+build-project Src/Memory 
+  ;
+
+build-project Tests 
+  ;
+
+install Dist 
+  : 
+    Src/Memory 
+  : 
+    <toolset>msvc,<variant>debug,<address-model>32:<location>Dist/MSVC/Debug/IA32
+    <toolset>msvc,<variant>debug,<address-model>64:<location>Dist/MSVC/Debug/AMD64
+    <toolset>msvc,<variant>release,<address-model>32:<location>Dist/MSVC/Release/IA32
+    <toolset>msvc,<variant>release,<address-model>64:<location>Dist/MSVC/Release/AMD64
+    <toolset>gcc,<variant>debug,<address-model>32:<location>Dist/GCC/Debug/IA32
+    <toolset>gcc,<variant>debug,<address-model>64:<location>Dist/GCC/Debug/AMD64
+    <toolset>gcc,<variant>release,<address-model>32:<location>Dist/GCC/Release/IA32
+    <toolset>gcc,<variant>release,<address-model>64:<location>Dist/GCC/Release/AMD64
+    <toolset>clang,<variant>debug,<address-model>32:<location>Dist/Clang/Debug/IA32
+    <toolset>clang,<variant>debug,<address-model>64:<location>Dist/Clang/Debug/AMD64
+    <toolset>clang,<variant>release,<address-model>32:<location>Dist/Clang/Release/IA32
+    <toolset>clang,<variant>release,<address-model>64:<location>Dist/Clang/Release/AMD64
+    <install-dependencies>on 
+    <install-type>SHARED_LIB 
+    <install-type>EXE 
+  ;
