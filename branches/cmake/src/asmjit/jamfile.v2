@@ -1,0 +1,22 @@
+# src/asmjit/jamfile.v2
+
+project 
+  : 
+    requirements 
+
+    <warnings>off
+  ;
+
+lib asmjit 
+  : 
+    [ glob asmjit/src/asmjit/*.cpp ] 
+    [ glob asmjit/src/asmjit/core/*.cpp ] 
+    [ glob asmjit/src/asmjit/x86/*.cpp ] 
+  : 
+    <link>static 
+    <define>ASMJIT_API="" 
+  : 
+  : 
+    <include>"./asmjit/src/" 
+    <define>ASMJIT_API="" 
+  ;
